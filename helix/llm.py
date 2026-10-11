@@ -58,7 +58,7 @@ class Settings:
     pro_model: str = ""
     pro_every: int = 10          # every Nth call goes to the pro model; 0 = never
     temperature: float = 0.8
-    max_tokens: int = 6000       # plenty for written reasoning + a program, with hidden thinking off
+    max_tokens: int = 8000       # room for written reasoning + a program, with hidden thinking off
     timeout: float = 180.0       # seconds of silence before giving up (streamed replies keep it alive)
     stream: bool = True          # Luminal cuts off non-streamed requests that run past ~20 s
     retries: int = 6             # 503s from a serverless model that's warming up are common
@@ -430,15 +430,22 @@ class FakeLLM(LLM):
         )
 
     def _hypotheses(self, user):
-        ids = re.findall(r"^### Program (\S+)", user, re.M) or ["unknown"]
+        champ = (re.search(r"## The champion: (\S+),", user) or [0, "unknown"])[1]
+        others = re.findall(r"^### Program (\S+):", user, re.M)
         n = int((re.search(r"exactly (\d+) hypotheses", user) or [0, 3])[1])
-        hyps = [{
-            "base": self.rng.choice(ids[:3]),
-            "claim": f"Fake claim {i}: penalising imbalance between leftover CPU and memory matters most on anticorr.",
-            "change": "Double the weight on the CPU/memory imbalance term.",
-            "prediction": "anticorr excess drops; other families roughly unchanged.",
-        } for i in range(n)]
-        return "```json\n" + json.dumps({"hypotheses": hyps}, indent=2) + "\n```"
+        n_cause = int((re.search(r"(\d+) \*\*cause\*\* tests", user) or [0, 0])[1])
+        hyps = []
+        for i in range(n):
+            cause = i < n_cause
+            hyps.append({
+                "kind": "cause" if cause else "improve",
+                "base": champ if cause or not others or i % 2 else self.rng.choice(others[:3]),
+                "claim": f"Fake {'cause' if cause else 'improve'} claim {i}: the imbalance term is why the champion wins.",
+                "change": "Remove the imbalance term." if cause else "Scale the imbalance weight by 1.3.",
+                "prediction": "anticorr excess moves the most.",
+                "builds_on": "",
+            })
+        return "```json\n" + json.dumps({"hypotheses": hyps}, indent=2) + "\n```\nAnalysis: fake."
 
 
 def check(settings=None):
