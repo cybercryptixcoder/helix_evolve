@@ -241,13 +241,24 @@
     <div class="phase" id="phase">Pick a run, or start one.</div>
 
     <section class="card">
-      <h2>Best score by generation <span class="right hint">score = −(mean excess %), higher is better</span></h2>
+      <h2>Improvement over Code Zero <span class="right hint">% of Code Zero's wasted capacity eliminated, higher is better</span></h2>
       <div class="legend">
         <span><i class="sw line"></i>Best so far</span>
         <span><i class="sw deep"></i>Best new, deep branch</span>
         <span><i class="sw wide"></i>Best new, wide branch</span>
         <span><i class="sw tune"></i>Tuned numbers</span>
-        <span><i class="sw ref"></i>Code Zero and bar to beat</span>
+      </div>
+      <div id="chartGain"><div class="empty">No generations yet.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>Raw score by generation <span class="right hint">score = −(mean excess bins % over the lower bound), for comparing runs</span></h2>
+      <div class="legend">
+        <span><i class="sw line"></i>Best so far</span>
+        <span><i class="sw deep"></i>Best new, deep branch</span>
+        <span><i class="sw wide"></i>Best new, wide branch</span>
+        <span><i class="sw tune"></i>Tuned numbers</span>
+        <span><i class="sw ref"></i>Code Zero</span>
       </div>
       <div id="chart"><div class="empty">No generations yet.</div></div>
     </section>
@@ -475,7 +486,8 @@ function render(s) {
   if (["finished", "stopped"].includes(state) && !st.error) phase = `Run ${state}.`;
   setHTML($("phase"), (phase || "–") + `<span class="hint">${esc(mongoTxt)}</span>`);
 
-  renderChart(s, barName);
+  renderChart(s, null, "chart", false);
+  renderChart(s, null, "chartGain", true);
   renderResearcher(s.researcher);
   renderHyps(s.hypotheses || []);
   renderCalls(s.calls || []);
@@ -488,22 +500,25 @@ function render(s) {
   if (s.has_report) loadReport(false);
 }
 
-function renderChart(s, barName) {
-  const gens = (s.generations || []).filter((g) => g.best_score != null);
-  if (!gens.length) return setHTML($("chart"), `<div class="empty">No generations yet.</div>`);
+function renderChart(s, barName, target, asGain) {
+  const seed = s.seed_score;
+  // asGain: % of Code Zero's excess removed = (score - seed) / |seed| * 100, so Code Zero is 0 and up is better.
+  const conv = (v) => asGain && seed ? (v - seed) / Math.abs(seed) * 100 : v;
+  const gens = (s.generations || []).filter((g) => g.best_score != null).map((g) => ({ ...g, best_score: conv(g.best_score) }));
+  if (!gens.length || (asGain && !seed)) return setHTML($(target), `<div class="empty">No generations yet.</div>`);
   const pts = [], refs = [];
-  if (s.seed_score != null) refs.push(["Code Zero", s.seed_score]);
-  if (barName) refs.push([barName, baselines[barName]]);
-  for (const g of gens) for (const b of ["deep", "wide", "tune"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: g[b].best_new, b });
+  if (seed != null && !asGain) refs.push(["Code Zero", seed]);
+  for (const g of gens) for (const b of ["deep", "wide", "tune"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: conv(g[b].best_new), b });
   const ys = gens.map((g) => g.best_score).concat(pts.map((p) => p.y), refs.map((r) => r[1]));
   let lo = Math.min(...ys), hi = Math.max(...ys); const pad = (hi - lo) * 0.08 || 0.5; lo -= pad; hi += pad;
+  if (asGain) { lo = 0; pts.splice(0, pts.length, ...pts.filter((p) => p.y >= 0)); }
   const maxX = Math.max(1, ...gens.map((g) => g.generation));
   const W = 860, H = 300, L = 54, R = 130, T = 12, B = 34;
   const X = (x) => L + (x / maxX) * (W - L - R), Y = (y) => T + (1 - (y - lo) / (hi - lo)) * (H - T - B);
   let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Best score by generation">`;
   const ticks = 5;
   for (let i = 0; i <= ticks; i++) { const v = lo + (hi - lo) * i / ticks, y = Y(v);
-    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="1"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${v.toFixed(2)}</text>`; }
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="1"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${asGain ? v.toFixed(1) + "%" : v.toFixed(2)}</text>`; }
   const step = Math.max(1, Math.ceil(maxX / 12));
   for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
   svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">generation</text>`;
@@ -519,8 +534,10 @@ function renderChart(s, barName) {
       : p.b === "wide"
       ? `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="var(--wide)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></rect>`
       : `<path d="M${x},${y - 6} L${x + 6},${y} L${x},${y + 6} L${x - 6},${y} Z" fill="var(--tune)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></path>`; }
+  if (asGain) { const last = gens[gens.length - 1];
+    svg += `<text class="refl" x="${X(last.generation) + 8}" y="${Y(last.best_score) + 4}">${last.best_score.toFixed(1)}%</text>`; }
   svg += `</svg>`;
-  setHTML($("chart"), svg);
+  setHTML($(target), svg);
 }
 
 function renderResearcher(r) {
