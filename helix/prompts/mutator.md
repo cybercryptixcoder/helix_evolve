@@ -10,5 +10,5 @@ You are where this search gets its variety, so be bold:
 
 ## Reply format
 
-1. One or two sentences describing the idea you're trying.
+1. A short paragraph of reasoning: what is holding the program back, and what you will try instead and why. Its first sentence should name the idea.
 2. The complete program in a single ```python block. It must define `priority(item, bins, capacity)` and follow every rule in the problem statement.
