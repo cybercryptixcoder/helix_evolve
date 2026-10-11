@@ -18,7 +18,7 @@ from .sandbox import REPO_ROOT, evaluate_file
 
 INK, MUTED, GRID = "#0b0b0b", "#8a8984", "#e4e3df"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a"]      # categorical slots 1-3, validated for colour-blind separation
-BRANCH_STYLE = {"deep": (SERIES[0], "o"), "wide": (SERIES[1], "s")}
+BRANCH_STYLE = {"deep": (SERIES[0], "o"), "wide": (SERIES[1], "s"), "tune": (SERIES[2], "D")}
 
 
 # ---------------------------------------------------------------- loading
@@ -215,7 +215,7 @@ def write_report(runs):
     lines += ["## Branches", "", "| Branch | Programs | Valid | Repaired | Duplicates | New bests | Best score |",
               "|---|---|---|---|---|---|---|"]
     events = main.improvements()
-    for branch in ("seed", "wide", "deep", "zeroshot"):
+    for branch in ("seed", "wide", "deep", "tune", "zeroshot"):
         progs = [p for p in main.store.programs.values() if p.branch == branch]
         if not progs:
             continue

@@ -161,6 +161,10 @@ def snapshot(run_dir):
                 bn = f"{r['best_new']:.3f}" if r.get("best_new") is not None else "none"
                 verdicts = ", ".join(f"{k} {v}" for k, v in r.items() if k in VERDICTS)
                 parts.append(f"{b} {r['valid']}/{r['new']} valid, best new {bn}" + (f" [{verdicts}]" if verdicts else ""))
+        t = g.get("tune")
+        if t:
+            bn = f", best {t['best_new']:.3f}" if t.get("best_new") is not None else ""
+            parts.append(f"tune {t.get('improved', 0)}/{len(t.get('targets', []))} improved{bn} ({t.get('tried', 0)} tries)")
         if g.get("seconds"):
             parts.append(f"{g['seconds']}s")
         out.append(" | ".join(parts))

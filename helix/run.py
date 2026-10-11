@@ -6,21 +6,23 @@
   python -m helix.run --mode zero-shot --n 40       control: best of N plain answers, no search
   python -m helix.run --resume helix/runs/<run>     continue a stopped run
 
-One generation:
-  1. Rank the current pool.
-  2. Deep branch: the Researcher reads the ranked programs, their per-family scores and the
-     research log, and proposes hypotheses. The Coder writes one program per hypothesis,
-     changing only that aspect of its base program. Each is scored and judged against its
-     base (supported / refuted / flat). The top X go forward.
-  3. Wide branch: the Mutator sees only the top X programs' code and scores (the air gap)
-     and writes variants with no direction. The top X go forward.
-  4. Merge both branches' survivors, plus the best program found so far, into the next pool.
+One generation (the three branches run at the same time):
+  1. Rank the current pool: the best programs found so far.
+  2. Deep branch: the Researcher studies the champion (knock-outs, inherited from its ancestors
+     where the parts are shared) and proposes mechanism changes. The Coder writes one program per
+     hypothesis, changing only that aspect. Each is scored and judged against its base.
+  3. Wide branch: the Mutator sees only the top X programs' code and scores (the air gap) and
+     writes variants of them, plus a fresh idea or two.
+  4. Tune branch: a cheap local search tunes the numbers of the champion and of the best untuned
+     newcomer, so the LLMs can spend their effort on structure.
+  5. Next pool = the best K of the old pool plus everything new (at most a few siblings per parent).
 
 Generation 0 is Code Zero plus one wide batch, because there's nothing to research yet.
 """
 import argparse
 import json
 import os
+import random
 import sys
 import threading
 import time
@@ -31,12 +33,16 @@ from pathlib import Path
 from . import roles
 from .llm import LLM, FakeLLM, Settings
 from .mongo import Mirror
-from .population import Hypothesis, Program, Store, judge
+from . import tune as tuner
+from .population import Hypothesis, Program, Store, judge, read_records
 from .sandbox import REPO_ROOT, evaluate_code, evaluate_file
 
 RUNS_DIR = Path(__file__).resolve().parent / "runs"
 # Mutator runs hot for variety; Coder runs cool so it changes only what it's told.
 TEMPERATURE = {"mutator": 0.8, "researcher": 0.6, "coder": 0.3, "zeroshot": 0.8}
+# Output limits per role (tokens): a reply that deliberates instead of answering fails in seconds, not a
+# minute, and gets one retry asking for only the answer. Zero-shot answers keep the general limit.
+MAX_TOKENS = {"mutator": 3000, "coder": 4000, "researcher": 4000}
 RESEARCHER_SHOWN = 8      # programs shown to the Researcher
 
 
@@ -50,6 +56,11 @@ class Search:
         self.phases = {}          # branch -> what it's doing right now
         self.status = {"state": "starting", "pid": os.getpid(), "mode": args.mode, "schedule": args.schedule,
                        "generation": None, "generations": args.generations, "started": time.time()}
+        self.tune_eval = tuner.evaluator("train", args.eval_timeout, args.tune_workers) if args.tune else None
+        self.rng = random.Random()
+        # Programs whose numbers have been tuned already (restored from the log on --resume).
+        self.tuned = {t for g in read_records(store.dir / "generations.jsonl")
+                      for t in (g.get("tune") or {}).get("targets", [])}
 
     # ================================================================ live status (read by the dashboard)
     def set_status(self, **fields):
@@ -121,8 +132,9 @@ class Search:
         system = roles.system_prompt(role)
         prog = Program(id=pid, code="", generation=generation, branch=branch,
                        parent_id=parent_id, hypothesis_id=hypothesis_id)
+        limit = MAX_TOKENS.get(role)
         try:
-            reply = self.llm.chat(role, system, user, temperature=TEMPERATURE[role])
+            reply = self.llm.chat(role, system, user, temperature=TEMPERATURE[role], max_tokens=limit)
         except Exception as exc:
             prog.error = f"LLM call failed: {exc}"
             if finalize:
@@ -131,21 +143,30 @@ class Search:
             return prog
         prog.model, prog.note = reply.model, roles.extract_note(reply.text)
         code = roles.extract_code(reply.text)
+        if code is None:   # cut off (or no program at all): one retry for only the code, keeping its idea
+            try:
+                again = self.llm.chat(f"{role}-retry", system, roles.code_only_message(user, reply.text),
+                                      temperature=TEMPERATURE[role], max_tokens=limit)
+                code = roles.extract_code(again.text)
+                prog.note = roles.extract_note(again.text) or prog.note
+            except Exception as exc:
+                prog.error = f"retry for a reply with no program failed: {exc}"
 
         for attempt in range(self.a.repairs + 1):
             if code is None:
-                result = {"valid": False, "error": "reply had no ```python block defining priority()"}
-            else:
-                prog.code = code
-                dup = self.store.duplicate_of(code)
-                if dup is not None:
-                    prog.duplicate_of = dup.id
-                    prog.valid, prog.score, prog.families, prog.error = dup.valid, dup.score, dup.families, dup.error
-                    break
-                # The tiny `quick` split first, so broken or very slow programs fail in a second.
-                result = evaluate_code(code, self.store.candidate_path(pid), "quick", min(15.0, self.a.eval_timeout))
-                if result["valid"]:
-                    result = evaluate_file(self.store.candidate_path(pid), "train", self.a.eval_timeout)
+                prog.error = prog.error or ("reply had no ```python block defining priority()" if attempt == 0
+                                            else "the repair reply had no ```python block")
+                break
+            prog.code = code
+            dup = self.store.duplicate_of(code)
+            if dup is not None:
+                prog.duplicate_of = dup.id
+                prog.valid, prog.score, prog.families, prog.error = dup.valid, dup.score, dup.families, dup.error
+                break
+            # The tiny `quick` split first, so broken or very slow programs fail in a second.
+            result = evaluate_code(code, self.store.candidate_path(pid), "quick", min(15.0, self.a.eval_timeout))
+            if result["valid"]:
+                result = evaluate_file(self.store.candidate_path(pid), "train", self.a.eval_timeout)
             if result["valid"]:
                 prog.valid, prog.score, prog.error = True, result["score"], None
                 prog.families = {f: v["excess_pct"] for f, v in result["families"].items()}
@@ -154,14 +175,14 @@ class Search:
             if attempt == self.a.repairs:
                 break
             try:   # one repair: show the agent its own error
-                # If there was no program, show only the end of the reply: it can be thousands of words of thinking.
-                fix = self.llm.chat(f"{role}-repair", system, roles.repair_message(code or reply.text[-2500:], prog.error),
-                                    temperature=TEMPERATURE[role])
+                fix = self.llm.chat(f"{role}-repair", system, roles.repair_message(code, prog.error),
+                                    temperature=TEMPERATURE[role], max_tokens=limit)
             except Exception as exc:
                 prog.error += f"\n(repair call failed: {exc})"
                 break
             prog.repaired = True
             code = roles.extract_code(fix.text)
+            prog.error = None if code else prog.error + "\n(the repair reply had no ```python block)"
 
         if finalize:
             finalize(prog)
@@ -173,15 +194,20 @@ class Search:
         """Mutator: top X programs in, variants out. Only code and score cross the air gap."""
         top = [p for p in pool if p.valid and not p.probe][: self.a.top_x]
         scored = [roles.Scored(p.code, p.score) for p in top]
-        # Half the variants start from the best program, so a lucky hit gets mutated further;
-        # the rest go round the other survivors to keep variety.
-        half = (self.a.variants + 1) // 2
+        # Most requests are variants: half of them start from the best program, so a hit gets built on;
+        # the rest go round the other top programs (a different one first each generation). The last
+        # one or two requests ask for a fresh idea, to keep variety.
+        fresh = min(self.a.fresh, self.a.variants)
+        n_var = self.a.variants - fresh
+        half = (n_var + 1) // 2
         rest = list(range(1, len(top))) or [0]
-        targets = [0] * half + [rest[i % len(rest)] for i in range(self.a.variants - half)]
+        targets = ([(0, False)] * half + [(rest[(i + generation) % len(rest)], False) for i in range(n_var - half)]
+                   + [(0, True)] * fresh)
         jobs = []
-        for t in targets:
-            msg = roles.mutator_message(scored[t], scored[:t] + scored[t + 1:])
-            jobs.append(self.workers.submit(self.candidate, "mutator", msg, generation, "wide", top[t].id))
+        for t, is_fresh in targets:
+            msg = roles.mutator_message(scored[t], scored[:t] + scored[t + 1:], fresh=is_fresh)
+            jobs.append(self.workers.submit(self.candidate, "mutator", msg, generation, "wide",
+                                            None if is_fresh else top[t].id))
         self.set_phase("wide", f"Mutator writing {len(jobs)} variants")
         progs = []
         for job in as_completed(jobs):
@@ -190,26 +216,40 @@ class Search:
         self.set_phase("wide", None)
         return progs, {}
 
+    def lineage(self, prog, depth=12):
+        """The program and its ancestors, nearest first."""
+        out = []
+        while prog is not None and len(out) < depth and prog.id not in out:
+            out.append(prog.id)
+            prog = self.store.programs.get(prog.parent_id) if prog.parent_id else None
+        return out
+
     def champion_plan(self, generation):
-        """The champion (best program so far), whether it's a fresh jump, and how many cause/improve tests to run."""
+        """The champion (best program so far), whether it's a real jump, and how many cause/improve tests to run.
+
+        Knock-outs are spent only where they teach something new: on a champion that jumped by at least
+        epsilon, and then only on its new or changed parts (knock-outs on its ancestors are inherited).
+        A small step, or a tuned champion (same parts, new numbers), gets improve tests only."""
         champ = self.store.best()
         older = [p for p in self.store.programs.values()
                  if p.valid and not p.probe and int(p.id[1:]) < int(champ.id[1:])]
         prev_best = max((p.score for p in older), default=None)
-        info = {"new": champ.generation >= generation - 1 and champ.branch != "seed",
-                "jump": round(champ.score - prev_best, 4) if prev_best is not None else None}
-        knocked = sum(1 for h in self.store.hypotheses
-                      if h.kind == "cause" and h.base_id == champ.id and h.verdict not in ("pending", "invalid"))
+        jump = round(champ.score - prev_best, 4) if prev_best is not None else None
+        info = {"new": champ.generation >= generation - 1 and champ.branch != "seed", "jump": jump,
+                "real_jump": jump is None or jump >= self.a.epsilon}
+        line = self.lineage(champ)
+        done = [h for h in self.store.hypotheses if h.kind == "cause" and h.verdict not in ("pending", "invalid")]
+        own = sum(h.base_id == champ.id for h in done)
+        inherited = sum(h.base_id in line[1:] for h in done)
         n = self.a.hypotheses
-        if champ.branch == "seed":
-            cause = 0                      # nothing to take apart in Code Zero
-        elif knocked == 0:
-            cause = max(1, n // 2)         # new champion: first find out which parts made it win
-        elif knocked < 3:
-            cause = 1
+        if champ.branch in ("seed", "tune") or own:
+            cause = 0                      # Code Zero, new numbers only, or already taken apart: improve it
+        elif info["real_jump"]:
+            cause = 1 if inherited else max(1, n // 2)   # only the new parts need measuring if the rest is known
         else:
-            cause = 0                      # its parts are mapped: spend everything on improving it
-        return champ, info, {"cause": min(cause, n), "improve": n - min(cause, n)}
+            cause = 0 if inherited else 1                # a small step: measure once if nothing in its line ever was
+        cause = min(cause, n)
+        return champ, info, {"cause": cause, "improve": n - cause, "tuned": bool(self.a.tune)}
 
     def deep(self, pool, generation):
         """Researcher: knock-outs to learn why the champion wins, moderate improve tests to beat it.
@@ -222,7 +262,9 @@ class Search:
             parent = self.store.programs.get(p.parent_id) if p.parent_id else None
             if parent is not None and parent.valid and parent.score is not None:
                 gains[p.id] = round(p.score - parent.score, 4)
-        msg = roles.researcher_message(champ, info, shown, self.store.hypotheses, plan, generation, gains)
+        parent = self.store.programs.get(champ.parent_id) if champ.parent_id else None
+        msg = roles.researcher_message(champ, info, shown, self.store.hypotheses, plan, generation, gains,
+                                       lineage=self.lineage(champ), parent=parent if parent and parent.valid else None)
         jump = f", new by {info['jump']:+.3f}" if info["new"] and info["jump"] is not None else ""
         say(f"   deep: champion {champ.id} ({champ.score:.3f}{jump}); plan {plan['cause']} cause + {plan['improve']} improve")
         self.set_phase("deep", f"Researcher studying champion {champ.id}")
@@ -233,7 +275,7 @@ class Search:
                 text = msg if attempt == 0 else (msg + "\n\nYour previous reply was cut off before the JSON. "
                                                  "Reply with ONLY the ```json block, no analysis.")
                 reply = self.llm.chat("researcher" if attempt == 0 else "researcher-retry", system, text,
-                                      temperature=TEMPERATURE["researcher"])
+                                      temperature=TEMPERATURE["researcher"], max_tokens=MAX_TOKENS["researcher"])
                 proposals = roles.extract_hypotheses(reply.text, {p.id for p in shown}, champ.id)[: self.a.hypotheses]
             except Exception as exc:
                 say(f"   deep: Researcher call failed ({str(exc)[:120]})")
@@ -268,11 +310,71 @@ class Search:
         kinds = {k: sum(h.kind == k for _, h in results) for k in ("cause", "improve")}
         return [prog for prog, _ in results], {"tested": len(results), **kinds, **verdicts}
 
+    def tune(self, pool, generation):
+        """Tune branch: local search over the numbers of the champion and of the best untuned newcomer.
+        A tuned program joins the pool only if it beats its original by --tune-margin."""
+        ranked = [p for p in pool if p.valid and not p.probe]
+        champ = self.store.best()
+        targets = [champ] if champ and champ.id not in self.tuned and champ.branch != "seed" else []
+        targets += [p for p in ranked if p.id not in self.tuned and p.branch in ("deep", "wide")
+                    and p not in targets][: max(0, self.a.tune_targets - len(targets))]
+        progs, tried, deadline = [], 0, time.time() + self.a.tune_seconds
+        valid_split = _has_split("valid")
+        for target in targets:
+            if time.time() > deadline:
+                break
+            self.tuned.add(target.id)
+            self.set_phase("tune", f"tuning {target.id}'s constants ({len(progs)} improved so far)")
+            out = tuner.tune(target.code, target.score, self.tune_eval, evals=self.a.tune_evals,
+                             batch=self.a.tune_workers * 2, seconds=deadline - time.time(), rng=self.rng)
+            if out is None:
+                continue                   # no numbers to tune
+            tried += out["tried"]
+            if out["code"] is None or out["score"] < target.score + self.a.tune_margin:
+                continue
+            if valid_split:                # a check on instances the tuning never saw, when the evaluator has them
+                with_tuning = evaluate_code(out["code"], self.store.dir / "tune-check.py", "valid", self.a.eval_timeout)
+                without = evaluate_file(self.store.candidate_path(target.id), "valid", self.a.eval_timeout)
+                if not with_tuning["valid"] or (without["valid"] and with_tuning["score"] < without["score"]):
+                    continue
+            if self.store.duplicate_of(out["code"]) is not None:
+                continue
+            changes = ", ".join(f"{a:g}→{b:g}" for a, b in out["changes"][:8])
+            prog = Program(id=self.store.new_id("p"), code=out["code"], generation=generation, branch="tune",
+                           parent_id=target.id, valid=True, score=out["score"],
+                           families={f: v["excess_pct"] for f, v in out["result"]["families"].items()},
+                           note=f"tuned {len(out['changes'])} constants of {target.id} "
+                                f"({out['score'] - target.score:+.3f}): {changes}")
+            self.store.candidate_path(prog.id).write_text(prog.code)
+            self.store.add_program(prog)
+            progs.append(prog)
+            say(f"   tune: {target.id} {target.score:.3f} → {prog.id} {prog.score:.3f} ({out['tried']} tries)")
+        self.set_phase("tune", None)
+        return progs, {"targets": [t.id for t in targets], "tried": tried, "improved": len(progs)}
+
     # ================================================================ generations
     def survivors(self, programs, x):
         """Knock-out measurements (probes) never join the pool; everything else competes on score."""
         fresh = [p for p in programs if p.valid and p.duplicate_of is None and not p.probe]
         return sorted(fresh, key=lambda p: p.rank_key, reverse=True)[:x]
+
+    def select_pool(self, ids):
+        """(μ+λ) selection: the best --pool-size programs among the old pool and everything new, with at
+        most --max-siblings children of one parent, so one lineage can't fill the pool."""
+        progs = [self.store.programs[i] for i in dict.fromkeys(ids) if i in self.store.programs]
+        ranked = self.survivors(progs, len(progs))
+        pool, skipped, per_parent = [], [], {}
+        for p in ranked:
+            key = p.parent_id or p.id
+            if per_parent.get(key, 0) >= self.a.max_siblings:
+                skipped.append(p)
+                continue
+            per_parent[key] = per_parent.get(key, 0) + 1
+            pool.append(p)
+            if len(pool) == self.a.pool_size:
+                break
+        pool += skipped[: self.a.pool_size - len(pool)]
+        return [p.id for p in pool]
 
     def generation(self, gen, pool_ids):
         started = time.time()
@@ -281,20 +383,18 @@ class Search:
             branches = ["deep"] if gen % 2 == 1 else ["wide"]
         else:
             branches = {"full": ["deep", "wide"], "wide-only": ["wide"], "deep-only": ["deep"]}[self.a.mode]
+        if self.a.tune:
+            branches = branches + ["tune"]
 
         say(f"\n── generation {gen}: {' + '.join(branches)} | pool best {pool[0].score:.3f} ({pool[0].id})")
         self.set_status(generation=gen)
-        with ThreadPoolExecutor(max_workers=2) as both:   # deep and wide run at the same time
-            futures = {b: both.submit(getattr(self, b), pool, gen) for b in branches}
+        with ThreadPoolExecutor(max_workers=len(branches)) as each:   # the branches run at the same time
+            futures = {b: each.submit(getattr(self, b), pool, gen) for b in branches}
             out = {b: f.result() for b, f in futures.items()}
 
         best = self.store.best()
-        next_pool = []
-        for b in branches:
-            next_pool += [p.id for p in self.survivors(out[b][0], self.a.top_x)]
-        next_pool = list(dict.fromkeys(next_pool + [best.id]))  # always keep the best ever
-        if len(next_pool) == 1 and best.id in pool_ids:        # nothing new survived: keep the old pool
-            next_pool = list(pool_ids)
+        new_ids = [p.id for b in branches for p in out[b][0]]
+        next_pool = self.select_pool(list(pool_ids) + new_ids + [best.id])
 
         record = {"generation": gen, "branches": branches, "pool": next_pool,
                   "best_id": best.id, "best_score": best.score, "seconds": round(time.time() - started, 1),
@@ -330,7 +430,7 @@ class Search:
             pool = [p.id]
         else:
             progs, _ = self.wide([p], 0)
-            pool = list(dict.fromkeys([q.id for q in self.survivors(progs, self.a.top_x)] + [self.store.best().id]))
+            pool = self.select_pool([p.id] + [q.id for q in progs])
             valid = sum(q.valid for q in progs)
             say(f"   wide: {valid}/{len(progs)} valid, best so far {self.store.best().score:.3f}")
         self.store.log_generation({"generation": 0, "branches": ["seed", "wide"], "pool": pool,
@@ -446,6 +546,15 @@ def short(text, n):
     return text if len(text) <= n else text[: n - 1] + "…"
 
 
+def _has_split(name):
+    """Whether the evaluator offers a split (read from its code, never changed)."""
+    try:
+        from evaluator.problem import SPLITS
+        return name in SPLITS
+    except Exception:
+        return False
+
+
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(prog="python -m helix.run", description=__doc__.split("\n\n")[0])
     ap.add_argument("--mode", choices=["full", "wide-only", "deep-only", "zero-shot"], default="full")
@@ -453,8 +562,11 @@ def parse_args(argv=None):
                     help="parallel: deep and wide every generation; alternate: deep on odd, wide on even")
     ap.add_argument("--generations", type=int, default=20)
     ap.add_argument("--max-minutes", type=float, default=0, help="stop after this long (0 = no limit)")
-    ap.add_argument("--top-x", type=int, default=4, help="survivors kept from each branch")
+    ap.add_argument("--top-x", type=int, default=4, help="programs the Mutator works from (the top of the pool)")
+    ap.add_argument("--pool-size", type=int, default=8, help="programs kept from one generation to the next")
+    ap.add_argument("--max-siblings", type=int, default=3, help="most pool slots that children of one parent can hold")
     ap.add_argument("--variants", type=int, default=6, help="Mutator programs per generation")
+    ap.add_argument("--fresh", type=int, default=2, help="of those, how many ask for a fresh idea instead of a variant")
     ap.add_argument("--hypotheses", type=int, default=4, help="Researcher hypotheses per generation")
     ap.add_argument("--n", type=int, default=40, help="answers in zero-shot mode")
     ap.add_argument("--epsilon", type=float, default=0.4,
@@ -467,6 +579,14 @@ def parse_args(argv=None):
                     help="how long to wait for the model to start answering before giving up")
     ap.add_argument("--eval-timeout", type=float, default=60.0, help="seconds before a program counts as hung")
     ap.add_argument("--pro-every", type=int, default=10, help="every Nth LLM call uses HELIX_PRO_MODEL (0 = never)")
+    ap.add_argument("--tune", action=argparse.BooleanOptionalAction, default=None,
+                    help="tune branch: local search over the champion's numbers (default: on in full mode)")
+    ap.add_argument("--tune-evals", type=int, default=48, help="evaluations per tuned program")
+    ap.add_argument("--tune-targets", type=int, default=2, help="programs tuned per generation")
+    ap.add_argument("--tune-seconds", type=float, default=40, help="time limit for the tune branch per generation")
+    ap.add_argument("--tune-margin", type=float, default=0.05, help="gain a tuned program needs to be kept")
+    ap.add_argument("--tune-workers", type=int, default=max(2, (os.cpu_count() or 4) // 2),
+                    help="evaluations in parallel while tuning")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
     ap.add_argument("--fake-llm", action="store_true", help="offline test double instead of Luminal")
     ap.add_argument("--publish", action=argparse.BooleanOptionalAction, default=None,
@@ -477,8 +597,9 @@ def parse_args(argv=None):
 
 
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
-KEPT_ON_RESUME = ["mode", "schedule", "top_x", "variants", "hypotheses", "n", "epsilon", "repairs",
-                  "pro_every", "seed_program", "fake_llm"]
+KEPT_ON_RESUME = ["mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
+                  "epsilon", "repairs", "pro_every", "seed_program", "fake_llm", "tune", "tune_evals", "tune_targets",
+                  "tune_seconds", "tune_margin"]
 
 
 def main(argv=None):
@@ -493,6 +614,8 @@ def main(argv=None):
 
     if args.publish is None:
         args.publish = not args.fake_llm
+    if args.tune is None:
+        args.tune = args.mode == "full"
     settings = Settings.from_env(pro_every=args.pro_every)
     if not args.fake_llm and settings.problems():
         sys.exit(f"Missing {', '.join(settings.problems())}. Fill them in on the dashboard (python -m helix.ui) "
