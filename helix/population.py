@@ -158,17 +158,31 @@ class Store:
     def load(cls, run_dir):
         """Rebuild a store from a run folder. Returns (store, last generation record or None)."""
         store = cls(run_dir)
-        for line in _read_lines(store.dir / "programs.jsonl"):
-            p = Program(**json.loads(line))
+        for record in read_records(store.dir / "programs.jsonl"):
+            p = Program(**record)
             store.programs[p.id] = p
             store._by_hash.setdefault(_code_hash(p.code), p.id)
-        for line in _read_lines(store.dir / "hypotheses.jsonl"):
-            store.hypotheses.append(Hypothesis(**json.loads(line)))
+        for record in read_records(store.dir / "hypotheses.jsonl"):
+            store.hypotheses.append(Hypothesis(**record))
         store._counters["p"] = max([int(i[1:]) for i in store.programs] or [0])
         store._counters["h"] = max([int(h.id[1:]) for h in store.hypotheses] or [0])
-        gens = [json.loads(line) for line in _read_lines(store.dir / "generations.jsonl")]
+        gens = read_records(store.dir / "generations.jsonl")
         return store, (gens[-1] if gens else None)
 
 
-def _read_lines(path):
-    return [line for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
+def read_records(path):
+    """Every complete line of a .jsonl file. A run killed mid-write can leave a broken last line: it's
+    skipped, and the file gets a closing newline so the next record starts on a line of its own."""
+    if not path.exists():
+        return []
+    text = path.read_text()
+    if text and not text.endswith("\n"):
+        with path.open("a") as f:
+            f.write("\n")
+    records = []
+    for line in text.splitlines():
+        try:
+            records.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    return records
