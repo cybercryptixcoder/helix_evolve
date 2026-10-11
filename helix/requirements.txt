@@ -1,0 +1,3 @@
+numpy          # required (also needed by the evaluator)
+matplotlib     # charts in the report and published results
+pymongo        # only if you set MONGODB_URI
