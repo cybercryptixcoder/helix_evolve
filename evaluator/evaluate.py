@@ -25,6 +25,16 @@ def _guarded_import(name, *args, **kwargs):
 _SAFE_BUILTINS = {k: v for k, v in vars(builtins).items() if k not in BLOCKED_BUILTINS}
 _SAFE_BUILTINS["__import__"] = _guarded_import
 
+# Programs shouldn't use randomness, but if one does, its score must still be
+# repeatable: numpy's global generator is reset before every instance, and
+# default_rng() without a seed gets seed 0.
+_seed_global_rng = np.random.seed
+_real_default_rng = np.random.default_rng
+
+
+def _seeded_default_rng(seed=None, *args, **kwargs):
+    return _real_default_rng(0 if seed is None else seed, *args, **kwargs)
+
 
 def _load_priority(program_path):
     source = Path(program_path).read_text()
@@ -61,12 +71,16 @@ def _summarise(results):
 def evaluate(program_path: str, split: str = "train") -> dict:
     instances = load_split(split)
     start = time.time()
+    np.random.default_rng = _seeded_default_rng
     try:
         # Programs may print; their output is discarded. Fresh load per
         # instance, so nothing a program keeps between calls can leak from
         # one instance into the next.
         with open(os.devnull, "w") as sink, contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
-            results = [run_instance(inst, _load_priority(program_path)) for inst in instances]
+            results = []
+            for inst in instances:
+                _seed_global_rng(0)
+                results.append(run_instance(inst, _load_priority(program_path)))
     except (Exception, SystemExit):
         error = traceback.format_exc().rstrip().splitlines()
         return {
@@ -79,6 +93,8 @@ def evaluate(program_path: str, split: str = "train") -> dict:
             "families": {},
             "runtime_s": round(time.time() - start, 3),
         }
+    finally:
+        np.random.default_rng = _real_default_rng
     families = _summarise(results)
     excess_pct = round(_mean([f["excess_pct"] for f in families.values()]), 4)
     return {
