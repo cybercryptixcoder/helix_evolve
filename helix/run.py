@@ -68,7 +68,10 @@ class Search:
                     prog.duplicate_of = dup.id
                     prog.valid, prog.score, prog.families, prog.error = dup.valid, dup.score, dup.families, dup.error
                     break
-                result = evaluate_code(code, self.store.candidate_path(pid), "train", self.a.eval_timeout)
+                # The tiny `quick` split first, so broken or very slow programs fail in a second.
+                result = evaluate_code(code, self.store.candidate_path(pid), "quick", min(15.0, self.a.eval_timeout))
+                if result["valid"]:
+                    result = evaluate_file(self.store.candidate_path(pid), "train", self.a.eval_timeout)
             if result["valid"]:
                 prog.valid, prog.score, prog.error = True, result["score"], None
                 prog.families = {f: v["excess_pct"] for f, v in result["families"].items()}
