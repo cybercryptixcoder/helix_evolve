@@ -183,6 +183,10 @@ def write_report(runs):
 
     print("Scoring the best program, Code Zero and the baselines on the held-out test split...", flush=True)
     rows, held_out = held_out_table(main)
+    (main.dir / "heldout.json").write_text(json.dumps([
+        {"label": label, "train_score": tr["score"], "test_score": te["score"], "valid": te["valid"],
+         "test_families": {f: v["excess_pct"] for f, v in te["families"].items()}}
+        for label, tr, te in rows], indent=2))
     lines += ["## Held-out check", "",
               "Scored on the evaluator's `test` split: new instances, plus families the search never saw "
               f"({', '.join(held_out) or 'none'}).", ""]
