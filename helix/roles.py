@@ -7,6 +7,7 @@ builds the user message for each call from the current state of the run.
 The air gap: the Mutator's prompt is built only from `Scored` objects (code and
 a score). It cannot receive a Program, a Hypothesis or the research log.
 """
+import difflib
 import json
 import re
 from dataclasses import dataclass
@@ -29,41 +30,75 @@ class Scored:
 
 
 # ---------------------------------------------------------------- user messages
-def mutator_message(target, others):
+def mutator_message(target, others, fresh=False):
+    """fresh=False: a variant of `target` (keep its core, one or two bold changes).
+    fresh=True: a genuinely different program that beats `target`."""
     if not isinstance(target, Scored) or not all(isinstance(o, Scored) for o in others):
         raise TypeError("the Mutator only receives code and scores (air gap)")
-    parts = [f"## Program to improve (score {target.score:.3f})\n\n```python\n{target.code.strip()}\n```"]
+    head = "Best program so far, the score to beat" if fresh else "Program to improve"
+    parts = [f"## {head} (score {target.score:.3f})\n\n```python\n{target.code.strip()}\n```"]
     if others:
-        parts.append("## Other strong programs, for ideas")
+        parts.append("## Other strong programs" + ("" if fresh else ", for parts you can borrow"))
         parts += [f"### Score {o.score:.3f}\n\n```python\n{o.code.strip()}\n```" for o in others]
-    parts.append("Write one new program that scores higher than the program to improve.")
+    if fresh:
+        parts.append(f"This is a **fresh idea** request: write a genuinely different program that scores higher than "
+                     f"{target.score:.3f}. Start your reply with the ```python block.")
+    else:
+        parts.append(f"This is a **variant** request: keep the core of the program to improve and make one or two bold "
+                     f"changes so it scores higher than {target.score:.3f}. Start your reply with the ```python block.")
     return "\n\n".join(parts)
 
 
-def researcher_message(champ, champ_info, ranked, log, plan, generation, gains):
-    """champ_info: {"new": bool, "jump": float|None}; plan: {"cause": n, "improve": n}; gains: id -> gain over parent."""
+def code_only_message(user, cut_off):
+    """Retry for a reply that ran out of room before finishing its program. Shows the agent what it had
+    written, so the idea it was working towards isn't lost."""
+    seen = cut_off.strip()
+    if len(seen) > 3000:
+        seen = seen[:1500] + "\n[...]\n" + seen[-1500:]
+    return (f"{user}\n\n## Your previous reply was cut off\n\nIt ran out of room before the program was complete. "
+            f"What you wrote:\n\n<<<\n{seen}\n>>>\n\n"
+            "Reply with ONLY the complete program, in a single ```python block, implementing the idea you were "
+            "working towards. No text before or after the block.")
+
+
+def researcher_message(champ, champ_info, ranked, log, plan, generation, gains, lineage=(), parent=None):
+    """champ_info: {"new", "jump", "real_jump"}; plan: {"cause", "improve", "tuned"}; gains: id -> gain over parent;
+    lineage: ids of the champion and its ancestors (knock-outs on an ancestor are inherited); parent: its parent."""
     parts = [f"Generation {generation}. Score = −(mean excess %); higher is better."]
 
     head = f"## The champion: {champ.id}, score {champ.score:.3f} ({champ.branch} branch, generation {champ.generation})"
     if champ_info.get("new") and champ_info.get("jump") is not None:
-        head += f"\n**New champion: it beat the previous best by {champ_info['jump']:+.3f}.** Find out why, then build on it."
+        if champ_info.get("real_jump"):
+            head += (f"\n**New champion: it beat the previous best by {champ_info['jump']:+.3f}.** Find out which new or "
+                     "changed parts made the jump (see the diff from its parent), then build on it.")
+        else:
+            head += (f"\nNew champion by a small margin ({champ_info['jump']:+.3f}): its parts are its parent's, so "
+                     "what we know about them still holds. Spend the tests on improving it.")
     parts.append(f"{head}\nExcess % by family: {format_families(champ.families)}\n\n```python\n{champ.code.strip()}\n```")
+    if parent is not None and parent.code.strip() != champ.code.strip():
+        diff = code_diff(parent.code, champ.code)
+        if diff:
+            parts.append(f"### What changed from its parent {parent.id} (score {parent.score:.3f})\n\n```diff\n{diff}\n```")
 
-    knockouts = [h for h in log if h.kind == "cause" and h.base_id == champ.id and h.verdict != "pending"]
+    lineage = list(lineage) or [champ.id]
+    order = {pid: i for i, pid in enumerate(lineage)}
+    knockouts = [h for h in log if h.kind == "cause" and h.base_id in order and h.verdict not in ("pending", "invalid")]
+    knockouts.sort(key=lambda h: (order[h.base_id], h.id))
     parts.append("## What we know about the champion's parts (knock-outs: score change when the part is removed)")
     if knockouts:
         def ko_line(h):
+            where_from = "" if h.base_id == champ.id else f" (inherited from ancestor {h.base_id})"
             if h.delta is None:
-                return f"- {h.id}: {h.change} → {h.verdict}"
+                return f"- {h.id}{where_from}: {h.change} → {h.verdict}"
             hurt = sorted(h.family_shift.items(), key=lambda kv: kv[1], reverse=True)[:2]
             where = ", ".join(f"{f} {v:+.2f}" for f, v in hurt if v > 0)
-            return f"- {h.id}: {h.change} → score {h.delta:+.3f} [{h.verdict}]" + (f"; excess rose most on {where}" if where else "")
-        parts.append("\n".join(ko_line(h) for h in knockouts))
+            return (f"- {h.id}{where_from}: {h.change} → score {h.delta:+.3f} [{h.verdict}]"
+                    + (f"; excess rose most on {where}" if where else ""))
+        parts.append("\n".join(ko_line(h) for h in knockouts[:12]))
     else:
-        parts.append("(no knock-outs on this champion yet)")
+        parts.append("(no knock-outs on this champion or its ancestors yet)")
     acted_on = {h.builds_on for h in log if h.builds_on}
-    open_findings = [h for h in log if h.kind == "cause" and h.verdict in ("matters", "removal-helps")
-                     and h.base_id == champ.id and h.id not in acted_on]
+    open_findings = [h for h in knockouts if h.verdict in ("matters", "removal-helps") and h.id not in acted_on]
     if open_findings:
         parts.append("Findings not acted on yet (aim improve tests at these): "
                      + ", ".join(f"{h.id} ({h.delta:+.3f})" for h in open_findings))
@@ -85,10 +120,16 @@ def researcher_message(champ, champ_info, ranked, log, plan, generation, gains):
     total = plan["cause"] + plan["improve"]
     ask = [f"## Plan for this generation\nPropose exactly {total} hypotheses:"]
     if plan["cause"]:
-        ask.append(f"- {plan['cause']} **cause** tests: knock out one part of {champ.id} each, choosing parts not knocked out yet.")
-    ask.append(f"- {plan['improve']} **improve** tests: moderate changes to the parts of {champ.id} that matter most"
-               + (", following up the open findings above" if open_findings else "")
-               + ", or a transplant between the champion and another strong program.")
+        ask.append(f"- {plan['cause']} **cause** tests: knock out one part of {champ.id} each, choosing parts that are "
+                   "new or changed since its parent and not knocked out yet (inherited knock-outs already cover the rest).")
+    ask.append(f"- {plan['improve']} **improve** tests: change a mechanism of {champ.id}: add a property of the bins or a "
+               "new term, change the functional form of a part that matters, change the rule for opening a new bin, "
+               "or transplant a part from another strong program"
+               + (". Follow up the open findings above, and aim at the families where the excess is highest" if open_findings
+                  else ". Aim at the families where the excess is highest") + ".")
+    if plan.get("tuned"):
+        ask.append("Don't propose a test that only moves a number: the champion's constants are tuned automatically "
+                   "every generation, including the weights of any new term you add.")
     ask.append("Use program ids exactly as written above. Put the JSON block first.")
     parts.append("\n".join(ask))
     return "\n\n".join(parts)
@@ -113,8 +154,8 @@ def repair_message(code, error):
     return (
         f"Your program failed when it was scored:\n\n```\n{error.strip()}\n```\n\n"
         f"Here is the program:\n\n```python\n{code.strip()}\n```\n\n"
-        "Fix the error and keep the idea the same. Reply in the same format as before: "
-        "one sentence, then the complete program in a single ```python block."
+        "Fix the error and keep the idea the same. Reply with the complete fixed program in a single "
+        "```python block, then at most one sentence."
     )
 
 
@@ -149,10 +190,22 @@ def extract_code(text):
 
 
 def extract_note(text):
-    """The agent's own short description: the text before the first code block, trimmed."""
+    """The agent's own short description: the text before the first code block, or, for a reply that
+    starts with its code, the text after the last one. Trimmed."""
     head = text.split("```", 1)[0].strip()
+    if not head and text.count("```") >= 2:
+        head = text.rsplit("```", 1)[1].strip()
     head = re.sub(r"^\s*(\d\.|-|\*)\s*", "", head)
     return " ".join(head.split())[:300]
+
+
+def code_diff(old, new, limit=40):
+    """The changed lines between two programs (- old, + new), at most `limit` lines."""
+    lines = [line for line in difflib.unified_diff(old.strip().splitlines(), new.strip().splitlines(), lineterm="", n=0)
+             if not line.startswith(("---", "+++", "@@"))]
+    if len(lines) > limit:
+        lines = lines[:limit] + [f"... ({len(lines) - limit} more changed lines)"]
+    return "\n".join(lines)
 
 
 def extract_hypotheses(text, valid_ids, fallback_id):

@@ -10,14 +10,14 @@
 <style>
   :root {
     --paper: #f4f1e8; --card: #fffdf7; --ink: #1c1b18; --ink2: #55524a; --muted: #8a867b; --rule: #e1dccd;
-    --deep: #2a78d6; --wide: #eb6834; --good: #1f7a3a; --bad: #b3261e; --warn: #9a6700; --focus: #2a78d6;
+    --deep: #2a78d6; --wide: #eb6834; --tune: #16936a; --good: #1f7a3a; --bad: #b3261e; --warn: #9a6700; --focus: #2a78d6;
     --grid: rgba(28, 27, 24, 0.045);
     --display: "Fraunces", Georgia, serif; --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --paper: #141412; --card: #1c1c19; --ink: #efece4; --ink2: #c3c0b6; --muted: #8f8b80; --rule: #302f2a;
-      --deep: #3987e5; --wide: #d95926; --good: #4caf6e; --bad: #e66767; --warn: #d4a72c; --grid: rgba(239, 236, 228, 0.035);
+      --deep: #3987e5; --wide: #d95926; --tune: #2fb886; --good: #4caf6e; --bad: #e66767; --warn: #d4a72c; --grid: rgba(239, 236, 228, 0.035);
     }
   }
   * { box-sizing: border-box; }
@@ -86,7 +86,7 @@
   .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink2); margin-bottom: 6px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .sw { width: 10px; height: 10px; display: inline-block; }
-  .sw.deep { background: var(--deep); border-radius: 50%; } .sw.wide { background: var(--wide); }
+  .sw.deep { background: var(--deep); border-radius: 50%; } .sw.wide { background: var(--wide); } .sw.tune { background: var(--tune); transform: rotate(45deg) scale(0.85); }
   .sw.line { width: 16px; height: 2px; background: var(--ink); } .sw.ref { width: 16px; height: 0; border-top: 1.5px dashed var(--muted); }
   svg.chart { width: 100%; height: auto; display: block; }
   svg.chart text { font: 11px var(--mono); fill: var(--muted); }
@@ -101,7 +101,7 @@
   tr.click { cursor: pointer; } tr.click:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
   .scroll { max-height: 420px; overflow: auto; }
   .chip { font: 500 11px var(--mono); padding: 1px 7px; border-radius: 4px; color: #fff; white-space: nowrap; }
-  .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.other { background: var(--ink2); color: var(--paper); }
+  .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.tune { background: var(--tune); } .chip.other { background: var(--ink2); color: var(--paper); }
   .v-supported, .v-removal-helps { color: var(--good); } .v-refuted { color: var(--bad); } .v-matters { color: var(--deep); }
   .v-flat, .v-invalid, .v-unchanged, .v-minor, .v-no-effect { color: var(--muted); }
   .kind { font: 500 10.5px var(--mono); padding: 0 5px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink2); }
@@ -246,6 +246,7 @@
         <span><i class="sw line"></i>Best so far</span>
         <span><i class="sw deep"></i>Best new, deep branch</span>
         <span><i class="sw wide"></i>Best new, wide branch</span>
+        <span><i class="sw tune"></i>Tuned numbers</span>
         <span><i class="sw ref"></i>Code Zero and bar to beat</span>
       </div>
       <div id="chart"><div class="empty">No generations yet.</div></div>
@@ -493,7 +494,7 @@ function renderChart(s, barName) {
   const pts = [], refs = [];
   if (s.seed_score != null) refs.push(["Code Zero", s.seed_score]);
   if (barName) refs.push([barName, baselines[barName]]);
-  for (const g of gens) for (const b of ["deep", "wide"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: g[b].best_new, b });
+  for (const g of gens) for (const b of ["deep", "wide", "tune"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: g[b].best_new, b });
   const ys = gens.map((g) => g.best_score).concat(pts.map((p) => p.y), refs.map((r) => r[1]));
   let lo = Math.min(...ys), hi = Math.max(...ys); const pad = (hi - lo) * 0.08 || 0.5; lo -= pad; hi += pad;
   const maxX = Math.max(1, ...gens.map((g) => g.generation));
@@ -512,10 +513,12 @@ function renderChart(s, barName) {
     d += i === 0 ? `M${x},${y}` : ` H${x} V${y}`; });
   d += ` H${X(maxX)}`;
   svg += `<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
-  for (const p of pts) { const x = X(p.x) + (p.b === "deep" ? -5 : 5), y = Y(p.y), tip = `generation ${p.x}, ${p.b} branch: best new ${p.y.toFixed(3)}`;
+  for (const p of pts) { const x = X(p.x) + ({ deep: -6, wide: 6, tune: 0 })[p.b], y = Y(p.y), tip = `generation ${p.x}, ${p.b} branch: best new ${p.y.toFixed(3)}`;
     svg += p.b === "deep"
       ? `<circle cx="${x}" cy="${y}" r="5" fill="var(--deep)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></circle>`
-      : `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="var(--wide)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></rect>`; }
+      : p.b === "wide"
+      ? `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="var(--wide)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></rect>`
+      : `<path d="M${x},${y - 6} L${x + 6},${y} L${x},${y + 6} L${x - 6},${y} Z" fill="var(--tune)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></path>`; }
   svg += `</svg>`;
   setHTML($("chart"), svg);
 }
@@ -558,7 +561,7 @@ function renderPrograms(progs) {
   const failed = progs.filter((p) => !p.valid).slice(-5).reverse();
   if (!progs.length) return setHTML($("programs"), `<div class="empty">No programs yet.</div>`);
   const row = (p) => `<tr class="click" data-pid="${esc(p.id)}"><td class="num">${esc(p.id)}</td><td class="num">${p.generation}</td>
-      <td><span class="chip ${p.branch === "deep" || p.branch === "wide" ? p.branch : "other"}">${esc(p.branch)}</span></td>
+      <td><span class="chip ${["deep", "wide", "tune"].includes(p.branch) ? p.branch : "other"}">${esc(p.branch)}</span></td>
       <td class="num">${p.valid ? fmt(p.score) : `<span class="bad">invalid</span>`}</td>
       <td>${p.probe ? `<span class="kind">knock-out</span> ` : ""}${esc((p.valid ? p.note : p.error) || "").slice(0, 140)}</td></tr>`;
   setHTML($("programs"), `<table><thead><tr><th>Id</th><th>Gen</th><th>Branch</th><th>Score</th><th>What it does</th></tr></thead><tbody>${valid.map(row).join("")}
@@ -568,8 +571,9 @@ function renderPrograms(progs) {
 function renderGens(gens) {
   if (!gens.length) return setHTML($("gens"), `<div class="empty">No generations yet.</div>`);
   const cell = (r) => r ? `${r.valid}/${r.new} valid, best ${fmt(r.best_new)}${r.cause != null ? ` · ${r.cause} cause / ${r.improve} improve` : ""}${["matters", "removal-helps", "supported", "refuted", "flat", "minor", "no-effect", "invalid", "unchanged"].filter((k) => r[k]).map((k) => ` · ${r[k]} ${k}`).join("")}` : "–";
-  const rows = gens.slice().reverse().map((g) => `<tr><td class="num">${g.generation}</td><td class="num">${fmt(g.best_score)}</td><td>${cell(g.deep)}</td><td>${cell(g.wide)}</td><td class="num">${g.seconds ? g.seconds + "s" : "–"}</td><td class="num">${g.llm ? g.llm.calls : "–"}</td></tr>`);
-  setHTML($("gens"), `<table><thead><tr><th>Gen</th><th>Best so far</th><th>Deep</th><th>Wide</th><th>Took</th><th>Calls</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
+  const tune = (t) => t ? `${t.improved || 0}/${(t.targets || []).length} improved${t.best_new != null ? `, best ${fmt(t.best_new)}` : ""}` : "–";
+  const rows = gens.slice().reverse().map((g) => `<tr><td class="num">${g.generation}</td><td class="num">${fmt(g.best_score)}</td><td>${cell(g.deep)}</td><td>${cell(g.wide)}</td><td>${tune(g.tune)}</td><td class="num">${g.seconds ? g.seconds + "s" : "–"}</td><td class="num">${g.llm ? g.llm.calls : "–"}</td></tr>`);
+  setHTML($("gens"), `<table><thead><tr><th>Gen</th><th>Best so far</th><th>Deep</th><th>Wide</th><th>Tune</th><th>Took</th><th>Calls</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
 }
 
 let lastReport = null;

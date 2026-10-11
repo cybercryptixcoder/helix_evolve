@@ -136,6 +136,7 @@ class Reply:
     tokens_out: int
     seconds: float
     reasoning: str = ""  # the model's thinking, if the API returns it separately
+    finish: str = ""     # why the reply ended: "stop", or "length" if it hit max_tokens
 
 
 class LLM:
@@ -184,15 +185,20 @@ class LLM:
         return "flash"
 
     # ------------------------------------------------------------ public
-    def chat(self, role, system, user, temperature=None, force_tier=None):
-        """Send one system + user message pair. Returns a Reply; raises after the last retry fails."""
+    def chat(self, role, system, user, temperature=None, force_tier=None, max_tokens=None):
+        """Send one system + user message pair. Returns a Reply; raises after the last retry fails.
+
+        max_tokens caps this reply (never above the settings' max_tokens), so a role that should answer
+        briefly fails fast instead of deliberating for a minute."""
         tier = self._pick_tier(force_tier)
         model = self.s.pro_model if tier == "pro" and self.s.pro_model else self.s.flash_model
         temp = self.s.temperature if temperature is None else temperature
+        limit = min(max_tokens, self.s.max_tokens) if max_tokens else self.s.max_tokens
         started = time.time()
         error = None
+        finish = ""
         try:
-            text, tokens_in, tokens_out, reasoning = self._complete(model, system, user, temp, role)
+            text, tokens_in, tokens_out, reasoning, finish = self._complete(model, system, user, temp, role, limit)
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
             raise
@@ -205,10 +211,11 @@ class LLM:
                 "reasoning": None if error else (reasoning[:REASONING_KEPT] or None),
                 "error": error,
                 "tokens_in": None if error else tokens_in, "tokens_out": None if error else tokens_out,
+                "max_tokens": limit, "finish": finish or None,
                 "seconds": seconds,
             })
         self._count(role, tier, tokens_in, tokens_out, seconds)
-        return Reply(text, model, tier, tokens_in, tokens_out, seconds, reasoning)
+        return Reply(text, model, tier, tokens_in, tokens_out, seconds, reasoning, finish or "")
 
     def wait_until_ready(self, max_wait=600.0, on_wait=None):
         """Send a tiny request until the model answers. Returns (ready, last_error).
@@ -246,12 +253,12 @@ class LLM:
         return totals
 
     # ------------------------------------------------------------ internals
-    def _complete(self, model, system, user, temperature, role):
+    def _complete(self, model, system, user, temperature, role, max_tokens):
         body = {
             "model": model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "temperature": temperature,
-            "max_tokens": self.s.max_tokens,
+            "max_tokens": max_tokens,
             **({"stream": True} if self.s.stream else {}),
             **self.s.extra_body,
         }
@@ -272,7 +279,7 @@ class LLM:
         usage = data.get("usage") or {}
         tokens_in = int(usage.get("prompt_tokens") or (len(system) + len(user)) // 4)
         tokens_out = int(usage.get("completion_tokens") or (len(text) + len(reasoning)) // 4)
-        return text, tokens_in, tokens_out, reasoning
+        return text, tokens_in, tokens_out, reasoning, choice.get("finish_reason") or ""
 
     def _post(self, body):
         missing = self.s.problems()
@@ -423,27 +430,31 @@ class FakeLLM(LLM):
         super().__init__(settings or Settings(), log_path)
         self.rng = random.Random(seed)
 
-    def _complete(self, model, system, user, temperature, role):
+    def _complete(self, model, system, user, temperature, role, max_tokens):
+        finish = "stop"
         with self._lock:
+            roll = self.rng.random()
             if role == "researcher":
                 text = self._hypotheses(user)
-            elif role.endswith("repair") or self.rng.random() > 0.1:
+            elif role == "mutator" and roll < 0.15:   # deliberates until it's cut off: exercises the retry
+                text, finish = "We need to write a new priority function. Let me think about the bins...\n```python\nimport numpy as np\n\ndef priority(item, bins", "length"
+            elif role.endswith(("repair", "retry")) or roll > 0.1:
                 text = self._program()
             else:
-                text = "Idea: return one score per resource.\n```python\nimport numpy as np\n\ndef priority(item, bins, capacity):\n    return np.zeros((len(bins), 2))\n```"
+                text = "```python\nimport numpy as np\n\ndef priority(item, bins, capacity):\n    return np.zeros((len(bins), 2))\n```\nIdea: one score per resource."
         time.sleep(0.05)
         thinking = f"(fake reasoning for the {role}: comparing the programs I was shown, then writing my answer)"
-        return text, len(system + user) // 4, len(text) // 4, thinking
+        return text, len(system + user) // 4, len(text) // 4, thinking, finish
 
     def _program(self):
         a, b, c, d = (round(self.rng.uniform(0, 2), 3) for _ in range(4))
         return (
-            f"Idea: weighted leftover with balance term (a={a}, b={b}, c={c}, new-bin penalty {d}).\n"
             "```python\nimport numpy as np\n\n\ndef priority(item, bins, capacity):\n"
             "    left = (bins - item) / capacity\n"
             f"    scores = -{a} * left.sum(axis=1) - {b} * np.abs(left[:, 0] - left[:, 1]) - {c} * left.max(axis=1)\n"
             f"    scores[-1] -= {d}\n"
-            "    return scores\n```"
+            "    return scores\n```\n"
+            f"Weighted leftover with a balance term (a={a}, b={b}, c={c}, new-bin penalty {d})."
         )
 
     def _hypotheses(self, user):
