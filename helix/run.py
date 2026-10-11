@@ -78,6 +78,23 @@ class Search:
     def stop_requested(self):
         return (self.store.dir / "STOP").exists()
 
+    def ensure_model_ready(self, why):
+        """Wait until the model answers before spending a generation on it."""
+        if self.a.fake_llm:
+            return
+        say(f"   checking the model is answering ({why})...")
+
+        def waiting(error, left):
+            msg = f"model not answering yet, retrying every 15s ({left / 60:.0f} min left): {error[:120]}"
+            say("   " + msg)
+            self.set_phase("model", msg)
+
+        ready, error = self.llm.wait_until_ready(max_wait=self.a.wait_minutes * 60, on_wait=waiting)
+        self.set_phase("model", None)
+        if not ready:
+            raise RuntimeError(f"the model isn't answering: {error}")
+        say("   model is answering")
+
     # ================================================================ published trace (results/<run>/)
     def publish_trace(self, final=False):
         """Copy the run's trace into results/<run>/ (committed to the repo). Never stops the run."""
@@ -292,6 +309,7 @@ class Search:
         self.set_status(state="running", error=None)
         state, error = "finished", None
         try:
+            self.ensure_model_ready("before starting")
             if self.a.mode == "zero-shot":
                 self.set_status(generation=0)
                 self.zero_shot()
@@ -308,8 +326,11 @@ class Search:
                     if deadline and time.time() > deadline:
                         say(f"\nTime budget of {self.a.max_minutes} min reached.")
                         break
+                    answered_before = self.llm.summary()["calls"]
                     pool = self.generation(gen, pool)
                     self.publish_trace()
+                    if self.llm.summary()["calls"] == answered_before:
+                        self.ensure_model_ready(f"no call answered in generation {gen}")
         except KeyboardInterrupt:
             state = "stopped"
             say("\nStopped. Everything so far is saved; continue with --resume " + str(self.store.dir))
@@ -371,7 +392,10 @@ def parse_args(argv=None):
                     help="score change that counts as supported/refuted; smaller changes are 'flat'. 0.4 is about "
                          "the gap between baselines, so smaller differences may just be noise across instances")
     ap.add_argument("--repairs", type=int, default=1, help="repair attempts for a program that fails")
-    ap.add_argument("--workers", type=int, default=8, help="LLM calls and evaluations in flight at once")
+    ap.add_argument("--workers", type=int, default=12,
+                    help="LLM calls and evaluations in flight at once (12 = a whole generation at once)")
+    ap.add_argument("--wait-minutes", type=float, default=15,
+                    help="how long to wait for the model to start answering before giving up")
     ap.add_argument("--eval-timeout", type=float, default=60.0, help="seconds before a program counts as hung")
     ap.add_argument("--pro-every", type=int, default=10, help="every Nth LLM call uses HELIX_PRO_MODEL (0 = never)")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
