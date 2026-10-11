@@ -452,7 +452,8 @@ function render(s) {
   $("tBarS").innerHTML = barName ? `${esc(barName)}${best ? ` · <span class="${best.score > baselines[barName] ? "ok" : "warn"}">${best.score > baselines[barName] ? "beaten" : "not yet"}</span>` : ""}` : "computing baselines…";
   const llm = st.llm || {};
   $("tCalls").textContent = llm.calls ?? "–";
-  $("tCallsS").textContent = `${llm.pro_calls || 0} pro · ${((llm.tokens_in || 0) / 1000).toFixed(0)}k in · ${((llm.tokens_out || 0) / 1000).toFixed(0)}k out`;
+  $("tCallsS").textContent = (state === "running" ? `${llm.in_flight || 0} in flight · ${llm.retrying || 0} retrying · ` : "")
+    + `${((llm.tokens_in || 0) / 1000).toFixed(0)}k in · ${((llm.tokens_out || 0) / 1000).toFixed(0)}k out`;
   const c = s.counts || {};
   $("tProgs").textContent = c.programs ?? "–";
   $("tProgsS").textContent = `${c.valid || 0} valid · ${c.repaired || 0} repaired · ${c.duplicates || 0} dup`;
@@ -465,6 +466,7 @@ function render(s) {
   const mongoTxt = mongo ? (mongo.enabled ? ` · MongoDB: ${mongo.written} docs written` : (mongo.error ? ` · MongoDB off: ${mongo.error}` : "")) : "";
   let phase = st.phase ? st.phase.split(" | ").map((p) => { const [b, ...r] = p.split(": "); return `<b>${esc(b)}</b>: ${esc(r.join(": "))}`; }).join(" &nbsp;·&nbsp; ") : "";
   if (state === "running" && !phase) phase = "between steps…";
+  if (state === "running" && llm.note) phase += `<div class="warn">Luminal: ${esc(llm.note)}</div>`;
   if (state === "crashed" || st.error) phase = `<span class="bad">${esc((st.error || "").split("\n").slice(-1)[0])}</span>`;
   if (state === "died") phase = `<span class="bad">The run's process ended without finishing (killed, or the machine slept). Resume continues from the last full generation.</span>`;
   if (["finished", "stopped"].includes(state) && !st.error) phase = `Run ${state}.`;

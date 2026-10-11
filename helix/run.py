@@ -308,6 +308,17 @@ class Search:
         (self.store.dir / "STOP").unlink(missing_ok=True)
         self.set_status(state="running", error=None)
         state, error = "finished", None
+        self._alive = True
+
+        def heartbeat():   # keeps the dashboard current while calls are slow (in flight, retrying)
+            while self._alive:
+                time.sleep(5)
+                if self._alive:
+                    try:
+                        self.set_status()
+                    except Exception:
+                        pass
+        threading.Thread(target=heartbeat, daemon=True).start()
         try:
             self.ensure_model_ready("before starting")
             if self.a.mode == "zero-shot":
@@ -339,6 +350,7 @@ class Search:
             error = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)).strip()[-3000:]
             say(f"\nThe run crashed:\n{error}")
         finally:
+            self._alive = False
             self.workers.shutdown(wait=False, cancel_futures=True)
             self.phases.clear()
             self.set_status(state=state, error=error, finished=time.time())

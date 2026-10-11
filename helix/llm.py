@@ -119,6 +119,13 @@ class LLM:
         self._lock = threading.Lock()
         self._calls = 0
         self.usage = {}   # (role, tier) -> {"calls", "tokens_in", "tokens_out", "seconds"}
+        self.max_concurrent = max(1, int(os.environ.get("HELIX_MAX_CONCURRENT") or 12))
+        self._slots = threading.Condition()
+        self._limit = self.max_concurrent
+        self._in_flight = 0
+        self._retrying = 0
+        self._ok_streak = 0
+        self.note = None          # why we're currently sending fewer requests, if we are
         self._count_logged_calls()
 
     def _count_logged_calls(self):
@@ -209,6 +216,7 @@ class LLM:
             totals["tokens_out"] += u["tokens_out"]
             if tier == "pro":
                 totals["pro_calls"] += u["calls"]
+        totals.update(in_flight=self._in_flight, retrying=self._retrying, limit=self._limit, note=self.note)
         return totals
 
     # ------------------------------------------------------------ internals
@@ -243,21 +251,65 @@ class LLM:
         last_error = None
         for attempt in range(self.s.retries + 1):
             req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+            self._acquire()
             try:
                 with urllib.request.urlopen(req, timeout=self.s.timeout) as resp:
-                    return json.loads(resp.read().decode())
+                    data = json.loads(resp.read().decode())
+                self._speed_up()
+                return data
             except urllib.error.HTTPError as err:
                 detail = err.read().decode(errors="replace")[:500]
                 last_error = RuntimeError(f"HTTP {err.code} from {url}: {detail}")
                 if err.code not in RETRY_STATUS:
                     raise last_error from None
+                if err.code in (429, 503):
+                    self._slow_down(f"HTTP {err.code}: {detail[:120]}")
                 wait = _retry_after(err) or _backoff(attempt)
             except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
                 last_error = RuntimeError(f"cannot reach {url}: {getattr(err, 'reason', err)}")
                 wait = _backoff(attempt)
+            finally:
+                self._release()
             if attempt < self.s.retries:
-                time.sleep(wait)
+                with self._lock:
+                    self._retrying += 1
+                time.sleep(wait)          # waits outside the slot, so other calls can go
+                with self._lock:
+                    self._retrying -= 1
         raise last_error
+
+    # ------------------------------------------------------------ adaptive concurrency
+    # Fire everything at once, but if the server says it's overloaded (503/429), halve how
+    # many requests are in flight; add one back after every 3 successes, up to the maximum.
+    def _acquire(self):
+        with self._slots:
+            while self._in_flight >= self._limit:
+                self._slots.wait()
+            self._in_flight += 1
+
+    def _release(self):
+        with self._slots:
+            self._in_flight -= 1
+            self._slots.notify_all()
+
+    def _slow_down(self, why):
+        with self._slots:
+            if self._limit > 1:
+                self._limit = max(1, self._limit // 2)
+            self._ok_streak = 0
+            self.note = f"server said {why} - sending at most {self._limit} at a time"
+
+    def _speed_up(self):
+        with self._slots:
+            self._ok_streak += 1
+            if self._ok_streak >= 3 and self._limit < self.max_concurrent:
+                self._limit += 1
+                self._ok_streak = 0
+                self._slots.notify_all()
+                if self.note:
+                    self.note = f"recovering from 503s - now up to {self._limit} at a time"
+            if self._limit >= self.max_concurrent:
+                self.note = None
 
     def _count(self, role, tier, tokens_in, tokens_out, seconds):
         with self._lock:
