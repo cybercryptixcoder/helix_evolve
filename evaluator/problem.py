@@ -101,7 +101,7 @@ def run_instance(instance, priority):
     n_open = 0
 
     for item in items:
-        fit_idx = np.flatnonzero(np.all(remaining[:n_open] >= item, axis=1))
+        fit_idx = (remaining[:n_open] >= item).all(axis=1).nonzero()[0]
         candidates = np.vstack([remaining[fit_idx], cap[None, :]])
         scores = np.asarray(priority(item.copy(), candidates.copy(), cap.copy()), dtype=float)
         if scores.shape != (len(candidates),):
@@ -115,13 +115,22 @@ def run_instance(instance, priority):
         else:
             remaining[fit_idx[choice]] -= item
 
-    totals = items.sum(axis=0)
-    lb = instance.get("lower_bound") or lower_bound(instance["items"], instance["capacity"])
+    # Check the finished packing in plain Python, so nothing a program changes
+    # inside numpy can let an overfull bin or a lost job through.
+    capacity = [int(c) for c in instance["capacity"]]
+    totals = [sum(int(item[d]) for item in instance["items"]) for d in range(2)]
+    left = remaining[:n_open].tolist()
+    if any(r < 0 for row in left for r in row):
+        raise ValueError("packing put more into a bin than its capacity")
+    if [n_open * capacity[d] - sum(row[d] for row in left) for d in range(2)] != totals:
+        raise ValueError("packing lost or duplicated a job")
+
+    lb = instance.get("lower_bound") or lower_bound(instance["items"], capacity)
     return {
         "id": instance["id"],
         "family": instance["family"],
         "bins_used": n_open,
         "lower_bound": lb,
         "excess": n_open / lb - 1,
-        "fill": (totals / (n_open * cap)).tolist(),
+        "fill": [totals[d] / (n_open * capacity[d]) for d in range(2)],
     }
