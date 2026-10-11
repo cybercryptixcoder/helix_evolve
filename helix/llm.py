@@ -259,7 +259,10 @@ class LLM:
                 return data
             except urllib.error.HTTPError as err:
                 detail = err.read().decode(errors="replace")[:500]
-                last_error = RuntimeError(f"HTTP {err.code} from {url}: {detail}")
+                # Luminal names the limit hit and the request id support asks for in these headers.
+                extra = "".join(f" [{h}: {err.headers.get(h)}]" for h in ("x-reject-reason", "x-luminal-request-id")
+                                if err.headers and err.headers.get(h))
+                last_error = RuntimeError(f"HTTP {err.code} from {url}: {detail}{extra}")
                 if err.code not in RETRY_STATUS:
                     raise last_error from None
                 if err.code in (429, 503):
