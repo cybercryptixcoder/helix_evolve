@@ -78,6 +78,22 @@ class Search:
     def stop_requested(self):
         return (self.store.dir / "STOP").exists()
 
+    # ================================================================ published trace (results/<run>/)
+    def publish_trace(self, final=False):
+        """Copy the run's trace into results/<run>/ (committed to the repo). Never stops the run."""
+        if not self.a.publish:
+            return
+        try:
+            from .publish import export
+            if final:
+                say("Publishing the final trace with the held-out check...")
+            dest = export(self.store.dir, report=final and self.store.best() is not None)
+            if final:
+                shown = dest.relative_to(REPO_ROOT) if dest.is_relative_to(REPO_ROOT) else dest
+                say(f"published to {shown}  (commit it, or use Publish on the dashboard)")
+        except Exception as exc:
+            say(f"   (publishing the trace failed, the run carries on: {type(exc).__name__}: {exc})")
+
     # ================================================================ one candidate
     def candidate(self, role, user, generation, branch, parent_id=None, hypothesis_id=None):
         """Ask one agent for a program, score it, repair it once if it fails. Always returns a Program."""
@@ -283,6 +299,7 @@ class Search:
                 if pool is None:
                     self.set_status(generation=0)
                     pool = self.seed()
+                    self.publish_trace()
                 for gen in range(start_gen, self.a.generations + 1):
                     if self.stop_requested():
                         say("\nStop requested. Everything so far is saved.")
@@ -292,6 +309,7 @@ class Search:
                         say(f"\nTime budget of {self.a.max_minutes} min reached.")
                         break
                     pool = self.generation(gen, pool)
+                    self.publish_trace()
         except KeyboardInterrupt:
             state = "stopped"
             say("\nStopped. Everything so far is saved; continue with --resume " + str(self.store.dir))
@@ -306,6 +324,7 @@ class Search:
             if self.store.mirror:
                 self.store.mirror.close()
         self.finish()
+        self.publish_trace(final=True)
         if state == "crashed":
             sys.exit(1)
 
@@ -357,6 +376,8 @@ def parse_args(argv=None):
     ap.add_argument("--pro-every", type=int, default=10, help="every Nth LLM call uses HELIX_PRO_MODEL (0 = never)")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
     ap.add_argument("--fake-llm", action="store_true", help="offline test double instead of Luminal")
+    ap.add_argument("--publish", action=argparse.BooleanOptionalAction, default=None,
+                    help="keep results/<run>/ updated every generation (default: on for real runs, off with --fake-llm)")
     ap.add_argument("--run-dir", help="where to save this run (default helix/runs/<time>-<mode>)")
     ap.add_argument("--resume", help="a run folder to continue")
     return ap.parse_args(argv)
@@ -377,6 +398,8 @@ def main(argv=None):
                 if key in cfg:
                     setattr(args, key, cfg[key])
 
+    if args.publish is None:
+        args.publish = not args.fake_llm
     settings = Settings.from_env(pro_every=args.pro_every)
     if not args.fake_llm and settings.problems():
         sys.exit(f"Missing {', '.join(settings.problems())}. Fill them in on the dashboard (python -m helix.ui) "
@@ -392,9 +415,11 @@ def main(argv=None):
         run_dir = Path(args.run_dir) if args.run_dir else RUNS_DIR / f"{time.strftime('%Y%m%d-%H%M%S')}-{args.mode}"
         store, start_gen, pool = Store(run_dir), 1, None
         store.mirror = Mirror(store.dir.name)
-        store.save_config({**vars(args), "provider": "fake" if args.fake_llm else settings.provider,
-                           "flash_model": settings.flash_model, "pro_model": settings.pro_model,
-                           "base_url": settings.base_url, "temperature": TEMPERATURE})
+        fake = args.fake_llm
+        store.save_config({**vars(args), "provider": "fake" if fake else settings.provider,
+                           "flash_model": "fake" if fake else settings.flash_model,
+                           "pro_model": "" if fake else settings.pro_model,
+                           "base_url": "" if fake else settings.base_url, "temperature": TEMPERATURE})
 
     llm_cls = FakeLLM if args.fake_llm else LLM
     llm = llm_cls(settings, store.dir / "llm_calls.jsonl")
