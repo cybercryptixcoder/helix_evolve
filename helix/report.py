@@ -23,7 +23,13 @@ BRANCH_STYLE = {"deep": (SERIES[0], "o"), "wide": (SERIES[1], "s")}
 
 # ---------------------------------------------------------------- loading
 def read_jsonl(path):
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
+    out = []
+    for line in path.read_text().splitlines() if path.exists() else []:
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass   # a broken line left by a killed run
+    return out
 
 
 class Run:

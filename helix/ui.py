@@ -24,7 +24,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import llm as llm_mod
 from . import mongo
-from .peek import RUNS_DIR, load_state, pid_alive, read_json, snapshot, tail_text
+from .peek import RUNS_DIR, load_state, pid_alive, read_json, read_jsonl, snapshot, tail_text
 from .sandbox import REPO_ROOT, evaluate_file
 
 HERE = Path(__file__).resolve().parent
@@ -335,7 +335,7 @@ class Handler(BaseHTTPRequestHandler):
                 if method == "GET" and rest == ["call"]:
                     return self._send(200, call_detail(run_dir(name), q["line"][0]))
                 if method == "GET" and len(rest) == 2 and rest[0] == "program":
-                    progs = [json.loads(l) for l in (run_dir(name) / "programs.jsonl").read_text().splitlines() if l.strip()]
+                    progs = read_jsonl(run_dir(name) / "programs.jsonl")
                     return self._send(200, next(x for x in progs if x["id"] == rest[1]))
                 if method == "GET" and len(rest) == 2 and rest[0] == "file" and rest[1] in FILES_OK:
                     f = run_dir(name) / rest[1]
