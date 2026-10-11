@@ -348,7 +348,9 @@ def parse_args(argv=None):
     ap.add_argument("--variants", type=int, default=6, help="Mutator programs per generation")
     ap.add_argument("--hypotheses", type=int, default=4, help="Researcher hypotheses per generation")
     ap.add_argument("--n", type=int, default=40, help="answers in zero-shot mode")
-    ap.add_argument("--epsilon", type=float, default=0.01, help="score change that counts as supported/refuted")
+    ap.add_argument("--epsilon", type=float, default=0.4,
+                    help="score change that counts as supported/refuted; smaller changes are 'flat'. 0.4 is about "
+                         "the gap between baselines, so smaller differences may just be noise across instances")
     ap.add_argument("--repairs", type=int, default=1, help="repair attempts for a program that fails")
     ap.add_argument("--workers", type=int, default=8, help="LLM calls and evaluations in flight at once")
     ap.add_argument("--eval-timeout", type=float, default=60.0, help="seconds before a program counts as hung")
