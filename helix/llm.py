@@ -111,6 +111,25 @@ class LLM:
         self._lock = threading.Lock()
         self._calls = 0
         self.usage = {}   # (role, tier) -> {"calls", "tokens_in", "tokens_out", "seconds"}
+        self._count_logged_calls()
+
+    def _count_logged_calls(self):
+        """On --resume the call log already holds this run's earlier calls: count them, so totals keep going."""
+        if not self.log_path or not self.log_path.exists():
+            return
+        text = self.log_path.read_text()
+        if text and not text.endswith("\n"):   # a killed run's half-written line: start new calls on a fresh line
+            with self.log_path.open("a") as f:
+                f.write("\n")
+        for line in text.splitlines():
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue   # a half-written last line from a killed run
+            self._calls += 1
+            if r.get("error") is None and r.get("role"):
+                self._count(r["role"], r.get("tier") or "flash", r.get("tokens_in") or 0,
+                            r.get("tokens_out") or 0, r.get("seconds") or 0.0)
 
     # ------------------------------------------------------------ routing
     def _pick_tier(self, force_tier):
