@@ -67,11 +67,14 @@ SPLITS = {
 def make_instance(family, split_seed, index, n_items):
     gen, capacity = FAMILIES[family]
     rng = np.random.default_rng([split_seed, list(FAMILIES).index(family), index])
+    items = gen(rng, n_items).astype(np.int64).tolist()
     return {
         "id": f"{family}-{index:03d}",
         "family": family,
         "capacity": list(capacity),
-        "items": gen(rng, n_items).astype(np.int64).tolist(),
+        "items": items,
+        # Worked out here, before any candidate code runs, so a program can't change it.
+        "lower_bound": lower_bound(items, capacity),
     }
 
 
@@ -85,9 +88,10 @@ def load_split(split):
 
 # ---------------------------------------------------------------- simulator
 def lower_bound(items, cap):
-    """No packing can use fewer bins: total demand / capacity, per resource, rounded up."""
-    totals = items.sum(axis=0)
-    return max(math.ceil(totals[0] / cap[0]), math.ceil(totals[1] / cap[1]))
+    """No packing can use fewer bins: total demand / capacity, per resource, rounded up.
+    Plain integer arithmetic, so it is exact and doesn't depend on numpy or math."""
+    totals = [sum(int(item[d]) for item in items) for d in range(2)]
+    return max(-(-totals[d] // int(cap[d])) for d in range(2))
 
 
 def run_instance(instance, priority):
@@ -112,7 +116,7 @@ def run_instance(instance, priority):
             remaining[fit_idx[choice]] -= item
 
     totals = items.sum(axis=0)
-    lb = lower_bound(items, cap)
+    lb = instance.get("lower_bound") or lower_bound(instance["items"], instance["capacity"])
     return {
         "id": instance["id"],
         "family": instance["family"],
