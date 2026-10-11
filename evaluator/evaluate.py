@@ -37,7 +37,7 @@ def _seeded_default_rng(seed=None, *args, **kwargs):
 
 
 def _load_priority(program_path):
-    source = Path(program_path).read_text()
+    source = Path(program_path).read_text(encoding="utf-8")
     namespace = {"__name__": "candidate", "__file__": str(program_path), "__builtins__": _SAFE_BUILTINS}
     exec(compile(source, str(program_path), "exec"), namespace)
     priority = namespace.get("priority")
