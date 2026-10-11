@@ -290,7 +290,7 @@ def check(settings=None):
     if missing:
         return [{"ok": False, "tier": "-", "model": "-",
                  "detail": f"missing {', '.join(missing)}: fill them in on the dashboard or in helix/.env"}]
-    llm = LLM(replace_retries(settings, 1))
+    llm = LLM(replace_retries(settings, 1, timeout=min(settings.timeout, 90)))
     results = []
     for tier in ["flash"] + (["pro"] if settings.pro_model else []):
         try:
@@ -305,9 +305,9 @@ def check(settings=None):
     return results
 
 
-def replace_retries(settings, retries):
+def replace_retries(settings, retries, timeout=None):
     from dataclasses import replace
-    return replace(settings, retries=retries)
+    return replace(settings, retries=retries, timeout=timeout or settings.timeout)
 
 
 if __name__ == "__main__":

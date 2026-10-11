@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 30'%3E%3Cpath d='M5 1C21 8 21 22 5 29' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Cpath d='M21 1C5 8 5 22 21 29' fill='none' stroke='%23eb6834' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f4f1e8; --card: #fffdf7; --ink: #1c1b18; --ink2: #55524a; --muted: #8a867b; --rule: #e1dccd;
+    --deep: #2a78d6; --wide: #eb6834; --good: #1f7a3a; --bad: #b3261e; --warn: #9a6700; --focus: #2a78d6;
+    --grid: rgba(28, 27, 24, 0.045);
+    --display: "Fraunces", Georgia, serif; --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141412; --card: #1c1c19; --ink: #efece4; --ink2: #c3c0b6; --muted: #8f8b80; --rule: #302f2a;
+      --deep: #3987e5; --wide: #d95926; --good: #4caf6e; --bad: #e66767; --warn: #d4a72c; --grid: rgba(239, 236, 228, 0.035);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--paper) 88%, transparent); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand h1 { margin: 0; font: 650 26px/1 var(--display); letter-spacing: -0.5px; }
+  .brand small { color: var(--muted); font: 12px var(--mono); }
+  header .spacer { flex: 1; }
+  select, input, textarea, button { font: inherit; color: inherit; }
+  select, input[type=text], input[type=password], input[type=number], textarea {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  button {
+    border: 1px solid var(--ink); background: var(--ink); color: var(--paper); border-radius: 6px; padding: 7px 12px;
+    cursor: pointer; font-weight: 500; white-space: nowrap;
+  }
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+  button.ghost:hover { border-color: var(--ink2); }
+  button.danger { background: transparent; color: var(--bad); border-color: var(--bad); }
+  button.go { background: var(--deep); border-color: var(--deep); color: #fff; font-size: 15px; padding: 9px 16px; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; padding: 20px 24px 60px; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 12px; font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink2);
+             display: flex; align-items: center; gap: 8px; }
+  .card h2 .n { color: var(--muted); }
+  .card h2 .right { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  label { display: block; font-size: 12px; color: var(--ink2); margin: 10px 0 4px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; background: transparent; color: var(--ink2); padding: 6px 12px; }
+  .seg button.on { background: var(--ink); color: var(--paper); }
+  .group { border-left: 2px solid var(--rule); padding-left: 10px; margin-top: 6px; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin-top: 10px; color: var(--ink); }
+  .check input { margin-top: 3px; }
+  .out { font: 12px/1.45 var(--mono); white-space: pre-wrap; word-break: break-word; margin-top: 10px; color: var(--ink2); }
+  .ok { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--mono); padding: 3px 9px; border-radius: 999px;
+          border: 1px solid var(--rule); background: var(--card); }
+  .pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .pill.running i { background: var(--good); animation: pulse 1.4s infinite; }
+  .pill.crashed i, .pill.died i { background: var(--bad); }
+  .pill.finished i { background: var(--deep); }
+  .pill.stopped i { background: var(--warn); }
+  @keyframes pulse { 50% { opacity: 0.25; } }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .tile { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+  .tile .k { font: 11px var(--mono); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .tile .v { font: 500 22px/1.25 var(--mono); margin-top: 4px; }
+  .tile .s { font-size: 12px; color: var(--ink2); }
+  .phase { font: 13px var(--mono); color: var(--ink2); padding: 10px 14px; border: 1px dashed var(--rule); border-radius: 10px;
+           margin-bottom: 16px; background: var(--card); min-height: 42px; }
+  .phase b { color: var(--ink); font-weight: 500; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink2); margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 10px; height: 10px; display: inline-block; }
+  .sw.deep { background: var(--deep); border-radius: 50%; } .sw.wide { background: var(--wide); }
+  .sw.line { width: 16px; height: 2px; background: var(--ink); } .sw.ref { width: 16px; height: 0; border-top: 1.5px dashed var(--muted); }
+  svg.chart { width: 100%; height: auto; display: block; }
+  svg.chart text { font: 11px var(--mono); fill: var(--muted); }
+  svg.chart .refl { font-size: 10.5px; fill: var(--ink2); }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 1300px) { .two { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
+       border-bottom: 1px solid var(--rule); padding: 6px 8px; }
+  td { border-bottom: 1px solid var(--rule); padding: 7px 8px; vertical-align: top; }
+  td.num { font-family: var(--mono); white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .scroll { max-height: 420px; overflow: auto; }
+  .chip { font: 500 11px var(--mono); padding: 1px 7px; border-radius: 4px; color: #fff; white-space: nowrap; }
+  .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.other { background: var(--ink2); color: var(--paper); }
+  .v-supported { color: var(--good); } .v-refuted { color: var(--bad); } .v-flat, .v-invalid, .v-unchanged { color: var(--muted); }
+  pre.code { font: 12px/1.5 var(--mono); background: color-mix(in srgb, var(--ink) 4%, var(--card)); border: 1px solid var(--rule);
+             border-radius: 8px; padding: 12px; overflow: auto; max-height: 460px; margin: 0; white-space: pre; }
+  pre.text { white-space: pre-wrap; word-break: break-word; }
+  details summary { cursor: pointer; color: var(--ink2); font-size: 13px; margin: 6px 0; }
+  .hyp { border-top: 1px solid var(--rule); padding: 8px 0; font-size: 13px; }
+  .hyp:first-child { border-top: 0; }
+  .hyp .meta { font: 11px var(--mono); color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  dialog { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); color: var(--ink); padding: 0;
+           width: min(1000px, 94vw); max-height: 88vh; }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+  dialog .dh { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); gap: 10px; }
+  dialog .dh h3 { margin: 0; font: 600 16px var(--display); flex: 1; }
+  dialog .db { padding: 16px; overflow: auto; max-height: calc(88vh - 60px); }
+  .md h1 { font: 650 20px var(--display); margin: 0 0 8px; } .md h2 { font: 600 15px var(--display); margin: 18px 0 8px; }
+  .md img { max-width: 100%; border: 1px solid var(--rule); border-radius: 8px; }
+  .md table { margin: 8px 0; }
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--paper); padding: 10px 14px;
+           border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 420px; z-index: 10; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true">
+      <path d="M5 1 C 21 8, 21 22, 5 29" fill="none" stroke="var(--deep)" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M21 1 C 5 8, 5 22, 21 29" fill="none" stroke="var(--wide)" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <div><h1>Helix</h1><small>deep + wide evolutionary search</small></div>
+  </div>
+  <div class="spacer"></div>
+  <span id="statePill" class="pill"><i></i><span>no run</span></span>
+  <select id="runPicker" style="width: 300px" aria-label="Run"></select>
+  <button class="ghost" id="snapBtn" title="Copy a text snapshot of this run to paste into a chat">Copy snapshot</button>
+</header>
+
+<div class="layout">
+  <aside>
+    <section class="card">
+      <h2><span class="n">01</span> Connect</h2>
+      <div class="seg" id="providerSeg">
+        <button data-p="luminal" class="on">Luminal Cloud</button><button data-p="local">Local model</button>
+      </div>
+      <div id="grpLuminal" class="group">
+        <label for="LUMINAL_BASE_URL">Base URL (ends in /v1)</label>
+        <input type="text" id="LUMINAL_BASE_URL" placeholder="https://…/v1">
+        <label for="LUMINAL_API_KEY">API key</label>
+        <input type="password" id="LUMINAL_API_KEY" autocomplete="off">
+        <div class="grid2">
+          <div><label for="HELIX_FLASH_MODEL">Flash model</label><input type="text" id="HELIX_FLASH_MODEL"></div>
+          <div><label for="HELIX_PRO_MODEL">Pro model (optional)</label><input type="text" id="HELIX_PRO_MODEL"></div>
+        </div>
+        <label for="LUMINAL_EXTRA_BODY">Extra request JSON (optional)</label>
+        <input type="text" id="LUMINAL_EXTRA_BODY" placeholder='{"reasoning_effort": "low"}'>
+      </div>
+      <div id="grpLocal" class="group" hidden>
+        <label for="LOCAL_BASE_URL">Local server URL</label>
+        <input type="text" id="LOCAL_BASE_URL">
+        <label for="LOCAL_MODEL">Model name</label>
+        <input type="text" id="LOCAL_MODEL" placeholder="qwen2.5-coder:7b">
+        <div class="hint">Any OpenAI-style local server: Ollama (default URL), LM Studio (http://localhost:1234/v1), llama.cpp.</div>
+      </div>
+      <label for="MONGODB_URI" style="margin-top:14px">MongoDB URI (optional, mirrors every run)</label>
+      <input type="password" id="MONGODB_URI" autocomplete="off" placeholder="mongodb+srv://…">
+      <label for="MONGODB_DB">MongoDB database</label>
+      <input type="text" id="MONGODB_DB">
+      <div class="row" style="margin-top:12px">
+        <button id="saveBtn">Save</button>
+        <button class="ghost" id="testLlmBtn">Test model</button>
+        <button class="ghost" id="testMongoBtn">Test MongoDB</button>
+      </div>
+      <div class="hint">Saved to helix/.env on this machine (never committed). Saved keys aren't shown again; leave a key blank to keep it.</div>
+      <div id="connectOut" class="out"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">02</span> Run</h2>
+      <div class="grid2">
+        <div><label for="mode">Mode</label>
+          <select id="mode">
+            <option value="full">Full (deep + wide)</option>
+            <option value="wide-only">Wide only (control)</option>
+            <option value="deep-only">Deep only (control)</option>
+            <option value="zero-shot">Zero-shot (control)</option>
+          </select></div>
+        <div><label for="schedule">Schedule</label>
+          <select id="schedule"><option value="parallel">Parallel</option><option value="alternate">Alternate</option></select></div>
+        <div><label for="generations">Generations</label><input type="number" id="generations" value="20" min="1"></div>
+        <div><label for="max_minutes">Time limit (min, 0 = none)</label><input type="number" id="max_minutes" value="0" min="0"></div>
+        <div><label for="top_x">Survivors per branch</label><input type="number" id="top_x" value="4" min="1"></div>
+        <div><label for="variants">Mutator variants</label><input type="number" id="variants" value="6" min="1"></div>
+        <div><label for="hypotheses">Hypotheses</label><input type="number" id="hypotheses" value="4" min="1"></div>
+        <div><label for="pro_every">Pro every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
+        <div><label for="epsilon">Verdict threshold</label><input type="number" id="epsilon" value="0.4" step="0.05" min="0"></div>
+        <div><label for="workers">Parallel calls</label><input type="number" id="workers" value="8" min="1"></div>
+        <div id="nWrap" hidden><label for="n">Zero-shot answers</label><input type="number" id="n" value="40" min="1"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="fake"> Offline test: fake model, no credits used, nothing published</label>
+      <div class="row" style="margin-top:14px">
+        <button class="go" id="runBtn">▶ Run</button>
+      </div>
+      <div id="runOut" class="out"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">03</span> Selected run</h2>
+      <div class="row">
+        <button class="ghost" id="stopBtn" title="Finish the current generation, save, exit">Stop after this generation</button>
+        <button class="danger" id="killBtn" title="Stop immediately">Kill now</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="number" id="moreGens" value="5" min="1" style="width:80px" aria-label="More generations">
+        <button class="ghost" id="resumeBtn">Resume for more generations</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="ghost" id="reportBtn" title="Score the best program, Code Zero and baselines on held-out instances">Held-out check</button>
+        <button class="ghost" id="publishBtn" title="Copy the trace into results/ in the repo">Publish</button>
+        <button class="ghost" id="pushBtn" title="Publish, then git commit and push">Publish &amp; push</button>
+      </div>
+      <div id="ctlOut" class="out"></div>
+    </section>
+  </aside>
+
+  <main>
+    <div class="tiles">
+      <div class="tile"><div class="k">Generation</div><div class="v" id="tGen">–</div><div class="s" id="tGenS"></div></div>
+      <div class="tile"><div class="k">Best score</div><div class="v" id="tBest">–</div><div class="s" id="tBestS"></div></div>
+      <div class="tile"><div class="k">Bar to beat</div><div class="v" id="tBar">–</div><div class="s" id="tBarS"></div></div>
+      <div class="tile"><div class="k">LLM calls</div><div class="v" id="tCalls">–</div><div class="s" id="tCallsS"></div></div>
+      <div class="tile"><div class="k">Programs</div><div class="v" id="tProgs">–</div><div class="s" id="tProgsS"></div></div>
+      <div class="tile"><div class="k">Elapsed</div><div class="v" id="tTime">–</div><div class="s" id="tTimeS"></div></div>
+    </div>
+    <div class="phase" id="phase">Pick a run, or start one.</div>
+
+    <section class="card">
+      <h2>Best score by generation <span class="right hint">score = −(mean excess %), higher is better</span></h2>
+      <div class="legend">
+        <span><i class="sw line"></i>Best so far</span>
+        <span><i class="sw deep"></i>Best new, deep branch</span>
+        <span><i class="sw wide"></i>Best new, wide branch</span>
+        <span><i class="sw ref"></i>Code Zero and bar to beat</span>
+      </div>
+      <div id="chart"><div class="empty">No generations yet.</div></div>
+    </section>
+
+    <div class="two">
+      <section class="card">
+        <h2>Researcher's latest thinking <span class="right hint" id="resMeta"></span></h2>
+        <div id="researcher"><div class="empty">The Researcher hasn't run yet.</div></div>
+      </section>
+      <section class="card">
+        <h2>Research log <span class="right hint" id="logMeta"></span></h2>
+        <div class="scroll" id="hyps"><div class="empty">No hypotheses tested yet.</div></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Agent calls <span class="right hint">newest first · click for the full prompt, reply and reasoning</span></h2>
+      <div class="scroll" id="calls"><div class="empty">No calls yet.</div></div>
+    </section>
+
+    <div class="two">
+      <section class="card">
+        <h2>Programs <span class="right hint">best first · click for code</span></h2>
+        <div class="scroll" id="programs"><div class="empty">No programs yet.</div></div>
+      </section>
+      <section class="card">
+        <h2>Best program <span class="right hint" id="bestMeta"></span></h2>
+        <div id="bestCode"><div class="empty">Nothing scored yet.</div></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Generations</h2>
+      <div class="scroll" id="gens"><div class="empty">No generations yet.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>Held-out report <span class="right hint">from “Held-out check”, or written automatically at the end of a real run</span></h2>
+      <div id="report" class="md"><div class="empty">No report yet.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>Console</h2>
+      <pre class="code text" id="console" style="max-height:300px">–</pre>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg"><div class="dh"><h3 id="dlgTitle"></h3><button class="ghost" id="dlgCopy">Copy</button><button class="ghost" id="dlgClose">Close</button></div><div class="db" id="dlgBody"></div></dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmt = (x, d = 3) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toFixed(d);
+const signed = (x, d = 3) => (x === null || x === undefined) ? "–" : (x >= 0 ? "+" : "") + Number(x).toFixed(d);
+let current = null, baselines = {}, lastState = null, provider = "luminal", dlgText = "";
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { method: opts.body ? "POST" : (opts.method || "GET"),
+    headers: { "Content-Type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const ctype = res.headers.get("Content-Type") || "";
+  const data = ctype.includes("json") ? await res.json() : await res.text();
+  if (!res.ok) throw new Error((data && data.error) || res.statusText);
+  return data;
+}
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3500); }
+function setHTML(el, html) { if (el._last !== html) { el._last = html; el.innerHTML = html; } }
+function busy(btn, on) { btn.disabled = on; }
+function branchOfRole(role) { return /researcher|coder/.test(role) ? "deep" : /mutator/.test(role) ? "wide" : "other"; }
+
+// ---------------------------------------------------------------- settings
+const FIELDS = ["LUMINAL_BASE_URL", "LUMINAL_API_KEY", "HELIX_FLASH_MODEL", "HELIX_PRO_MODEL", "LUMINAL_EXTRA_BODY",
+                "LOCAL_BASE_URL", "LOCAL_MODEL", "MONGODB_URI", "MONGODB_DB"];
+function setProvider(p) {
+  provider = p;
+  document.querySelectorAll("#providerSeg button").forEach((b) => b.classList.toggle("on", b.dataset.p === p));
+  $("grpLuminal").hidden = p !== "luminal"; $("grpLocal").hidden = p !== "local";
+}
+async function loadSettings() {
+  const s = await api("/api/settings");
+  setProvider(s.HELIX_PROVIDER.value === "local" ? "local" : "luminal");
+  for (const k of FIELDS) {
+    const f = s[k], el = $(k);
+    if (f.secret) { el.value = ""; el.placeholder = f.set ? `saved (${f.hint || "set"}), leave blank to keep` : (k === "MONGODB_URI" ? "mongodb+srv://…" : "paste key"); }
+    else el.value = f.value || "";
+  }
+}
+async function saveSettings() {
+  const body = { HELIX_PROVIDER: provider };
+  for (const k of FIELDS) body[k] = $(k).value;
+  await api("/api/settings", { body });
+  await loadSettings();
+}
+$("providerSeg").addEventListener("click", (e) => { if (e.target.dataset.p) setProvider(e.target.dataset.p); });
+$("saveBtn").onclick = async () => {
+  try { await saveSettings(); $("connectOut").innerHTML = `<span class="ok">Saved.</span>`; }
+  catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+};
+$("testLlmBtn").onclick = async (ev) => {
+  busy(ev.target, true); $("connectOut").textContent = "Saving, then sending one tiny request per model…";
+  try {
+    await saveSettings();
+    const r = await api("/api/check/llm", { body: {} });
+    $("connectOut").innerHTML = r.results.map((x) => `<div class="${x.ok ? "ok" : "bad"}">${x.ok ? "✓" : "✕"} ${esc(x.tier)} ${esc(x.model)}: ${esc(x.detail)}</div>`).join("");
+  } catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+  busy(ev.target, false);
+};
+$("testMongoBtn").onclick = async (ev) => {
+  busy(ev.target, true); $("connectOut").textContent = "Saving, then connecting to MongoDB…";
+  try { await saveSettings(); const r = await api("/api/check/mongo", { body: {} });
+        $("connectOut").innerHTML = `<div class="${r.ok ? "ok" : "bad"}">${r.ok ? "✓" : "✕"} ${esc(r.detail)}</div>`; }
+  catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+  busy(ev.target, false);
+};
+
+// ---------------------------------------------------------------- run controls
+$("mode").onchange = () => { $("nWrap").hidden = $("mode").value !== "zero-shot"; };
+$("runBtn").onclick = async (ev) => {
+  const body = { fake: $("fake").checked };
+  for (const k of ["mode", "schedule", "generations", "max_minutes", "top_x", "variants", "hypotheses", "pro_every", "epsilon", "workers", "n"])
+    body[k] = $(k).value;
+  busy(ev.target, true); $("runOut").textContent = "Starting…";
+  try {
+    if (!body.fake) await saveSettings();
+    const r = await api("/api/runs/start", { body });
+    current = r.name; $("runOut").innerHTML = `<span class="ok">Started ${esc(r.name)}.</span>`;
+    await refreshRuns(); await refreshState();
+  } catch (e) { $("runOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+  busy(ev.target, false);
+};
+async function control(path, body, out = "ctlOut") {
+  if (!current) return toast("Pick a run first.");
+  $(out).textContent = "Working…";
+  try { const r = await api(`/api/runs/${current}/${path}`, { body: body || {} });
+        $(out).innerHTML = `<span class="${r.ok === false ? "bad" : "ok"}">${esc(r.message || (r.until_generation ? `Resuming until generation ${r.until_generation}.` : "Done."))}</span>`;
+        refreshState(); refreshRuns(); return r; }
+  catch (e) { $(out).innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
+$("stopBtn").onclick = () => control("stop", { force: false });
+$("killBtn").onclick = () => { if (confirm("Kill the run now? The generation in progress is lost; everything before it is kept.")) control("stop", { force: true }); };
+$("resumeBtn").onclick = () => control("resume", { more: $("moreGens").value });
+$("reportBtn").onclick = async (ev) => { busy(ev.target, true); $("ctlOut").textContent = "Scoring on held-out instances (about 20 seconds)…";
+  await control("report", {}); lastReport = null; await loadReport(true); busy(ev.target, false); };
+$("publishBtn").onclick = async (ev) => { busy(ev.target, true); await control("publish", { push: false }); busy(ev.target, false); };
+$("pushBtn").onclick = async (ev) => { busy(ev.target, true); await control("publish", { push: true }); busy(ev.target, false); };
+$("snapBtn").onclick = async () => {
+  if (!current) return toast("Pick a run first.");
+  const text = await api(`/api/runs/${current}/snapshot`);
+  try { await navigator.clipboard.writeText(text); toast("Snapshot copied. Paste it into the chat."); }
+  catch { openDialog("Snapshot", `<pre class="code text">${esc(text)}</pre>`, text); }
+};
+
+// ---------------------------------------------------------------- dialog
+function openDialog(title, html, copyText) { $("dlgTitle").textContent = title; $("dlgBody").innerHTML = html; dlgText = copyText || ""; $("dlg").showModal(); }
+$("dlgClose").onclick = () => $("dlg").close();
+$("dlgCopy").onclick = async () => { try { await navigator.clipboard.writeText(dlgText || $("dlgBody").innerText); toast("Copied."); } catch { toast("Copy failed; select the text instead."); } };
+
+async function showCall(line) {
+  const c = await api(`/api/runs/${current}/call?line=${line}`);
+  const parts = [`<div class="hint">${esc(c.time)} · ${esc(c.model)} (${esc(c.tier)}) · ${esc(c.seconds)}s · ${esc(c.tokens_in)} in / ${esc(c.tokens_out)} out</div>`];
+  if (c.error) parts.push(`<h4 class="bad">Error</h4><pre class="code text">${esc(c.error)}</pre>`);
+  if (c.reasoning) parts.push(`<details open><summary>Model reasoning</summary><pre class="code text">${esc(c.reasoning)}</pre></details>`);
+  if (c.reply) parts.push(`<details open><summary>Reply</summary><pre class="code text">${esc(c.reply)}</pre></details>`);
+  parts.push(`<details><summary>What the agent was sent (user message)</summary><pre class="code text">${esc(c.user)}</pre></details>`);
+  parts.push(`<details><summary>System prompt</summary><pre class="code text">${esc(c.system)}</pre></details>`);
+  openDialog(`${c.role} call`, parts.join(""), `${c.reasoning ? "REASONING\n" + c.reasoning + "\n\n" : ""}REPLY\n${c.reply || c.error}`);
+}
+async function showProgram(id) {
+  const p = await api(`/api/runs/${current}/program/${id}`);
+  const fams = Object.entries(p.families || {}).map(([f, v]) => `${f} ${fmt(v, 2)}`).join(" · ");
+  openDialog(`${p.id} · ${p.branch} · score ${fmt(p.score)}`,
+    `<div class="hint">generation ${p.generation}${p.parent_id ? ` · from ${esc(p.parent_id)}` : ""}${p.hypothesis_id ? ` · tests ${esc(p.hypothesis_id)}` : ""}${p.repaired ? " · repaired" : ""}${p.duplicate_of ? ` · duplicate of ${esc(p.duplicate_of)}` : ""}</div>
+     ${p.note ? `<p>${esc(p.note)}</p>` : ""}${fams ? `<p class="hint">Excess % by family: ${esc(fams)}</p>` : ""}
+     ${p.error ? `<pre class="code text bad">${esc(p.error)}</pre>` : ""}<pre class="code">${esc(p.code || "(no code)")}</pre>`, p.code);
+}
+
+// ---------------------------------------------------------------- runs list + polling
+async function refreshRuns() {
+  const r = await api("/api/runs");
+  if (!current) current = r.active || (r.runs[0] && r.runs[0].name) || null;
+  const opts = r.runs.map((x) => `<option value="${esc(x.name)}" ${x.name === current ? "selected" : ""}>${esc(x.name)} · ${esc(x.state)}${x.best_score != null ? " · " + fmt(x.best_score) : ""}</option>`);
+  setHTML($("runPicker"), opts.join("") || `<option>no runs yet</option>`);
+}
+$("runPicker").onchange = () => { current = $("runPicker").value; lastReport = null; refreshState(); };
+
+async function refreshState() {
+  if (!current) return;
+  try { const s = await api(`/api/runs/${current}`); lastState = s; render(s); }
+  catch (e) { $("phase").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+}
+
+// ---------------------------------------------------------------- rendering
+function render(s) {
+  const st = s.status || {}, cfg = s.config || {}, state = st.state || "unknown";
+  const pill = $("statePill"); pill.className = "pill " + state; pill.querySelector("span").textContent = state + (s.stop_requested && state === "running" ? " · stopping" : "");
+  const gens = s.generations || [];
+  $("tGen").textContent = st.generation != null ? `${st.generation} / ${st.generations ?? "?"}` : "–";
+  $("tGenS").textContent = `${cfg.mode || ""}${cfg.schedule ? " · " + cfg.schedule : ""}`;
+  const best = s.best;
+  $("tBest").textContent = best ? fmt(best.score) : "–";
+  $("tBestS").textContent = best && s.seed_score != null ? `${signed(best.score - s.seed_score)} vs Code Zero ${fmt(s.seed_score)}` : "";
+  const barName = Object.keys(baselines).filter((k) => k !== "code_zero").sort((a, b) => baselines[b] - baselines[a])[0];
+  $("tBar").textContent = barName ? fmt(baselines[barName]) : "–";
+  $("tBarS").innerHTML = barName ? `${esc(barName)}${best ? ` · <span class="${best.score > baselines[barName] ? "ok" : "warn"}">${best.score > baselines[barName] ? "beaten" : "not yet"}</span>` : ""}` : "computing baselines…";
+  const llm = st.llm || {};
+  $("tCalls").textContent = llm.calls ?? "–";
+  $("tCallsS").textContent = `${llm.pro_calls || 0} pro · ${((llm.tokens_in || 0) / 1000).toFixed(0)}k in · ${((llm.tokens_out || 0) / 1000).toFixed(0)}k out`;
+  const c = s.counts || {};
+  $("tProgs").textContent = c.programs ?? "–";
+  $("tProgsS").textContent = `${c.valid || 0} valid · ${c.repaired || 0} repaired · ${c.duplicates || 0} dup`;
+  const end = st.finished || (state === "running" ? Date.now() / 1000 : st.updated);
+  const mins = st.started && end ? (end - st.started) / 60 : null;
+  $("tTime").textContent = mins != null ? (mins < 60 ? `${mins.toFixed(1)}m` : `${(mins / 60).toFixed(1)}h`) : "–";
+  $("tTimeS").textContent = `${cfg.provider || ""} ${cfg.flash_model ? "· " + cfg.flash_model : ""}`;
+
+  const mongo = st.mongo;
+  const mongoTxt = mongo ? (mongo.enabled ? ` · MongoDB: ${mongo.written} docs written` : (mongo.error ? ` · MongoDB off: ${mongo.error}` : "")) : "";
+  let phase = st.phase ? st.phase.split(" | ").map((p) => { const [b, ...r] = p.split(": "); return `<b>${esc(b)}</b>: ${esc(r.join(": "))}`; }).join(" &nbsp;·&nbsp; ") : "";
+  if (state === "running" && !phase) phase = "between steps…";
+  if (state === "crashed" || st.error) phase = `<span class="bad">${esc((st.error || "").split("\n").slice(-1)[0])}</span>`;
+  if (state === "died") phase = `<span class="bad">The run's process ended without finishing (killed, or the machine slept). Resume continues from the last full generation.</span>`;
+  if (["finished", "stopped"].includes(state) && !st.error) phase = `Run ${state}.`;
+  setHTML($("phase"), (phase || "–") + `<span class="hint">${esc(mongoTxt)}</span>`);
+
+  renderChart(s, barName);
+  renderResearcher(s.researcher);
+  renderHyps(s.hypotheses || []);
+  renderCalls(s.calls || []);
+  renderPrograms(s.programs || []);
+  setHTML($("bestCode"), best ? `<pre class="code">${esc(best.code)}</pre>` : `<div class="empty">Nothing scored yet.</div>`);
+  $("bestMeta").textContent = best ? `${best.id} · ${best.branch} · gen ${best.generation}` : "";
+  renderGens(gens);
+  const con = $("console"); const atBottom = con.scrollTop + con.clientHeight >= con.scrollHeight - 4;
+  if (con.textContent !== s.console) { con.textContent = s.console || "–"; if (atBottom) con.scrollTop = con.scrollHeight; }
+  if (s.has_report) loadReport(false);
+}
+
+function renderChart(s, barName) {
+  const gens = (s.generations || []).filter((g) => g.best_score != null);
+  if (!gens.length) return setHTML($("chart"), `<div class="empty">No generations yet.</div>`);
+  const pts = [], refs = [];
+  if (s.seed_score != null) refs.push(["Code Zero", s.seed_score]);
+  if (barName) refs.push([barName, baselines[barName]]);
+  for (const g of gens) for (const b of ["deep", "wide"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: g[b].best_new, b });
+  const ys = gens.map((g) => g.best_score).concat(pts.map((p) => p.y), refs.map((r) => r[1]));
+  let lo = Math.min(...ys), hi = Math.max(...ys); const pad = (hi - lo) * 0.08 || 0.5; lo -= pad; hi += pad;
+  const maxX = Math.max(1, ...gens.map((g) => g.generation));
+  const W = 860, H = 300, L = 54, R = 130, T = 12, B = 34;
+  const X = (x) => L + (x / maxX) * (W - L - R), Y = (y) => T + (1 - (y - lo) / (hi - lo)) * (H - T - B);
+  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Best score by generation">`;
+  const ticks = 5;
+  for (let i = 0; i <= ticks; i++) { const v = lo + (hi - lo) * i / ticks, y = Y(v);
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="1"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${v.toFixed(2)}</text>`; }
+  const step = Math.max(1, Math.ceil(maxX / 12));
+  for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
+  svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">generation</text>`;
+  for (const [name, v] of refs) { const y = Y(v);
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-dasharray="5 4" stroke-width="1.2"/><text class="refl" x="${W - R + 6}" y="${y + 4}">${esc(name)} ${v.toFixed(2)}</text>`; }
+  let d = ""; gens.forEach((g, i) => { const x = X(g.generation), y = Y(g.best_score);
+    d += i === 0 ? `M${x},${y}` : ` H${x} V${y}`; });
+  d += ` H${X(maxX)}`;
+  svg += `<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  for (const p of pts) { const x = X(p.x) + (p.b === "deep" ? -5 : 5), y = Y(p.y), tip = `generation ${p.x}, ${p.b} branch: best new ${p.y.toFixed(3)}`;
+    svg += p.b === "deep"
+      ? `<circle cx="${x}" cy="${y}" r="5" fill="var(--deep)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></circle>`
+      : `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="var(--wide)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></rect>`; }
+  svg += `</svg>`;
+  setHTML($("chart"), svg);
+}
+
+function renderResearcher(r) {
+  if (!r) { $("resMeta").textContent = ""; return setHTML($("researcher"), `<div class="empty">The Researcher hasn't run yet.</div>`); }
+  $("resMeta").textContent = `${r.time} · ${r.model} · ${r.seconds}s`;
+  let hyps = [];
+  try { const m = r.reply.match(/\{[\s\S]*\}/); hyps = (JSON.parse(m[0]).hypotheses || []); } catch { }
+  const list = hyps.length ? hyps.map((h) => `<div class="hyp"><div class="meta">on ${esc(h.base)}</div><div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>${h.prediction ? `<div class="hint">Predicts: ${esc(h.prediction)}</div>` : ""}</div>`).join("")
+                           : `<pre class="code text">${esc(r.reply)}</pre>`;
+  const reasoning = r.reasoning ? `<details ${$("researcher")._open ? "open" : ""} id="resDetails"><summary>Model reasoning (${r.reasoning.length.toLocaleString()} characters)</summary><pre class="code text">${esc(r.reasoning)}</pre></details>`
+                                : `<div class="hint">This model doesn't return its reasoning separately; the hypotheses are its reply.</div>`;
+  setHTML($("researcher"), reasoning + list);
+  const det = $("resDetails"); if (det) det.ontoggle = () => { $("researcher")._open = det.open; };
+}
+
+function renderHyps(hyps) {
+  const counts = {}; hyps.forEach((h) => counts[h.verdict] = (counts[h.verdict] || 0) + 1);
+  $("logMeta").textContent = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ");
+  if (!hyps.length) return setHTML($("hyps"), `<div class="empty">No hypotheses tested yet.</div>`);
+  const icon = { supported: "▲", refuted: "▼", flat: "■", invalid: "✕", unchanged: "=" };
+  const rows = hyps.slice().reverse().map((h) => `<div class="hyp"><div class="meta">${esc(h.id)} · gen ${h.generation} · on ${esc(h.base_id)} · <span class="v-${esc(h.verdict)}">${icon[h.verdict] || ""} ${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</span></div>
+      <div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>
+      ${h.family_shift && Object.keys(h.family_shift).length ? `<div class="hint">Excess moved: ${Object.entries(h.family_shift).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3).map(([f, v]) => `${esc(f)} ${signed(v, 2)}`).join(", ")}</div>` : ""}</div>`);
+  setHTML($("hyps"), rows.join(""));
+}
+
+function renderCalls(calls) {
+  if (!calls.length) return setHTML($("calls"), `<div class="empty">No calls yet.</div>`);
+  const rows = calls.map((c) => `<tr class="click" data-line="${c.line}"><td class="num">${esc(c.time)}</td>
+      <td><span class="chip ${branchOfRole(c.role || "")}">${esc(c.role)}</span></td><td class="num">${esc(c.tier)}</td>
+      <td class="num">${esc(c.seconds)}s</td><td class="num">${c.tokens_out ?? "–"}</td>
+      <td>${c.error ? `<span class="bad">${esc(c.error.slice(0, 160))}</span>` : esc(c.preview)}${c.has_reasoning ? ` <span class="hint">· reasoning</span>` : ""}</td></tr>`);
+  setHTML($("calls"), `<table><thead><tr><th>Time</th><th>Agent</th><th>Model</th><th>Took</th><th>Tokens out</th><th>Says</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
+}
+
+function renderPrograms(progs) {
+  const valid = progs.filter((p) => p.valid).sort((a, b) => b.score - a.score).slice(0, 15);
+  const failed = progs.filter((p) => !p.valid).slice(-5).reverse();
+  if (!progs.length) return setHTML($("programs"), `<div class="empty">No programs yet.</div>`);
+  const row = (p) => `<tr class="click" data-pid="${esc(p.id)}"><td class="num">${esc(p.id)}</td><td class="num">${p.generation}</td>
+      <td><span class="chip ${p.branch === "deep" || p.branch === "wide" ? p.branch : "other"}">${esc(p.branch)}</span></td>
+      <td class="num">${p.valid ? fmt(p.score) : `<span class="bad">invalid</span>`}</td>
+      <td>${esc((p.valid ? p.note : p.error) || "").slice(0, 140)}</td></tr>`;
+  setHTML($("programs"), `<table><thead><tr><th>Id</th><th>Gen</th><th>Branch</th><th>Score</th><th>What it does</th></tr></thead><tbody>${valid.map(row).join("")}
+      ${failed.length ? `<tr><td colspan="5" class="hint">Latest failures</td></tr>` + failed.map(row).join("") : ""}</tbody></table>`);
+}
+
+function renderGens(gens) {
+  if (!gens.length) return setHTML($("gens"), `<div class="empty">No generations yet.</div>`);
+  const cell = (r) => r ? `${r.valid}/${r.new} valid, best ${fmt(r.best_new)}${["supported", "refuted", "flat", "invalid", "unchanged"].filter((k) => r[k]).map((k) => ` · ${r[k]} ${k}`).join("")}` : "–";
+  const rows = gens.slice().reverse().map((g) => `<tr><td class="num">${g.generation}</td><td class="num">${fmt(g.best_score)}</td><td>${cell(g.deep)}</td><td>${cell(g.wide)}</td><td class="num">${g.seconds ? g.seconds + "s" : "–"}</td><td class="num">${g.llm ? g.llm.calls : "–"}</td></tr>`);
+  setHTML($("gens"), `<table><thead><tr><th>Gen</th><th>Best so far</th><th>Deep</th><th>Wide</th><th>Took</th><th>Calls</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
+}
+
+let lastReport = null;
+async function loadReport(force) {
+  if (!current) return;
+  if (!force && lastReport === current) return;
+  try {
+    const md = await api(`/api/runs/${current}/file/report.md`);
+    lastReport = current;
+    setHTML($("report"), mdToHtml(md, current));
+  } catch { setHTML($("report"), `<div class="empty">No report yet.</div>`); }
+}
+function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
+function mdToHtml(md, run) {
+  const out = []; const lines = md.split("\n"); let i = 0;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (l.startsWith("# ")) out.push(`<h1>${inline(l.slice(2))}</h1>`);
+    else if (l.startsWith("## ")) out.push(`<h2>${inline(l.slice(3))}</h2>`);
+    else if (l.startsWith("![")) { const m = l.match(/\((.+?)\)/); if (m) out.push(`<img src="/api/runs/${run}/file/${esc(m[1])}?t=${Date.now()}" alt="">`); }
+    else if (l.startsWith("|")) { const rows = []; while (i < lines.length && lines[i].startsWith("|")) { rows.push(lines[i]); i++; } i--;
+      const cells = (r) => r.split("|").slice(1, -1).map((c) => c.trim());
+      out.push(`<table><thead><tr>${cells(rows[0]).map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.slice(2).map((r) => `<tr>${cells(r).map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`); }
+    else if (l.startsWith("- ")) out.push(`<div>• ${inline(l.slice(2))}</div>`);
+    else if (l.trim()) out.push(`<p>${inline(l)}</p>`);
+    i++;
+  }
+  return out.join("");
+}
+
+document.addEventListener("click", (e) => {
+  const tr = e.target.closest("tr[data-line]"); if (tr) return showCall(tr.dataset.line);
+  const tp = e.target.closest("tr[data-pid]"); if (tp) return showProgram(tp.dataset.pid);
+});
+
+async function boot() {
+  try { await loadSettings(); } catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+  await refreshRuns(); await refreshState();
+  const pollBaselines = async () => { try { baselines = await api("/api/baselines"); } catch { } if (Object.keys(baselines).length < 2) setTimeout(pollBaselines, 3000); else if (lastState) render(lastState); };
+  pollBaselines();
+  setInterval(() => { if (!document.hidden) refreshState(); }, 3000);
+  setInterval(() => { if (!document.hidden) refreshRuns(); }, 10000);
+}
+boot();
+</script>
+</body>
+</html>
