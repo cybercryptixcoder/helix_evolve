@@ -36,9 +36,9 @@ FILES_OK = {"report.md", "progress.png", "compare.png", "best_program.py", "cons
 # key, secret?, default
 FIELDS = [
     ("HELIX_PROVIDER", False, "luminal"),
-    ("LUMINAL_BASE_URL", False, ""),
+    ("LUMINAL_BASE_URL", False, "https://flash.luminal.cloud/v1"),
     ("LUMINAL_API_KEY", True, ""),
-    ("HELIX_FLASH_MODEL", False, "deepseek-v4.1-flash"),
+    ("HELIX_FLASH_MODEL", False, "deepseek-ai/DeepSeek-V4.1-Flash"),
     ("HELIX_PRO_MODEL", False, ""),
     ("LUMINAL_EXTRA_BODY", False, ""),
     ("LOCAL_BASE_URL", False, "http://localhost:11434/v1"),

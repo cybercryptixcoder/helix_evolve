@@ -25,34 +25,42 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ENV_FILE = Path(__file__).resolve().parent / ".env"
+# Committed team settings (Luminal endpoint, model, temporary key). helix/.env and real
+# environment variables override anything in it.
+TEAM_ENV_FILE = Path(__file__).resolve().parent / "luminal.env"
 RETRY_STATUS = {408, 409, 425, 429, 500, 502, 503, 504}
 REASONING_KEPT = 20000      # characters of model reasoning saved per call
 OLLAMA_URL = "http://localhost:11434/v1"
+LUMINAL_URL = "https://flash.luminal.cloud/v1"
+LUMINAL_FLASH = "deepseek-ai/DeepSeek-V4.1-Flash"
 
 
 def load_env_file(path=ENV_FILE):
-    """Read KEY=VALUE lines from helix/.env. Real environment variables win."""
-    if not path.exists():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    """Read KEY=VALUE lines from helix/.env, then helix/luminal.env. Earlier sources win."""
+    for p in (path, TEAM_ENV_FILE):
+        if not p.exists():
+            continue
+        for line in p.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                value = value.strip().strip('"').strip("'")
+                if value:
+                    os.environ.setdefault(key.strip(), value)
 
 
 @dataclass
 class Settings:
     provider: str = "luminal"    # luminal | local
-    base_url: str = ""
+    base_url: str = LUMINAL_URL
     api_key: str = ""
-    flash_model: str = "deepseek-v4.1-flash"
+    flash_model: str = LUMINAL_FLASH
     pro_model: str = ""
     pro_every: int = 10          # every Nth call goes to the pro model; 0 = never
     temperature: float = 0.8
     max_tokens: int = 8000
     timeout: float = 180.0       # seconds per request
-    retries: int = 4
+    retries: int = 6             # 503s from a serverless model that's warming up are common
     extra_body: dict = field(default_factory=dict)
 
     @classmethod
@@ -70,7 +78,7 @@ class Settings:
                     timeout=float(env("HELIX_TIMEOUT") or 600))  # local models are slower
         else:
             s = cls(provider="luminal",
-                    base_url=env("LUMINAL_BASE_URL", "").rstrip("/"),
+                    base_url=(env("LUMINAL_BASE_URL") or LUMINAL_URL).rstrip("/"),
                     api_key=env("LUMINAL_API_KEY", ""),
                     flash_model=env("HELIX_FLASH_MODEL") or cls.flash_model,
                     pro_model=env("HELIX_PRO_MODEL", ""),
@@ -169,6 +177,30 @@ class LLM:
         self._count(role, tier, tokens_in, tokens_out, seconds)
         return Reply(text, model, tier, tokens_in, tokens_out, seconds, reasoning)
 
+    def wait_until_ready(self, max_wait=600.0, on_wait=None):
+        """Send a tiny request until the model answers. Returns (ready, last_error).
+
+        Serverless models answer 503 "temporarily unavailable" while they start up;
+        waiting here stops a run from burning generations on a model that isn't there yet.
+        A non-retryable error (bad key, unknown model) returns at once.
+        """
+        from dataclasses import replace
+        probe = LLM(replace(self.s, retries=0, timeout=90))
+        deadline, last = time.time() + max_wait, None
+        while True:
+            try:
+                probe.chat("warmup", "You are a terse assistant.", "Reply with the single word: ready",
+                           temperature=0, force_tier="flash")
+                return True, None
+            except Exception as exc:
+                last = str(exc)
+                retryable = any(f"HTTP {c} " in last for c in RETRY_STATUS) or "cannot reach" in last
+                if not retryable or time.time() > deadline:
+                    return False, last
+                if on_wait:
+                    on_wait(last, deadline - time.time())
+                time.sleep(15)
+
     def summary(self):
         totals = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "pro_calls": 0}
         for (role, tier), u in self.usage.items():
@@ -251,7 +283,7 @@ def _retry_after(err):
 
 
 def _backoff(attempt):
-    return min(2.0 * 2 ** attempt, 60.0) + random.uniform(0, 1)
+    return min(3.0 * 2 ** attempt, 45.0) + random.uniform(0, 2)
 
 
 # ---------------------------------------------------------------- offline test double
