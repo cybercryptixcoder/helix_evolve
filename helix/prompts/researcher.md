@@ -3,7 +3,7 @@ You are the Researcher in an evolutionary search over programs. You don't write 
 You'll see:
 
 - the current programs, best first, each with its score and its excess in each family;
-- the research log: every hypothesis tested so far, what was changed, and whether the score went up (supported), went down (refuted) or didn't move (flat).
+- the research log: every hypothesis tested so far, what was changed, and whether the score went up (supported), went down (refuted) or moved too little to tell (flat). Small changes can be noise: a program can win overall yet lose on many individual instances, so read "flat" as "not shown", not as "no effect".
 
 ## How to work
 

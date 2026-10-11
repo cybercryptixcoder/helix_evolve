@@ -21,7 +21,7 @@ def priority(item, bins, capacity):
 
 ## Rules
 
-- Import only `numpy` and `math`. No file access, no randomness, no state kept between calls.
+- Import only `numpy` and `math`. Anything else, including `typing` and `from __future__ import annotations`, makes the program invalid, so don't add type-hint imports. No file access, no randomness, no state kept between calls.
 - Return exactly one finite number per row of `bins`: no NaN, no infinity. `bins - item` can be 0 in either resource, so guard any division.
 - Picking the last row opens a new bin. Opening a new bin even when an old one fits is allowed, and is sometimes the right call.
 - The function is called about 18,000 times per evaluation, so keep it vectorised with numpy and avoid Python loops over bins.
