@@ -1,14 +1,15 @@
-"""One client for every agent: Luminal through an OpenAI-style /chat/completions API.
+"""One client for every agent, over an OpenAI-style /chat/completions API.
 
-Settings come from environment variables, or from helix/.env (see helix/.env.example):
-  LUMINAL_BASE_URL    the endpoint, ending in /v1
-  LUMINAL_API_KEY     sent as "Authorization: Bearer <key>"
-  HELIX_FLASH_MODEL   the model used for most calls
-  HELIX_PRO_MODEL     a stronger model used for every Nth call (optional)
-  LUMINAL_EXTRA_BODY  optional JSON merged into every request body
+Two providers, picked with HELIX_PROVIDER:
+  luminal (default)   Luminal Cloud: LUMINAL_BASE_URL, LUMINAL_API_KEY,
+                      HELIX_FLASH_MODEL, HELIX_PRO_MODEL (optional)
+  local               a model on your own machine (Ollama, LM Studio, llama.cpp):
+                      LOCAL_BASE_URL (default Ollama's http://localhost:11434/v1), LOCAL_MODEL
+Also: LUMINAL_EXTRA_BODY (JSON merged into every request), HELIX_TIMEOUT (seconds per request).
+Settings come from environment variables or helix/.env (the dashboard writes that file).
 
-Every call (role, model, prompts, reply, tokens, seconds) is appended to the
-run's llm_calls.jsonl, so you can read exactly what each agent saw and said.
+Every call (role, model, prompts, reply, the model's reasoning if it returns any,
+tokens, seconds) is appended to the run's llm_calls.jsonl.
 
 Check your settings:  python -m helix.llm
 """
@@ -25,6 +26,8 @@ from pathlib import Path
 
 ENV_FILE = Path(__file__).resolve().parent / ".env"
 RETRY_STATUS = {408, 409, 425, 429, 500, 502, 503, 504}
+REASONING_KEPT = 20000      # characters of model reasoning saved per call
+OLLAMA_URL = "http://localhost:11434/v1"
 
 
 def load_env_file(path=ENV_FILE):
@@ -40,6 +43,7 @@ def load_env_file(path=ENV_FILE):
 
 @dataclass
 class Settings:
+    provider: str = "luminal"    # luminal | local
     base_url: str = ""
     api_key: str = ""
     flash_model: str = "deepseek-v4.1-flash"
@@ -54,14 +58,27 @@ class Settings:
     @classmethod
     def from_env(cls, **overrides):
         load_env_file()
-        extra = os.environ.get("LUMINAL_EXTRA_BODY", "").strip()
-        s = cls(
-            base_url=os.environ.get("LUMINAL_BASE_URL", "").rstrip("/"),
-            api_key=os.environ.get("LUMINAL_API_KEY", ""),
-            flash_model=os.environ.get("HELIX_FLASH_MODEL") or cls.flash_model,
-            pro_model=os.environ.get("HELIX_PRO_MODEL", ""),
-            extra_body=json.loads(extra) if extra else {},
-        )
+        env = os.environ.get
+        extra = env("LUMINAL_EXTRA_BODY", "").strip()
+        provider = (env("HELIX_PROVIDER") or "luminal").strip().lower()
+        if provider == "local":
+            s = cls(provider="local",
+                    base_url=(env("LOCAL_BASE_URL") or OLLAMA_URL).rstrip("/"),
+                    api_key=env("LOCAL_API_KEY") or "local",     # local servers ignore the key
+                    flash_model=env("LOCAL_MODEL", ""),
+                    pro_model="",
+                    timeout=float(env("HELIX_TIMEOUT") or 600))  # local models are slower
+        else:
+            s = cls(provider="luminal",
+                    base_url=env("LUMINAL_BASE_URL", "").rstrip("/"),
+                    api_key=env("LUMINAL_API_KEY", ""),
+                    flash_model=env("HELIX_FLASH_MODEL") or cls.flash_model,
+                    pro_model=env("HELIX_PRO_MODEL", ""),
+                    timeout=float(env("HELIX_TIMEOUT") or 180))
+        try:
+            s.extra_body = json.loads(extra) if extra else {}
+        except json.JSONDecodeError:
+            raise SystemExit(f"LUMINAL_EXTRA_BODY isn't valid JSON: {extra!r}")
         for key, value in overrides.items():
             if value is not None:
                 setattr(s, key, value)
@@ -69,14 +86,11 @@ class Settings:
 
     def problems(self):
         """What's missing before real calls can work."""
-        missing = []
-        if not self.base_url:
-            missing.append("LUMINAL_BASE_URL")
-        if not self.api_key:
-            missing.append("LUMINAL_API_KEY")
-        if not self.flash_model:
-            missing.append("HELIX_FLASH_MODEL")
-        return missing
+        if self.provider == "local":
+            return [name for name, value in (("LOCAL_BASE_URL", self.base_url), ("LOCAL_MODEL", self.flash_model))
+                    if not value]
+        return [name for name, value in (("LUMINAL_BASE_URL", self.base_url), ("LUMINAL_API_KEY", self.api_key),
+                                         ("HELIX_FLASH_MODEL", self.flash_model)) if not value]
 
 
 @dataclass
@@ -87,6 +101,7 @@ class Reply:
     tokens_in: int
     tokens_out: int
     seconds: float
+    reasoning: str = ""  # the model's thinking, if the API returns it separately
 
 
 class LLM:
@@ -117,7 +132,7 @@ class LLM:
         started = time.time()
         error = None
         try:
-            text, tokens_in, tokens_out = self._complete(model, system, user, temp, role)
+            text, tokens_in, tokens_out, reasoning = self._complete(model, system, user, temp, role)
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
             raise
@@ -126,12 +141,14 @@ class LLM:
             self._log({
                 "role": role, "tier": tier, "model": model, "temperature": temp,
                 "system": system, "user": user,
-                "reply": None if error else text, "error": error,
+                "reply": None if error else text,
+                "reasoning": None if error else (reasoning[:REASONING_KEPT] or None),
+                "error": error,
                 "tokens_in": None if error else tokens_in, "tokens_out": None if error else tokens_out,
                 "seconds": seconds,
             })
         self._count(role, tier, tokens_in, tokens_out, seconds)
-        return Reply(text, model, tier, tokens_in, tokens_out, seconds)
+        return Reply(text, model, tier, tokens_in, tokens_out, seconds, reasoning)
 
     def summary(self):
         totals = {"calls": 0, "tokens_in": 0, "tokens_out": 0, "pro_calls": 0}
@@ -156,10 +173,14 @@ class LLM:
         choice = (data.get("choices") or [{}])[0]
         message = choice.get("message") or {}
         text = message.get("content") or ""
+        # Reasoning models return their thinking in a separate field; the name varies by server.
+        reasoning = message.get("reasoning_content") or message.get("reasoning") or ""
+        if not isinstance(reasoning, str):
+            reasoning = json.dumps(reasoning)
         if not text.strip():
             raise RuntimeError(f"empty reply (finish_reason={choice.get('finish_reason')!r})")
         usage = data.get("usage") or {}
-        return text, int(usage.get("prompt_tokens") or 0), int(usage.get("completion_tokens") or 0)
+        return text, int(usage.get("prompt_tokens") or 0), int(usage.get("completion_tokens") or 0), reasoning
 
     def _post(self, body):
         missing = self.s.problems()
@@ -236,7 +257,8 @@ class FakeLLM(LLM):
             else:
                 text = "Idea: return one score per resource.\n```python\nimport numpy as np\n\ndef priority(item, bins, capacity):\n    return np.zeros((len(bins), 2))\n```"
         time.sleep(0.05)
-        return text, len(system + user) // 4, len(text) // 4
+        thinking = f"(fake reasoning for the {role}: comparing the programs I was shown, then writing my answer)"
+        return text, len(system + user) // 4, len(text) // 4, thinking
 
     def _program(self):
         a, b, c, d = (round(self.rng.uniform(0, 2), 3) for _ in range(4))
@@ -261,13 +283,35 @@ class FakeLLM(LLM):
         return "```json\n" + json.dumps({"hypotheses": hyps}, indent=2) + "\n```"
 
 
-if __name__ == "__main__":
-    settings = Settings.from_env()
+def check(settings=None):
+    """Send one tiny request to each configured model. Returns a list of result dicts (never raises)."""
+    settings = settings or Settings.from_env()
     missing = settings.problems()
     if missing:
-        raise SystemExit(f"Missing: {', '.join(missing)}. Copy helix/.env.example to helix/.env and fill it in.")
-    llm = LLM(settings)
-    tiers = ["flash"] + (["pro"] if settings.pro_model else [])
-    for tier in tiers:
-        r = llm.chat("check", "You are a terse assistant.", "Reply with the single word: ready", temperature=0, force_tier=tier)
-        print(f"{tier:5s} {r.model}: {r.text.strip()[:60]!r}  ({r.seconds}s, {r.tokens_in} in / {r.tokens_out} out)")
+        return [{"ok": False, "tier": "-", "model": "-",
+                 "detail": f"missing {', '.join(missing)}: fill them in on the dashboard or in helix/.env"}]
+    llm = LLM(replace_retries(settings, 1))
+    results = []
+    for tier in ["flash"] + (["pro"] if settings.pro_model else []):
+        try:
+            r = llm.chat("check", "You are a terse assistant.", "Reply with the single word: ready",
+                         temperature=0, force_tier=tier)
+            results.append({"ok": True, "tier": tier, "model": r.model,
+                            "detail": f"replied {r.text.strip()[:40]!r} in {r.seconds}s"
+                                      + (" (returns reasoning)" if r.reasoning else "")})
+        except Exception as exc:
+            model = settings.pro_model if tier == "pro" else settings.flash_model
+            results.append({"ok": False, "tier": tier, "model": model, "detail": str(exc)[:400]})
+    return results
+
+
+def replace_retries(settings, retries):
+    from dataclasses import replace
+    return replace(settings, retries=retries)
+
+
+if __name__ == "__main__":
+    s = Settings.from_env()
+    print(f"provider: {s.provider} | endpoint: {s.base_url or '(not set)'}")
+    for res in check(s):
+        print(f"{'OK  ' if res['ok'] else 'FAIL'} {res['tier']:5s} {res['model']}: {res['detail']}")
