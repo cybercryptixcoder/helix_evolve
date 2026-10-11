@@ -58,7 +58,7 @@ class Settings:
     pro_model: str = ""
     pro_every: int = 10          # every Nth call goes to the pro model; 0 = never
     temperature: float = 0.8
-    max_tokens: int = 16000      # reasoning models spend thousands of tokens thinking before they answer
+    max_tokens: int = 6000       # plenty for written reasoning + a program, with hidden thinking off
     timeout: float = 180.0       # seconds of silence before giving up (streamed replies keep it alive)
     stream: bool = True          # Luminal cuts off non-streamed requests that run past ~20 s
     retries: int = 6             # 503s from a serverless model that's warming up are common
@@ -89,6 +89,12 @@ class Settings:
         except json.JSONDecodeError:
             raise SystemExit(f"LUMINAL_EXTRA_BODY isn't valid JSON: {extra!r}")
         s.stream = (env("HELIX_STREAM") or "1").strip().lower() not in ("0", "false", "no", "off")
+        # DeepSeek-V4.1-Flash on Luminal: with hidden thinking on it reasons for 16k+ tokens (~90 s) and
+        # often never answers; with it off it answers in seconds. The agents still reason, in the reply
+        # itself (every prompt asks for reasoning before the answer). HELIX_THINKING=on turns it back on.
+        thinking_on = (env("HELIX_THINKING") or "off").strip().lower() in ("1", "on", "true", "yes")
+        if s.provider == "luminal" and "chat_template_kwargs" not in s.extra_body:
+            s.extra_body["chat_template_kwargs"] = {"thinking": thinking_on}
         if env("HELIX_MAX_TOKENS"):
             s.max_tokens = int(env("HELIX_MAX_TOKENS"))
         for key, value in overrides.items():
