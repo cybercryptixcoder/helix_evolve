@@ -100,10 +100,10 @@ def run_instance(instance, priority):
         fit_idx = np.flatnonzero(np.all(remaining[:n_open] >= item, axis=1))
         candidates = np.vstack([remaining[fit_idx], cap[None, :]])
         scores = np.asarray(priority(item.copy(), candidates.copy(), cap.copy()), dtype=float)
-        if scores.shape != (len(candidates),) or not np.all(np.isfinite(scores)):
-            raise ValueError(
-                f"priority returned shape {scores.shape}, expected ({len(candidates)},) of finite numbers"
-            )
+        if scores.shape != (len(candidates),):
+            raise ValueError(f"priority returned shape {scores.shape}, expected ({len(candidates)},)")
+        if not np.all(np.isfinite(scores)):
+            raise ValueError(f"priority returned NaN or infinity: {scores.tolist()[:10]}")
         choice = int(np.argmax(scores))
         if choice == len(fit_idx):  # last row = new bin
             remaining[n_open] = cap - item
