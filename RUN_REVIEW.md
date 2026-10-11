@@ -1,105 +1,117 @@
-# Review: is the deep loop cashing in on lucky hits?
+# Review 2: why the curve is still shallow
 
-Run reviewed: `20261011-181101-full` (3 generations, DeepSeek V4.1 Flash, 40 LLM calls). Evidence comes from the console log, the hypothesis log and the call log of that run, and from the prompts in `helix/prompts/`.
+Reviewed: the latest run's dashboard log (generations up to 10, champion p0088 at −6.961), against the code at `6f2332e`. Review 1, on the 18:11 run, is in this file's git history.
 
-## Verdict
+## Short answer
 
-**No.** The loop is doing what its prompts tell it to do, but that isn't what we designed it to do.
+The deep loop now does what review 1 asked. It takes the champion apart with knock-outs, then makes moderate improve tests, and knock-out programs stay out of the pool. **Two structural problems still keep the curve shallow, and both sit outside the deep loop:**
 
-- **Wide gets lucky, as intended.** In generation 1 the Mutator wrote p0011 and the best score jumped from −8.378 to −7.455.
-- **Deep never cashes it in.** After that jump the best score never moved again:
-  - 8 hypotheses were tested: 0 supported, 5 flat, 3 refuted.
-  - The best deep program was +0.041 over its base. Every other deep program scored the same as its base or worse.
-  - In generation 3 the deep branch didn't run at all.
-- **The cause is structural.** The deep loop has no step that answers "why did this program win?", and no step that turns an answer into a better program. Its tests are built to *distort* the winner, not to *improve* it.
+1. **The population has no memory.** Each generation the pool is rebuilt from *that generation's* new programs plus the single best. The 2nd–5th best programs ever found are thrown away. Half the Mutator's work then goes into "improving" whatever the last batch produced, even when it's bad.
+2. **The wide branch is mostly wasted.** 15 of the 17 Mutator calls in this log hit the 8,000-token limit (45–61 s each) before writing code. So wide's programs are mostly *repair* rewrites, made without the reasoning that led to the idea, and wide is what sets the length of every generation.
 
-## What we intended vs what happens
+Fixing both is quick. Three more changes make better use of the deep budget (sections 3–5).
 
-| Step we intended | What actually happens |
+| Question | Answer |
 |---|---|
-| Wide tries random things; sometimes one lands. | ✅ Works. p0011 (wide, gen 1) is the only real gain in the run. |
-| Deep notices *that* program did much better. | ❌ Nothing marks a jump. The Researcher sees 8 programs ranked by score and spreads its hypotheses across them. In gen 2 only 2 of 4 tests were on p0011. |
-| Deep works out *why* it did better. | ❌ The winner has nothing to be compared against in a controlled way (see 1 below), so the Researcher guesses. Its own reasoning says: *"Inconsistent signal — noise"*, *"which is responsible? Not clear."* |
-| Deep turns the "why" into code that builds on the winner. | ❌ Every test is an exaggeration (×3, ×8, sign flips) that pushes the winner *away* from what made it good, so they all score lower. No step turns what was learned into a better program. |
-| The improved program becomes the new base. | ❌ Deep never produced one. Worse, its deliberately distorted test programs went into the next pool and used up the Mutator's attention: in gen 3 a Mutator was asked to improve p0024 (−7.815, an exaggerated copy of p0011) instead of p0011 itself. |
+| Does the Mutator mutate the deep loop's new code? | **Partly.** Half its variants start from the champion, which is often a deep or deep-lineage program. The other half start from pool slots 2–4, and those are refilled every generation with the latest batch's results, good or bad. |
+| Is the earlier disconnect fixed? | The part review 1 described is. The one you saw in the graph (late mutations as bad as the worst code) comes from problems 1 and 3 below. |
 
-This is also why the chart shows a jump and then scattered points below it. The best-ever line is kept, but after a jump neither branch makes programs *near* the winner. Wide writes a new idea from scratch each time, and deep writes distorted copies.
+## 1. The pool forgets everything except the single best (biggest problem)
 
-## The structural problems, most important first
+`run.py`, `generation()`:
 
-### 1. "Why did it win?" can't be answered the way the loop asks it
+```python
+next_pool = []
+for b in branches:
+    next_pool += [p.id for p in self.survivors(out[b][0], self.a.top_x)]   # top X of THIS generation's new programs
+next_pool = list(dict.fromkeys(next_pool + [best.id]))                    # + only the single best ever
+```
 
-The Mutator prompt says *"Prefer a genuinely different idea … a different formula altogether"*. So a lucky winner from wide differs from its parent and from every other program in many ways at once. Comparing it with the others can't show which of its parts made the difference. The Researcher is left eyeballing whole programs that differ everywhere, and its reasoning in gen 3 says so explicitly.
+`survivors()` ranks only the programs made this generation, so the next pool is "the top 4 new wide programs + the top 4 new deep programs + the champion", however bad the new ones are. A program that was 2nd best last generation is dropped unless it's the champion.
 
-**Missing:** an attribution step. Knock out each part of the winner, one at a time, by removing or neutralising it, and score each version. The parts whose removal costs the most are *why it won*. This is a controlled experiment that actually answers the question, and it's cheap: the evaluator takes under a second per program.
+**Effects:**
+- **The Mutator works on poor programs.** `wide()` takes the top 4 of that pool. Slot 0 is the champion and slots 1–3 are usually last generation's newest outputs. Half the variants go to those slots, which is why the log shows Mutators asked to "write a program that scores higher than **−8.018**" while "the best shown is **−6.961**". They mutate a recent failure, not the 2nd–4th best program ever found.
+- **The Researcher works on poor programs too.** It sees the same pool, so its comparison programs are also mostly the latest, often weak, batch.
+- **Good deep work disappears.** A deep improve test that scored well but didn't beat the champion survives one generation, then vanishes.
 
-### 2. The test always distorts, whatever the hypothesis claims
+**Fix:** keep the best programs found so far, the usual (μ+λ) evolutionary selection:
 
-The hypotheses are causal ("the `consumed` term is what makes p0011 beat the others"). The prompts force the test to be an exaggeration:
+```python
+candidates = old pool (non-probe) + this generation's new programs (non-probe, valid, not duplicates)
+next_pool  = top K by score   (K ≈ 8–10, e.g. 2 × top_x)
+```
 
-- Researcher prompt: *"Make the change big enough to show a clear effect: exaggerate the aspect under test rather than nudging it."*
-- Coder prompt: *"push it far enough that the effect will show up."*
+To keep some variety, cap how many pool slots one lineage can hold (for example at most 3 programs sharing the same parent), or reserve 1–2 slots for the best *wide* programs. This is a few lines in `generation()`; `survivors()` can stay as it is.
 
-7 of the 8 tests in this run were a 3× to 12× change or a sign flip. The eighth (h0006) transplanted p0011's `consumed` term into the weaker p0010, which is closer to the right idea, but it was aimed at p0010 rather than the winner and came back flat. On a program that is already good, pushing any one weight that far moves it off its sweet spot, so the score drops *whether the claim was true or not*. An exaggeration answers "does this part matter at all?". It doesn't answer "is this why it won?", and it never produces a better program.
+## 2. Almost every Mutator reply is cut off
 
-Example: h0005 claimed `consumed` is why p0011 wins, then tested 2.0 → 6.0. The score went down. We still don't know whether `consumed` is why it wins.
+From the call log, Mutator calls between 19:07 and 19:11:
 
-### 3. Nothing turns a finding into a better program
+| | Calls |
+|---|---|
+| Hit the 8,000-token limit (45–61 s, no complete program) | **15** |
+| Finished normally (4–5 s) | 2 |
+| Repairs that themselves broke ("cut off mid-expression", "missing `return`") | several |
 
-Findings are logged as verdicts and nothing acts on them.
+The Mutator deliberates in its reply ("We need to write a new priority function… Let me think about…") and ignores "under about 150 words". So each wide batch takes about 60 s plus a repair round, and the repair rewrites the program from a one-line summary. The deep branch, by contrast, finishes in about 35–40 s (Researcher about 33 s, Coders about 3 s). **Deep and wide run in parallel, so wide's truncation alone sets the length of every generation.**
 
-- **h0008 found something useful.** It flipped `+0.4*tight_rem` to `−1.5*tight_rem` on p0011, and anticorr got 3.35 points worse. So `tight_rem` is clearly one of the things that makes p0011 good. The obvious next move (try 0.6 or 0.8 instead of 0.4) never happened.
-- **The Researcher worked it out but was cut off.** In gen 3 it reasoned its way to exactly these follow-ups ("scale `tight_rem` up 0.4 → 1.5", "raise `balance`"), but its reply hit the token limit before the JSON (see 5).
+**Fix:** the same one that worked for the Researcher.
+- **Code first.** "Start your reply with the ```python block. After it, at most two sentences naming the idea."
+- **A per-role output limit.** Give the Mutator something like 2,500 tokens, so a deliberating reply fails in seconds, not a minute.
+- **One retry on a cut-off reply:** "Reply with ONLY the ```python block". Include the cut-off reply's own reasoning in that retry, so the idea isn't lost.
 
-**Missing:** an exploit step. For the parts that attribution says matter, make moderate changes (about ×0.5 to ×1.5, or a refined version of the same mechanism), and transplant them into other strong programs. These are the programs deep should hand to the next generation, not the exaggerated tests.
+Expected effect: generations about twice as fast, and wide programs that are the model's actual idea.
 
-### 4. Deep's attention isn't anchored on the winner
+## 3. The Mutator is told to throw the program away
 
-- **The prompt spreads it out.** The Researcher prompt says *"Mix safe bets on the strongest program with at least one bolder idea"*, and lets it choose any of the 8 programs it's shown as a base.
-- **The budget shows it.** After the jump, the lucky hit got exactly 2 LLM calls of deep work, both exaggerations. In the same two generations 12 Mutator calls went to unrelated new ideas.
-- **No jump signal.** The Researcher is shown each program's score and parent, but not how much it beat its parent, so a lucky jump looks like any other row.
+`helix/prompts/mutator.md`: *"Prefer a genuinely different idea over nudging a constant … a different formula altogether."* Its replies show it doing exactly that: "All the shown programs are weighted sums of l… Let me think about a genuinely different approach."
 
-### 5. Operational: replies cut off at the 6,000-token limit
+So even when given the champion, the Mutator mostly writes a new program from scratch. In a search this far along, a from-scratch program usually scores like the early generations, which is the "mutations as bad as the worst" you saw.
 
-8 of the 40 logged calls returned exactly 6,000 tokens, meaning they were cut off:
-- 1 Researcher call;
-- 5 Mutator calls;
-- 2 of the repair calls that followed them.
+That's also not the design. Wide was meant to make *variants of the top programs* ("general attempts to improve"), not new programs.
 
-The prompts already ask for short reasoning, but in these calls the model deliberated at length anyway ("Let me think about this problem carefully…").
+**Fix:** split the Mutator's slots.
+- **Most slots (for example 4 of 6): variants.** "Keep this program's core; make one or two bold changes: add a new property of the bins, change the functional form of one term, change the rule for opening a new bin, or borrow a part from another program."
+- **The other 1–2 slots: fresh ideas.** "Write a genuinely different program" stays for these, to keep diversity.
 
-- **Gen 3 Researcher:** cut off mid-sentence, so there was no JSON, "no usable hypotheses", and the **whole deep branch was skipped for that generation**.
-- **Mutators:** no code block, so a repair call wrote the program without the reasoning that led to the idea.
+## 4. Knock-outs are re-run on every small new champion
 
-### 6. Smaller things
+`champion_plan()` spends half the deep budget (2 of 4 tests) on knock-outs whenever the champion has none recorded against it, including when the new champion beat the old one by only +0.058 and has the same parts.
 
-- **A test that changes nothing is reported as "flat".** h0003 changed code but moved every family by exactly 0.00, so the change never affected a single placement. It should get its own verdict (for example "no effect"), so the Researcher doesn't read it as evidence.
-- **A test that changed two things.** h0007 changed two coefficients at once, breaking the one-change rule, so its result can't be attributed to either.
+In this log, h0037 knocked out `fit` on p0088. That cost 12.1, which we already knew from h0025 on its ancestor. The Researcher itself notes that "all parts are un-knocked out" only because the champion's id changed.
 
-## What to change
+**Fix:**
+- **Only for real jumps.** Run cause tests only when the jump is at least `--epsilon` (a real jump, not drift).
+- **Only on parts that are new or changed.** Knock out only parts that differ from the champion's parent. Unchanged parts inherit the parent's knock-out results, which can be shown to the Researcher as "inherited from p00xx".
+- **Otherwise improve.** Spend every slot on improve tests.
 
-Structural changes, in order. The first four are the fix; the fifth stops generations being wasted.
+## 5. Improve tests are too slow at tuning numbers
 
-1. **Give deep two kinds of experiment instead of one.**
-   - **Cause test (knock-out):** remove or neutralise one part of the champion, and see how much it was worth. This answers "why did it win".
-   - **Improve test (moderate step):** change a part that matters by a moderate amount (about ×0.5 to ×1.5), refine its mechanism, or transplant it into another strong program. This produces candidates.
-   - **Keep exaggeration** only as an optional probe, and stop the prompts requiring it. Today the Researcher prompt ("exaggerate … rather than nudging") and the Coder prompt ("push it far enough") forbid exactly what the improve step needs.
-2. **Anchor deep on the champion, especially right after a jump.**
-   - When a new best appears, mark it ("p0011 is new and beat the previous best by 0.92").
-   - Spend most of that generation's deep budget on it: first knock-outs to find its key parts, then improve tests on those parts.
-3. **Close the loop from finding to code.** Every cause finding should lead to at least one improve test in the next generation, aimed at that same part. The research log should say which finding each new test builds on.
-4. **Don't let test programs pose as candidates.** Knock-outs and exaggerations are measurements. Keep their results in the research log, but only improve tests (and wide's programs) should compete for the next pool and be shown to the Mutator.
-5. **Make replies fit.**
-   - Detect a cut-off reply (`finish_reason == "length"`) and retry once, asking for the answer with no reasoning.
-   - Or ask for the JSON or code *first* and the reasoning after it, so cutting off the end loses only reasoning.
-   - Never skip a whole branch because one reply was cut off.
+Most improve tests are a single coefficient moved by about ×1.2: "geom 0.5 → 0.6", "penalty 0.16 → 0.20". The champion is a weighted sum of about five terms, so this is coordinate search done by an LLM, at 2 steps per generation and about 0.05 per step. In the research log, 21 of the 23 improve tests are "flat" and none is "supported".
 
-## How to tell it's fixed
+**Fix: let a cheap optimiser tune the numbers, and the LLM design the structure.**
+- **Tune.** Each generation, take the champion's numeric constants (parse them with `ast`) and run a short parallel local search: about 40–80 evaluations of ±10–30% perturbations, keeping any improvement. Each evaluation takes under a second, so with the existing workers this costs about 10–20 s of a roughly 40 s generation. Add the tuned program to the pool like any other deep program, with branch `tune`.
+- **Repoint the Researcher.** Its improve tests go to *mechanisms*: new terms, new functional forms, a different new-bin rule, ideas aimed at the families where the excess sits (`anticorr` 15.6% and `large` 10.4% on p0088). Only the LLM can do that.
+- **Guard against overfitting.** Accept a tuned program only if it improves by a margin. The final held-out `test` check already catches overfitting. If you want a separate check, I can add a `valid` split to the evaluator (different seeds, same families), which is a two-line change on my side.
+- **For the pitch:** this isn't "just tuning numbers". The LLM finds structure, and the optimiser polishes it.
 
-In the next run, after wide makes a jump, look for three things:
+## Order of work and expected effect
 
-- the following generation's research log shows knock-outs on that program, naming which parts mattered and by how much in each family;
-- the generation after that has improve tests on those parts;
-- **the best score rises again from deep**, not only from new wide luck.
+| # | Change | Where | Size | Effect |
+|---|---|---|---|---|
+| 1 | Pool keeps the best K so far (μ+λ) | `run.py` `generation()` | ~10 lines | Mutator and Researcher build on the best programs, not on the last batch |
+| 2 | Mutator: code first, smaller limit, code-only retry | `prompts/mutator.md`, `llm.py`, `run.py` `candidate()` | small | Generations about 2× faster; wide's programs are real ideas |
+| 3 | Mutator: mostly variants, 1–2 fresh-idea slots | `prompts/mutator.md`, `run.py` `wide()` | small | Fewer "as bad as the worst" mutations |
+| 4 | Knock-outs only for real jumps, only on new parts | `run.py` `champion_plan()` | small | Deep spends its slots on improving |
+| 5 | Optimiser tunes constants; LLM improve tests go to mechanisms | `run.py` `deep()` + a small tuner | ~60–100 lines | Large quick gain on the current champion; LLM effort goes where only it can help |
 
-The report's "where the improvements came from" table should show deep rows after each wide jump.
+**Honest expectation.** Changes 1–4 should roughly double progress per minute: shorter generations, no wasted wide calls, and a population that remembers. Change 5 should give a clear one-off step on the current champion, then keep it tuned.
+
+A gain in the next 10 generations bigger than everything so far (−9.18 → −6.96, 2.2 points) is unlikely from loop changes alone. Most of the remaining excess is in `anticorr` and `large`, and part of it is the lower bound being loose (it ignores job shapes), so 0% isn't reachable. Real headroom is smaller than the numbers suggest.
+
+## How to tell it worked
+
+- The pool line in each generation's record lists programs from several generations, not only the latest one.
+- Mutator calls finish in well under 15 s, with almost no repairs.
+- Mutator targets other than the champion score close to the champion, not around −8.
+- The best score rises in most generations, with rows from `deep`, `tune` and `wide` in the report's "where the improvements came from" table.
