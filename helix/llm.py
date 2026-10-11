@@ -17,12 +17,28 @@ import json
 import os
 import random
 import re
+import ssl
 import threading
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
+
+
+def _ssl_context():
+    """Python from python.org on macOS ships without root certificates, so HTTPS fails with
+    CERTIFICATE_VERIFY_FAILED. Use certifi's bundle when it's installed; otherwise the system default."""
+    if os.environ.get("SSL_CERT_FILE"):
+        return ssl.create_default_context()
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
+SSL_CONTEXT = _ssl_context()
 
 ENV_FILE = Path(__file__).resolve().parent / ".env"
 # Committed team settings (Luminal endpoint, model, temporary key). helix/.env and real
@@ -270,7 +286,8 @@ class LLM:
             req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
             self._acquire()
             try:
-                with urllib.request.urlopen(req, timeout=self.s.timeout) as resp:
+                with urllib.request.urlopen(req, timeout=self.s.timeout,
+                                            context=SSL_CONTEXT if url.startswith("https") else None) as resp:
                     data = _read_stream(resp) if body.get("stream") else json.loads(resp.read().decode())
                 self._speed_up()
                 return data
