@@ -58,8 +58,9 @@ class Settings:
     pro_model: str = ""
     pro_every: int = 10          # every Nth call goes to the pro model; 0 = never
     temperature: float = 0.8
-    max_tokens: int = 8000
-    timeout: float = 180.0       # seconds per request
+    max_tokens: int = 16000      # reasoning models spend thousands of tokens thinking before they answer
+    timeout: float = 180.0       # seconds of silence before giving up (streamed replies keep it alive)
+    stream: bool = True          # Luminal cuts off non-streamed requests that run past ~20 s
     retries: int = 6             # 503s from a serverless model that's warming up are common
     extra_body: dict = field(default_factory=dict)
 
@@ -87,6 +88,9 @@ class Settings:
             s.extra_body = json.loads(extra) if extra else {}
         except json.JSONDecodeError:
             raise SystemExit(f"LUMINAL_EXTRA_BODY isn't valid JSON: {extra!r}")
+        s.stream = (env("HELIX_STREAM") or "1").strip().lower() not in ("0", "false", "no", "off")
+        if env("HELIX_MAX_TOKENS"):
+            s.max_tokens = int(env("HELIX_MAX_TOKENS"))
         for key, value in overrides.items():
             if value is not None:
                 setattr(s, key, value)
@@ -226,6 +230,7 @@ class LLM:
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "temperature": temperature,
             "max_tokens": self.s.max_tokens,
+            **({"stream": True} if self.s.stream else {}),
             **self.s.extra_body,
         }
         data = self._post(body)
@@ -237,9 +242,12 @@ class LLM:
         if not isinstance(reasoning, str):
             reasoning = json.dumps(reasoning)
         if not text.strip():
-            raise RuntimeError(f"empty reply (finish_reason={choice.get('finish_reason')!r})")
+            raise RuntimeError(f"empty reply (finish_reason={choice.get('finish_reason')!r}"
+                               + (f", {len(reasoning):,} characters of reasoning" if reasoning else "") + ")")
         usage = data.get("usage") or {}
-        return text, int(usage.get("prompt_tokens") or 0), int(usage.get("completion_tokens") or 0), reasoning
+        tokens_in = int(usage.get("prompt_tokens") or (len(system) + len(user)) // 4)
+        tokens_out = int(usage.get("completion_tokens") or (len(text) + len(reasoning)) // 4)
+        return text, tokens_in, tokens_out, reasoning
 
     def _post(self, body):
         missing = self.s.problems()
@@ -254,7 +262,7 @@ class LLM:
             self._acquire()
             try:
                 with urllib.request.urlopen(req, timeout=self.s.timeout) as resp:
-                    data = json.loads(resp.read().decode())
+                    data = _read_stream(resp) if body.get("stream") else json.loads(resp.read().decode())
                 self._speed_up()
                 return data
             except urllib.error.HTTPError as err:
@@ -328,6 +336,41 @@ class LLM:
         record = {"time": time.strftime("%H:%M:%S"), **record}
         with self._lock, self.log_path.open("a") as f:
             f.write(json.dumps(record) + "\n")
+
+
+def _read_stream(resp):
+    """Collect an OpenAI-style server-sent-event stream into the same shape as a normal reply."""
+    content, reasoning, finish, usage, seen_events, raw_lines = [], [], None, {}, False, []
+    for raw in resp:
+        line = raw.decode("utf-8", "replace").strip()
+        raw_lines.append(line)
+        if not line.startswith("data:"):
+            continue
+        seen_events = True
+        payload = line[5:].strip()
+        if payload == "[DONE]":
+            break
+        try:
+            chunk = json.loads(payload)
+        except json.JSONDecodeError:
+            continue
+        if chunk.get("error"):   # an error part-way through: treat like a dropped connection and retry
+            raise ConnectionError(f"error in stream: {json.dumps(chunk['error'])[:300]}")
+        if chunk.get("usage"):
+            usage = chunk["usage"]
+        for ch in chunk.get("choices") or []:
+            delta = ch.get("delta") or ch.get("message") or {}
+            if delta.get("content"):
+                content.append(delta["content"])
+            r = delta.get("reasoning_content") or delta.get("reasoning")
+            if isinstance(r, str) and r:
+                reasoning.append(r)
+            if ch.get("finish_reason"):
+                finish = ch["finish_reason"]
+    if not seen_events:          # the server ignored "stream" and sent one normal JSON reply
+        return json.loads("\n".join(raw_lines))
+    return {"choices": [{"message": {"content": "".join(content), "reasoning_content": "".join(reasoning)},
+                         "finish_reason": finish}], "usage": usage}
 
 
 def _retry_after(err):
