@@ -125,7 +125,7 @@ What the baselines are:
 
 A program is marked **invalid** (`valid: false`, `score: null`) instead of crashing the evaluator when it:
 
-- imports anything other than `numpy` or `math`, including through `__import__`;
+- imports anything other than `numpy` or `math`, including through `__import__`. That also rules out `typing` and `from __future__ import annotations`, which LLMs often add out of habit;
 - uses `open`, `exec`, `eval`, `compile`, `input` or `breakpoint` (these are removed);
 - fails to load, has a syntax error, or defines no `priority`;
 - raises an exception, or calls `exit()`;
@@ -135,14 +135,26 @@ Other behaviour:
 
 - Anything a program prints is discarded.
 - The `error` field keeps the last 20 lines of the traceback, so it can be shown to the LLM. A wrong shape and NaN/infinity give different messages, so the model can tell which to fix.
-- The program is reloaded for every instance, so nothing it stores can carry over from one instance to the next. The same program always gets the same score; this was checked by running it twice.
+- The program is reloaded for every instance, so nothing it stores can carry over from one instance to the next.
+- The same program always gets the same score. If a program uses numpy randomness anyway, numpy's global generator is reset before every instance and `default_rng()` without a seed gets seed 0.
 - Timeouts are handled by the loop (`helix/sandbox.py`, 60 s by default), not here, as the contract says.
+
+## A program can't fake its score
+
+The program runs in the same process as the scorer, so in principle it could change numpy or math functions the scorer uses. We tried this: replacing `numpy.mean` gave a perfect score, replacing `math.ceil` gave +99.97, and replacing `numpy.all` let every job "fit" into one bin. An LLM won't usually do this on purpose, but evolution rewards anything that raises the score. So the scorer no longer depends on anything a program can change:
+
+- **Lower bounds** are worked out with plain integer arithmetic when the instances are generated, before any program code runs.
+- **The fit check** uses numpy operators and array methods, not module functions a program can replace.
+- **Every finished packing is checked in plain Python**: no bin may go over capacity, and the bins must hold exactly the total demand. If either fails, the program is invalid.
+- **Averages** for families and the overall score are computed in plain Python.
+
+All three tricks above now get the honest score, and all baselines score exactly as before.
 
 ## Files
 
 | File | What's in it |
 |---|---|
-| `evaluator/problem.py` | Instance families, splits and seeds; the packing simulator; the lower bound. The simulator gives the same results as the contract's reference code. |
+| `evaluator/problem.py` | Instance families, splits and seeds; the packing simulator; the lower bound; the final packing check. The simulator gives the same results as the contract's reference code. Each instance dict also carries its precomputed `lower_bound`. |
 | `evaluator/evaluate.py` | `evaluate(program_path, split)`: loads the program safely, runs every instance, builds the result. |
 | `evaluator/__main__.py` | The `python -m evaluator` command line. |
 | `evaluator/__init__.py` | Exposes `evaluate`. |
