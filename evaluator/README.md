@@ -97,6 +97,7 @@ Excess over the lower bound, so lower is better. Columns after "Overall" are per
 | `best_fit` | **8.77%** | 4.4 | 3.5 | 18.7 | 3.8 | 15.0 | 7.4 |
 | `dot_product` | **8.42%** | 4.7 | 3.5 | 17.6 | 3.1 | 14.3 | 7.4 |
 | `tuned_params` | **8.01%** | 4.2 | 3.6 | 15.9 | 3.8 | 13.3 | 7.2 |
+| `alphaevolve_borg` | **12.65%** | 10.0 | 10.2 | 18.8 | 3.1 | 18.6 | 15.1 |
 
 **Test** (new seeds, plus the two held-out families)
 
@@ -106,6 +107,7 @@ Excess over the lower bound, so lower is better. Columns after "Overall" are per
 | `best_fit` | **8.77%** | 5.6 | 3.7 | 19.2 | 3.8 | 14.7 | 7.8 | 10.1 | 5.2 |
 | `dot_product` | **7.99%** | 5.9 | 3.9 | 18.3 | 1.9 | 13.7 | 7.9 | 7.0 | 5.3 |
 | `tuned_params` | **7.39%** | 5.5 | 3.9 | 15.2 | 3.1 | 13.4 | 7.0 | 6.6 | 4.6 |
+| `alphaevolve_borg` | **11.97%** | 10.3 | 10.9 | 18.8 | 2.8 | 18.1 | 16.1 | 9.2 | 9.6 |
 
 What the baselines are:
 
@@ -113,6 +115,9 @@ What the baselines are:
 - `best_fit.py`: the bin with the least space left over, measured as a fraction of capacity.
 - `dot_product.py`: the bin whose free space points the same way as the job's demand (Panigrahy et al., *Heuristics for Vector Bin Packing*, 2011).
 - `tuned_params.py`: a fixed formula (fill, balance between CPU and memory, a near-full bonus, a small penalty for opening a new bin) whose six weights were picked by a 120-try random search on `train`. No LLM was involved.
+- `alphaevolve_borg.py`: the heuristic AlphaEvolve discovered for Google's Borg scheduler (Novikov et al., *AlphaEvolve*, 2025, Figure 6). That paper frames the same kind of online job placement as two-resource vector bin packing. The formula is copied unchanged; the only addition is ranking the new bin last, because Borg places jobs on existing machines and never opens one.
+
+**Why AlphaEvolve's heuristic scores worse than First Fit here.** It was evolved to reduce *stranded* resources on a fixed fleet, so it favours machines with lots of free space and keeps CPU and memory in balance. That spreads jobs out, which is the opposite of using as few bins as possible. A heuristic evolved for one objective doesn't carry over to another, which is why this problem needs its own search. It is a reference point, not the bar to beat.
 
 **`tuned_params` is the bar to beat.** If evolved programs don't beat it, the loop is only tuning numbers, not finding new ideas. It also improves on both held-out families, which shows the training mix has real room to improve and that gains can carry over to unseen job types. The biggest gaps are in `anticorr` and `large`.
 
@@ -141,7 +146,8 @@ Other behaviour:
 | `evaluator/evaluate.py` | `evaluate(program_path, split)`: loads the program safely, runs every instance, builds the result. |
 | `evaluator/__main__.py` | The `python -m evaluator` command line. |
 | `evaluator/__init__.py` | Exposes `evaluate`. |
-| `programs/*.py` | Code Zero and the three baselines above. |
+| `evaluator/.gitignore` | Keeps `__pycache__/` out of the repo. |
+| `programs/*.py` | Code Zero and the four baselines above. |
 
 ## Changing the instance set
 
@@ -152,7 +158,7 @@ The evaluator owner can tune the instance set (the contract allows it). Families
 ```bash
 python -c "
 from evaluator import evaluate
-for p in ['code_zero', 'best_fit', 'dot_product', 'tuned_params']:
+for p in ['code_zero', 'best_fit', 'dot_product', 'tuned_params', 'alphaevolve_borg']:
     print(p, *(evaluate(f'programs/{p}.py', s)['excess_pct'] for s in ['train', 'test']))
 "
 ```
@@ -160,4 +166,4 @@ for p in ['code_zero', 'best_fit', 'dot_product', 'tuned_params']:
 ## Notes
 
 - The commit that added `tuned_params.py` says 7.97% on train. That was before its weights were rounded to three decimals; the committed program scores 8.01%, as in the table above.
-- Running the evaluator directly creates `evaluator/__pycache__/`. Don't commit it. The sandbox sets `PYTHONDONTWRITEBYTECODE`, so loop runs don't create it.
+- Two `.pyc` cache files were committed by mistake early on and have since been removed; `evaluator/.gitignore` now keeps `__pycache__/` out.
