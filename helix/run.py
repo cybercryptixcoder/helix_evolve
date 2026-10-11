@@ -36,7 +36,7 @@ from .sandbox import REPO_ROOT, evaluate_code, evaluate_file
 
 RUNS_DIR = Path(__file__).resolve().parent / "runs"
 # Mutator runs hot for variety; Coder runs cool so it changes only what it's told.
-TEMPERATURE = {"mutator": 1.0, "researcher": 0.7, "coder": 0.3, "zeroshot": 1.0}
+TEMPERATURE = {"mutator": 0.8, "researcher": 0.6, "coder": 0.3, "zeroshot": 0.8}
 RESEARCHER_SHOWN = 8      # programs shown to the Researcher
 
 
@@ -149,7 +149,8 @@ class Search:
             if attempt == self.a.repairs:
                 break
             try:   # one repair: show the agent its own error
-                fix = self.llm.chat(f"{role}-repair", system, roles.repair_message(code or reply.text, prog.error),
+                # If there was no program, show only the end of the reply: it can be thousands of words of thinking.
+                fix = self.llm.chat(f"{role}-repair", system, roles.repair_message(code or reply.text[-2500:], prog.error),
                                     temperature=TEMPERATURE[role])
             except Exception as exc:
                 prog.error += f"\n(repair call failed: {exc})"

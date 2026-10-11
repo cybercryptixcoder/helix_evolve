@@ -10,5 +10,5 @@ You'll get a base program, its scores, and one hypothesis naming the change to m
 
 ## Reply format
 
-1. One sentence saying exactly what you changed.
+1. One sentence saying exactly what you changed. Don't deliberate at length; make the change and write the program.
 2. The complete program in a single ```python block. It must define `priority(item, bins, capacity)` and follow every rule in the problem statement.

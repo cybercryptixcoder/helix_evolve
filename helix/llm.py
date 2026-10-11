@@ -247,9 +247,12 @@ class LLM:
         reasoning = message.get("reasoning_content") or message.get("reasoning") or ""
         if not isinstance(reasoning, str):
             reasoning = json.dumps(reasoning)
+        if not text.strip() and reasoning.strip():
+            # The model slipped into hidden thinking and ran out of room before answering. The program or
+            # JSON is often already written inside that thinking, so hand it on and let the parser look.
+            text = reasoning
         if not text.strip():
-            raise RuntimeError(f"empty reply (finish_reason={choice.get('finish_reason')!r}"
-                               + (f", {len(reasoning):,} characters of reasoning" if reasoning else "") + ")")
+            raise RuntimeError(f"empty reply (finish_reason={choice.get('finish_reason')!r})")
         usage = data.get("usage") or {}
         tokens_in = int(usage.get("prompt_tokens") or (len(system) + len(user)) // 4)
         tokens_out = int(usage.get("completion_tokens") or (len(text) + len(reasoning)) // 4)

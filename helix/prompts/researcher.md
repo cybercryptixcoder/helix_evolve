@@ -14,7 +14,7 @@ You'll see:
 
 ## Reply format
 
-First write your analysis in plain text: work through steps 1–4 above, comparing specific programs and families, before deciding anything. Then end your reply with a single ```json block and nothing after it:
+First write your analysis in plain text: work through steps 1–4 above, comparing specific programs and families, before deciding anything. Keep it focused, under about 500 words, and don't think at length before you start writing. Then end your reply with a single ```json block and nothing after it:
 
 ```json
 {"hypotheses": [
