@@ -89,6 +89,7 @@ class Store:
         self._by_hash = {}
         self._counters = {"p": 0, "h": 0}
         self._lock = threading.Lock()
+        self.mirror = None        # optional MongoDB copy (helix/mongo.py), set by run.py
 
     # ------------------------------------------------------------ ids and lookup
     def new_id(self, kind):
@@ -140,10 +141,15 @@ class Store:
 
     def save_config(self, config):
         (self.dir / "config.json").write_text(json.dumps(config, indent=2))
+        if self.mirror:
+            self.mirror.put("runs", {"config": config}, key="run_id")
 
     def _append(self, name, record):
         with (self.dir / name).open("a") as f:
             f.write(json.dumps(record) + "\n")
+        if self.mirror:   # programs.jsonl -> "programs" collection, keyed by id / generation
+            collection = name.removesuffix(".jsonl")
+            self.mirror.put(collection, dict(record), key="generation" if collection == "generations" else "id")
 
     # ------------------------------------------------------------ resume
     @classmethod
