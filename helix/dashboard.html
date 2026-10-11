@@ -102,7 +102,9 @@
   .scroll { max-height: 420px; overflow: auto; }
   .chip { font: 500 11px var(--mono); padding: 1px 7px; border-radius: 4px; color: #fff; white-space: nowrap; }
   .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.other { background: var(--ink2); color: var(--paper); }
-  .v-supported { color: var(--good); } .v-refuted { color: var(--bad); } .v-flat, .v-invalid, .v-unchanged { color: var(--muted); }
+  .v-supported, .v-removal-helps { color: var(--good); } .v-refuted { color: var(--bad); } .v-matters { color: var(--deep); }
+  .v-flat, .v-invalid, .v-unchanged, .v-minor, .v-no-effect { color: var(--muted); }
+  .kind { font: 500 10.5px var(--mono); padding: 0 5px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink2); }
   pre.code { font: 12px/1.5 var(--mono); background: color-mix(in srgb, var(--ink) 4%, var(--card)); border: 1px solid var(--rule);
              border-radius: 8px; padding: 12px; overflow: auto; max-height: 460px; margin: 0; white-space: pre; }
   pre.text { white-space: pre-wrap; word-break: break-word; }
@@ -535,8 +537,8 @@ function renderHyps(hyps) {
   const counts = {}; hyps.forEach((h) => counts[h.verdict] = (counts[h.verdict] || 0) + 1);
   $("logMeta").textContent = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ");
   if (!hyps.length) return setHTML($("hyps"), `<div class="empty">No hypotheses tested yet.</div>`);
-  const icon = { supported: "▲", refuted: "▼", flat: "■", invalid: "✕", unchanged: "=" };
-  const rows = hyps.slice().reverse().map((h) => `<div class="hyp"><div class="meta">${esc(h.id)} · gen ${h.generation} · on ${esc(h.base_id)} · <span class="v-${esc(h.verdict)}">${icon[h.verdict] || ""} ${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</span></div>
+  const icon = { supported: "▲", refuted: "▼", flat: "■", invalid: "✕", unchanged: "=", matters: "◆", minor: "·", "no-effect": "○", "removal-helps": "▲" };
+  const rows = hyps.slice().reverse().map((h) => `<div class="hyp"><div class="meta"><span class="kind">${esc(h.kind || "improve")}</span> ${esc(h.id)} · gen ${h.generation} · on ${esc(h.base_id)}${h.builds_on ? ` · builds on ${esc(h.builds_on)}` : ""} · <span class="v-${esc(h.verdict)}">${icon[h.verdict] || ""} ${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</span></div>
       <div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>
       ${h.family_shift && Object.keys(h.family_shift).length ? `<div class="hint">Excess moved: ${Object.entries(h.family_shift).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3).map(([f, v]) => `${esc(f)} ${signed(v, 2)}`).join(", ")}</div>` : ""}</div>`);
   setHTML($("hyps"), rows.join(""));
@@ -558,14 +560,14 @@ function renderPrograms(progs) {
   const row = (p) => `<tr class="click" data-pid="${esc(p.id)}"><td class="num">${esc(p.id)}</td><td class="num">${p.generation}</td>
       <td><span class="chip ${p.branch === "deep" || p.branch === "wide" ? p.branch : "other"}">${esc(p.branch)}</span></td>
       <td class="num">${p.valid ? fmt(p.score) : `<span class="bad">invalid</span>`}</td>
-      <td>${esc((p.valid ? p.note : p.error) || "").slice(0, 140)}</td></tr>`;
+      <td>${p.probe ? `<span class="kind">knock-out</span> ` : ""}${esc((p.valid ? p.note : p.error) || "").slice(0, 140)}</td></tr>`;
   setHTML($("programs"), `<table><thead><tr><th>Id</th><th>Gen</th><th>Branch</th><th>Score</th><th>What it does</th></tr></thead><tbody>${valid.map(row).join("")}
       ${failed.length ? `<tr><td colspan="5" class="hint">Latest failures</td></tr>` + failed.map(row).join("") : ""}</tbody></table>`);
 }
 
 function renderGens(gens) {
   if (!gens.length) return setHTML($("gens"), `<div class="empty">No generations yet.</div>`);
-  const cell = (r) => r ? `${r.valid}/${r.new} valid, best ${fmt(r.best_new)}${["supported", "refuted", "flat", "invalid", "unchanged"].filter((k) => r[k]).map((k) => ` · ${r[k]} ${k}`).join("")}` : "–";
+  const cell = (r) => r ? `${r.valid}/${r.new} valid, best ${fmt(r.best_new)}${r.cause != null ? ` · ${r.cause} cause / ${r.improve} improve` : ""}${["matters", "removal-helps", "supported", "refuted", "flat", "minor", "no-effect", "invalid", "unchanged"].filter((k) => r[k]).map((k) => ` · ${r[k]} ${k}`).join("")}` : "–";
   const rows = gens.slice().reverse().map((g) => `<tr><td class="num">${g.generation}</td><td class="num">${fmt(g.best_score)}</td><td>${cell(g.deep)}</td><td>${cell(g.wide)}</td><td class="num">${g.seconds ? g.seconds + "s" : "–"}</td><td class="num">${g.llm ? g.llm.calls : "–"}</td></tr>`);
   setHTML($("gens"), `<table><thead><tr><th>Gen</th><th>Best so far</th><th>Deep</th><th>Wide</th><th>Took</th><th>Calls</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
 }

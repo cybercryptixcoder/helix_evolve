@@ -40,26 +40,67 @@ def mutator_message(target, others):
     return "\n\n".join(parts)
 
 
-def researcher_message(ranked, log, n_hypotheses, generation):
-    parts = [f"Generation {generation}. Score = −(mean excess %); higher is better.", "## Programs, best first"]
-    for p in ranked:
+def researcher_message(champ, champ_info, ranked, log, plan, generation, gains):
+    """champ_info: {"new": bool, "jump": float|None}; plan: {"cause": n, "improve": n}; gains: id -> gain over parent."""
+    parts = [f"Generation {generation}. Score = −(mean excess %); higher is better."]
+
+    head = f"## The champion: {champ.id}, score {champ.score:.3f} ({champ.branch} branch, generation {champ.generation})"
+    if champ_info.get("new") and champ_info.get("jump") is not None:
+        head += f"\n**New champion: it beat the previous best by {champ_info['jump']:+.3f}.** Find out why, then build on it."
+    parts.append(f"{head}\nExcess % by family: {format_families(champ.families)}\n\n```python\n{champ.code.strip()}\n```")
+
+    knockouts = [h for h in log if h.kind == "cause" and h.base_id == champ.id and h.verdict != "pending"]
+    parts.append("## What we know about the champion's parts (knock-outs: score change when the part is removed)")
+    if knockouts:
+        def ko_line(h):
+            if h.delta is None:
+                return f"- {h.id}: {h.change} → {h.verdict}"
+            hurt = sorted(h.family_shift.items(), key=lambda kv: kv[1], reverse=True)[:2]
+            where = ", ".join(f"{f} {v:+.2f}" for f, v in hurt if v > 0)
+            return f"- {h.id}: {h.change} → score {h.delta:+.3f} [{h.verdict}]" + (f"; excess rose most on {where}" if where else "")
+        parts.append("\n".join(ko_line(h) for h in knockouts))
+    else:
+        parts.append("(no knock-outs on this champion yet)")
+    acted_on = {h.builds_on for h in log if h.builds_on}
+    open_findings = [h for h in log if h.kind == "cause" and h.verdict in ("matters", "removal-helps")
+                     and h.base_id == champ.id and h.id not in acted_on]
+    if open_findings:
+        parts.append("Findings not acted on yet (aim improve tests at these): "
+                     + ", ".join(f"{h.id} ({h.delta:+.3f})" for h in open_findings))
+
+    parts.append("## Other candidate programs, best first")
+    others = [p for p in ranked if p.id != champ.id]
+    for p in others:
         origin = p.branch + (f", from {p.parent_id}" if p.parent_id else "")
-        parts.append(
-            f"### Program {p.id} — score {p.score:.3f} ({origin})\n"
-            f"Excess % by family: {format_families(p.families)}\n\n```python\n{p.code.strip()}\n```"
-        )
+        gain = f", {gains[p.id]:+.3f} over its parent" if gains.get(p.id) is not None else ""
+        parts.append(f"### Program {p.id}: score {p.score:.3f} ({origin}{gain})\n"
+                     f"Excess % by family: {format_families(p.families)}\n\n```python\n{p.code.strip()}\n```")
+    if not others:
+        parts.append("(none)")
+
     parts.append("## Research log (oldest first)")
     shown = [h for h in log if h.verdict != "pending"][-LOG_SHOWN:]
     parts.append("\n".join(format_hypothesis(h) for h in shown) if shown else "(nothing tested yet)")
-    parts.append(f"Propose exactly {n_hypotheses} hypotheses. Use program ids exactly as written above.")
+
+    total = plan["cause"] + plan["improve"]
+    ask = [f"## Plan for this generation\nPropose exactly {total} hypotheses:"]
+    if plan["cause"]:
+        ask.append(f"- {plan['cause']} **cause** tests: knock out one part of {champ.id} each, choosing parts not knocked out yet.")
+    ask.append(f"- {plan['improve']} **improve** tests: moderate changes to the parts of {champ.id} that matter most"
+               + (", following up the open findings above" if open_findings else "")
+               + ", or a transplant between the champion and another strong program.")
+    ask.append("Use program ids exactly as written above. Put the JSON block first.")
+    parts.append("\n".join(ask))
     return "\n\n".join(parts)
 
 
 def coder_message(base, h):
+    kind = ("**cause** (knock-out): remove or neutralise exactly this part, nothing else"
+            if h.kind == "cause" else "**improve**: make exactly this moderate change, nothing else")
     return (
         f"## Base program {base.id} (score {base.score:.3f})\n"
         f"Excess % by family: {format_families(base.families)}\n\n```python\n{base.code.strip()}\n```\n\n"
-        f"## Hypothesis\n\nClaim: {h.claim}\n\nChange to make: {h.change}\n\nPrediction: {h.prediction}\n\n"
+        f"## Hypothesis ({kind})\n\nClaim: {h.claim}\n\nChange to make: {h.change}\n\nPrediction: {h.prediction}\n\n"
         "Make exactly this change to the base program."
     )
 
@@ -83,7 +124,7 @@ def format_families(families):
 
 
 def format_hypothesis(h):
-    line = f"- {h.id} on {h.base_id}: [{h.verdict}"
+    line = f"- {h.id} {h.kind} on {h.base_id}" + (f" (builds on {h.builds_on})" if h.builds_on else "") + f": [{h.verdict}"
     if h.delta is not None:
         line += f", {h.delta:+.3f}"
     line += f"] claim: {h.claim} | change: {h.change}"
@@ -132,11 +173,14 @@ def extract_hypotheses(text, valid_ids, fallback_id):
             if not claim or not change:
                 continue
             base = str(item.get("base", "")).strip()
+            kind = str(item.get("kind", "improve")).strip().lower()
             out.append({
                 "base": base if base in valid_ids else fallback_id,
                 "claim": claim,
                 "change": change,
                 "prediction": str(item.get("prediction", "")).strip(),
+                "kind": "cause" if kind.startswith("cause") or "knock" in kind else "improve",
+                "builds_on": str(item.get("builds_on") or "").strip(),
             })
         if out:
             return out

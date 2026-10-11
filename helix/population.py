@@ -36,6 +36,7 @@ class Program:
     model: str = ""
     repaired: bool = False
     duplicate_of: str | None = None
+    probe: bool = False               # a knock-out measurement: kept in the log, not a candidate for the pool
 
     @property
     def rank_key(self):
@@ -55,16 +56,25 @@ class Hypothesis:
     base_score: float | None = None
     new_score: float | None = None
     delta: float | None = None
-    verdict: str = "pending"          # supported | refuted | flat | invalid | unchanged
+    # improve: supported | refuted | flat | no-effect      cause (knock-out): matters | minor | no-effect | removal-helps
+    # either: invalid | unchanged
+    verdict: str = "pending"
     family_shift: dict = field(default_factory=dict)   # family -> change in excess % (negative = better)
+    kind: str = "improve"             # cause = knock-out measurement; improve = attempt to beat the base
+    builds_on: str = ""               # the hypothesis id this test follows from, if any
 
 
 def judge(h, base, new, epsilon):
-    """Fill in a hypothesis's verdict by comparing its program with the base program."""
+    """Fill in a hypothesis's verdict by comparing its program with the base program.
+
+    A knock-out (cause) program is a measurement: it's marked as a probe so it never joins the pool,
+    unless removing the part actually made the program better, in which case it's a real candidate.
+    """
     h.program_id = new.id
     h.base_score = base.score
     if new.duplicate_of == base.id:
         h.verdict = "unchanged"           # the Coder produced the base program again
+        new.probe = h.kind == "cause"
         return h
     if not new.valid:
         h.verdict = "invalid"
@@ -72,7 +82,20 @@ def judge(h, base, new, epsilon):
     h.new_score = new.score
     h.delta = round(new.score - base.score, 4)
     h.family_shift = {f: round(new.families[f] - base.families[f], 3) for f in base.families if f in new.families}
-    h.verdict = "supported" if h.delta > epsilon else "refuted" if h.delta < -epsilon else "flat"
+    no_effect = bool(h.family_shift) and all(v == 0 for v in h.family_shift.values())
+    if h.kind == "cause":
+        if no_effect:
+            h.verdict = "no-effect"       # the part never changed a single placement: dead weight
+        elif h.delta > epsilon:
+            h.verdict = "removal-helps"   # the part was hurting: the knock-out is a better program
+        elif h.delta < -epsilon:
+            h.verdict = "matters"         # the part is worth about -delta: a reason the base wins
+        else:
+            h.verdict = "minor"
+        new.probe = h.verdict != "removal-helps"
+    else:
+        h.verdict = ("no-effect" if no_effect else "supported" if h.delta > epsilon
+                     else "refuted" if h.delta < -epsilon else "flat")
     return h
 
 
@@ -118,7 +141,7 @@ class Store:
             return self._best_unlocked()
 
     def _best_unlocked(self):
-        valid = [p for p in self.programs.values() if p.valid]
+        valid = [p for p in self.programs.values() if p.valid and not p.probe]   # measurements never lead
         return max(valid, key=lambda p: p.rank_key) if valid else None
 
     # ------------------------------------------------------------ recording

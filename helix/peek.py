@@ -16,6 +16,7 @@ from collections import Counter
 from pathlib import Path
 
 RUNS_DIR = Path(__file__).resolve().parent / "runs"
+VERDICTS = ("matters", "minor", "removal-helps", "supported", "refuted", "flat", "no-effect", "invalid", "unchanged")
 
 
 # ---------------------------------------------------------------- reading a run folder
@@ -97,7 +98,8 @@ def load_state(run_dir):
     programs = read_jsonl(d / "programs.jsonl")
     hyps = read_jsonl(d / "hypotheses.jsonl")
     valid = [p for p in programs if p.get("valid")]
-    best = max(valid, key=lambda p: p["score"]) if valid else None
+    leaders = [p for p in valid if not p.get("probe")]       # knock-out measurements never lead
+    best = max(leaders, key=lambda p: p["score"]) if leaders else None
     seed = next((p for p in programs if p.get("branch") == "seed"), None)
     errors = Counter(_first_error_line(p["error"]) for p in programs if not p.get("valid") and p.get("error"))
     return {
@@ -106,7 +108,7 @@ def load_state(run_dir):
         "config": read_json(d / "config.json", {}) or {},
         "generations": read_jsonl(d / "generations.jsonl"),
         "programs": [{k: p.get(k) for k in ("id", "generation", "branch", "parent_id", "hypothesis_id", "note",
-                                            "valid", "score", "families", "repaired", "duplicate_of", "model")}
+                                            "valid", "score", "families", "repaired", "duplicate_of", "model", "probe")}
                      | {"error": _first_error_line(p.get("error"))} for p in programs],
         "hypotheses": hyps,
         "best": best,
@@ -157,7 +159,7 @@ def snapshot(run_dir):
             r = g.get(b)
             if r:
                 bn = f"{r['best_new']:.3f}" if r.get("best_new") is not None else "none"
-                verdicts = ", ".join(f"{k} {v}" for k, v in r.items() if k in ("supported", "refuted", "flat", "invalid", "unchanged"))
+                verdicts = ", ".join(f"{k} {v}" for k, v in r.items() if k in VERDICTS)
                 parts.append(f"{b} {r['valid']}/{r['new']} valid, best new {bn}" + (f" [{verdicts}]" if verdicts else ""))
         if g.get("seconds"):
             parts.append(f"{g['seconds']}s")
@@ -186,7 +188,9 @@ def snapshot(run_dir):
         out.append("\n== Latest verdicts")
         for h in s["hypotheses"][-8:]:
             delta = f"{h['delta']:+.3f}" if h.get("delta") is not None else "n/a"
-            out.append(f"{h['id']} gen {h['generation']} {h['verdict']} {delta} on {h['base_id']}: {h['claim'][:160]} || change: {h['change'][:120]}")
+            out.append(f"{h['id']} gen {h['generation']} {h.get('kind', 'improve')} {h['verdict']} {delta} on {h['base_id']}"
+                       + (f" (builds on {h['builds_on']})" if h.get("builds_on") else "")
+                       + f": {h['claim'][:160]} || change: {h['change'][:120]}")
 
     ideas = [p for p in s["programs"] if p["branch"] == "wide" and p.get("note")][-5:]
     if ideas:

@@ -112,8 +112,11 @@ class Search:
             say(f"   (publishing the trace failed, the run carries on: {type(exc).__name__}: {exc})")
 
     # ================================================================ one candidate
-    def candidate(self, role, user, generation, branch, parent_id=None, hypothesis_id=None):
-        """Ask one agent for a program, score it, repair it once if it fails. Always returns a Program."""
+    def candidate(self, role, user, generation, branch, parent_id=None, hypothesis_id=None, finalize=None):
+        """Ask one agent for a program, score it, repair it once if it fails. Always returns a Program.
+
+        `finalize(prog)` runs after scoring and before the program is saved (the deep branch uses it
+        to judge a test and mark knock-outs as measurements)."""
         pid = self.store.new_id("p")
         system = roles.system_prompt(role)
         prog = Program(id=pid, code="", generation=generation, branch=branch,
@@ -122,6 +125,8 @@ class Search:
             reply = self.llm.chat(role, system, user, temperature=TEMPERATURE[role])
         except Exception as exc:
             prog.error = f"LLM call failed: {exc}"
+            if finalize:
+                finalize(prog)
             self.store.add_program(prog)
             return prog
         prog.model, prog.note = reply.model, roles.extract_note(reply.text)
@@ -158,17 +163,23 @@ class Search:
             prog.repaired = True
             code = roles.extract_code(fix.text)
 
+        if finalize:
+            finalize(prog)
         self.store.add_program(prog)
         return prog
 
     # ================================================================ the two branches
     def wide(self, pool, generation):
         """Mutator: top X programs in, variants out. Only code and score cross the air gap."""
-        top = [p for p in pool if p.valid][: self.a.top_x]
+        top = [p for p in pool if p.valid and not p.probe][: self.a.top_x]
         scored = [roles.Scored(p.code, p.score) for p in top]
+        # Half the variants start from the best program, so a lucky hit gets mutated further;
+        # the rest go round the other survivors to keep variety.
+        half = (self.a.variants + 1) // 2
+        rest = list(range(1, len(top))) or [0]
+        targets = [0] * half + [rest[i % len(rest)] for i in range(self.a.variants - half)]
         jobs = []
-        for i in range(self.a.variants):
-            t = i % len(top)
+        for t in targets:
             msg = roles.mutator_message(scored[t], scored[:t] + scored[t + 1:])
             jobs.append(self.workers.submit(self.candidate, "mutator", msg, generation, "wide", top[t].id))
         self.set_phase("wide", f"Mutator writing {len(jobs)} variants")
@@ -179,30 +190,68 @@ class Search:
         self.set_phase("wide", None)
         return progs, {}
 
+    def champion_plan(self, generation):
+        """The champion (best program so far), whether it's a fresh jump, and how many cause/improve tests to run."""
+        champ = self.store.best()
+        older = [p for p in self.store.programs.values()
+                 if p.valid and not p.probe and int(p.id[1:]) < int(champ.id[1:])]
+        prev_best = max((p.score for p in older), default=None)
+        info = {"new": champ.generation >= generation - 1 and champ.branch != "seed",
+                "jump": round(champ.score - prev_best, 4) if prev_best is not None else None}
+        knocked = sum(1 for h in self.store.hypotheses
+                      if h.kind == "cause" and h.base_id == champ.id and h.verdict not in ("pending", "invalid"))
+        n = self.a.hypotheses
+        if champ.branch == "seed":
+            cause = 0                      # nothing to take apart in Code Zero
+        elif knocked == 0:
+            cause = max(1, n // 2)         # new champion: first find out which parts made it win
+        elif knocked < 3:
+            cause = 1
+        else:
+            cause = 0                      # its parts are mapped: spend everything on improving it
+        return champ, info, {"cause": min(cause, n), "improve": n - min(cause, n)}
+
     def deep(self, pool, generation):
-        """Researcher forms hypotheses; Coder tests each with a one-aspect change; verdicts go in the log."""
-        shown = [p for p in pool if p.valid][:RESEARCHER_SHOWN]
-        msg = roles.researcher_message(shown, self.store.hypotheses, self.a.hypotheses, generation)
-        self.set_phase("deep", f"Researcher reading {len(shown)} programs")
-        try:
-            reply = self.llm.chat("researcher", roles.system_prompt("researcher"), msg, temperature=TEMPERATURE["researcher"])
-            proposals = roles.extract_hypotheses(reply.text, {p.id for p in shown}, shown[0].id)[: self.a.hypotheses]
-        except Exception as exc:
-            say(f"   deep: Researcher call failed ({exc}); skipping the deep branch this generation")
-            self.set_phase("deep", None)
-            return [], {"tested": 0}
+        """Researcher: knock-outs to learn why the champion wins, moderate improve tests to beat it.
+        Coder writes each test; knock-outs are kept as measurements, improve tests compete for the pool."""
+        champ, info, plan = self.champion_plan(generation)
+        candidates = [p for p in pool if p.valid and not p.probe and p.id != champ.id]
+        shown = [champ] + candidates[: RESEARCHER_SHOWN - 1]
+        gains = {}
+        for p in shown:
+            parent = self.store.programs.get(p.parent_id) if p.parent_id else None
+            if parent is not None and parent.valid and parent.score is not None:
+                gains[p.id] = round(p.score - parent.score, 4)
+        msg = roles.researcher_message(champ, info, shown, self.store.hypotheses, plan, generation, gains)
+        jump = f", new by {info['jump']:+.3f}" if info["new"] and info["jump"] is not None else ""
+        say(f"   deep: champion {champ.id} ({champ.score:.3f}{jump}); plan {plan['cause']} cause + {plan['improve']} improve")
+        self.set_phase("deep", f"Researcher studying champion {champ.id}")
+        system = roles.system_prompt("researcher")
+        proposals = []
+        for attempt in range(2):     # a cut-off reply gets one retry asking for only the JSON
+            try:
+                text = msg if attempt == 0 else (msg + "\n\nYour previous reply was cut off before the JSON. "
+                                                 "Reply with ONLY the ```json block, no analysis.")
+                reply = self.llm.chat("researcher" if attempt == 0 else "researcher-retry", system, text,
+                                      temperature=TEMPERATURE["researcher"])
+                proposals = roles.extract_hypotheses(reply.text, {p.id for p in shown}, champ.id)[: self.a.hypotheses]
+            except Exception as exc:
+                say(f"   deep: Researcher call failed ({str(exc)[:120]})")
+            if proposals:
+                break
         if not proposals:
-            say("   deep: Researcher reply had no usable hypotheses; skipping the deep branch this generation")
+            say("   deep: no usable hypotheses after a retry; skipping the deep branch this generation")
             self.set_phase("deep", None)
             return [], {"tested": 0}
-        self.set_phase("deep", f"Coder testing {len(proposals)} hypotheses")
+        self.set_phase("deep", f"Coder writing {len(proposals)} tests")
 
         def test(prop):
             base = self.store.programs[prop["base"]]
             h = Hypothesis(id=self.store.new_id("h"), generation=generation, base_id=base.id,
-                           claim=prop["claim"], change=prop["change"], prediction=prop["prediction"])
-            prog = self.candidate("coder", roles.coder_message(base, h), generation, "deep", base.id, h.id)
-            judge(h, base, prog, self.a.epsilon)
+                           claim=prop["claim"], change=prop["change"], prediction=prop["prediction"],
+                           kind=prop["kind"], builds_on=prop["builds_on"])
+            prog = self.candidate("coder", roles.coder_message(base, h), generation, "deep", base.id, h.id,
+                                  finalize=lambda p: judge(h, base, p, self.a.epsilon))
             self.store.add_hypothesis(h)
             return prog, h
 
@@ -213,14 +262,16 @@ class Search:
             results.append((prog, h))
             verdicts[h.verdict] = verdicts.get(h.verdict, 0) + 1
             delta = f"{h.delta:+.3f}" if h.delta is not None else "  n/a "
-            say(f"   {h.id} {h.verdict:9s} {delta}  on {h.base_id}: {short(h.claim, 90)}")
-            self.set_phase("deep", f"{len(results)}/{len(jobs)} hypotheses tested")
+            say(f"   {h.id} {h.kind:7s} {h.verdict:13s} {delta}  on {h.base_id}: {short(h.claim, 80)}")
+            self.set_phase("deep", f"{len(results)}/{len(jobs)} tests scored")
         self.set_phase("deep", None)
-        return [prog for prog, _ in results], {"tested": len(results), **verdicts}
+        kinds = {k: sum(h.kind == k for _, h in results) for k in ("cause", "improve")}
+        return [prog for prog, _ in results], {"tested": len(results), **kinds, **verdicts}
 
     # ================================================================ generations
     def survivors(self, programs, x):
-        fresh = [p for p in programs if p.valid and p.duplicate_of is None]
+        """Knock-out measurements (probes) never join the pool; everything else competes on score."""
+        fresh = [p for p in programs if p.valid and p.duplicate_of is None and not p.probe]
         return sorted(fresh, key=lambda p: p.rank_key, reverse=True)[:x]
 
     def generation(self, gen, pool_ids):
@@ -372,8 +423,13 @@ class Search:
             gain = f" (Code Zero {seed.score:.3f}, gain {best.score - seed.score:+.3f})" if seed else ""
             say(f"best: {best.id} score {best.score:.3f}{gain}, found in generation {best.generation} by the {best.branch} branch")
         if hyps:
-            counts = {v: sum(h.verdict == v for h in hyps) for v in ("supported", "refuted", "flat", "invalid", "unchanged")}
-            say("hypotheses tested: " + ", ".join(f"{n} {v}" for v, n in counts.items() if n))
+            for kind in ("cause", "improve"):
+                mine = [h for h in hyps if h.kind == kind]
+                if mine:
+                    counts = {}
+                    for h in mine:
+                        counts[h.verdict] = counts.get(h.verdict, 0) + 1
+                    say(f"{kind} tests: " + ", ".join(f"{n} {v}" for v, n in counts.items()))
         say(f"LLM: {usage['calls']} calls ({usage['pro_calls']} pro), {usage['tokens_in']:,} tokens in, "
             f"{usage['tokens_out']:,} out")
         say(f"run folder: {self.store.dir}")
