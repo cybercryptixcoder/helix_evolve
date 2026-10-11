@@ -36,17 +36,23 @@ def _load_priority(program_path):
     return priority
 
 
+def _mean(values):
+    return sum(values) / len(values)
+
+
 def _summarise(results):
+    # Plain Python on purpose: by now the program's code has run, and it could
+    # have changed numpy functions such as np.mean.
     families = {}
     for r in results:
         families.setdefault(r["family"], []).append(r)
     summary = {}
     for fam, rs in families.items():
         summary[fam] = {
-            "excess_pct": round(100 * float(np.mean([r["excess"] for r in rs])), 4),
+            "excess_pct": round(100 * _mean([float(r["excess"]) for r in rs]), 4),
             "bins_used": int(sum(r["bins_used"] for r in rs)),
             "lower_bound": int(sum(r["lower_bound"] for r in rs)),
-            "fill": [round(float(x), 4) for x in np.mean([r["fill"] for r in rs], axis=0)],
+            "fill": [round(_mean([float(r["fill"][d]) for r in rs]), 4) for d in range(2)],
             "instances": len(rs),
         }
     return summary
@@ -74,7 +80,7 @@ def evaluate(program_path: str, split: str = "train") -> dict:
             "runtime_s": round(time.time() - start, 3),
         }
     families = _summarise(results)
-    excess_pct = round(float(np.mean([f["excess_pct"] for f in families.values()])), 4)
+    excess_pct = round(_mean([f["excess_pct"] for f in families.values()]), 4)
     return {
         "contract_version": CONTRACT_VERSION,
         "split": split,
