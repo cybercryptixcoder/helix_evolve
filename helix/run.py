@@ -315,7 +315,7 @@ class Search:
             say("\nStopped. Everything so far is saved; continue with --resume " + str(self.store.dir))
         except (Exception, SystemExit) as exc:
             state = "crashed"
-            error = "".join(traceback.format_exception(exc)).strip()[-3000:]
+            error = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)).strip()[-3000:]
             say(f"\nThe run crashed:\n{error}")
         finally:
             self.workers.shutdown(wait=False, cancel_futures=True)

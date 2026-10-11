@@ -11,6 +11,8 @@ run can be resumed and every decision can be read back afterwards:
   best_program.py    the best program so far
   candidates/        every candidate as a .py file, named by its id
 """
+from __future__ import annotations   # lets `str | None` hints load on Python 3.9
+
 import hashlib
 import json
 import threading
