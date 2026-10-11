@@ -164,8 +164,7 @@ def spawn(args, name):
 
 
 def start_run(body):
-    if active_run():
-        raise RuntimeError(f"a run is already going ({active_run()}); stop it first")
+    # Several runs may go at once (e.g. the full loop next to a wide-only control); each has its own folder.
     fake = bool(body.get("fake"))
     if not fake:
         missing = llm_mod.Settings.from_env().problems()
@@ -173,6 +172,8 @@ def start_run(body):
             raise RuntimeError(f"missing {', '.join(missing)}: fill them in under Connect and press Save")
     mode = body.get("mode", "full")
     name = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}" + ("-offline" if fake else "")
+    if (RUNS_DIR / name).exists():
+        raise RuntimeError(f"{name} was started a moment ago; wait a second and press Run again")
     args = ["--run-dir", str(RUNS_DIR / name), "--mode", mode]
     for key in ("schedule", "generations", "max_minutes", "top_x", "variants", "hypotheses", "n",
                 "pro_every", "epsilon", "workers"):
@@ -187,10 +188,10 @@ def start_run(body):
 
 
 def resume_run(name, body):
-    if active_run():
-        raise RuntimeError(f"a run is already going ({active_run()}); stop it first")
     d = run_dir(name)
     st = read_json(d / "status.json", {}) or {}
+    if st.get("state") in ("starting", "running") and process_alive(name, st.get("pid")):
+        raise RuntimeError(f"{name} is still going; stop it before resuming it")
     done = st.get("generation") or 0
     extra = int(body.get("more") or 5)
     args = ["--resume", str(d), "--generations", str(done + extra)]
