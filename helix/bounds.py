@@ -1,8 +1,8 @@
 """The best any program could possibly do: bounds on the optimal packing of every instance.
 
-The evaluator's lower bound (total demand ÷ capacity) ignores job shapes, so it can sit well below the
-true optimum: on `anticorr`, even a perfect packing that knows every job in advance needs far more bins.
-This module computes, for every train and test instance, how many bins the *optimal* packing needs:
+The evaluator's lower bound (total demand ÷ capacity) ignores job shapes, so it can sit below the true
+optimum (by about 2-3% on `anticorr`; on most families the optimum is within a bin or two of it). This
+module computes, for every train and test instance, how many bins the *optimal* packing needs:
 
   lower   no packing can use fewer bins. From the configuration LP (Gilmore–Gomory): a column-generation
           bound with 2D-knapsack pricing, the classic bound behind exact bin-packing solvers. Proven
