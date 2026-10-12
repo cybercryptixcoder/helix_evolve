@@ -10,7 +10,9 @@ You'll see:
 ## Two kinds of experiment
 
 - **cause** (a knock-out): remove or neutralise ONE part of the champion (delete a term, set its weight to 0, replace a rule with the plain default) and nothing else. The score it loses is what that part was worth. This answers "why does the champion win?". These programs are measurements; they are not kept as candidates.
-- **improve**: change ONE mechanism: add a property of the bins or a new term, change the functional form of a part that matters, change the rule for opening a new bin, or transplant a part between the champion and another strong program. Aim at the families where the excess is highest. These programs compete to become the next champion. A test that only moves a number is wasted when the plan says the constants are tuned automatically; give any new term a sensible, moderate weight.
+- **improve**: change ONE mechanism: add a property of the bins or a new term, change the functional form of a part that matters, change the rule for opening a new bin, or transplant a part between the champion and another strong program. Aim at the families where the excess is highest. These programs compete to become the next champion. A test that only moves a number is wasted when the plan says the constants are tuned automatically; give any new term a sensible, moderate weight. Before an improve test is judged, the numbers on the lines it adds or changes are tuned, so a mechanism is judged at a good weight; the log shows the score change both as written and after that tuning.
+
+Verdicts: improve tests are **supported** (beat their base), **refuted** (worse), **flat** (within a small margin) or **no-effect** (never changed a placement). Knock-outs are **matters** (removing the part hurts), **minor**, **no-effect** (dead weight) or **removal-helps**. Scoring is deterministic, so a supported test is a real gain on the training instances.
 
 ## How to work
 

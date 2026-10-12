@@ -129,7 +129,13 @@ def researcher_message(champ, champ_info, ranked, log, plan, generation, gains, 
                   else ". Aim at the families where the excess is highest") + ".")
     if plan.get("tuned"):
         ask.append("Don't propose a test that only moves a number: the champion's constants are tuned automatically "
-                   "every generation, including the weights of any new term you add.")
+                   "every generation, and the numbers on any line you add or change are tuned before your test is "
+                   "judged.")
+    if plan.get("stuck"):
+        ask.append(f"**The best score hasn't moved for {plan['stall']} generations.** Small edits to {champ.id} are "
+                   "exhausted (see the log). Make at least half of the improve tests bold: a new mechanism the "
+                   "champion lacks, a different rule for opening a new bin, rebuilding one part from scratch, or "
+                   "developing another strong program (a different lineage) instead of the champion.")
     ask.append("Use program ids exactly as written above. Put the JSON block first.")
     parts.append("\n".join(ask))
     return "\n\n".join(parts)
@@ -168,7 +174,10 @@ def format_hypothesis(h):
     line = f"- {h.id} {h.kind} on {h.base_id}" + (f" (builds on {h.builds_on})" if h.builds_on else "") + f": [{h.verdict}"
     if h.delta is not None:
         line += f", {h.delta:+.3f}"
-    line += f"] claim: {h.claim} | change: {h.change}"
+    line += "]"
+    if getattr(h, "raw_delta", None) is not None and h.delta is not None and h.raw_delta != h.delta:
+        line += f" (as written {h.raw_delta:+.3f}; after tuning its new numbers {h.delta:+.3f})"
+    line += f" claim: {h.claim} | change: {h.change}"
     if h.family_shift:
         moved = sorted(h.family_shift.items(), key=lambda kv: abs(kv[1]), reverse=True)[:3]
         line += " | excess moved: " + ", ".join(f"{f} {v:+.2f}" for f, v in moved)

@@ -62,6 +62,7 @@ class Hypothesis:
     family_shift: dict = field(default_factory=dict)   # family -> change in excess % (negative = better)
     kind: str = "improve"             # cause = knock-out measurement; improve = attempt to beat the base
     builds_on: str = ""               # the hypothesis id this test follows from, if any
+    raw_delta: float | None = None    # score change as the Coder wrote it, when its new numbers were then tuned
 
 
 def judge(h, base, new, epsilon):
