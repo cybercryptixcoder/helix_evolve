@@ -2,7 +2,7 @@
 
 Written on October 12, 2026, when the project changed hands. It covers what Helix is, how the repo is laid out, how to run it, what every run so far showed, what we learned, the mistakes made along the way, the rules the owners work by, and what is still unknown. Luminal (the model provider) has its own guide: [LUMINAL.md](LUMINAL.md).
 
-**Status in one paragraph.** Helix is a two-loop evolutionary search in which LLM agents improve a deliberately bad program (Code Zero) for online 2D vector bin packing. The first engine (agents write whole programs) reached at best 27% of the way from Code Zero to the optimal packing (run 2). A second engine (agents write *features*, an optimiser sets the numbers, validation instances decide what's kept) was built on October 12. Its only real run so far started from a hand-written head start by mistake, so it isn't comparable with the earlier runs. That head start has been removed. **The next step is a clean run of the feature engine from Code Zero, compared with run 2.**
+**Status in one paragraph.** Helix is a two-loop evolutionary search in which LLM agents improve a deliberately bad program (Code Zero) for online 2D vector bin packing. The first engine (agents write whole programs) reached at best 27% of the way from Code Zero to the optimal packing (run 2). A second engine (agents write *features*, an optimiser sets the numbers, validation instances decide what's kept) was built on October 12. Its first real run started from a hand-written head start by mistake, so it isn't comparable with the earlier runs. That head start was removed, and run 5 (10 generations from Code Zero) reached 25.1% on train and 25.6% on the held-out test split. **The next step is to compare the two engines properly from the same start (longer runs, repeats), starting with run 5 against run 2.** Every run's full trace is in `results/`.
 
 ---
 
@@ -178,7 +178,7 @@ Inside `helix/`:
 - `features.jsonl` (feature engine);
 - `status.json` (live state for the dashboard), `config.json`, `candidates/*.py`, `best_program.py`, `console.log`.
 
-Real runs also keep `results/<run>/` up to date (a copy for publishing). It's only committed if someone presses Publish & push or runs `python -m helix.publish ... --push`. **All real run data so far lives on Shreyas's Mac**, not in the repo. Runs 2, 3 and 4 were exported as zips during the project.
+Real runs also keep `results/<run>/` up to date (a copy for publishing, with the call log also compressed as `llm_calls.jsonl.gz`). The dashboard's **Publish** button only copies; nothing is committed until someone runs `git add results` and pushes (or `python -m helix.publish helix/runs/<run> --push`). **Runs 2-5 are in `results/` in full**: every agent call with its prompt, reply and hidden reasoning, every program, generation, hypothesis and feature, the console log, and the held-out report.
 
 ---
 
@@ -294,7 +294,7 @@ flowchart TB
 | 2 | `20261011-185558-full` | programs, `08784f8` (no pool memory yet; `--epsilon` 0.4) | 30 | 46 min | **−6.793** | **27.4%** | −6.755 (25.0%) | The reference run. Most of the gain by generation 13 (−6.855); one small gain at 29 |
 | 3 | `20261012-080715-full` | programs, `eb71b70` (all v1 fixes, tune, tune-then-judge, `--epsilon` 0.05) | 17 (stopped) | 38 min | −7.511 | 19.1% | | Worse than run 2. Stagnated at generation 7. 100 of 108 Mutator calls cut off by hidden thinking; deep produced nothing in 9 of 17 generations. Technical failure, not a verdict on the design |
 | 4 | `20261012-124038-full` | features, `62cf672`, **with the hand-written head start** | 10 | 15 min | −6.185 | 34.3% (started at 32.8%) | −5.97 | **Not comparable** (§10). The agents added 1.5 points in 10 generations |
-| 5 | | features, `234f4e8` or later, from Code Zero | | | | | | **Not run yet.** The test that matters |
+| 5 | `20261012-134507-full` | features, `234f4e8`, from Code Zero, packing comparison on | 10 | 47 min | −6.986 | 25.1% | −6.703 (25.6%) | The first clean feature-engine run. 99 LLM calls. Not analysed yet |
 
 Details:
 - **Run 2:**
@@ -382,7 +382,7 @@ Listed so they aren't repeated. Most were made by the AI assistant; Shreyas caug
 
 ## 12. What we don't know
 
-- **Whether the feature engine beats the program engine** from the same start. Run 5 hasn't happened. Compare it with run 2 on the dashboard (Compare with), at equal generations and at equal minutes.
+- **Whether the feature engine beats the program engine** from the same start. Run 5 (10 generations) is the only clean run and hasn't been analysed. Compare it with run 2 on the dashboard (Compare with), at equal generations and at equal minutes, and run it longer.
 - **Whether the packing comparison helps.** It has never been switched off in a real run. A pair of runs with and without `--no-inspect` answers it.
 - **Run-to-run variance.** Every number above is from a single run. Without two or three repeats of the same settings, a difference of a few points between runs can't be called real.
 - **Whether thinking would produce better ideas.** It's off because it never finished; it was never tested with a budget large enough to finish.
@@ -397,7 +397,7 @@ Listed so they aren't repeated. Most were made by the AI assistant; Shreyas caug
 
 ## 13. Suggested next steps
 
-1. **Run 5:** the feature engine from Code Zero, 30 generations, default settings. Compare with run 2. Check `python -m helix.analyze` for zero cut-offs and a sensible share of kept features.
+1. **Analyse run 5** (`results/20261012-134507-full`) against run 2, then run the feature engine from Code Zero for 30 generations to match run 2. Check `python -m helix.analyze` for zero cut-offs and a sensible share of kept features.
 2. **Run 6:** the same with `--no-inspect`, to measure what the packing comparison adds.
 3. **Repeat** the better configuration once or twice to see the spread.
 4. **Held-out check** (`python -m helix.report`, or the dashboard button) on the final champion of each.
