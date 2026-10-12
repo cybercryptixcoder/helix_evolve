@@ -730,12 +730,13 @@ def parse_args(argv=None):
                     help="evaluations in parallel while tuning")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
     fe = ap.add_argument_group("features engine")
-    fe.add_argument("--seed-features", choices=["textbook", "none"], default="textbook",
-                    help="start from the textbook measurements (fitted in generation 0), or from nothing")
-    fe.add_argument("--initial-evals", type=int, default=1200, help="evaluations fitting the starting features")
     fe.add_argument("--trial-evals", type=int, default=24, help="evaluations searching a new feature's weights")
     fe.add_argument("--trial-sigma", type=float, default=0.5, help="step size searching a new feature's weights")
     fe.add_argument("--refit-evals", type=int, default=64, help="evaluations of the joint refit when features are kept")
+    fe.add_argument("--inspect", action=argparse.BooleanOptionalAction, default=True,
+                    help="show the Researcher the champion's packings next to near-optimal packings of the same jobs")
+    fe.add_argument("--trial-refit-evals", type=int, default=24,
+                    help="evaluations of each of a feature's two paired refits (with it, and with it switched off)")
     fe.add_argument("--champion-refit-evals", type=int, default=24,
                     help="evaluations refitting the champion's own weights each generation, before features are tried")
     fe.add_argument("--refit-sigma", type=float, default=0.15)
@@ -755,7 +756,7 @@ def parse_args(argv=None):
 
 
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
-KEPT_ON_RESUME = ["engine", "seed_features", "initial_evals", "trial_evals", "trial_sigma", "refit_evals",
+KEPT_ON_RESUME = ["engine", "inspect", "trial_evals", "trial_sigma", "trial_refit_evals", "refit_evals",
                   "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns",
                   "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",

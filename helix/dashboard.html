@@ -234,11 +234,11 @@
         <div><label for="pro_every">Pro model every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
       </div>
       <div class="grid2 eng-features" style="margin-top:10px">
-        <div><label for="initial_evals">Fitting the textbook features (evaluations)</label><input type="number" id="initial_evals" value="1200" min="0"></div>
         <div><label for="trial_evals">Weight search per feature tried (evaluations)</label><input type="number" id="trial_evals" value="24" min="4"></div>
         <div><label for="refit_evals">Joint refit when features are kept (evaluations)</label><input type="number" id="refit_evals" value="64" min="4"></div>
         <div><label for="accept_margin">Validation gain needed to keep a feature</label><input type="number" id="accept_margin" value="0.03" step="0.01" min="0"></div>
         <div><label for="fit_workers">CPU cores for fitting (blank = all but one)</label><input type="number" id="fit_workers" min="1" placeholder="all but one"></div>
+        <div><label><input type="checkbox" id="inspect" checked> Show the Researcher near-optimal packings</label></div>
       </div>
       <div class="grid2 eng-programs" style="margin-top:10px">
         <div><label for="pool_size">Pool size</label><input type="number" id="pool_size" value="8" min="2"></div>
@@ -413,17 +413,17 @@ const colsOf = (lib) => (lib || []).reduce((n, x) => n + (x.columns || []).lengt
 function flowStatesFeatures(d) {
   const f = {}, rec = d && d.record, br = (rec && rec.branches) || [], feats = (d && d.features) || [], hyps = (d && d.hypotheses) || [];
   const lib = selGen === 0 ? (d && d.library_out) || [] : (d && d.library_in) || [];
-  f.library = { state: "done", sub: `${lib.length} feature${lib.length === 1 ? "" : "s"}`, note: `${colsOf(lib)} weights` };
+  f.library = lib.length ? { state: "done", sub: `${lib.length} feature${lib.length === 1 ? "" : "s"}`, note: `${colsOf(lib)} weights` } : { state: "done", sub: "empty", note: "= Code Zero" };
   const gaps = gapsOf(d && d.diagnostics);
-  f.inspect = selGen === 0 ? { state: "off" } : gaps.length ? { state: "done", sub: "extra bins vs optimum", note: gaps.slice(0, 2).map(([k, g]) => `${k} +${g}`).join(", ") } : { state: rec ? "failed" : "waiting", note: rec ? "no comparison" : "" };
+  f.inspect = selGen === 0 || (d && d.inspect === false) ? { state: "off", note: d && d.inspect === false ? "switched off" : "" } : gaps.length ? { state: "done", sub: "extra bins vs optimum", note: gaps.slice(0, 2).map(([k, g]) => `${k} +${g}`).join(", ") } : { state: rec ? "failed" : "waiting", note: rec ? "no comparison" : "" };
   const deep = feats.filter((x) => x.branch === "deep"), wide = feats.filter((x) => x.branch === "wide"), usable = (x) => x.status !== "invalid";
   f.researcher = br.includes("deep") ? { state: hyps.length ? "done" : "failed", note: hyps.length ? `${hyps.length} feature ideas` : "no usable ideas" } : { state: "off" };
   f.coder = br.includes("deep") && deep.length ? { state: "done", done: deep.filter(usable).length, total: deep.length, note: verdictNote(hyps) } : { state: "off" };
   f.mutator = br.includes("wide") ? { state: "done", done: wide.filter(usable).length, total: wide.length, note: `${wide.filter((x) => x.status === "active" || x.status === "retired").length} kept` } : { state: "off" };
   const fit = rec && rec.fit;
-  f.fit = rec ? (fit ? { state: "done", sub: `${fit.trials} of ${fit.candidates} tried`, note: `${fit.evals} evaluations` } : { state: "done", sub: "weights fitted", note: `train ${fmt(rec.best_score)}` }) : { state: "waiting" };
+  f.fit = selGen === 0 ? { state: "off" } : rec && fit ? { state: "done", sub: `${fit.trials} of ${fit.candidates} tried`, note: `${fit.evals} evaluations` } : { state: rec ? "done" : "waiting" };
   const kept = (rec && rec.accepted) || [], ret = (rec && rec.retired) || [];
-  f.accept = rec ? { state: "done", sub: `champion ${rec.best_id}`, note: selGen === 0 ? "the first champion" : (kept.length ? `kept ${kept.length}` : "nothing kept") + (ret.length ? `, retired ${ret.length}` : "") } : { state: "waiting" };
+  f.accept = rec ? { state: "done", sub: `champion ${rec.best_id}`, note: selGen === 0 ? "Code Zero" : (kept.length ? `kept ${kept.length}` : "nothing kept") + (ret.length ? `, retired ${ret.length}` : "") } : { state: "waiting" };
   return f;
 }
 function flowStates(detail) {
@@ -548,7 +548,7 @@ function featTable(fs, sortByValid = false) {
     <td class="num">${deltaHTML(f.delta_train)}</td><td class="num">${deltaHTML(f.delta_valid)}</td><td>${statusHTML(f.status)}</td>
     <td>${esc(((f.status === "invalid" ? f.error : f.description || f.note) || "").split("\n").pop().slice(0, 150))}</td></tr>`);
   return `<div class="tablewrap"><table><thead><tr><th>Feature</th><th>Name</th><th>Branch</th><th class="num">Train</th><th class="num">Validation</th><th>Verdict</th><th>What it measures</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
-    <div class="hint">Train and Validation: how much the score moves when the feature is added, with only its own weights searched and the rest of the policy fixed (higher is better). Validation instances are never used for fitting; they decide what is kept. Click a row for the code.</div>`;
+    <div class="hint">Train and Validation: how much better the policy does with the feature than the same refit without it (higher is better). Validation instances are never used for fitting; they decide what is kept. Click a row for the code.</div>`;
 }
 function libTable(rows) {
   if (!rows.length) return `<div class="empty">The library is empty: the policy is Code Zero.</div>`;
@@ -583,9 +583,9 @@ function renderDetailFeatures(d) {
   const feats = d.features || [], hyps = d.hypotheses || [], rec = d.record || {}, calls = (re) => (d.calls || []).filter((c) => re.test(c.role || ""));
   const champLine = (c, label) => c ? `<p>${label} <a href="#" data-pid="${esc(c.id)}">${esc(c.id)}</a>: train ${fmt(c.train)}, validation ${fmt(c.valid)}</p>` : "";
   if (selNode === "library") return selGen === 0
-    ? `<p class="hint">Generation 0: Code Zero, then the textbook measurements of a bin (Best Fit and its relatives) with weights fitted by the optimiser. No agent has written anything yet.</p>` + libTable(d.library_out || [])
+    ? `<p class="hint">Generation 0 is Code Zero and nothing else: the library is empty, so every bin scores 0 and each job goes into the oldest bin it fits (first fit). Every gain after this is the search's own.</p>` + champLine(d.champion, "Code Zero:")
     : champLine(d.champion_in, "Champion going in:") + libTable(d.library_in || []);
-  if (selNode === "inspect") return selGen === 0 ? `<div class="empty">Generation 0 has no inspection.</div>` : diagTable(d.diagnostics);
+  if (selNode === "inspect") return d.inspect === false ? `<div class="empty">The packing comparison is switched off for this run (--no-inspect).</div>` : selGen === 0 ? `<div class="empty">Generation 0 has no inspection.</div>` : diagTable(d.diagnostics);
   const deepF = feats.filter((f) => f.branch === "deep");
   if (selNode === "researcher") return (hyps.length ? hyps.map((h) => featHypBlock(h, feats)).join("")
       : deepF.length ? `<p class="hint">The ideas and their verdicts are written when this generation ends. The features written from them so far:</p>` + featTable(deepF)
@@ -783,9 +783,9 @@ function engineFields() {
 $("engine").onchange = engineFields; engineFields();
 $("runBtn").onclick = async () => {
   const feat = $("engine").value === "features";
-  const body = { engine: $("engine").value, mode: $("mode").value, fake: $("fake").checked, tune: $("tune").checked };
+  const body = { engine: $("engine").value, mode: $("mode").value, fake: $("fake").checked, tune: $("tune").checked, inspect: $("inspect").checked };
   const keys = ["generations", "max_minutes", "workers", "variants", "fresh", "hypotheses", "pro_every"]
-    .concat(feat ? ["initial_evals", "trial_evals", "refit_evals", "accept_margin", "fit_workers"] : ["pool_size", "epsilon", "judge_tune_evals"]);
+    .concat(feat ? ["trial_evals", "refit_evals", "accept_margin", "fit_workers"] : ["pool_size", "epsilon", "judge_tune_evals"]);
   for (const k of keys) body[k] = $(k).value;
   try { const r = await api("/api/runs/start", { method: "POST", body }); current = r.name; selGen = null; $("follow").checked = true; $("newDlg").close(); await refreshRuns(); tick(true); }
   catch (e) { $("runOut").textContent = e.message; }

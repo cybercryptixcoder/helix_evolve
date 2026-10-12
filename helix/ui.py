@@ -193,11 +193,13 @@ def start_run(body):
     if mode != "zero-shot":
         args += ["--engine", engine]
     keys = ["schedule", "generations", "max_minutes", "top_x", "variants", "fresh", "hypotheses", "n", "pro_every", "workers"]
-    keys += (["initial_evals", "trial_evals", "refit_evals", "accept_margin", "fit_workers"] if engine == "features"
+    keys += (["trial_evals", "refit_evals", "accept_margin", "fit_workers"] if engine == "features"
              else ["epsilon", "pool_size", "judge_tune_evals", "tune_evals"])
     for key in keys:
         if body.get(key) not in (None, ""):
             args += [f"--{key.replace('_', '-')}", str(body[key])]
+    if engine == "features" and body.get("inspect") is False:
+        args.append("--no-inspect")
     if body.get("tune") is not None and mode == "full" and engine == "programs":
         args.append("--tune" if body["tune"] else "--no-tune")
     if fake:
@@ -460,7 +462,8 @@ def generation_detail(name, gen):
     pool_out = [progs[i] for i in (record or {}).get("pool", []) if i in progs]
     view = lambda ps: [{"id": p["id"], "branch": p.get("branch"), "generation": p.get("generation"),
                         **_units(p, start)} for p in ps]
-    out = {"generation": gen, "engine": engine_of(read_json(d / "config.json", {}) or {}), "record": record,
+    cfg = read_json(d / "config.json", {}) or {}
+    out = {"generation": gen, "engine": engine_of(cfg), "inspect": cfg.get("inspect", True), "record": record,
            "programs": made, "hypotheses": hyps, "calls": calls, "pool_in": view(pool_in), "pool_out": view(pool_out)}
     if out["engine"] == "features":
         feats = _features(d)

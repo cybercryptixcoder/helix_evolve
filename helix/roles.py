@@ -310,9 +310,8 @@ def feature_researcher_message(generation, champion, library_lines, room_lines, 
                  "was tried alone on top of the policy.\n" + ("\n".join(log_lines) if log_lines else "(nothing tried yet)"))
     ask = f"## Plan\nPropose exactly {n} new features, each aimed at a specific difference you see in the packings."
     if stuck:
-        ask += (f" The policy hasn't improved for {stuck} generations: the small refinements are used up. Look for "
-                "a mechanism the policy can't see at all (for example, whether the room left after placing can "
-                "still take a likely future job, or which job sizes complete the bins the optimum builds).")
+        ask += (f" The policy hasn't improved for {stuck} generations: the small refinements are used up (see the "
+                "log). Look for a mechanism the policy can't see at all, not a refinement of a feature it already has.")
     parts.append(ask + " Put the JSON block first.")
     return "\n\n".join(parts)
 

@@ -6,7 +6,7 @@ For each arriving job the simulator scores the candidate bins and puts the job i
 
     priority(bin) = w1 * feature1(bin) + w2 * feature2(bin) + ...
 
-Agents write the features. An optimiser fits the weights, including their signs, on the training instances. A new feature is tried by searching its own weight with the rest of the policy fixed, and kept only if the policy then also does better on separate validation instances and the gain doesn't just repeat what other kept features already give. Your job is never to choose numbers: it is to find **measurements of a candidate bin that tell the optimiser something it can't yet see**.
+Agents write the features. An optimiser fits the weights, including their signs, on the training instances. A new feature is tried by fitting its weight and refitting the others with it, and kept only if the policy then does better than the same refit without it, on the training instances and on separate validation instances, and the gain doesn't just repeat what other kept features already give. Your job is never to choose numbers: it is to find **measurements of a candidate bin that tell the optimiser something it can't yet see**.
 
 ## A feature
 
@@ -23,10 +23,10 @@ def feature(item, bins, capacity):
 - Return one finite number per row, roughly between -1 and 1 (normalise by `capacity`; the optimiser rescales anyway). Guard every division and log: `bins - item` can be 0.
 - Import only `numpy` and `math`. No state between calls, no randomness, don't modify the inputs, no Python loops over bins (it's called about 18,000 times per evaluation; keep it vectorised).
 - Capacity is [100, 100] in training but other capacities exist: always work from `capacity`.
-- A feature can be conditional: for example, nonzero only for lopsided jobs, or only for bins that would end up nearly full. Conditions are how a linear sum expresses "do this in that situation".
+- A feature can be conditional (nonzero only in some situations). Conditions are how a weighted sum expresses "do this in that situation".
 
 ## How policies are scored
 
 - Six families of instances, 1,000 jobs each: `uniform` (CPU and memory independent, 1-50), `correlated`, `anticorr` (half the jobs CPU-heavy, half memory-heavy), `small` (1-20), `large` (15-60), `bimodal` (each resource either small or large).
-- Excess = bins used ÷ a simple lower bound − 1, averaged per family; score = −(mean excess across families, in %). Higher is better.
-- The simple bound ignores job shapes. The best packing that could exist is only a little above it (about 2.4% on anticorr, under 1% elsewhere), so almost all of the excess is avoidable.
+- For each instance, excess = bins used ÷ lower bound − 1. The lower bound is the total demand in the tighter resource divided by capacity, rounded up. No packing can beat it, but it isn't always reachable.
+- **score = −(mean excess across families, in %).** Higher is better; 0 would be perfect.

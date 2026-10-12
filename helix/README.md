@@ -7,7 +7,9 @@ There are two engines:
 - **Feature engine** (the default): agents write *features*, small functions that measure a candidate bin. The policy is a weighted sum of them; an optimiser (CMA-ES) fits the weights on the training instances, and separate validation instances decide which features are kept. The Researcher sees the policy's packings next to near-optimal packings of the same jobs.
 - **Program engine** (`--engine programs`, version 1): agents write whole `priority()` programs, numbers included, and a tune step polishes the numbers.
 
-Why the switch: two runs of the program engine stalled at 19% and 27% of the way from Code Zero to the optimal packing, while the optimiser alone, over textbook measurements and with no LLM, reached 35%, and 40% with ten features aimed at what optimal packings do differently. Agents are good at ideas and bad at numbers, and they were working blind. The feature engine gives each job to the part that's good at it.
+Why the switch: in runs 2 and 3, agents wrote whole programs, numbers included, and judged them by scores alone; the runs stalled at 27% and 19% of the way from Code Zero to the optimal packing. Agents are better at ideas than at numbers, and they were working blind. The feature engine gives each job to the part that's good at it.
+
+Both engines start from the same place: **generation 0 is Code Zero and nothing else**. In the feature engine the library starts empty; an empty policy scores every bin 0, so each job goes into the oldest bin it fits, which is exactly Code Zero (the run checks this). Every gain after that is the search's own, so runs of both engines are compared fairly.
 
 ## Start here: the dashboard
 
@@ -76,7 +78,7 @@ Run everything from the repo root.
 
 Main options (defaults in brackets):
 - **Both engines:** `--hypotheses 4` Researcher ideas per generation; `--variants` Mutator outputs per generation (4 features / 6 programs), of which `--fresh` are fresh ideas (1 / 2); `--max-minutes`, `--workers 12` agent calls in parallel, `--pro-every 10`.
-- **Feature engine:** `--initial-evals 1200` evaluations fitting the textbook features at the start (about 5 minutes on 8 cores); `--trial-evals 24` evaluations searching a new feature's weights; `--champion-refit-evals 24` evaluations refitting the champion's weights each generation; `--refit-evals 64` for the joint refit when features are kept; `--accept-margin 0.03` validation gain a feature needs (one bin saved on one of the 24 validation instances is worth about 0.017); `--max-columns 60` most weights the policy may have; `--fit-workers` CPU cores for fitting (all but one); `--seed-features textbook|none`.
+- **Feature engine:** `--trial-evals 24` evaluations searching a new feature's own weights; `--trial-refit-evals 24` evaluations for each of its two paired refits; `--champion-refit-evals 24` evaluations refitting the champion's weights each generation; `--refit-evals 64` for the joint refit when features are kept; `--accept-margin 0.03` validation gain a feature needs (one bin saved on one of the 24 validation instances is worth about 0.017); `--max-columns 60` most weights the policy may have; `--fit-workers` CPU cores for fitting (all but one); `--no-inspect` gives the Researcher no packing comparison.
 - **Program engine:** `--epsilon 0.05` smallest score change judged supported or refuted; `--jump 0.15`, `--stall 3`, `--judge-tune-evals 16`; `--tune/--no-tune`, `--tune-evals 48`, `--tune-targets 2`; `--pool-size 8`, `--max-siblings 3`, `--top-x 4`.
 
 To stop a command-line run cleanly, create a file called `STOP` in its run folder.
@@ -87,10 +89,10 @@ To stop a command-line run cleanly, create a file called `STOP` in its run folde
 2. **Inspect:** for one training instance per family, the champion's packing next to a near-optimal packing of the same jobs (`instruments.py`, from `optimal_packings.json`): jobs per bin, the most common bin make-ups by job size class, bins stranded with one resource full, room left.
 3. **Deep:** the Researcher reads that comparison, the room left per family, each feature's weight and importance, and the research log. It proposes features aimed at specific structural differences, each with the number in the comparison that should move. A Coder writes each one as `feature(item, bins, capacity)`.
 4. **Wide**, at the same time: the Mutator sees only the policy's code and its score. It writes variants of the policy's features (a different form, a condition, a combination) and fresh ones.
-5. **Fit:** first the champion's own weights are refitted (no new feature), so fitting keeps improving the policy and that gain is credited to fitting, never to a feature. Then each new feature is checked (it runs, returns finite values of the right shape, isn't much slower; one repair if not) and tried: **only its own weights are searched**, with the champion's weights fixed (a line search for a single value, CMA-ES for several), so it's judged by what it adds. The result is scored on the validation instances, which the fitting never sees: 24 new instances (4 per training family) from the evaluator's own generator, with a seed no split uses.
+5. **Fit:** first the champion's own weights are refitted (no new feature), so fitting keeps improving the policy and that gain is credited to fitting, never to a feature. Then each new feature is checked (it runs, returns finite values of the right shape, isn't much slower; one repair if not) and tried: its own weights are searched with the rest fixed (a line search for a single value, CMA-ES for several), then all the weights are refitted twice from there with the same budget and random seed, once with the feature and once with it switched off. The feature is credited only with the difference, on train and on the validation instances, which the fitting never sees: 24 new instances (4 per training family) from the evaluator's own generator, with a seed no split uses.
 6. **Accept:** features that gain at least `--accept-margin` on validation (and anything on train) are combined greedily, best first: each joins only if validation improves again with it, so the result is never worse than the best single feature. Then all the weights are refitted together. Features whose removal would score better on validation are retired. The new champion is scored by the evaluator; each idea's verdict goes into the research log.
 
-Generation 0 is Code Zero plus the textbook features (Best Fit and its relatives, 18 values) with fitted weights, before any agent has written anything. The fitting runs the evaluator's simulation in-process on a pool of worker processes, with the evaluator's own restricted builtins; features may only import `numpy` and `math`.
+Generation 0 is Code Zero and nothing else: no agent is called and nothing is fitted. The fitting runs the evaluator's simulation in-process on a pool of worker processes, with the evaluator's own restricted builtins; features may only import `numpy` and `math`.
 
 **The air gap is enforced in code.** `roles.feature_mutator_message` (and `mutator_message` in the program engine) only accepts a `Scored(code, score)` object and raises an error on anything else, so the Mutator can't see the packings, the hypotheses or the research log.
 
@@ -146,7 +148,7 @@ With `MONGODB_URI` set, every program, hypothesis, generation and the run's stat
 | `ui.py`, `dashboard.html` | The dashboard: local server and its single page |
 | `run.py` | The program engine, the controls, live status, stop and resume |
 | `evolve.py` | The feature engine's loop |
-| `features.py` | Features: checking an agent's code, the textbook features, composing a policy into a `priority()` program |
+| `features.py` | Features: checking an agent's code, composing a policy into a `priority()` program |
 | `fit.py` | Fitting: parallel scoring of weight vectors, CMA-ES, validation, importance |
 | `instruments.py` | The packing comparison the Researcher reads |
 | `roles.py` | Builds each agent's message and parses its reply |

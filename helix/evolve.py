@@ -1,9 +1,12 @@
 """The feature engine: agents invent features, an optimiser fits the weights, validation decides.
 
-Why: two runs of the program engine (agents write whole programs, numbers included) stalled at 19-27%
-of the way to the optimal packing, while a plain optimiser over textbook measurements reached 35% and,
-with ten features aimed at what optimal packings do differently, 40%. Agents are good at ideas and bad
-at numbers, and they were working blind. So the work is split:
+Why: in runs 2 and 3 of the program engine, agents wrote whole programs, numbers included, and judged
+them by scores alone; the runs stalled at 27% and 19% of the way from Code Zero to the optimal packing.
+Agents are better at ideas than at numbers, and they were working blind. So the work is split.
+
+The starting point is the same as the program engine's: generation 0 is Code Zero and nothing else (an
+empty library scores every bin 0, which is first fit, which is Code Zero). Every gain after that is the
+search's own.
 
 - the **library** holds features (small functions that measure a candidate bin); the policy is a weighted
   sum of them, and the weights are fitted by CMA-ES (helix/fit.py), never chosen by an agent;
@@ -14,8 +17,9 @@ at numbers, and they were working blind. So the work is split:
 - **wide**: the Mutator sees only the policy's code and score (the air gap) and writes variants of its
   features, or fresh ones;
 - **fit**: first the champion's own weights are refitted (so fitting keeps improving the policy, and no
-  feature is credited with that); then each new feature is tried by searching only its own weights, the
-  others fixed, on the train instances, and judged on separate validation instances;
+  feature is credited with that); then each new feature is tried: its own weights are searched, then all
+  the weights are refitted twice, with the feature and with it switched off, and the feature is credited
+  with the difference, on train and on separate validation instances;
 - **accept**: features that help on validation are combined greedily (each joins only if validation
   improves again), then refitted together; features that hurt are retired.
 
@@ -26,23 +30,20 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 
 from . import instruments, metrics, roles
 from .bounds import diagnostic_instances, family_floor
-from .features import (Feature, FeatureError, compose, docstring, flat, prepare, split_vector, textbook_feature)
+from .features import Feature, FeatureError, compose, docstring, prepare, split_vector
 from .fit import FitError, Fitter, train_index
 from .population import Hypothesis, Program, read_records
 from .run import MAX_TOKENS, THINK_LIMIT, Search, say, short
 from .sandbox import evaluate_file
 
 TEMPERATURE = {"feature_researcher": 0.6, "feature_coder": 0.2, "feature_mutator": 0.8}
-# Step size of the first fit, in scaled units (each value divided by its spread). Larger steps start CMA-ES
-# from near-random policies: with 0.5 it was at -7.15 after 360 evaluations, against -6.64 for the same
-# features with steps of about this size.
-INITIAL_SIGMA = 0.2
 for _r in ("feature_researcher", "feature_coder", "feature_mutator"):
     MAX_TOKENS.setdefault(_r, 6000 if _r == "feature_researcher" else 3000)
     THINK_LIMIT.setdefault(_r, 16000 if _r == "feature_researcher" else 8000)
@@ -95,8 +96,8 @@ class FeatureSearch(Search):
     def reset_flow(self, generation, branches):
         with self._status_lock:
             self.flow_generation = generation
-            uses = {"library": True, "inspect": generation > 0, "researcher": "deep" in branches,
-                    "coder": "deep" in branches, "mutator": "wide" in branches, "fit": True, "accept": True}
+            uses = {"library": True, "inspect": generation > 0 and self.a.inspect, "researcher": "deep" in branches,
+                    "coder": "deep" in branches, "mutator": "wide" in branches, "fit": generation > 0, "accept": True}
             self.flow = {n: {"state": "waiting" if uses[n] else "off"} for n in self.FLOW_NODES}
         self.set_status()
 
@@ -246,17 +247,33 @@ class FeatureSearch(Search):
         return False
 
     def trial(self, f):
-        """Search only the new feature's weights, with the champion's weights fixed, on train; then score the
-        result on validation. So a feature is judged by what it adds, not by what refitting the others finds."""
+        """Try one feature on top of the champion, on train, then score it on validation.
+
+        1. Search only the feature's own weights, with the champion's fixed.
+        2. Refit all the weights twice from that point, with the same budget, step size and random seed:
+           once with the feature and once with it switched off (its values multiplied by 0). Features often
+           pay off only once the other weights adjust to them; the second refit is the control, so the
+           feature is credited only with the difference, never with what refitting alone finds."""
         feats = self.lib() + [f]
         n = len(self.champ["x"])
         x0 = np.concatenate([self.champ["x"], np.zeros(f.width)])
+        seed = int(f.id[1:])
         x, s, fams = self.fitter.optimise(feats, x0, self.a.trial_evals, sigma=self.a.trial_sigma,
-                                          base=(self.champ["train"], self.champ["fams"]), seed=int(f.id[1:]),
+                                          base=(self.champ["train"], self.champ["fams"]), seed=seed,
                                           free=list(range(n, n + f.width)))
+        ref = {"x": x0, "train": self.champ["train"], "valid": self.champ["valid"]}
+        if n and self.a.trial_refit_evals > 0:
+            muted = self.lib() + [replace(f, scales=[0.0] * f.width)]
+            start = x
+            x, s, fams = self.fitter.optimise(feats, start, self.a.trial_refit_evals, sigma=self.a.refit_sigma,
+                                              base=(s, fams), seed=seed + 1)
+            xr, sr, _ = self.fitter.optimise(muted, start, self.a.trial_refit_evals, sigma=self.a.refit_sigma,
+                                             base=(self.champ["train"], self.champ["fams"]), seed=seed + 1)
+            vr = self.champ["valid"] if np.array_equal(xr, start) else self.fitter.score(muted, xr, "valid")[0]
+            ref = {"x": xr, "train": sr, "valid": vr}
         v, vfams = self.fitter.score(feats, x, "valid")
-        f.delta_train = round(s - self.champ["train"], 4)
-        f.delta_valid = round(v - self.champ["valid"], 4)
+        f.delta_train = round(s - ref["train"], 4)
+        f.delta_valid = round(v - ref["valid"], 4)
         return {"feature": f, "x": x, "train": s, "fams": fams, "valid": v, "vfams": vfams}
 
     # ================================================================ one generation
@@ -267,21 +284,26 @@ class FeatureSearch(Search):
             f" valid {self.champ['valid']:.3f} | {len(self.library)} features, {len(self.champ['x'])} weights")
         self.set_status(generation=gen)
         self.reset_flow(gen, branches)
-        self.set_flow("library", "done", sub=f"{len(self.library)} feature{'s' * (len(self.library) != 1)}",
-                      note=f"{len(self.champ['x'])} weights")
+        if self.library:
+            self.set_flow("library", "done", sub=f"{len(self.library)} feature{'s' * (len(self.library) != 1)}",
+                          note=f"{len(self.champ['x'])} weights")
+        else:
+            self.set_flow("library", "done", sub="empty", note="= Code Zero")
 
-        # ---- inspect
-        self.set_flow("inspect", "active", note="packing the diagnostic instances")
-        try:
-            idx = [train_index(i["id"]) for i in diagnostic_instances()]
-            comparison = instruments.compare(self.fitter.packings(self.lib(), self.champ["x"], idx))
-        except FitError as exc:
-            comparison = {}
-            say(f"   inspect failed: {exc}")
+        # ---- inspect (--no-inspect: the Researcher gets no packing comparison, as in the program engine)
+        comparison = {}
+        if self.a.inspect:
+            self.set_flow("inspect", "active", note="packing the diagnostic instances")
+            try:
+                idx = [train_index(i["id"]) for i in diagnostic_instances()]
+                comparison = instruments.compare(self.fitter.packings(self.lib(), self.champ["x"], idx))
+            except FitError as exc:
+                say(f"   inspect failed: {exc}")
         gaps = sorted(((fam, c["champion"]["bins"] - (c["optimum"] or {}).get("bins", c["champion"]["bins"]))
                        for fam, c in comparison.items()), key=lambda kv: -kv[1])
-        self.set_flow("inspect", "done", sub="extra bins vs optimum",
-                      note=", ".join(f"{fam} +{g}" for fam, g in gaps[:2]) or "no comparison")
+        if self.a.inspect:
+            self.set_flow("inspect", "done", sub="extra bins vs optimum",
+                          note=", ".join(f"{fam} +{g}" for fam, g in gaps[:2]) or "no comparison")
         context = self.context(gen, comparison)
 
         # ---- agents (deep and wide at the same time)
@@ -412,8 +434,8 @@ class FeatureSearch(Search):
         """Combine the features that helped on validation (greedily, best first), refit them together, and
         retire features that hurt."""
         margin = self.a.accept_margin
-        good = sorted([t for t in trials if t["valid"] - self.champ["valid"] > margin and t["train"] > self.champ["train"]],
-                      key=lambda t: -t["valid"])
+        good = sorted([t for t in trials if t["feature"].delta_valid > margin and t["feature"].delta_train > 0],
+                      key=lambda t: -t["feature"].delta_valid)
         accepted = []
         if good:
             # Greedy, so the result is never worse than the best single feature: start from the best one, add
@@ -586,6 +608,10 @@ class FeatureSearch(Search):
             existing.append(f"- {f.name}: {' '.join(f.description.split())[:200]}")
             for col, w, im in cols[:3]:
                 targets.append(f"_{f.id} ({col if f.width > 1 else f.name})")
+        if not self.library:
+            lib_lines = ["(no features yet: every bin scores 0, so each job goes into the oldest bin it fits; "
+                         "this is Code Zero)"]
+            existing = ["(none yet)"]
         floor = family_floor("train")
         room = [f"- {fam}: {champ['fams'].get(fam, 0):.2f} / {floor[fam]['lower']:.2f} / room {champ['fams'].get(fam, 0) - floor[fam]['lower']:.2f}"
                 for fam in sorted(floor, key=lambda k: -(champ["fams"].get(k, 0) - floor[k]["lower"]))] if floor and champ["fams"] else []
@@ -599,12 +625,16 @@ class FeatureSearch(Search):
         last_gain = champ_prog.generation if champ_prog else gen
         return {"champion": {"id": champ["id"], "train": champ["train"], "valid": champ["valid"]},
                 "progress": progress, "library_lines": lib_lines, "existing_lines": existing,
-                "room_lines": room, "packings": instruments.text(comparison), "log_lines": log,
+                "room_lines": room, "log_lines": log,
+                "packings": instruments.text(comparison) if self.a.inspect else "(switched off for this run)",
                 "mutation_targets": targets, "champion_code": self.compose_champion(champ["id"]),
                 "stuck": max(0, gen - 1 - last_gain)}
 
     # ================================================================ generation 0
     def seed(self):
+        """Generation 0 is Code Zero and nothing else: the library starts empty. An empty policy scores every
+        bin 0, so the simulator picks the oldest bin that fits, which is exactly what Code Zero does. No agent
+        is called and nothing is fitted; every gain after this is the search's own."""
         seed_path = self.a.seed_program
         result = evaluate_file(seed_path, "train", self.a.eval_timeout)
         if not result["valid"]:
@@ -616,51 +646,23 @@ class FeatureSearch(Search):
                     features=[])
         self.store.candidate_path(p.id).write_text(code)
         self.store.add_program(p)
-        say(f"── generation 0: Code Zero scores {p.score:.3f} ({p.id})")
-        self.set_flow("library", "active", note="scoring the empty policy")
+        say(f"── generation 0: Code Zero scores {p.score:.3f} ({p.id}); the library starts empty")
+        self.set_flow("library", "active", note="scoring Code Zero on validation")
+        empty_train, _ = self.fitter.score([], np.zeros(0), "train")
+        if abs(empty_train - p.score) > 1e-3:              # the empty policy must be Code Zero, exactly
+            raise SystemExit(f"the empty feature policy scores {empty_train:.4f} but Code Zero scores {p.score:.4f}; "
+                             "the feature engine starts from Code Zero only when they are the same policy")
         v0, vf0 = self.fitter.score([], np.zeros(0), "valid")
         self.champ = {"id": p.id, "x": np.zeros(0), "train": p.score, "fams": p.families, "valid": v0, "vfams": vf0}
-        if self.a.seed_features == "textbook":
-            f = textbook_feature()
-            f.id = self.store.new_id("f")
-            self.features[f.id] = f
-            self.set_flow("library", "active", note="measuring the textbook features")
-            width, f.scales = self.fitter.feature_scales([f], np.zeros(f.width), 0)
-            self.library = [f.id]
-            x0 = np.zeros(f.width)
-            x0[0] = -1.0                                   # Best Fit: least room left
-            self.set_flow("fit", "active", note=f"fitting {f.width} weights ({self.a.initial_evals} evaluations)")
-            self.set_phase("fit", "fitting the textbook features' weights")
-            x, s, fams = self.fitter.optimise([f], x0, self.a.initial_evals, sigma=INITIAL_SIGMA,
-                                              on_step=lambda n, b: self.set_flow("fit", note=f"{n} evaluations, best {b:.3f}"))
-            v, vfams = self.fitter.score([f], x, "valid")
-            f.weights = [float(w) for w in x]
-            f.status = "active"
-            prev = dict(self.champ)
-            self.champ.update(x=np.asarray(x, dtype=float), train=s, fams=fams, valid=v, vfams=vfams)
-            imp = self.fitter.importance([f], x, "valid", base=v)
-            f.importance = [round(i, 4) for i in imp]
-            self.save_feature(f)
-            self.set_flow("fit", "done", sub="weights fitted", note=f"train {s:.3f}")
-            self.record_champion(0, prev, [], note="the textbook features, weights fitted")
-            say(f"   textbook features, weights fitted ({self.a.initial_evals} evaluations): train {self.champ['train']:.3f},"
-                f" valid {self.champ['valid']:.3f}")
-        self.set_phase("fit", None)
-        self.set_flow("library", "done", sub=f"{len(self.library)} feature{'s' * (len(self.library) != 1)}",
-                      note=f"{len(self.champ['x'])} weights")
-        self.set_flow("accept", "done", sub=f"champion {self.champ['id']}", note="the first champion")
-        self.store.log_generation({"generation": 0, "branches": ["seed", "fit"], "pool": [self.champ["id"]],
-                                   "best_id": self.champ["id"], "best_score": self.champ["train"],
-                                   "valid_score": self.champ["valid"], "llm": self.llm.summary(),
+        self.set_flow("library", "done", sub="empty", note="= Code Zero")
+        self.set_flow("accept", "done", sub=f"champion {p.id}", note="Code Zero")
+        self.store.log_generation({"generation": 0, "branches": ["seed"], "pool": [p.id], "best_id": p.id,
+                                   "best_score": p.score, "valid_score": v0, "llm": self.llm.summary(),
                                    "started_at": round(self.status["started"], 1), "finished_at": round(time.time(), 1),
-                                   "library": [{"id": f.id, "name": f.name, "branch": f.branch, "columns": f.columns,
-                                                "weights": [round(w, 4) for w in f.weights], "importance": f.importance}
-                                               for f in self.lib()],
-                                   "champion": {"id": self.champ["id"], "features": list(self.library),
-                                                "x": [float(v) for v in self.champ["x"]], "train": self.champ["train"],
-                                                "valid": self.champ["valid"], "fams": self.champ["fams"],
-                                                "vfams": self.champ["vfams"]}})
-        return [self.champ["id"]]
+                                   "library": [],
+                                   "champion": {"id": p.id, "features": [], "x": [], "train": p.score, "valid": v0,
+                                                "fams": p.families, "vfams": vf0}})
+        return [p.id]
 
     def finish(self):
         self.fitter.close()
