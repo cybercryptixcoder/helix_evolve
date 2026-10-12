@@ -322,7 +322,8 @@ function renderTiles() {
   $("tWasteS").textContent = start && start.waste != null ? `per 100 bins the optimum needs · Code Zero ${fmt(start.waste, 2)}` : "per 100 bins the optimal packing needs";
   $("tScore").textContent = b ? fmt(b.score) : "–";
   const ho = state && state.heldout;
-  $("tScoreS").textContent = (start ? `Code Zero ${fmt(start.score)}` : "") + (ho ? ` · held-out ${fmt(ho.score)}${ho.progress != null ? ` (${pct(ho.progress)})` : ""}` : "");
+  $("tScoreS").textContent = (start ? `Code Zero ${fmt(start.score)}` : "") + (refs.optimal ? ` · optimum ${fmt(refs.optimal.score, 2)}` : "")
+    + (ho ? ` · held-out ${fmt(ho.score)}${ho.progress != null ? ` (${pct(ho.progress)})` : ""}` : "");
   if (b && bc) {
     const usePct = b.progress != null && bc.progress != null;
     const ahead = usePct ? `${signed(b.progress - bc.progress, 1)} pts` : signed(b.score - bc.score);
@@ -542,7 +543,9 @@ function drawChart() {
   const W = 1000, H = 360, L = 58, R = 220, T = 14, B = 40;
   const X = (x) => L + (x / maxX) * (W - L - R), Y = (y) => T + (1 - (y - lo) / (hi - lo)) * (H - T - B);
   let svg = "";
-  for (let i = 0; i <= 5; i++) { const v = lo + (hi - lo) * i / 5, y = Y(v); svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${unit === "progress" ? v.toFixed(0) + "%" : v.toFixed(2)}</text>`; }
+  const raw = (hi - lo) / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), tstep = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((x) => x >= raw);
+  const dec = tstep >= 1 ? 0 : Math.min(3, Math.ceil(-Math.log10(tstep)));
+  for (let v = Math.ceil(lo / tstep) * tstep; v <= hi + 1e-9; v += tstep) { const y = Y(v); svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${unit === "progress" ? v.toFixed(dec) + "%" : v.toFixed(Math.max(dec, 1))}</text>`; }
   const step = Math.max(1, Math.ceil(maxX / (xAxis === "generation" ? 12 : 10)));
   for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
   svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">${xAxis}</text>`;
