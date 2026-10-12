@@ -41,7 +41,7 @@ def _ssl_context():
 SSL_CONTEXT = _ssl_context()
 
 ENV_FILE = Path(__file__).resolve().parent / ".env"
-# Committed team settings (Luminal endpoint, model, temporary key). helix/.env and real
+# Committed team settings (Luminal endpoint and model, never a key). helix/.env and real
 # environment variables override anything in it.
 TEAM_ENV_FILE = Path(__file__).resolve().parent / "luminal.env"
 RETRY_STATUS = {408, 409, 425, 429, 500, 502, 503, 504}
