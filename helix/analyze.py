@@ -20,6 +20,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .peek import latest_run, read_json, read_jsonl
+from .bounds import family_floor
+from .metrics import units
 from .reference import gap_closed, offline_reference
 
 CUT_OFF_SHARE = 0.98      # a reply this close to its token limit counts as cut off (older logs have no finish reason)
@@ -172,11 +174,18 @@ def analyze(run_dir):
     if best and best.get("families"):
         try:
             ref = offline_reference("train")["families"]
-            out.append("\n== Headroom by family (excess %, lower is better)")
-            out.append(f"{'family':12s} {'best':>7s} {'offline':>8s}" + (f" {'Code Zero':>9s}" if seed else ""))
+            floor = family_floor("train")
+            out.append("\n== Headroom by family (excess % over the simple bound, lower is better)")
+            out.append(f"{'family':12s} {'best':>7s} {'optimum':>8s} {'room':>7s} {'offline':>8s}" + (f" {'Code Zero':>9s}" if seed else ""))
             for f, v in best["families"].items():
-                out.append(f"{f:12s} {v:7.2f} {ref.get(f, float('nan')):8.2f}"
-                           + (f" {seed['families'].get(f, float('nan')):9.2f}" if seed else ""))
+                opt = floor.get(f, {}).get("lower") if floor else None
+                out.append(f"{f:12s} {v:7.2f} " + (f"{opt:8.2f} {v - opt:7.2f} " if opt is not None else f"{'?':>8s} {'?':>7s} ")
+                           + f"{ref.get(f, float('nan')):8.2f}" + (f" {seed['families'].get(f, float('nan')):9.2f}" if seed else ""))
+            if best.get("families") and seed and seed.get("families"):
+                u = units(best["families"], seed["families"], "train")
+                if u["progress"] is not None:
+                    out.append(f"progress to optimal {u['progress']:.1f}% (0% = Code Zero, 100% = optimum); "
+                               f"{u['waste']:.2f} extra bins per 100 the optimum needs")
         except Exception as exc:
             out.append(f"(no headroom table: {exc})")
     return "\n".join(out)
