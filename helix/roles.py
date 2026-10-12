@@ -61,10 +61,19 @@ def code_only_message(user, cut_off):
             "working towards. No text before or after the block.")
 
 
-def researcher_message(champ, champ_info, ranked, log, plan, generation, gains, lineage=(), parent=None):
+def researcher_message(champ, champ_info, ranked, log, plan, generation, gains, lineage=(), parent=None, floor=None):
     """champ_info: {"new", "jump", "real_jump"}; plan: {"cause", "improve", "tuned"}; gains: id -> gain over parent;
-    lineage: ids of the champion and its ancestors (knock-outs on an ancestor are inherited); parent: its parent."""
+    lineage: ids of the champion and its ancestors (knock-outs on an ancestor are inherited); parent: its parent;
+    floor: {family: {"lower", "upper"}}, the excess % of the best packing that could exist (helix/bounds.py)."""
     parts = [f"Generation {generation}. Score = −(mean excess %); higher is better."]
+    if floor:
+        room = {f: champ.families[f] - floor[f]["lower"] for f in floor if f in champ.families}
+        parts.append("## Where the room is\nExcess % is measured against a simple bound that no packing can reach. The "
+                     "best packing that could possibly exist (even knowing every job in advance) has, by family: "
+                     + ", ".join(f"{f} {floor[f]['lower']:.1f}" for f in floor)
+                     + ". So the champion's real room to improve, in points of excess, is: "
+                     + ", ".join(f"{f} {v:.1f}" for f, v in sorted(room.items(), key=lambda kv: -kv[1]))
+                     + ". Aim at the families with the most room, not simply the highest excess.")
 
     head = f"## The champion: {champ.id}, score {champ.score:.3f} ({champ.branch} branch, generation {champ.generation})"
     if champ_info.get("new") and champ_info.get("jump") is not None:
@@ -218,14 +227,18 @@ def code_diff(old, new, limit=40):
 
 
 def extract_hypotheses(text, valid_ids, fallback_id):
-    """Parse the Researcher's JSON. Unknown base ids fall back to the best program."""
+    """Parse the Researcher's JSON. Unknown base ids fall back to the best program. A reply cut off
+    part-way through the JSON still yields the hypotheses it finished."""
     candidates = [body for lang, body in _FENCE.findall(text) if lang.lower() in ("json", "")]
     candidates.append(text[text.find("{"): text.rfind("}") + 1] if "{" in text else "")
+    parsed = []
     for raw in candidates:
         try:
-            data = json.loads(raw)
+            parsed.append(json.loads(raw))
         except (json.JSONDecodeError, ValueError):
             continue
+    parsed.append({"hypotheses": _complete_objects(text)})
+    for data in parsed:
         items = data.get("hypotheses", []) if isinstance(data, dict) else data
         out = []
         for item in items if isinstance(items, list) else []:
@@ -247,3 +260,29 @@ def extract_hypotheses(text, valid_ids, fallback_id):
         if out:
             return out
     return []
+
+
+def _complete_objects(text):
+    """Every complete, parseable {...} object in `text` that looks like a hypothesis (has a claim)."""
+    out, stack, in_str, esc = [], [], False, False
+    for i, ch in enumerate(text):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+        elif ch == "{":
+            stack.append(i)
+        elif ch == "}" and stack:
+            begin = stack.pop()
+            try:
+                obj = json.loads(text[begin:i + 1])
+            except (json.JSONDecodeError, ValueError):
+                continue
+            if isinstance(obj, dict) and "claim" in obj:
+                out.append(obj)
+    return out

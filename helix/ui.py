@@ -9,6 +9,7 @@ Runs are started as separate processes, so closing the dashboard doesn't stop a 
 and reopening it picks the run back up from its folder.
 """
 import argparse
+import gzip
 import json
 import os
 import re
@@ -22,10 +23,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from . import bounds as bounds_mod
 from . import llm as llm_mod
-from . import mongo
+from . import metrics, mongo
 from .peek import RUNS_DIR, load_state, pid_alive, read_json, read_jsonl, snapshot, tail_text
-from .sandbox import REPO_ROOT, evaluate_file
+from .sandbox import REPO_ROOT, evaluate_code, evaluate_file
 
 HERE = Path(__file__).resolve().parent
 ENV_FILE = HERE / ".env"
@@ -50,7 +52,10 @@ SECRET = {k for k, s, _ in FIELDS if s}
 
 PROCS = {}               # run name -> Popen, for runs started by this dashboard
 BASELINES = {}           # program name -> train score, filled in the background at startup
+REFERENCES = {}          # yardsticks in every unit (helix.metrics.references), filled in at startup
+HEALTH = {"evaluator": {"ok": None, "detail": "checking..."}}
 LOCK = threading.Lock()
+RESULTS_DIR = REPO_ROOT / "results"
 
 
 # ================================================================ settings (helix/.env)
@@ -111,18 +116,23 @@ def save_settings(new):
 
 # ================================================================ runs
 def run_dir(name):
+    """A run's folder: helix/runs/<name>, or a published copy in results/<name> (read-only)."""
     if not name or not NAME_OK.match(name):
         raise ValueError("bad run name")
-    d = RUNS_DIR / name
-    if not d.is_dir():
-        raise FileNotFoundError(f"no run called {name}")
-    return d
+    if (RUNS_DIR / name).is_dir():
+        return RUNS_DIR / name
+    if (RESULTS_DIR / name / "generations.jsonl").exists():
+        return RESULTS_DIR / name
+    raise FileNotFoundError(f"no run called {name}")
 
 
 def list_runs():
     runs = []
     folders = [p for p in RUNS_DIR.glob("*") if p.is_dir()] if RUNS_DIR.exists() else []
-    for d in sorted(folders, key=lambda p: p.stat().st_mtime, reverse=True):
+    local = {p.name for p in folders}
+    published = [p for p in RESULTS_DIR.glob("*") if p.is_dir() and p.name not in local
+                 and (p / "generations.jsonl").exists()] if RESULTS_DIR.exists() else []
+    for d in sorted(folders + published, key=lambda p: p.stat().st_mtime, reverse=True):
         st = read_json(d / "status.json", {}) or {}
         cfg = read_json(d / "config.json", {}) or {}
         state = st.get("state", "unknown")
@@ -130,7 +140,8 @@ def list_runs():
             state = "died"
         runs.append({"name": d.name, "state": state, "mode": cfg.get("mode"), "provider": cfg.get("provider"),
                      "model": cfg.get("flash_model"), "generation": st.get("generation"),
-                     "generations": st.get("generations"), "best_score": st.get("best_score")})
+                     "generations": st.get("generations"), "best_score": st.get("best_score"),
+                     "published": d.parent == RESULTS_DIR})
     return runs
 
 
@@ -175,10 +186,12 @@ def start_run(body):
     if (RUNS_DIR / name).exists():
         raise RuntimeError(f"{name} was started a moment ago; wait a second and press Run again")
     args = ["--run-dir", str(RUNS_DIR / name), "--mode", mode]
-    for key in ("schedule", "generations", "max_minutes", "top_x", "variants", "hypotheses", "n",
-                "pro_every", "epsilon", "workers"):
+    for key in ("schedule", "generations", "max_minutes", "top_x", "variants", "fresh", "hypotheses", "n",
+                "pro_every", "epsilon", "workers", "pool_size", "judge_tune_evals", "tune_evals"):
         if body.get(key) not in (None, ""):
             args += [f"--{key.replace('_', '-')}", str(body[key])]
+    if body.get("tune") is not None and mode == "full":
+        args.append("--tune" if body["tune"] else "--no-tune")
     if fake:
         args.append("--fake-llm")
     if "publish" in body:
@@ -238,9 +251,19 @@ def call_list(d, n=40):
     return out[::-1]
 
 
+def _call_lines(d):
+    path = d / "llm_calls.jsonl"
+    if path.exists():
+        return path.read_bytes().splitlines()
+    gz = d / "llm_calls.jsonl.gz"
+    if gz.exists():
+        with gzip.open(gz, "rb") as f:
+            return f.read().splitlines()
+    return []
+
+
 def call_detail(d, line):
-    lines = (d / "llm_calls.jsonl").read_bytes().splitlines()
-    return json.loads(lines[int(line)])
+    return json.loads(_call_lines(d)[int(line)])
 
 
 def latest_researcher(d):
@@ -264,12 +287,214 @@ def run_state(name):
         s["status"]["state"] = "died"
     best = s.pop("best")
     s["best"] = {k: best.get(k) for k in ("id", "score", "branch", "generation", "code", "families", "note")} if best else None
+    if best and best.get("families"):
+        start = _start_families(_programs(d))
+        s["best"]["units"] = {"score": best["score"], **metrics.units(best["families"], start)} if start else None
     s["calls"] = call_list(d)
     s["researcher"] = latest_researcher(d)
     s["console"] = tail_text(d / "console.log", 60)
     s["has_report"] = (d / "report.md").exists()
     s["stop_requested"] = (d / "STOP").exists()
+    s["heldout"] = heldout_units(d)
+    s["published"] = d.parent == RESULTS_DIR
     return s
+
+
+def heldout_units(d):
+    """The held-out check (report) in all three units, on the test split, if it has been run."""
+    rows = read_json(d / "heldout.json", None)
+    if not rows:
+        return None
+    best = next((r for r in rows if str(r.get("label", "")).startswith("Evolved best")), None)
+    zero = next((r for r in rows if r.get("label") == "Code Zero"), None)
+    if not best or not zero or not best.get("valid"):
+        return None
+    return {"label": best["label"], "score": best["test_score"], "code_zero": zero["test_score"],
+            **metrics.units(best["test_families"], zero["test_families"], "test")}
+
+
+# ================================================================ progress in readable units
+_CACHE = {}
+
+
+def _cached(key, path, build):
+    """Rebuild only when the file behind it changes (the run keeps appending to its logs)."""
+    try:
+        stamp = (path.stat().st_mtime, path.stat().st_size)
+    except OSError:
+        stamp = None
+    hit = _CACHE.get(key)
+    if hit and hit[0] == stamp:
+        return hit[1]
+    value = build()
+    _CACHE[key] = (stamp, value)
+    return value
+
+
+def _programs(d):
+    return _cached(("programs", str(d)), d / "programs.jsonl", lambda: {p["id"]: p for p in read_jsonl(d / "programs.jsonl")})
+
+
+def _start_families(progs):
+    seed = next((p for p in progs.values() if p.get("branch") == "seed" and p.get("families")), None)
+    return seed["families"] if seed else metrics.code_zero_families("train")
+
+
+def _units(p, start):
+    if not p or not p.get("valid") or not p.get("families"):
+        return {"score": p.get("score") if p else None, "waste": None, "progress": None}
+    return {"score": p["score"], **metrics.units(p["families"], start)}
+
+
+def run_series(name):
+    """Per generation: the best program in all three units, each branch's best new program, and minutes."""
+    d = run_dir(name)
+    progs = _programs(d)
+    start = _start_families(progs)
+    st = read_json(d / "status.json", {}) or {}
+    out, elapsed = [], 0.0
+    for g in read_jsonl(d / "generations.jsonl"):
+        if g.get("finished_at") and st.get("started"):
+            elapsed = (g["finished_at"] - st["started"]) / 60
+        else:
+            elapsed += (g.get("seconds") or 0) / 60
+        row = {"generation": g["generation"], "minutes": round(elapsed, 2), "best_id": g.get("best_id"),
+               **_units(progs.get(g.get("best_id")), start)}
+        for b in ("deep", "wide", "tune"):
+            new = [p for p in progs.values() if p.get("generation") == g["generation"] and p.get("branch") == b
+                   and p.get("valid") and not p.get("probe") and p.get("duplicate_of") is None]
+            if new:
+                top = max(new, key=lambda p: p["score"])
+                row[b] = {"id": top["id"], **_units(top, start)}
+        out.append(row)
+    return {"name": name, "series": out, "start": _units({"valid": True, "families": start,
+                                                          "score": -sum(start.values()) / len(start)}, start)
+            if start else None}
+
+
+def _call_index(d):
+    """(line number, generation, role, time, light fields) for every call, built once per file change."""
+    path = d / "llm_calls.jsonl" if (d / "llm_calls.jsonl").exists() else d / "llm_calls.jsonl.gz"
+
+    def build():
+        rows = []
+        for no, raw in enumerate(_call_lines(d)):
+            try:
+                c = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            reply = c.get("reply") or ""
+            head = reply.split("```", 1)[0].strip()
+            if not head and reply.count("```") >= 2:          # a reply that starts with its code or JSON
+                head = reply.rsplit("```", 1)[1].strip() or reply.split("```", 2)[1][:200]
+            rows.append({"line": no, "generation": c.get("generation"), "role": c.get("role"), "time": c.get("time"),
+                         "program": c.get("program"), "hypothesis": c.get("hypothesis"), "seconds": c.get("seconds"),
+                         "tokens_out": c.get("tokens_out"), "finish": c.get("finish"), "error": c.get("error"),
+                         "has_reasoning": bool(c.get("reasoning")),
+                         "preview": " ".join(head.split())[:160]})
+        return rows
+    return _cached(("calls", str(d)), path, build)
+
+
+def generation_detail(name, gen):
+    """Everything that happened in one generation, grouped by the flowchart's steps."""
+    d = run_dir(name)
+    gen = int(gen)
+    progs = _programs(d)
+    start = _start_families(progs)
+    gens = read_jsonl(d / "generations.jsonl")
+    record = next((g for g in gens if g["generation"] == gen), None)
+    before = next((g for g in gens if g["generation"] == gen - 1), None)
+    hyps = [h for h in read_jsonl(d / "hypotheses.jsonl") if h.get("generation") == gen]
+
+    def prog_view(p):
+        parent = progs.get(p.get("parent_id") or "")
+        return {**{k: p.get(k) for k in ("id", "branch", "parent_id", "hypothesis_id", "note", "valid", "score",
+                                        "families", "error", "repaired", "duplicate_of", "probe", "code")},
+                **{"units": _units(p, start)},
+                "parent_score": parent.get("score") if parent else None,
+                "parent_code": parent.get("code") if parent and p.get("branch") in ("deep", "tune") else None}
+
+    made = [prog_view(p) for p in progs.values() if p.get("generation") == gen]
+    calls = [c for c in _call_index(d) if c["generation"] == gen]
+    if not calls and record and record.get("finished_at") is None:
+        calls = _calls_by_count(d, gens, gen)         # runs from before calls were tagged with their generation
+    pool_in = [progs[i] for i in (before or {}).get("pool", []) if i in progs] if before else []
+    pool_out = [progs[i] for i in (record or {}).get("pool", []) if i in progs]
+    view = lambda ps: [{"id": p["id"], "branch": p.get("branch"), "generation": p.get("generation"),
+                        **_units(p, start)} for p in ps]
+    return {"generation": gen, "record": record, "programs": made, "hypotheses": hyps, "calls": calls,
+            "pool_in": view(pool_in), "pool_out": view(pool_out)}
+
+
+def _calls_by_count(d, gens, gen):
+    """Older runs didn't tag calls with a generation. Each generation record holds the running count of
+    answered calls when it ended, and a generation's calls all finish before it ends, so slice by that."""
+    counts = {g["generation"]: (g.get("llm") or {}).get("calls") for g in gens}
+    hi, lo = counts.get(gen), counts.get(gen - 1, 0) if gen > 0 else 0
+    if hi is None or lo is None:
+        return []
+    answered = [c for c in _call_index(d) if not c.get("error")]
+    return answered[lo:hi]
+
+
+def health(name=None):
+    """Is each part connected and working? Luminal / the model, MongoDB, the evaluator, the bounds."""
+    s = llm_mod.Settings.from_env()
+    out = {"evaluator": HEALTH["evaluator"],
+           "bounds": {"ok": bool(bounds_mod.family_floor("train")),
+                      "detail": "optimal-packing bounds loaded" if bounds_mod.family_floor("train")
+                      else "not computed: python -m helix.bounds --compute"}}
+    problems = s.problems()
+    out["model"] = {"ok": None if not problems else False,
+                    "detail": f"{s.provider}: {s.flash_model}" if not problems else f"missing {', '.join(problems)}"}
+    mongo_uri = os.environ.get("MONGODB_URI")
+    out["mongo"] = {"ok": None, "detail": "not configured (optional)" if not mongo_uri else "configured"}
+    if name:
+        try:
+            d = run_dir(name)
+            st = read_json(d / "status.json", {}) or {}
+            llm = st.get("llm") or {}
+            recent = _call_index(d)[-12:]
+            errors = [c for c in recent if c.get("error")]
+            if recent:
+                last = recent[-1]
+                ok = not errors or errors[-1]["line"] < recent[-1]["line"] and not recent[-1].get("error")
+                out["model"] = {"ok": ok, "detail": f"last answer {last.get('time')}, {len(errors)} errors in the last "
+                                f"{len(recent)} calls" + (f"; {llm['note']}" if llm.get("note") else "")}
+            m = st.get("mongo")
+            if m and m.get("error"):
+                out["mongo"] = {"ok": False, "detail": m["error"]}
+            elif m and m.get("enabled"):
+                out["mongo"] = {"ok": True, "detail": f"{m.get('written', 0)} records mirrored"
+                                + (f", {m['dropped']} dropped" if m.get("dropped") else "")}
+            elif m:
+                out["mongo"] = {"ok": None, "detail": "off for this run (no MONGODB_URI; optional)"}
+        except (FileNotFoundError, ValueError):
+            pass
+    return out
+
+
+def check_evaluator():
+    code = (REPO_ROOT / "programs" / "code_zero.py").read_text()
+    t = time.time()
+    try:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            r = evaluate_code(code, Path(tmp) / "check.py", "quick", 60)
+        HEALTH["evaluator"] = {"ok": bool(r.get("valid")), "detail": f"scored Code Zero in {time.time() - t:.1f}s"
+                               if r.get("valid") else (r.get("error") or "invalid")[-200:]}
+    except Exception as exc:
+        HEALTH["evaluator"] = {"ok": False, "detail": f"{type(exc).__name__}: {exc}"}
+
+
+def compute_references():
+    try:
+        version = bounds_mod.version()
+        REFERENCES.update(metrics.references("train"))
+        REFERENCES["_version"] = version
+    except Exception as exc:
+        REFERENCES["error"] = {"label": f"{type(exc).__name__}: {exc}"}
 
 
 def compute_baselines():
@@ -328,6 +553,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, mongo.check())
             if method == "GET" and p == ["baselines"]:
                 return self._send(200, BASELINES)
+            if method == "GET" and p == ["references"]:
+                if REFERENCES.get("_version") != bounds_mod.version() and "code_zero" in REFERENCES:
+                    threading.Thread(target=compute_references, daemon=True).start()   # bounds changed: refresh
+                return self._send(200, {k: v for k, v in REFERENCES.items() if not k.startswith("_")})
+            if method == "GET" and p == ["health"]:
+                return self._send(200, health(q.get("run", [None])[0]))
             if method == "GET" and p == ["runs"]:
                 return self._send(200, {"runs": list_runs(), "active": active_run()})
             if method == "POST" and p == ["runs", "start"]:
@@ -336,6 +567,10 @@ class Handler(BaseHTTPRequestHandler):
                 name, rest = p[1], p[2:]
                 if method == "GET" and not rest:
                     return self._send(200, run_state(name))
+                if method == "GET" and rest == ["series"]:
+                    return self._send(200, run_series(name))
+                if method == "GET" and len(rest) == 2 and rest[0] == "gen":
+                    return self._send(200, generation_detail(name, rest[1]))
                 if method == "GET" and rest == ["snapshot"]:
                     return self._send(200, snapshot(run_dir(name)), "text/plain")
                 if method == "GET" and rest == ["call"]:
@@ -384,6 +619,8 @@ def main():
     llm_mod.load_env_file()
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
     threading.Thread(target=compute_baselines, daemon=True).start()
+    threading.Thread(target=check_evaluator, daemon=True).start()
+    threading.Thread(target=compute_references, daemon=True).start()
     server = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     url = f"http://127.0.0.1:{a.port}"
     print(f"Helix dashboard: {url}   (Ctrl+C to close it; runs keep going)", flush=True)

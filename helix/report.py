@@ -13,6 +13,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from . import metrics
 from .population import Store
 from .reference import gap_closed, offline_reference
 from .sandbox import REPO_ROOT, evaluate_file
@@ -216,6 +217,15 @@ def write_report(runs):
     if best_row and zero_row and best_row[1]["valid"] and best_row[2]["valid"]:
         g_train = gap_closed(best_row[1]["score"], zero_row[1]["score"], ref["train"]["score"])
         g_test = gap_closed(best_row[2]["score"], zero_row[2]["score"], ref["test"]["score"])
+        fam = lambda r: {f: v["excess_pct"] for f, v in r["families"].items()}
+        u_train = metrics.units(fam(best_row[1]), fam(zero_row[1]), "train")
+        u_test = metrics.units(fam(best_row[2]), fam(zero_row[2]), "test")
+        if u_train["progress"] is not None:
+            lines += [f"**Progress to optimal** (0% = Code Zero, 100% = the optimal packing, `helix/bounds.py`): "
+                      f"**{u_train['progress']:.1f}%** on train"
+                      + (f", **{u_test['progress']:.1f}%** on the held-out test split" if u_test["progress"] is not None else "")
+                      + f". Extra bins per 100 the optimum needs: {u_train['waste']:.2f} on train"
+                      + (f", {u_test['waste']:.2f} on test" if u_test["waste"] is not None else "") + ".", ""]
         lines += [f"The score counts bins above a lower bound that ignores job shapes, so 0 can't be reached. As a "
                   f"practical yardstick, an offline packer that sees every job before placing any scores "
                   f"{fmt(ref['train']['score'])} on train. The evolved program has closed **{fmt(g_train, 1)}%** of "
