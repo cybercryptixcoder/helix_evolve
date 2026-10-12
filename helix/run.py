@@ -34,6 +34,7 @@ from . import roles
 from .llm import LLM, FakeLLM, Settings
 from .mongo import Mirror
 from . import tune as tuner
+from .bounds import family_floor
 from .population import Hypothesis, Program, Store, judge, read_records
 from .sandbox import REPO_ROOT, evaluate_code, evaluate_file
 
@@ -42,7 +43,10 @@ RUNS_DIR = Path(__file__).resolve().parent / "runs"
 TEMPERATURE = {"mutator": 0.8, "researcher": 0.6, "coder": 0.3, "zeroshot": 0.8}
 # Output limits per role (tokens): a reply that deliberates instead of answering fails in seconds, not a
 # minute, and gets one retry asking for only the answer. Zero-shot answers keep the general limit.
-MAX_TOKENS = {"mutator": 3000, "coder": 4000, "researcher": 4000}
+MAX_TOKENS = {"mutator": 4000, "coder": 4000, "researcher": 6000}
+# Characters of hidden reasoning, with no answer yet, after which a reply is abandoned and retried: with
+# thinking off the model still sometimes slips into it, and then rarely answers before running out of room.
+THINK_LIMIT = {"mutator": 8000, "coder": 6000, "researcher": 16000}
 RESEARCHER_SHOWN = 8      # programs shown to the Researcher
 
 
@@ -56,8 +60,19 @@ class Search:
         self.phases = {}          # branch -> what it's doing right now
         self.status = {"state": "starting", "pid": os.getpid(), "mode": args.mode, "schedule": args.schedule,
                        "generation": None, "generations": args.generations, "started": time.time()}
+        # What each step of the flowchart is doing in the current generation (read by the dashboard).
+        self.flow, self.flow_generation = {}, None
+        self._evals = {"running": 0, "done": 0}
         # Scores many variants of one program in parallel: the tune branch, and tune-then-judge in the deep branch.
-        self.tune_eval = tuner.evaluator("train", args.eval_timeout, args.tune_workers)
+        many = tuner.evaluator("train", args.eval_timeout, args.tune_workers)
+
+        def counted(codes):
+            self.count_evals(len(codes), 0)
+            try:
+                return many(codes)
+            finally:
+                self.count_evals(-len(codes), len(codes))
+        self.tune_eval = counted
         self.rng = random.Random()
         # Programs whose numbers have been tuned already (restored from the log on --resume).
         self.tuned = {t for g in read_records(store.dir / "generations.jsonl")
@@ -69,6 +84,7 @@ class Search:
             self.status.update(fields)
             best = self.store.best()
             self.status.update(phase=" | ".join(f"{b}: {t}" for b, t in self.phases.items()),
+                               flow=self.flow, flow_generation=self.flow_generation,
                                updated=time.time(), llm=self.llm.summary(),
                                best_id=best.id if best else None, best_score=best.score if best else None,
                                mongo=self.store.mirror.status if self.store.mirror else None)
@@ -86,6 +102,34 @@ class Search:
             else:
                 self.phases[branch] = text
         self.set_status()
+
+    # ---------------------------------------------------------------- the flowchart's live state
+    FLOW_NODES = ("pool", "researcher", "coder", "mutator", "tune", "evaluator", "merge")
+
+    def reset_flow(self, generation, branches):
+        with self._status_lock:
+            self.flow_generation = generation
+            self._evals = {"running": 0, "done": 0}
+            uses = {"pool": True, "researcher": "deep" in branches, "coder": "deep" in branches,
+                    "mutator": "wide" in branches, "tune": "tune" in branches, "evaluator": True, "merge": True}
+            self.flow = {n: {"state": "waiting" if uses[n] else "off"} for n in self.FLOW_NODES}
+        self.set_status()
+
+    def set_flow(self, node, state=None, **fields):
+        with self._status_lock:
+            f = self.flow.setdefault(node, {"state": "waiting"})
+            if state:
+                f["state"] = state
+            f.update(fields)
+        self.set_status()
+
+    def count_evals(self, running, done):
+        with self._status_lock:
+            self._evals["running"] += running
+            self._evals["done"] += done
+            ev = self.flow.setdefault("evaluator", {})
+            ev.update(running=self._evals["running"], done=self._evals["done"],
+                      state="active" if self._evals["running"] > 0 else ("done" if self._evals["done"] else "waiting"))
 
     def stop_requested(self):
         return (self.store.dir / "STOP").exists()
@@ -133,9 +177,12 @@ class Search:
         system = roles.system_prompt(role)
         prog = Program(id=pid, code="", generation=generation, branch=branch,
                        parent_id=parent_id, hypothesis_id=hypothesis_id)
-        limit = MAX_TOKENS.get(role)
+        limit, think = MAX_TOKENS.get(role), THINK_LIMIT.get(role)
+        tag = {"generation": generation, "branch": branch, "program": pid,
+               **({"hypothesis": hypothesis_id} if hypothesis_id else {})}
         try:
-            reply = self.llm.chat(role, system, user, temperature=TEMPERATURE[role], max_tokens=limit)
+            reply = self.llm.chat(role, system, user, temperature=TEMPERATURE[role], max_tokens=limit,
+                                  think_limit=think, tag=tag)
         except Exception as exc:
             prog.error = f"LLM call failed: {exc}"
             if finalize:
@@ -147,7 +194,7 @@ class Search:
         if code is None:   # cut off (or no program at all): one retry for only the code, keeping its idea
             try:
                 again = self.llm.chat(f"{role}-retry", system, roles.code_only_message(user, reply.text),
-                                      temperature=TEMPERATURE[role], max_tokens=limit)
+                                      temperature=TEMPERATURE[role], max_tokens=limit, think_limit=think, tag=tag)
                 code = roles.extract_code(again.text)
                 prog.note = roles.extract_note(again.text) or prog.note
             except Exception as exc:
@@ -165,9 +212,13 @@ class Search:
                 prog.valid, prog.score, prog.families, prog.error = dup.valid, dup.score, dup.families, dup.error
                 break
             # The tiny `quick` split first, so broken or very slow programs fail in a second.
-            result = evaluate_code(code, self.store.candidate_path(pid), "quick", min(15.0, self.a.eval_timeout))
-            if result["valid"]:
-                result = evaluate_file(self.store.candidate_path(pid), "train", self.a.eval_timeout)
+            self.count_evals(1, 0)
+            try:
+                result = evaluate_code(code, self.store.candidate_path(pid), "quick", min(15.0, self.a.eval_timeout))
+                if result["valid"]:
+                    result = evaluate_file(self.store.candidate_path(pid), "train", self.a.eval_timeout)
+            finally:
+                self.count_evals(-1, 1)
             if result["valid"]:
                 prog.valid, prog.score, prog.error = True, result["score"], None
                 prog.families = {f: v["excess_pct"] for f, v in result["families"].items()}
@@ -177,7 +228,7 @@ class Search:
                 break
             try:   # one repair: show the agent its own error
                 fix = self.llm.chat(f"{role}-repair", system, roles.repair_message(code, prog.error),
-                                    temperature=TEMPERATURE[role], max_tokens=limit)
+                                    temperature=TEMPERATURE[role], max_tokens=limit, think_limit=think, tag=tag)
             except Exception as exc:
                 prog.error += f"\n(repair call failed: {exc})"
                 break
@@ -211,11 +262,16 @@ class Search:
             jobs.append(self.workers.submit(self.candidate, "mutator", msg, generation, "wide",
                                             None if is_fresh else top[t].id))
         self.set_phase("wide", f"Mutator writing {len(jobs)} variants")
+        self.set_flow("mutator", "active", done=0, total=len(jobs), note=f"{len(jobs) - fresh} variants, {fresh} fresh ideas")
         progs = []
         for job in as_completed(jobs):
             progs.append(job.result())
             self.set_phase("wide", f"{len(progs)}/{len(jobs)} variants scored")
+            self.set_flow("mutator", done=len(progs))
         self.set_phase("wide", None)
+        valid = [p for p in progs if p.valid]
+        self.set_flow("mutator", "done", note=f"{len(valid)}/{len(progs)} valid"
+                      + (f", best {max(p.score for p in valid):.3f}" if valid else ""))
         return progs, {}
 
     def lineage(self, prog, depth=12):
@@ -280,18 +336,23 @@ class Search:
                 gains[p.id] = round(p.score - parent.score, 4)
         parent = self.store.programs.get(champ.parent_id) if champ.parent_id else None
         msg = roles.researcher_message(champ, info, shown, self.store.hypotheses, plan, generation, gains,
-                                       lineage=self.lineage(champ), parent=parent if parent and parent.valid else None)
+                                       lineage=self.lineage(champ), parent=parent if parent and parent.valid else None,
+                                       floor=family_floor("train"))
         jump = f", new by {info['jump']:+.3f}" if info["new"] and info["jump"] is not None else ""
         say(f"   deep: champion {champ.id} ({champ.score:.3f}{jump}); plan {plan['cause']} cause + {plan['improve']} improve")
         self.set_phase("deep", f"Researcher studying champion {champ.id}")
+        self.set_flow("researcher", "active", note=f"studying {champ.id}: {plan['cause']} cause + {plan['improve']} improve")
         system = roles.system_prompt("researcher")
         proposals = []
         for attempt in range(2):     # a cut-off reply gets one retry asking for only the JSON
             try:
-                text = msg if attempt == 0 else (msg + "\n\nYour previous reply was cut off before the JSON. "
-                                                 "Reply with ONLY the ```json block, no analysis.")
+                text = msg if attempt == 0 else (msg + "\n\nYour previous reply ran out of room before the JSON. "
+                                                 "Reply with ONLY the ```json block, no analysis, and keep each field "
+                                                 "under 40 words.")
                 reply = self.llm.chat("researcher" if attempt == 0 else "researcher-retry", system, text,
-                                      temperature=TEMPERATURE["researcher"], max_tokens=MAX_TOKENS["researcher"])
+                                      temperature=TEMPERATURE["researcher"], max_tokens=MAX_TOKENS["researcher"],
+                                      think_limit=THINK_LIMIT["researcher"],
+                                      tag={"generation": generation, "branch": "deep"})
                 proposals = roles.extract_hypotheses(reply.text, {p.id for p in shown}, champ.id)[: self.a.hypotheses]
             except Exception as exc:
                 say(f"   deep: Researcher call failed ({str(exc)[:120]})")
@@ -300,8 +361,12 @@ class Search:
         if not proposals:
             say("   deep: no usable hypotheses after a retry; skipping the deep branch this generation")
             self.set_phase("deep", None)
+            self.set_flow("researcher", "failed", note="no usable hypotheses after a retry")
+            self.set_flow("coder", "off")
             return [], {"tested": 0}
         self.set_phase("deep", f"Coder writing {len(proposals)} tests")
+        self.set_flow("researcher", "done", note=f"{len(proposals)} hypotheses on {champ.id}")
+        self.set_flow("coder", "active", done=0, total=len(proposals), note="writing and judging tests")
 
         def test(prop):
             base = self.store.programs[prop["base"]]
@@ -322,7 +387,9 @@ class Search:
             delta = f"{h.delta:+.3f}" if h.delta is not None else "  n/a "
             say(f"   {h.id} {h.kind:7s} {h.verdict:13s} {delta}  on {h.base_id}: {short(h.claim, 80)}")
             self.set_phase("deep", f"{len(results)}/{len(jobs)} tests scored")
+            self.set_flow("coder", done=len(results))
         self.set_phase("deep", None)
+        self.set_flow("coder", "done", note=", ".join(f"{n} {v}" for v, n in sorted(verdicts.items())))
         kinds = {k: sum(h.kind == k for _, h in results) for k in ("cause", "improve")}
         return [prog for prog, _ in results], {"tested": len(results), **kinds, **verdicts}
 
@@ -376,6 +443,7 @@ class Search:
                 break
             self.tuned.add(target.id)
             self.set_phase("tune", f"tuning {target.id}'s constants ({len(progs)} improved so far)")
+            self.set_flow("tune", "active", note=f"tuning {target.id}", done=len(progs), total=len(targets))
             out = tuner.tune(target.code, target.score, self.tune_eval, evals=self.a.tune_evals,
                              batch=self.a.tune_workers * 2, seconds=deadline - time.time(), rng=self.rng)
             if out is None:
@@ -401,6 +469,7 @@ class Search:
             progs.append(prog)
             say(f"   tune: {target.id} {target.score:.3f} → {prog.id} {prog.score:.3f} ({out['tried']} tries)")
         self.set_phase("tune", None)
+        self.set_flow("tune", "done", note=f"{len(progs)} of {len(targets)} improved ({tried} evaluations)")
         return progs, {"targets": [t.id for t in targets], "tried": tried, "improved": len(progs)}
 
     # ================================================================ generations
@@ -439,16 +508,22 @@ class Search:
 
         say(f"\n── generation {gen}: {' + '.join(branches)} | pool best {pool[0].score:.3f} ({pool[0].id})")
         self.set_status(generation=gen)
+        self.reset_flow(gen, branches)
+        self.set_flow("pool", "done", note=f"{len(pool)} programs, best {pool[0].score:.3f} ({pool[0].id})")
         with ThreadPoolExecutor(max_workers=len(branches)) as each:   # the branches run at the same time
             futures = {b: each.submit(getattr(self, b), pool, gen) for b in branches}
             out = {b: f.result() for b, f in futures.items()}
 
         best = self.store.best()
+        self.set_flow("merge", "active")
         new_ids = [p.id for b in branches for p in out[b][0]]
         next_pool = self.select_pool(list(pool_ids) + new_ids + [best.id])
+        kept_new = len(set(next_pool) & set(new_ids))
+        self.set_flow("merge", "done", note=f"kept {kept_new} new of {len(new_ids)}; best {best.score:.3f} ({best.id})")
 
         record = {"generation": gen, "branches": branches, "pool": next_pool,
                   "best_id": best.id, "best_score": best.score, "seconds": round(time.time() - started, 1),
+                  "started_at": round(started, 1), "finished_at": round(time.time(), 1),
                   "llm": self.llm.summary()}
         for b in branches:
             progs, extra = out[b]
@@ -477,6 +552,8 @@ class Search:
         self.store.candidate_path(p.id).write_text(code)
         self.store.add_program(p)
         say(f"── generation 0: Code Zero scores {p.score:.3f} ({p.id})")
+        self.reset_flow(0, [] if self.a.mode == "deep-only" else ["wide"])
+        self.set_flow("pool", "done", note=f"Code Zero {p.score:.3f}")
         if self.a.mode == "deep-only":
             pool = [p.id]
         else:
@@ -484,7 +561,9 @@ class Search:
             pool = self.select_pool([p.id] + [q.id for q in progs])
             valid = sum(q.valid for q in progs)
             say(f"   wide: {valid}/{len(progs)} valid, best so far {self.store.best().score:.3f}")
+        self.set_flow("merge", "done", note=f"pool of {len(pool)}, best {self.store.best().score:.3f}")
         self.store.log_generation({"generation": 0, "branches": ["seed", "wide"], "pool": pool,
+                                   "started_at": round(self.status["started"], 1), "finished_at": round(time.time(), 1),
                                    "best_id": self.store.best().id, "best_score": self.store.best().score,
                                    "llm": self.llm.summary()})
         return pool

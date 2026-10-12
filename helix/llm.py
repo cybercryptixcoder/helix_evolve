@@ -185,11 +185,13 @@ class LLM:
         return "flash"
 
     # ------------------------------------------------------------ public
-    def chat(self, role, system, user, temperature=None, force_tier=None, max_tokens=None):
+    def chat(self, role, system, user, temperature=None, force_tier=None, max_tokens=None, think_limit=None, tag=None):
         """Send one system + user message pair. Returns a Reply; raises after the last retry fails.
 
         max_tokens caps this reply (never above the settings' max_tokens), so a role that should answer
-        briefly fails fast instead of deliberating for a minute."""
+        briefly fails fast instead of deliberating for a minute. think_limit (characters) stops reading a
+        streamed reply that has only produced hidden reasoning that long and no answer yet: the model has
+        slipped into thinking mode, and the caller retries with a sharper prompt (finish = "thinking")."""
         tier = self._pick_tier(force_tier)
         model = self.s.pro_model if tier == "pro" and self.s.pro_model else self.s.flash_model
         temp = self.s.temperature if temperature is None else temperature
@@ -198,13 +200,15 @@ class LLM:
         error = None
         finish = ""
         try:
-            text, tokens_in, tokens_out, reasoning, finish = self._complete(model, system, user, temp, role, limit)
+            text, tokens_in, tokens_out, reasoning, finish = self._complete(model, system, user, temp, role, limit,
+                                                                            think_limit)
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
             raise
         finally:
             seconds = round(time.time() - started, 2)
             self._log({
+                **(tag or {}),
                 "role": role, "tier": tier, "model": model, "temperature": temp,
                 "system": system, "user": user,
                 "reply": None if error else text,
@@ -253,7 +257,7 @@ class LLM:
         return totals
 
     # ------------------------------------------------------------ internals
-    def _complete(self, model, system, user, temperature, role, max_tokens):
+    def _complete(self, model, system, user, temperature, role, max_tokens, think_limit=None):
         body = {
             "model": model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
@@ -262,7 +266,7 @@ class LLM:
             **({"stream": True} if self.s.stream else {}),
             **self.s.extra_body,
         }
-        data = self._post(body)
+        data = self._post(body, think_limit)
         choice = (data.get("choices") or [{}])[0]
         message = choice.get("message") or {}
         text = message.get("content") or ""
@@ -281,7 +285,7 @@ class LLM:
         tokens_out = int(usage.get("completion_tokens") or (len(text) + len(reasoning)) // 4)
         return text, tokens_in, tokens_out, reasoning, choice.get("finish_reason") or ""
 
-    def _post(self, body):
+    def _post(self, body, think_limit=None):
         missing = self.s.problems()
         if missing:
             raise RuntimeError(f"missing settings: {', '.join(missing)} (set them in helix/.env)")
@@ -295,7 +299,7 @@ class LLM:
             try:
                 with urllib.request.urlopen(req, timeout=self.s.timeout,
                                             context=SSL_CONTEXT if url.startswith("https") else None) as resp:
-                    data = _read_stream(resp) if body.get("stream") else json.loads(resp.read().decode())
+                    data = _read_stream(resp, think_limit) if body.get("stream") else json.loads(resp.read().decode())
                 self._speed_up()
                 return data
             except urllib.error.HTTPError as err:
@@ -371,9 +375,12 @@ class LLM:
             f.write(json.dumps(record) + "\n")
 
 
-def _read_stream(resp):
-    """Collect an OpenAI-style server-sent-event stream into the same shape as a normal reply."""
+def _read_stream(resp, think_limit=None):
+    """Collect an OpenAI-style server-sent-event stream into the same shape as a normal reply.
+    Stops early (finish "thinking") once `think_limit` characters of hidden reasoning have arrived with
+    no answer text: closing the connection ends the generation instead of waiting out max_tokens."""
     content, reasoning, finish, usage, seen_events, raw_lines = [], [], None, {}, False, []
+    n_content = n_reasoning = 0
     for raw in resp:
         line = raw.decode("utf-8", "replace").strip()
         raw_lines.append(line)
@@ -395,11 +402,16 @@ def _read_stream(resp):
             delta = ch.get("delta") or ch.get("message") or {}
             if delta.get("content"):
                 content.append(delta["content"])
+                n_content += len(delta["content"])
             r = delta.get("reasoning_content") or delta.get("reasoning")
             if isinstance(r, str) and r:
                 reasoning.append(r)
+                n_reasoning += len(r)
             if ch.get("finish_reason"):
                 finish = ch["finish_reason"]
+        if think_limit and not n_content and n_reasoning > think_limit:
+            finish = "thinking"
+            break
     if not seen_events:          # the server ignored "stream" and sent one normal JSON reply
         return json.loads("\n".join(raw_lines))
     return {"choices": [{"message": {"content": "".join(content), "reasoning_content": "".join(reasoning)},
@@ -430,7 +442,7 @@ class FakeLLM(LLM):
         super().__init__(settings or Settings(), log_path)
         self.rng = random.Random(seed)
 
-    def _complete(self, model, system, user, temperature, role, max_tokens):
+    def _complete(self, model, system, user, temperature, role, max_tokens, think_limit=None):
         finish = "stop"
         with self._lock:
             roll = self.rng.random()

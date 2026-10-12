@@ -191,7 +191,7 @@ def shared_lines(old, new):
 
 def _cut_off(call, default_limit):
     if call.get("finish"):
-        return call["finish"] == "length"
+        return call["finish"] in ("length", "thinking")
     limit = call.get("max_tokens") or default_limit
     return (call.get("tokens_out") or 0) >= CUT_OFF_SHARE * limit
 

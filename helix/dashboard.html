@@ -3,644 +3,632 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Helix Dashboard</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 30'%3E%3Cpath d='M5 1C21 8 21 22 5 29' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Cpath d='M21 1C5 8 5 22 21 29' fill='none' stroke='%23eb6834' stroke-width='3'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Helix</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 30'%3E%3Cpath d='M5 1 C 21 8, 21 22, 5 29' fill='none' stroke='%232a78d6' stroke-width='3'/%3E%3Cpath d='M21 1 C 5 8, 5 22, 21 29' fill='none' stroke='%23eb6834' stroke-width='3'/%3E%3C/svg%3E">
 <style>
   :root {
-    --paper: #f4f1e8; --card: #fffdf7; --ink: #1c1b18; --ink2: #55524a; --muted: #8a867b; --rule: #e1dccd;
-    --deep: #2a78d6; --wide: #eb6834; --tune: #16936a; --good: #1f7a3a; --bad: #b3261e; --warn: #9a6700; --focus: #2a78d6;
-    --grid: rgba(28, 27, 24, 0.045);
-    --display: "Fraunces", Georgia, serif; --sans: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+    color-scheme: light;
+    --paper: #f5f4f0; --card: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #8a8984; --rule: #e4e3df;
+    --deep: #2a78d6; --wide: #eb6834; --tune: #1baf7a; --cmp1: #eda100; --cmp2: #e87ba4; --cmp3: #6250d6;
+    --good: #1f7a3a; --bad: #b3261e; --warn: #9a6700; --focus: #2a78d6;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #141412; --card: #1c1c19; --ink: #efece4; --ink2: #c3c0b6; --muted: #8f8b80; --rule: #302f2a;
-      --deep: #3987e5; --wide: #d95926; --tune: #2fb886; --good: #4caf6e; --bad: #e66767; --warn: #d4a72c; --grid: rgba(239, 236, 228, 0.035);
+      color-scheme: dark;
+      --paper: #121211; --card: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #8f8d85; --rule: #302f2b;
+      --deep: #3987e5; --wide: #d95926; --tune: #199e70; --cmp1: #c98500; --cmp2: #d55181; --cmp3: #9085e9;
+      --good: #4caf6e; --bad: #e66767; --warn: #d4a72c;
     }
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #121211; --card: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #8f8d85; --rule: #302f2b;
+    --deep: #3987e5; --wide: #d95926; --tune: #199e70; --cmp1: #c98500; --cmp2: #d55181; --cmp3: #9085e9;
+    --good: #4caf6e; --bad: #e66767; --warn: #d4a72c;
+  }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.5 var(--sans);
-    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  header {
-    display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--rule);
-    background: color-mix(in srgb, var(--paper) 88%, transparent); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px);
-  }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--sans); }
+  button, select, input { font: inherit; color: inherit; }
+  button { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--ink2); }
+  button.go { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  button.danger { color: var(--bad); }
+  button:focus-visible, select:focus-visible, input:focus-visible, .node:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  select, input[type=number], input[type=text], input[type=password] { background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
-  .brand h1 { margin: 0; font: 650 26px/1 var(--display); letter-spacing: -0.5px; }
-  .brand small { color: var(--muted); font: 12px var(--mono); }
-  header .spacer { flex: 1; }
-  select, input, textarea, button { font: inherit; color: inherit; }
-  select, input[type=text], input[type=password], input[type=number], textarea {
-    background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; width: 100%;
-  }
-  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-  button {
-    border: 1px solid var(--ink); background: var(--ink); color: var(--paper); border-radius: 6px; padding: 7px 12px;
-    cursor: pointer; font-weight: 500; white-space: nowrap;
-  }
-  button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
-  button.ghost:hover { border-color: var(--ink2); }
-  button.danger { background: transparent; color: var(--bad); border-color: var(--bad); }
-  button.go { background: var(--deep); border-color: var(--deep); color: #fff; font-size: 15px; padding: 9px 16px; }
-  button:disabled { opacity: 0.45; cursor: default; }
-  .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; padding: 20px 24px 60px; }
-  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
-  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-  .card h2 { margin: 0 0 12px; font: 600 12px var(--mono); text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink2);
-             display: flex; align-items: center; gap: 8px; }
-  .card h2 .n { color: var(--muted); }
-  .card h2 .right { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
-  label { display: block; font-size: 12px; color: var(--ink2); margin: 10px 0 4px; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
-  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; background: transparent; color: var(--ink2); padding: 6px 12px; }
-  .seg button.on { background: var(--ink); color: var(--paper); }
-  .group { border-left: 2px solid var(--rule); padding-left: 10px; margin-top: 6px; }
-  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin-top: 10px; color: var(--ink); }
-  .check input { margin-top: 3px; }
-  .out { font: 12px/1.45 var(--mono); white-space: pre-wrap; word-break: break-word; margin-top: 10px; color: var(--ink2); }
+  .brand h1 { margin: 0; font-size: 20px; letter-spacing: .02em; }
+  .brand small { color: var(--muted); }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #runPicker { max-width: 380px; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .card h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink2); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+  .card h3 { font-size: 13px; color: var(--ink2); margin: 14px 0 6px; font-weight: 600; }
+  .hint { color: var(--muted); font-size: 12.5px; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .health { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--card); font-size: 13px; max-width: 100%; }
+  .pill b { font-weight: 600; }
+  .pill span.d { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.ok { background: var(--good); } .dot.bad { background: var(--bad); } .dot.run { background: var(--deep); animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .tile { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+  .tile .k { color: var(--ink2); font-size: 12.5px; }
+  .tile .v { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .tile .s { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
   .ok { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); }
-  .pill { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--mono); padding: 3px 9px; border-radius: 999px;
-          border: 1px solid var(--rule); background: var(--card); }
-  .pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
-  .pill.running i { background: var(--good); animation: pulse 1.4s infinite; }
-  .pill.crashed i, .pill.died i { background: var(--bad); }
-  .pill.finished i { background: var(--deep); }
-  .pill.stopped i { background: var(--warn); }
-  @keyframes pulse { 50% { opacity: 0.25; } }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
-  .tile { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
-  .tile .k { font: 11px var(--mono); text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-  .tile .v { font: 500 22px/1.25 var(--mono); margin-top: 4px; }
-  .tile .s { font-size: 12px; color: var(--ink2); }
-  .phase { font: 13px var(--mono); color: var(--ink2); padding: 10px 14px; border: 1px dashed var(--rule); border-radius: 10px;
-           margin-bottom: 16px; background: var(--card); min-height: 42px; }
-  .phase b { color: var(--ink); font-weight: 500; }
-  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink2); margin-bottom: 6px; }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .sw { width: 10px; height: 10px; display: inline-block; }
-  .sw.deep { background: var(--deep); border-radius: 50%; } .sw.wide { background: var(--wide); } .sw.tune { background: var(--tune); transform: rotate(45deg) scale(0.85); }
-  .sw.line { width: 16px; height: 2px; background: var(--ink); } .sw.ref { width: 16px; height: 0; border-top: 1.5px dashed var(--muted); }
-  svg.chart { width: 100%; height: auto; display: block; }
-  svg.chart text { font: 11px var(--mono); fill: var(--muted); }
-  svg.chart .refl { font-size: 10.5px; fill: var(--ink2); }
-  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-  @media (max-width: 1300px) { .two { grid-template-columns: 1fr; } }
+  .flowbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .svgwrap { overflow-x: auto; }
+  #flow { width: 100%; min-width: 760px; height: auto; display: block; }
+  #flow text { font-family: var(--sans); fill: var(--ink); }
+  #flow .sub { fill: var(--ink2); font-size: 12.5px; }
+  #flow .note { fill: var(--muted); font-size: 11.5px; }
+  #flow .edge { fill: none; stroke: var(--rule); stroke-width: 2; }
+  #flow .edge.live { stroke: var(--ink2); stroke-dasharray: 6 6; animation: flowdash 1s linear infinite; }
+  @keyframes flowdash { to { stroke-dashoffset: -12; } }
+  .node { cursor: pointer; }
+  .node rect.box { fill: var(--card); stroke-width: 2; }
+  .node.waiting rect.box { stroke-dasharray: 5 4; }
+  .node.off { opacity: .32; }
+  .node.active rect.box { stroke-width: 3.5; animation: glow 1.4s ease-in-out infinite; }
+  .node.failed rect.box { stroke: var(--bad) !important; }
+  .node.sel rect.box { fill: color-mix(in srgb, var(--card) 86%, var(--ink) 14%); }
+  @keyframes glow { 50% { stroke-opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .node.active rect.box, #flow .edge.live, .dot.run { animation: none; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--ink2); margin: 2px 0 8px; }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 6px; border-radius: 2px; }
+  .legend i.dot2 { width: 9px; height: 9px; border-radius: 50%; }
+  .legend i.dash { background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 9px); }
+  .tablewrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
-       border-bottom: 1px solid var(--rule); padding: 6px 8px; }
-  td { border-bottom: 1px solid var(--rule); padding: 7px 8px; vertical-align: top; }
-  td.num { font-family: var(--mono); white-space: nowrap; }
-  tr.click { cursor: pointer; } tr.click:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
-  .scroll { max-height: 420px; overflow: auto; }
-  .chip { font: 500 11px var(--mono); padding: 1px 7px; border-radius: 4px; color: #fff; white-space: nowrap; }
-  .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.tune { background: var(--tune); } .chip.other { background: var(--ink2); color: var(--paper); }
-  .v-supported, .v-removal-helps { color: var(--good); } .v-refuted { color: var(--bad); } .v-matters { color: var(--deep); }
-  .v-flat, .v-invalid, .v-unchanged, .v-minor, .v-no-effect { color: var(--muted); }
-  .kind { font: 500 10.5px var(--mono); padding: 0 5px; border-radius: 3px; border: 1px solid var(--rule); color: var(--ink2); }
-  pre.code { font: 12px/1.5 var(--mono); background: color-mix(in srgb, var(--ink) 4%, var(--card)); border: 1px solid var(--rule);
-             border-radius: 8px; padding: 12px; overflow: auto; max-height: 460px; margin: 0; white-space: pre; }
-  pre.text { white-space: pre-wrap; word-break: break-word; }
-  details summary { cursor: pointer; color: var(--ink2); font-size: 13px; margin: 6px 0; }
-  .hyp { border-top: 1px solid var(--rule); padding: 8px 0; font-size: 13px; }
-  .hyp:first-child { border-top: 0; }
-  .hyp .meta { font: 11px var(--mono); color: var(--muted); }
-  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
-  dialog { border: 1px solid var(--rule); border-radius: 12px; background: var(--card); color: var(--ink); padding: 0;
-           width: min(1000px, 94vw); max-height: 88vh; }
-  dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
-  dialog .dh { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); gap: 10px; }
-  dialog .dh h3 { margin: 0; font: 600 16px var(--display); flex: 1; }
-  dialog .db { padding: 16px; overflow: auto; max-height: calc(88vh - 60px); }
-  .md h1 { font: 650 20px var(--display); margin: 0 0 8px; } .md h2 { font: 600 15px var(--display); margin: 18px 0 8px; }
-  .md img { max-width: 100%; border: 1px solid var(--rule); border-radius: 8px; }
-  .md table { margin: 8px 0; }
-  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--paper); padding: 10px 14px;
-           border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 420px; z-index: 10; }
-  .toast.show { opacity: 1; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: color-mix(in srgb, var(--card) 90%, var(--ink) 10%); }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; color: #fff; background: var(--ink2); white-space: nowrap; }
+  .chip.deep { background: var(--deep); } .chip.wide { background: var(--wide); } .chip.tune { background: var(--tune); }
+  .tag { display: inline-block; padding: 0 6px; border: 1px solid var(--rule); border-radius: 6px; font-size: 11.5px; color: var(--ink2); }
+  pre.code { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 10px; overflow: auto; font: 12px/1.45 var(--mono); max-height: 420px; white-space: pre; margin: 6px 0; }
+  pre.text { white-space: pre-wrap; }
+  .add { color: var(--good); } .del { color: var(--bad); }
+  .hyp { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+  .hyp .meta { color: var(--ink2); font-size: 12.5px; margin-bottom: 4px; }
+  .v-supported, .v-removal-helps { color: var(--good); } .v-refuted, .v-invalid { color: var(--bad); } .v-matters { color: var(--deep); }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+  #chart { width: 100%; min-width: 620px; height: auto; display: block; }
+  #chart text { font-family: var(--sans); fill: var(--ink2); font-size: 12px; }
+  .tip { position: fixed; pointer-events: none; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; z-index: 5; min-width: 180px; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 5px 10px; text-transform: none; letter-spacing: 0; }
+  .seg button.on { background: var(--ink); color: var(--card); }
+  dialog { border: 1px solid var(--rule); border-radius: 14px; background: var(--card); color: var(--ink); padding: 0; width: min(920px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog .dh { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--card); }
+  dialog .db { padding: 14px 16px; overflow: auto; max-height: calc(100vh - 140px); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .grid2 label { display: block; font-size: 12.5px; color: var(--ink2); margin-bottom: 3px; }
+  .grid2 input, .grid2 select { width: 100%; }
+  .out { white-space: pre-wrap; font: 12px/1.45 var(--mono); color: var(--ink2); margin-top: 8px; }
+  details > summary { cursor: pointer; color: var(--ink2); }
+  .cmpchips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .cmpchip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--rule); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12.5px; }
+  .cmpchip i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+  .cmpchip button { border: 0; padding: 0 6px; background: transparent; }
+  @media (max-width: 860px) { .tiles { grid-template-columns: 1fr 1fr; } .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .tiles { grid-template-columns: 1fr; } .pill span.d { max-width: 180px; } #runPicker { max-width: 100%; } }
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true">
-      <path d="M5 1 C 21 8, 21 22, 5 29" fill="none" stroke="var(--deep)" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M21 1 C 5 8, 5 22, 21 29" fill="none" stroke="var(--wide)" stroke-width="2.4" stroke-linecap="round"/>
-    </svg>
-    <div><h1>Helix</h1><small>deep + wide evolutionary search</small></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><path d="M5 1 C 21 8, 21 22, 5 29" fill="none" stroke="var(--deep)" stroke-width="2.4" stroke-linecap="round"/><path d="M21 1 C 5 8, 5 22, 21 29" fill="none" stroke="var(--wide)" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <div><h1>Helix</h1><small>deep + wide evolutionary search</small></div>
+    </div>
+    <div class="bar">
+      <select id="runPicker" aria-label="Run"></select>
+      <button class="go" id="newBtn">New run</button>
+      <button id="stopBtn" title="Finish the current generation, save, exit">Stop</button>
+      <button class="danger" id="killBtn" title="Stop immediately">Kill</button>
+      <button id="resumeBtn" title="Continue this run for more generations">Resume</button>
+      <button id="reportBtn" title="Score the best program on held-out instances">Held-out check</button>
+      <button id="publishBtn" title="Copy the trace into results/ in the repo">Publish</button>
+      <button id="settingsBtn">Connect</button>
+    </div>
+  </header>
+
+  <div class="health" id="health"></div>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">Progress to optimal</div><div class="v" id="tProg">–</div><div class="s" id="tProgS">0% = Code Zero, 100% = the optimal packing</div></div>
+    <div class="tile"><div class="k">Extra bins vs optimal</div><div class="v" id="tWaste">–</div><div class="s" id="tWasteS">per 100 bins the optimal packing needs</div></div>
+    <div class="tile"><div class="k">Score (evaluator's units)</div><div class="v" id="tScore">–</div><div class="s" id="tScoreS"></div></div>
+    <div class="tile"><div class="k">vs best classic heuristic</div><div class="v" id="tClassic">–</div><div class="s" id="tClassicS"></div></div>
   </div>
-  <div class="spacer"></div>
-  <span id="statePill" class="pill"><i></i><span>no run</span></span>
-  <select id="runPicker" style="width: 300px" aria-label="Run"></select>
-  <button class="ghost" id="snapBtn" title="Copy a text snapshot of this run to paste into a chat">Copy snapshot</button>
-</header>
 
-<div class="layout">
-  <aside>
-    <section class="card">
-      <h2><span class="n">01</span> Connect</h2>
-      <div class="seg" id="providerSeg">
-        <button data-p="luminal" class="on">Luminal Cloud</button><button data-p="local">Local model</button>
-      </div>
-      <div id="grpLuminal" class="group">
-        <label for="LUMINAL_BASE_URL">Base URL (ends in /v1)</label>
-        <input type="text" id="LUMINAL_BASE_URL" placeholder="https://…/v1">
-        <label for="LUMINAL_API_KEY">API key</label>
-        <input type="password" id="LUMINAL_API_KEY" autocomplete="off">
-        <div class="grid2">
-          <div><label for="HELIX_FLASH_MODEL">Flash model</label><input type="text" id="HELIX_FLASH_MODEL"></div>
-          <div><label for="HELIX_PRO_MODEL">Pro model (optional)</label><input type="text" id="HELIX_PRO_MODEL"></div>
-        </div>
-        <label for="LUMINAL_EXTRA_BODY">Extra request JSON (optional)</label>
-        <input type="text" id="LUMINAL_EXTRA_BODY" placeholder='{"reasoning_effort": "low"}'>
-      </div>
-      <div id="grpLocal" class="group" hidden>
-        <label for="LOCAL_BASE_URL">Local server URL</label>
-        <input type="text" id="LOCAL_BASE_URL">
-        <label for="LOCAL_MODEL">Model name</label>
-        <input type="text" id="LOCAL_MODEL" placeholder="qwen2.5-coder:7b">
-        <div class="hint">Any OpenAI-style local server: Ollama (default URL), LM Studio (http://localhost:1234/v1), llama.cpp.</div>
-      </div>
-      <label for="MONGODB_URI" style="margin-top:14px">MongoDB URI (optional, mirrors every run)</label>
-      <input type="password" id="MONGODB_URI" autocomplete="off" placeholder="mongodb+srv://…">
-      <label for="MONGODB_DB">MongoDB database</label>
-      <input type="text" id="MONGODB_DB">
-      <div class="row" style="margin-top:12px">
-        <button id="saveBtn">Save</button>
-        <button class="ghost" id="testLlmBtn">Test model</button>
-        <button class="ghost" id="testMongoBtn">Test MongoDB</button>
-      </div>
-      <div class="hint">Saved to helix/.env on this machine (never committed). Saved keys aren't shown again; leave a key blank to keep it.</div>
-      <div id="connectOut" class="out"></div>
-    </section>
+  <section class="card">
+    <h2><span>Generation <span id="flowGen">–</span> · the loop</span>
+      <span class="flowbar">
+        <button id="genPrev" aria-label="Previous generation">◀</button>
+        <select id="genPicker" aria-label="Generation"></select>
+        <button id="genNext" aria-label="Next generation">▶</button>
+        <label class="hint"><input type="checkbox" id="follow" checked> follow live</label>
+      </span>
+    </h2>
+    <div class="svgwrap"><svg id="flow" viewBox="0 0 1120 340" role="img" aria-label="Flowchart of one generation"></svg></div>
+    <div class="hint" id="phaseLine">Pick a run, or start one.</div>
+  </section>
 
-    <section class="card">
-      <h2><span class="n">02</span> Run</h2>
-      <div class="grid2">
-        <div><label for="mode">Mode</label>
-          <select id="mode">
-            <option value="full">Full (deep + wide)</option>
-            <option value="wide-only">Wide only (control)</option>
-            <option value="deep-only">Deep only (control)</option>
-            <option value="zero-shot">Zero-shot (control)</option>
-          </select></div>
-        <div><label for="schedule">Schedule</label>
-          <select id="schedule"><option value="parallel">Parallel</option><option value="alternate">Alternate</option></select></div>
-        <div><label for="generations">Generations</label><input type="number" id="generations" value="20" min="1"></div>
-        <div><label for="max_minutes">Time limit (min, 0 = none)</label><input type="number" id="max_minutes" value="0" min="0"></div>
-        <div><label for="top_x">Survivors per branch</label><input type="number" id="top_x" value="4" min="1"></div>
-        <div><label for="variants">Mutator variants</label><input type="number" id="variants" value="6" min="1"></div>
-        <div><label for="hypotheses">Hypotheses</label><input type="number" id="hypotheses" value="4" min="1"></div>
-        <div><label for="pro_every">Pro every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
-        <div><label for="epsilon">Verdict threshold</label><input type="number" id="epsilon" value="0.4" step="0.05" min="0"></div>
-        <div><label for="workers">Parallel calls</label><input type="number" id="workers" value="12" min="1"></div>
-        <div id="nWrap" hidden><label for="n">Zero-shot answers</label><input type="number" id="n" value="40" min="1"></div>
-      </div>
-      <label class="check"><input type="checkbox" id="fake"> Offline test: fake model, no credits used, nothing published</label>
-      <div class="row" style="margin-top:14px">
-        <button class="go" id="runBtn">▶ Run</button>
-      </div>
-      <div id="runOut" class="out"></div>
-    </section>
+  <section class="card">
+    <h2><span id="detailTitle">Details</span><span class="hint">Click a step in the loop to see what it did in this generation.</span></h2>
+    <div id="detail"><div class="empty">Click a step in the loop above.</div></div>
+  </section>
 
-    <section class="card">
-      <h2><span class="n">03</span> Selected run</h2>
-      <div class="row">
-        <button class="ghost" id="stopBtn" title="Finish the current generation, save, exit">Stop after this generation</button>
-        <button class="danger" id="killBtn" title="Stop immediately">Kill now</button>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <input type="number" id="moreGens" value="5" min="1" style="width:80px" aria-label="More generations">
-        <button class="ghost" id="resumeBtn">Resume for more generations</button>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button class="ghost" id="reportBtn" title="Score the best program, Code Zero and baselines on held-out instances">Held-out check</button>
-        <button class="ghost" id="publishBtn" title="Copy the trace into results/ in the repo">Publish</button>
-        <button class="ghost" id="pushBtn" title="Publish, then git commit and push">Publish &amp; push</button>
-      </div>
-      <div id="ctlOut" class="out"></div>
-    </section>
-  </aside>
-
-  <main>
-    <div class="tiles">
-      <div class="tile"><div class="k">Generation</div><div class="v" id="tGen">–</div><div class="s" id="tGenS"></div></div>
-      <div class="tile"><div class="k">Best score</div><div class="v" id="tBest">–</div><div class="s" id="tBestS"></div></div>
-      <div class="tile"><div class="k">Gap closed</div><div class="v" id="tBar">–</div><div class="s" id="tBarS"></div></div>
-      <div class="tile"><div class="k">LLM calls</div><div class="v" id="tCalls">–</div><div class="s" id="tCallsS"></div></div>
-      <div class="tile"><div class="k">Programs</div><div class="v" id="tProgs">–</div><div class="s" id="tProgsS"></div></div>
-      <div class="tile"><div class="k">Elapsed</div><div class="v" id="tTime">–</div><div class="s" id="tTimeS"></div></div>
+  <section class="card">
+    <h2><span>Progress</span>
+      <span class="flowbar">
+        <span class="seg" id="unitSeg"><button data-u="progress" class="on">Progress to optimal</button><button data-u="score">Evaluator score</button></span>
+        <span class="seg" id="xSeg"><button data-x="generation" class="on">Generation</button><button data-x="minutes">Minutes</button></span>
+      </span>
+    </h2>
+    <div class="flowbar" style="margin-bottom:6px">
+      <span class="hint">Compare with:</span>
+      <select id="cmpPicker" aria-label="Add a run to compare"><option value="">add a run…</option></select>
+      <span class="cmpchips" id="cmpChips"></span>
     </div>
-    <div class="phase" id="phase">Pick a run, or start one.</div>
+    <div class="legend" id="chartLegend"></div>
+    <div class="svgwrap"><svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Best program by generation"></svg></div>
+    <div class="tablewrap" id="cmpTable"></div>
+  </section>
 
-    <section class="card">
-      <h2>Improvement over Code Zero <span class="right hint">% of Code Zero's wasted capacity eliminated, higher is better</span></h2>
-      <div class="legend">
-        <span><i class="sw line"></i>Best so far</span>
-        <span><i class="sw deep"></i>Best new, deep branch</span>
-        <span><i class="sw wide"></i>Best new, wide branch</span>
-        <span><i class="sw tune"></i>Tuned numbers</span>
-        <span><i class="sw ref"></i>Offline packer (sees every job in advance)</span>
-      </div>
-      <div id="chartGain"><div class="empty">No generations yet.</div></div>
-    </section>
-
-    <section class="card">
-      <h2>Raw score by generation <span class="right hint">score = −(mean excess bins % over the lower bound), for comparing runs</span></h2>
-      <div class="legend">
-        <span><i class="sw line"></i>Best so far</span>
-        <span><i class="sw deep"></i>Best new, deep branch</span>
-        <span><i class="sw wide"></i>Best new, wide branch</span>
-        <span><i class="sw tune"></i>Tuned numbers</span>
-        <span><i class="sw ref"></i>Code Zero, offline packer (sees every job in advance)</span>
-      </div>
-      <div id="chart"><div class="empty">No generations yet.</div></div>
-    </section>
-
-    <div class="two">
-      <section class="card">
-        <h2>Researcher's latest thinking <span class="right hint" id="resMeta"></span></h2>
-        <div id="researcher"><div class="empty">The Researcher hasn't run yet.</div></div>
-      </section>
-      <section class="card">
-        <h2>Research log <span class="right hint" id="logMeta"></span></h2>
-        <div class="scroll" id="hyps"><div class="empty">No hypotheses tested yet.</div></div>
-      </section>
-    </div>
-
-    <section class="card">
-      <h2>Agent calls <span class="right hint">newest first · click for the full prompt, reply and reasoning</span></h2>
-      <div class="scroll" id="calls"><div class="empty">No calls yet.</div></div>
-    </section>
-
-    <div class="two">
-      <section class="card">
-        <h2>Programs <span class="right hint">best first · click for code</span></h2>
-        <div class="scroll" id="programs"><div class="empty">No programs yet.</div></div>
-      </section>
-      <section class="card">
-        <h2>Best program <span class="right hint" id="bestMeta"></span></h2>
-        <div id="bestCode"><div class="empty">Nothing scored yet.</div></div>
-      </section>
-    </div>
-
-    <section class="card">
-      <h2>Generations</h2>
-      <div class="scroll" id="gens"><div class="empty">No generations yet.</div></div>
-    </section>
-
-    <section class="card">
-      <h2>Held-out report <span class="right hint">from “Held-out check”, or written automatically at the end of a real run</span></h2>
-      <div id="report" class="md"><div class="empty">No report yet.</div></div>
-    </section>
-
-    <section class="card">
-      <h2>Console</h2>
-      <pre class="code text" id="console" style="max-height:300px">–</pre>
-    </section>
-  </main>
+  <section class="card">
+    <details><summary>Console</summary><pre class="code text" id="console">–</pre></details>
+  </section>
 </div>
 
-<dialog id="dlg"><div class="dh"><h3 id="dlgTitle"></h3><button class="ghost" id="dlgCopy">Copy</button><button class="ghost" id="dlgClose">Close</button></div><div class="db" id="dlgBody"></div></dialog>
-<div class="toast" id="toast"></div>
+<div class="tip" id="tip"></div>
+
+<dialog id="dlg"><div class="dh"><b id="dlgTitle"></b><button id="dlgClose">Close</button></div><div class="db" id="dlgBody"></div></dialog>
+
+<dialog id="settingsDlg">
+  <div class="dh"><b>Connect</b><button data-close>Close</button></div>
+  <div class="db">
+    <div class="grid2">
+      <div><label for="HELIX_PROVIDER">Provider</label><select id="HELIX_PROVIDER"><option value="luminal">Luminal Cloud</option><option value="local">Local model (Ollama, LM Studio)</option></select></div>
+      <div><label for="HELIX_FLASH_MODEL">Model</label><input type="text" id="HELIX_FLASH_MODEL"></div>
+      <div><label for="LUMINAL_BASE_URL">Luminal base URL</label><input type="text" id="LUMINAL_BASE_URL"></div>
+      <div><label for="LUMINAL_API_KEY">Luminal API key</label><input type="password" id="LUMINAL_API_KEY" autocomplete="off"></div>
+      <div><label for="HELIX_PRO_MODEL">Pro model (optional)</label><input type="text" id="HELIX_PRO_MODEL"></div>
+      <div><label for="LUMINAL_EXTRA_BODY">Extra request JSON (optional)</label><input type="text" id="LUMINAL_EXTRA_BODY"></div>
+      <div><label for="LOCAL_BASE_URL">Local base URL</label><input type="text" id="LOCAL_BASE_URL"></div>
+      <div><label for="LOCAL_MODEL">Local model</label><input type="text" id="LOCAL_MODEL"></div>
+      <div><label for="MONGODB_URI">MongoDB URI (optional)</label><input type="password" id="MONGODB_URI" autocomplete="off" placeholder="mongodb+srv://…"></div>
+      <div><label for="MONGODB_DB">MongoDB database</label><input type="text" id="MONGODB_DB"></div>
+    </div>
+    <div class="bar" style="margin-top:12px"><button class="go" id="saveBtn">Save</button><button id="testLlmBtn">Test model</button><button id="testMongoBtn">Test MongoDB</button></div>
+    <div class="hint" style="margin-top:6px">Saved to helix/.env on this machine (never committed). Saved keys aren't shown again; leave a key blank to keep it.</div>
+    <div class="out" id="connectOut"></div>
+  </div>
+</dialog>
+
+<dialog id="newDlg">
+  <div class="dh"><b>New run</b><button data-close>Close</button></div>
+  <div class="db">
+    <div class="grid2">
+      <div><label for="mode">Mode</label><select id="mode"><option value="full">Full: deep + wide + tune</option><option value="wide-only">Wide only (control)</option><option value="deep-only">Deep only (control)</option><option value="zero-shot">Zero-shot (control)</option></select></div>
+      <div><label for="generations">Generations</label><input type="number" id="generations" value="30" min="1"></div>
+      <div><label for="max_minutes">Time limit (minutes, 0 = none)</label><input type="number" id="max_minutes" value="0" min="0"></div>
+      <div><label for="workers">Agent calls in parallel</label><input type="number" id="workers" value="12" min="1"></div>
+    </div>
+    <details style="margin-top:10px"><summary>More settings</summary>
+      <div class="grid2" style="margin-top:8px">
+        <div><label for="variants">Mutator programs per generation</label><input type="number" id="variants" value="6" min="1"></div>
+        <div><label for="fresh">…of which fresh ideas</label><input type="number" id="fresh" value="2" min="0"></div>
+        <div><label for="hypotheses">Researcher hypotheses</label><input type="number" id="hypotheses" value="4" min="1"></div>
+        <div><label for="pool_size">Pool size</label><input type="number" id="pool_size" value="8" min="2"></div>
+        <div><label for="epsilon">Verdict threshold</label><input type="number" id="epsilon" value="0.05" step="0.01" min="0"></div>
+        <div><label for="judge_tune_evals">Tuning per deep test (evaluations)</label><input type="number" id="judge_tune_evals" value="16" min="0"></div>
+        <div><label for="pro_every">Pro model every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
+        <div><label><input type="checkbox" id="tune" checked> Tune branch</label></div>
+      </div>
+    </details>
+    <label class="hint" style="display:block;margin-top:10px"><input type="checkbox" id="fake"> Offline test: fake model, no credits used, nothing published</label>
+    <div class="bar" style="margin-top:12px"><button class="go" id="runBtn">▶ Start</button></div>
+    <div class="out" id="runOut"></div>
+  </div>
+</dialog>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
-const fmt = (x, d = 3) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toFixed(d);
-const signed = (x, d = 3) => (x === null || x === undefined) ? "–" : (x >= 0 ? "+" : "") + Number(x).toFixed(d);
-let current = null, baselines = {}, lastState = null, provider = "luminal", dlgText = "";
-
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (x, d = 3) => x == null || Number.isNaN(x) ? "–" : Number(x).toFixed(d);
+const signed = (x, d = 3) => x == null ? "–" : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(d);
+const pct = (x, d = 1) => x == null ? "–" : `${Number(x).toFixed(d)}%`;
 async function api(path, opts = {}) {
-  const res = await fetch(path, { method: opts.body ? "POST" : (opts.method || "GET"),
-    headers: { "Content-Type": "application/json" }, body: opts.body ? JSON.stringify(opts.body) : undefined });
-  const ctype = res.headers.get("Content-Type") || "";
-  const data = ctype.includes("json") ? await res.json() : await res.text();
-  if (!res.ok) throw new Error((data && data.error) || res.statusText);
-  return data;
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = t; }
+  if (!r.ok) throw new Error((j && j.error) || t || r.statusText);
+  return j;
 }
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3500); }
-function setHTML(el, html) { if (el._last !== html) { el._last = html; el.innerHTML = html; } }
-function busy(btn, on) { btn.disabled = on; }
-function branchOfRole(role) { return /researcher|coder/.test(role) ? "deep" : /mutator/.test(role) ? "wide" : "other"; }
+function setHTML(el, html) { if (el._h !== html) { el.innerHTML = html; el._h = html; } }
 
-// ---------------------------------------------------------------- settings
-const FIELDS = ["LUMINAL_BASE_URL", "LUMINAL_API_KEY", "HELIX_FLASH_MODEL", "HELIX_PRO_MODEL", "LUMINAL_EXTRA_BODY",
-                "LOCAL_BASE_URL", "LOCAL_MODEL", "MONGODB_URI", "MONGODB_DB"];
-function setProvider(p) {
-  provider = p;
-  document.querySelectorAll("#providerSeg button").forEach((b) => b.classList.toggle("on", b.dataset.p === p));
-  $("grpLuminal").hidden = p !== "luminal"; $("grpLocal").hidden = p !== "local";
-}
-async function loadSettings() {
-  const s = await api("/api/settings");
-  setProvider(s.HELIX_PROVIDER.value === "local" ? "local" : "luminal");
-  for (const k of FIELDS) {
-    const f = s[k], el = $(k);
-    if (f.secret) { el.value = ""; el.placeholder = f.set ? `saved (${f.hint || "set"}), leave blank to keep` : (k === "MONGODB_URI" ? "mongodb+srv://…" : "paste key"); }
-    else el.value = f.value || "";
-  }
-}
-async function saveSettings() {
-  const body = { HELIX_PROVIDER: provider };
-  for (const k of FIELDS) body[k] = $(k).value;
-  await api("/api/settings", { body });
-  await loadSettings();
-}
-$("providerSeg").addEventListener("click", (e) => { if (e.target.dataset.p) setProvider(e.target.dataset.p); });
-$("saveBtn").onclick = async () => {
-  try { await saveSettings(); $("connectOut").innerHTML = `<span class="ok">Saved.</span>`; }
-  catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-};
-$("testLlmBtn").onclick = async (ev) => {
-  busy(ev.target, true); $("connectOut").textContent = "Saving, then sending one tiny request per model…";
-  try {
-    await saveSettings();
-    const r = await api("/api/check/llm", { body: {} });
-    $("connectOut").innerHTML = r.results.map((x) => `<div class="${x.ok ? "ok" : "bad"}">${x.ok ? "✓" : "✕"} ${esc(x.tier)} ${esc(x.model)}: ${esc(x.detail)}</div>`).join("");
-  } catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-  busy(ev.target, false);
-};
-$("testMongoBtn").onclick = async (ev) => {
-  busy(ev.target, true); $("connectOut").textContent = "Saving, then connecting to MongoDB…";
-  try { await saveSettings(); const r = await api("/api/check/mongo", { body: {} });
-        $("connectOut").innerHTML = `<div class="${r.ok ? "ok" : "bad"}">${r.ok ? "✓" : "✕"} ${esc(r.detail)}</div>`; }
-  catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-  busy(ev.target, false);
-};
+let current = null, state = null, series = {}, refs = {}, compare = [], selNode = "researcher", selGen = null, detailCache = {};
+let unit = "progress", xAxis = "generation";
+const CMP_COLORS = ["var(--cmp1)", "var(--cmp2)", "var(--cmp3)"];
+try { compare = JSON.parse(localStorage.getItem("helix.compare") || "[]"); } catch { compare = []; }
 
-// ---------------------------------------------------------------- run controls
-$("mode").onchange = () => { $("nWrap").hidden = $("mode").value !== "zero-shot"; };
-$("runBtn").onclick = async (ev) => {
-  const body = { fake: $("fake").checked };
-  for (const k of ["mode", "schedule", "generations", "max_minutes", "top_x", "variants", "hypotheses", "pro_every", "epsilon", "workers", "n"])
-    body[k] = $(k).value;
-  busy(ev.target, true); $("runOut").textContent = "Starting…";
-  try {
-    if (!body.fake) await saveSettings();
-    const r = await api("/api/runs/start", { body });
-    current = r.name; $("runOut").innerHTML = `<span class="ok">Started ${esc(r.name)}.</span>`;
-    await refreshRuns(); await refreshState();
-  } catch (e) { $("runOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-  busy(ev.target, false);
-};
-async function control(path, body, out = "ctlOut") {
-  if (!current) return toast("Pick a run first.");
-  $(out).textContent = "Working…";
-  try { const r = await api(`/api/runs/${current}/${path}`, { body: body || {} });
-        $(out).innerHTML = `<span class="${r.ok === false ? "bad" : "ok"}">${esc(r.message || (r.until_generation ? `Resuming until generation ${r.until_generation}.` : "Done."))}</span>`;
-        refreshState(); refreshRuns(); return r; }
-  catch (e) { $(out).innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-}
-$("stopBtn").onclick = () => control("stop", { force: false });
-$("killBtn").onclick = () => { if (confirm("Kill the run now? The generation in progress is lost; everything before it is kept.")) control("stop", { force: true }); };
-$("resumeBtn").onclick = () => control("resume", { more: $("moreGens").value });
-$("reportBtn").onclick = async (ev) => { busy(ev.target, true); $("ctlOut").textContent = "Scoring on held-out instances (about 20 seconds)…";
-  await control("report", {}); lastReport = null; await loadReport(true); busy(ev.target, false); };
-$("publishBtn").onclick = async (ev) => { busy(ev.target, true); await control("publish", { push: false }); busy(ev.target, false); };
-$("pushBtn").onclick = async (ev) => { busy(ev.target, true); await control("publish", { push: true }); busy(ev.target, false); };
-$("snapBtn").onclick = async () => {
-  if (!current) return toast("Pick a run first.");
-  const text = await api(`/api/runs/${current}/snapshot`);
-  try { await navigator.clipboard.writeText(text); toast("Snapshot copied. Paste it into the chat."); }
-  catch { openDialog("Snapshot", `<pre class="code text">${esc(text)}</pre>`, text); }
-};
-
-// ---------------------------------------------------------------- dialog
-function openDialog(title, html, copyText) { $("dlgTitle").textContent = title; $("dlgBody").innerHTML = html; dlgText = copyText || ""; $("dlg").showModal(); }
-$("dlgClose").onclick = () => $("dlg").close();
-$("dlgCopy").onclick = async () => { try { await navigator.clipboard.writeText(dlgText || $("dlgBody").innerText); toast("Copied."); } catch { toast("Copy failed; select the text instead."); } };
-
-async function showCall(line) {
-  const c = await api(`/api/runs/${current}/call?line=${line}`);
-  const parts = [`<div class="hint">${esc(c.time)} · ${esc(c.model)} (${esc(c.tier)}) · ${esc(c.seconds)}s · ${esc(c.tokens_in)} in / ${esc(c.tokens_out)} out</div>`];
-  if (c.error) parts.push(`<h4 class="bad">Error</h4><pre class="code text">${esc(c.error)}</pre>`);
-  if (c.reasoning) parts.push(`<details open><summary>Model reasoning</summary><pre class="code text">${esc(c.reasoning)}</pre></details>`);
-  if (c.reply) parts.push(`<details open><summary>Reply</summary><pre class="code text">${esc(c.reply)}</pre></details>`);
-  parts.push(`<details><summary>What the agent was sent (user message)</summary><pre class="code text">${esc(c.user)}</pre></details>`);
-  parts.push(`<details><summary>System prompt</summary><pre class="code text">${esc(c.system)}</pre></details>`);
-  openDialog(`${c.role} call`, parts.join(""), `${c.reasoning ? "REASONING\n" + c.reasoning + "\n\n" : ""}REPLY\n${c.reply || c.error}`);
-}
-async function showProgram(id) {
-  const p = await api(`/api/runs/${current}/program/${id}`);
-  const fams = Object.entries(p.families || {}).map(([f, v]) => `${f} ${fmt(v, 2)}`).join(" · ");
-  openDialog(`${p.id} · ${p.branch} · score ${fmt(p.score)}`,
-    `<div class="hint">generation ${p.generation}${p.parent_id ? ` · from ${esc(p.parent_id)}` : ""}${p.hypothesis_id ? ` · tests ${esc(p.hypothesis_id)}` : ""}${p.repaired ? " · repaired" : ""}${p.duplicate_of ? ` · duplicate of ${esc(p.duplicate_of)}` : ""}</div>
-     ${p.note ? `<p>${esc(p.note)}</p>` : ""}${fams ? `<p class="hint">Excess % by family: ${esc(fams)}</p>` : ""}
-     ${p.error ? `<pre class="code text bad">${esc(p.error)}</pre>` : ""}<pre class="code">${esc(p.code || "(no code)")}</pre>`, p.code);
-}
-
-// ---------------------------------------------------------------- runs list + polling
+// ---------------------------------------------------------------- runs
 async function refreshRuns() {
   const r = await api("/api/runs");
   if (!current) current = r.active || (r.runs[0] && r.runs[0].name) || null;
-  const opts = r.runs.map((x) => `<option value="${esc(x.name)}" ${x.name === current ? "selected" : ""}>${esc(x.name)} · ${esc(x.state)}${x.best_score != null ? " · " + fmt(x.best_score) : ""}</option>`);
-  setHTML($("runPicker"), opts.join("") || `<option>no runs yet</option>`);
+  const label = (x) => `${x.name} · ${x.state}${x.published ? " · published" : ""}${x.best_score != null ? " · " + fmt(x.best_score) : ""}`;
+  setHTML($("runPicker"), r.runs.map((x) => `<option value="${esc(x.name)}" ${x.name === current ? "selected" : ""}>${esc(label(x))}</option>`).join("") || `<option>no runs yet</option>`);
+  setHTML($("cmpPicker"), `<option value="">add a run…</option>` + r.runs.filter((x) => x.name !== current && !compare.includes(x.name)).map((x) => `<option value="${esc(x.name)}">${esc(label(x))}</option>`).join(""));
 }
-$("runPicker").onchange = () => { current = $("runPicker").value; lastReport = null; refreshState(); };
-
-async function refreshState() {
-  if (!current) return;
-  try { const s = await api(`/api/runs/${current}`); lastState = s; render(s); }
-  catch (e) { $("phase").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+$("runPicker").onchange = () => { current = $("runPicker").value; selGen = null; detailCache = {}; $("follow").checked = true; refreshRuns(); tick(true); };
+$("cmpPicker").onchange = () => { const v = $("cmpPicker").value; if (v && compare.length < 3) { compare.push(v); saveCompare(); loadSeries(v).then(drawChart); refreshRuns(); } $("cmpPicker").value = ""; };
+function saveCompare() { try { localStorage.setItem("helix.compare", JSON.stringify(compare)); } catch { } renderCmpChips(); }
+function renderCmpChips() {
+  setHTML($("cmpChips"), compare.map((n, i) => `<span class="cmpchip"><i style="background:${CMP_COLORS[i]}"></i>${esc(n)}<button data-rm="${esc(n)}" aria-label="Stop comparing with ${esc(n)}">×</button></span>`).join(""));
+  $("cmpChips").querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { compare = compare.filter((x) => x !== b.dataset.rm); saveCompare(); drawChart(); refreshRuns(); });
 }
+async function loadSeries(name) { try { series[name] = await api(`/api/runs/${name}/series`); } catch { delete series[name]; } }
 
-// ---------------------------------------------------------------- rendering
-function render(s) {
-  const st = s.status || {}, cfg = s.config || {}, state = st.state || "unknown";
-  const pill = $("statePill"); pill.className = "pill " + state; pill.querySelector("span").textContent = state + (s.stop_requested && state === "running" ? " · stopping" : "");
-  const gens = s.generations || [];
-  $("tGen").textContent = st.generation != null ? `${st.generation} / ${st.generations ?? "?"}` : "–";
-  $("tGenS").textContent = `${cfg.mode || ""}${cfg.schedule ? " · " + cfg.schedule : ""}`;
-  const best = s.best;
-  $("tBest").textContent = best ? fmt(best.score) : "–";
-  $("tBestS").textContent = best && s.seed_score != null ? `${signed(best.score - s.seed_score)} vs Code Zero ${fmt(s.seed_score)}` : "";
-  const barName = Object.keys(baselines).filter((k) => k !== "code_zero" && k !== "offline_reference").sort((a, b) => baselines[b] - baselines[a])[0];
-  const ref = baselines.offline_reference, seed = s.seed_score;
-  const closed = best && seed != null && ref != null && ref > seed ? 100 * (best.score - seed) / (ref - seed) : null;
-  $("tBar").textContent = closed != null ? `${closed.toFixed(0)}%` : "–";
-  $("tBarS").innerHTML = ref != null ? `of the way from Code Zero to an offline packer that sees every job (${fmt(ref)})`
-    + (barName && best ? ` · best baseline ${esc(barName)} <span class="${best.score > baselines[barName] ? "ok" : "warn"}">${best.score > baselines[barName] ? "beaten" : "not yet"}</span>` : "")
-    : "computing the reference…";
-  const llm = st.llm || {};
-  $("tCalls").textContent = llm.calls ?? "–";
-  $("tCallsS").textContent = (state === "running" ? `${llm.in_flight || 0} in flight · ${llm.retrying || 0} retrying · ` : "")
-    + `${((llm.tokens_in || 0) / 1000).toFixed(0)}k in · ${((llm.tokens_out || 0) / 1000).toFixed(0)}k out`;
-  const c = s.counts || {};
-  $("tProgs").textContent = c.programs ?? "–";
-  $("tProgsS").textContent = `${c.valid || 0} valid · ${c.repaired || 0} repaired · ${c.duplicates || 0} dup`;
-  const end = st.finished || (state === "running" ? Date.now() / 1000 : st.updated);
-  const mins = st.started && end ? (end - st.started) / 60 : null;
-  $("tTime").textContent = mins != null ? (mins < 60 ? `${mins.toFixed(1)}m` : `${(mins / 60).toFixed(1)}h`) : "–";
-  $("tTimeS").textContent = `${cfg.provider || ""} ${cfg.flash_model ? "· " + cfg.flash_model : ""}`;
-
-  const mongo = st.mongo;
-  const mongoTxt = mongo ? (mongo.enabled ? ` · MongoDB: ${mongo.written} docs written` : (mongo.error ? ` · MongoDB off: ${mongo.error}` : "")) : "";
-  let phase = st.phase ? st.phase.split(" | ").map((p) => { const [b, ...r] = p.split(": "); return `<b>${esc(b)}</b>: ${esc(r.join(": "))}`; }).join(" &nbsp;·&nbsp; ") : "";
-  if (state === "running" && !phase) phase = "between steps…";
-  if (state === "running" && llm.note) phase += `<div class="warn">Luminal: ${esc(llm.note)}</div>`;
-  if (state === "crashed" || st.error) phase = `<span class="bad">${esc((st.error || "").split("\n").slice(-1)[0])}</span>`;
-  if (state === "died") phase = `<span class="bad">The run's process ended without finishing (killed, or the machine slept). Resume continues from the last full generation.</span>`;
-  if (["finished", "stopped"].includes(state) && !st.error) phase = `Run ${state}.`;
-  setHTML($("phase"), (phase || "–") + `<span class="hint">${esc(mongoTxt)}</span>`);
-
-  renderChart(s, null, "chart", false);
-  renderChart(s, null, "chartGain", true);
-  renderResearcher(s.researcher);
-  renderHyps(s.hypotheses || []);
-  renderCalls(s.calls || []);
-  renderPrograms(s.programs || []);
-  setHTML($("bestCode"), best ? `<pre class="code">${esc(best.code)}</pre>` : `<div class="empty">Nothing scored yet.</div>`);
-  $("bestMeta").textContent = best ? `${best.id} · ${best.branch} · gen ${best.generation}` : "";
-  renderGens(gens);
-  const con = $("console"); const atBottom = con.scrollTop + con.clientHeight >= con.scrollHeight - 4;
-  if (con.textContent !== s.console) { con.textContent = s.console || "–"; if (atBottom) con.scrollTop = con.scrollHeight; }
-  if (s.has_report) loadReport(false);
-}
-
-function renderChart(s, barName, target, asGain) {
-  const seed = s.seed_score;
-  // asGain: % of Code Zero's excess removed = (score - seed) / |seed| * 100, so Code Zero is 0 and up is better.
-  const conv = (v) => asGain && seed ? (v - seed) / Math.abs(seed) * 100 : v;
-  const gens = (s.generations || []).filter((g) => g.best_score != null).map((g) => ({ ...g, best_score: conv(g.best_score) }));
-  if (!gens.length || (asGain && !seed)) return setHTML($(target), `<div class="empty">No generations yet.</div>`);
-  const pts = [], refs = [];
-  if (seed != null && !asGain) refs.push(["Code Zero", seed]);
-  if (baselines.offline_reference != null && seed) refs.push(["Offline packer", conv(baselines.offline_reference)]);
-  for (const g of gens) for (const b of ["deep", "wide", "tune"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: conv(g[b].best_new), b });
-  const ys = gens.map((g) => g.best_score).concat(pts.map((p) => p.y), refs.map((r) => r[1]));
-  let lo = Math.min(...ys), hi = Math.max(...ys); const pad = (hi - lo) * 0.08 || 0.5; lo -= pad; hi += pad;
-  if (asGain) { lo = 0; pts.splice(0, pts.length, ...pts.filter((p) => p.y >= 0)); }
-  const maxX = Math.max(1, ...gens.map((g) => g.generation));
-  const W = 860, H = 300, L = 54, R = 130, T = 12, B = 34;
-  const X = (x) => L + (x / maxX) * (W - L - R), Y = (y) => T + (1 - (y - lo) / (hi - lo)) * (H - T - B);
-  let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Best score by generation">`;
-  const ticks = 5;
-  for (let i = 0; i <= ticks; i++) { const v = lo + (hi - lo) * i / ticks, y = Y(v);
-    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="1"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${asGain ? v.toFixed(1) + "%" : v.toFixed(2)}</text>`; }
-  const step = Math.max(1, Math.ceil(maxX / 12));
-  for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
-  svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">generation</text>`;
-  for (const [name, v] of refs) { const y = Y(v);
-    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-dasharray="5 4" stroke-width="1.2"/><text class="refl" x="${W - R + 6}" y="${y + 4}">${esc(name)} ${asGain ? v.toFixed(1) + "%" : v.toFixed(2)}</text>`; }
-  let d = ""; gens.forEach((g, i) => { const x = X(g.generation), y = Y(g.best_score);
-    d += i === 0 ? `M${x},${y}` : ` H${x} V${y}`; });
-  d += ` H${X(maxX)}`;
-  svg += `<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
-  for (const p of pts) { const x = X(p.x) + ({ deep: -6, wide: 6, tune: 0 })[p.b], y = Y(p.y), tip = `generation ${p.x}, ${p.b} branch: best new ${p.y.toFixed(3)}`;
-    svg += p.b === "deep"
-      ? `<circle cx="${x}" cy="${y}" r="5" fill="var(--deep)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></circle>`
-      : p.b === "wide"
-      ? `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="var(--wide)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></rect>`
-      : `<path d="M${x},${y - 6} L${x + 6},${y} L${x},${y + 6} L${x - 6},${y} Z" fill="var(--tune)" stroke="var(--card)" stroke-width="2"><title>${tip}</title></path>`; }
-  if (asGain) { const last = gens[gens.length - 1];
-    svg += `<text class="refl" x="${X(last.generation) + 8}" y="${Y(last.best_score) + 4}">${last.best_score.toFixed(1)}%</text>`; }
-  svg += `</svg>`;
-  setHTML($(target), svg);
-}
-
-function renderResearcher(r) {
-  if (!r) { $("resMeta").textContent = ""; return setHTML($("researcher"), `<div class="empty">The Researcher hasn't run yet.</div>`); }
-  $("resMeta").textContent = `${r.time} · ${r.model} · ${r.seconds}s`;
-  let hyps = [];
-  try { const m = r.reply.match(/\{[\s\S]*\}/); hyps = (JSON.parse(m[0]).hypotheses || []); } catch { }
-  const list = hyps.length ? hyps.map((h) => `<div class="hyp"><div class="meta">on ${esc(h.base)}</div><div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>${h.prediction ? `<div class="hint">Predicts: ${esc(h.prediction)}</div>` : ""}</div>`).join("")
-                           : `<pre class="code text">${esc(r.reply)}</pre>`;
-  const reasoning = r.reasoning ? `<details ${$("researcher")._open ? "open" : ""} id="resDetails"><summary>Model reasoning (${r.reasoning.length.toLocaleString()} characters)</summary><pre class="code text">${esc(r.reasoning)}</pre></details>`
-                                : `<div class="hint">This model doesn't return its reasoning separately; the hypotheses are its reply.</div>`;
-  setHTML($("researcher"), reasoning + list);
-  const det = $("resDetails"); if (det) det.ontoggle = () => { $("researcher")._open = det.open; };
-}
-
-function renderHyps(hyps) {
-  const counts = {}; hyps.forEach((h) => counts[h.verdict] = (counts[h.verdict] || 0) + 1);
-  $("logMeta").textContent = Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(" · ");
-  if (!hyps.length) return setHTML($("hyps"), `<div class="empty">No hypotheses tested yet.</div>`);
-  const icon = { supported: "▲", refuted: "▼", flat: "■", invalid: "✕", unchanged: "=", matters: "◆", minor: "·", "no-effect": "○", "removal-helps": "▲" };
-  const rows = hyps.slice().reverse().map((h) => `<div class="hyp"><div class="meta"><span class="kind">${esc(h.kind || "improve")}</span> ${esc(h.id)} · gen ${h.generation} · on ${esc(h.base_id)}${h.builds_on ? ` · builds on ${esc(h.builds_on)}` : ""} · <span class="v-${esc(h.verdict)}">${icon[h.verdict] || ""} ${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</span></div>
-      <div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>
-      ${h.family_shift && Object.keys(h.family_shift).length ? `<div class="hint">Excess moved: ${Object.entries(h.family_shift).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 3).map(([f, v]) => `${esc(f)} ${signed(v, 2)}`).join(", ")}</div>` : ""}</div>`);
-  setHTML($("hyps"), rows.join(""));
-}
-
-function renderCalls(calls) {
-  if (!calls.length) return setHTML($("calls"), `<div class="empty">No calls yet.</div>`);
-  const rows = calls.map((c) => `<tr class="click" data-line="${c.line}"><td class="num">${esc(c.time)}</td>
-      <td><span class="chip ${branchOfRole(c.role || "")}">${esc(c.role)}</span></td><td class="num">${esc(c.tier)}</td>
-      <td class="num">${esc(c.seconds)}s</td><td class="num">${c.tokens_out ?? "–"}</td>
-      <td>${c.error ? `<span class="bad">${esc(c.error.slice(0, 160))}</span>` : esc(c.preview)}${c.has_reasoning ? ` <span class="hint">· reasoning</span>` : ""}</td></tr>`);
-  setHTML($("calls"), `<table><thead><tr><th>Time</th><th>Agent</th><th>Model</th><th>Took</th><th>Tokens out</th><th>Says</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
-}
-
-function renderPrograms(progs) {
-  const valid = progs.filter((p) => p.valid).sort((a, b) => b.score - a.score).slice(0, 15);
-  const failed = progs.filter((p) => !p.valid).slice(-5).reverse();
-  if (!progs.length) return setHTML($("programs"), `<div class="empty">No programs yet.</div>`);
-  const row = (p) => `<tr class="click" data-pid="${esc(p.id)}"><td class="num">${esc(p.id)}</td><td class="num">${p.generation}</td>
-      <td><span class="chip ${["deep", "wide", "tune"].includes(p.branch) ? p.branch : "other"}">${esc(p.branch)}</span></td>
-      <td class="num">${p.valid ? fmt(p.score) : `<span class="bad">invalid</span>`}</td>
-      <td>${p.probe ? `<span class="kind">knock-out</span> ` : ""}${esc((p.valid ? p.note : p.error) || "").slice(0, 140)}</td></tr>`;
-  setHTML($("programs"), `<table><thead><tr><th>Id</th><th>Gen</th><th>Branch</th><th>Score</th><th>What it does</th></tr></thead><tbody>${valid.map(row).join("")}
-      ${failed.length ? `<tr><td colspan="5" class="hint">Latest failures</td></tr>` + failed.map(row).join("") : ""}</tbody></table>`);
-}
-
-function renderGens(gens) {
-  if (!gens.length) return setHTML($("gens"), `<div class="empty">No generations yet.</div>`);
-  const cell = (r) => r ? `${r.valid}/${r.new} valid, best ${fmt(r.best_new)}${r.cause != null ? ` · ${r.cause} cause / ${r.improve} improve` : ""}${["matters", "removal-helps", "supported", "refuted", "flat", "minor", "no-effect", "invalid", "unchanged"].filter((k) => r[k]).map((k) => ` · ${r[k]} ${k}`).join("")}` : "–";
-  const tune = (t) => t ? `${t.improved || 0}/${(t.targets || []).length} improved${t.best_new != null ? `, best ${fmt(t.best_new)}` : ""}` : "–";
-  const rows = gens.slice().reverse().map((g) => `<tr><td class="num">${g.generation}</td><td class="num">${fmt(g.best_score)}</td><td>${cell(g.deep)}</td><td>${cell(g.wide)}</td><td>${tune(g.tune)}</td><td class="num">${g.seconds ? g.seconds + "s" : "–"}</td><td class="num">${g.llm ? g.llm.calls : "–"}</td></tr>`);
-  setHTML($("gens"), `<table><thead><tr><th>Gen</th><th>Best so far</th><th>Deep</th><th>Wide</th><th>Tune</th><th>Took</th><th>Calls</th></tr></thead><tbody>${rows.join("")}</tbody></table>`);
-}
-
-let lastReport = null;
-async function loadReport(force) {
-  if (!current) return;
-  if (!force && lastReport === current) return;
+// ---------------------------------------------------------------- polling
+let ticking = false, lastSeries = 0, lastHealth = 0;
+async function tick(force = false) {
+  if (ticking || !current) return; ticking = true;
   try {
-    const md = await api(`/api/runs/${current}/file/report.md`);
-    lastReport = current;
-    setHTML($("report"), mdToHtml(md, current));
-  } catch { setHTML($("report"), `<div class="empty">No report yet.</div>`); }
+    state = await api(`/api/runs/${current}`);
+    renderState();
+    const now = Date.now();
+    if (force || now - lastSeries > 5000 || !series[current]) {
+      lastSeries = now;
+      await Promise.all([loadSeries(current), ...compare.filter((n) => !series[n]).map(loadSeries)]);
+      renderTiles(); drawChart();
+    }
+    if (force || now - lastHealth > 10000) { lastHealth = now; renderHealth(await api(`/api/health?run=${encodeURIComponent(current)}`)); }
+    await renderFlowAndDetail(force);
+  } catch (e) { $("phaseLine").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
+  finally { ticking = false; }
 }
-function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
-function mdToHtml(md, run) {
-  const out = []; const lines = md.split("\n"); let i = 0;
-  while (i < lines.length) {
-    const l = lines[i];
-    if (l.startsWith("# ")) out.push(`<h1>${inline(l.slice(2))}</h1>`);
-    else if (l.startsWith("## ")) out.push(`<h2>${inline(l.slice(3))}</h2>`);
-    else if (l.startsWith("![")) { const m = l.match(/\((.+?)\)/); if (m) out.push(`<img src="/api/runs/${run}/file/${esc(m[1])}?t=${Date.now()}" alt="">`); }
-    else if (l.startsWith("|")) { const rows = []; while (i < lines.length && lines[i].startsWith("|")) { rows.push(lines[i]); i++; } i--;
-      const cells = (r) => r.split("|").slice(1, -1).map((c) => c.trim());
-      out.push(`<table><thead><tr>${cells(rows[0]).map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.slice(2).map((r) => `<tr>${cells(r).map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`); }
-    else if (l.startsWith("- ")) out.push(`<div>• ${inline(l.slice(2))}</div>`);
-    else if (l.trim()) out.push(`<p>${inline(l)}</p>`);
-    i++;
+
+// ---------------------------------------------------------------- health + tiles
+function renderHealth(h) {
+  const st = (state && state.status) || {}, s = st.state || "unknown";
+  const el = st.started ? ((st.finished || Date.now() / 1000) - st.started) / 60 : null;
+  const pill = (name, ok, detail) => `<span class="pill"><i class="dot ${ok === true ? "ok" : ok === false ? "bad" : ""}"></i><b>${name}</b><span class="d" title="${esc(detail)}">${esc(detail)}</span></span>`;
+  const runDot = s === "running" ? "run" : s === "finished" ? "ok" : (s === "crashed" || s === "died") ? "bad" : "";
+  setHTML($("health"),
+    `<span class="pill"><i class="dot ${runDot}"></i><b>Run</b><span class="d">${esc(s)} · generation ${st.generation ?? "–"} / ${st.generations ?? "?"}${el != null ? ` · ${el.toFixed(0)} min` : ""}</span></span>`
+    + pill("Model", h.model.ok, h.model.detail) + pill("Evaluator", h.evaluator.ok, h.evaluator.detail)
+    + pill("MongoDB", h.mongo.ok, h.mongo.detail) + pill("Optimal bounds", h.bounds.ok, h.bounds.detail));
+}
+
+function bestRow() {
+  // The newest best: the live best program (found mid-generation) if it's ahead of the last finished generation.
+  const s = series[current], last = s && s.series.length ? s.series[s.series.length - 1] : null, live = state && state.best;
+  if (live && live.units && (!last || live.score > last.score)) return { ...live.units, score: live.score };
+  return last;
+}
+function renderTiles() {
+  const b = bestRow(), start = series[current] && series[current].start, bc = refs.best_classic;
+  $("tProg").textContent = b && b.progress != null ? pct(b.progress) : "–";
+  $("tProgS").textContent = b && b.progress != null ? "0% = Code Zero (first fit), 100% = the optimal packing" : "needs the optimal-packing bounds";
+  $("tWaste").textContent = b && b.waste != null ? fmt(b.waste, 2) : "–";
+  $("tWasteS").textContent = start && start.waste != null ? `per 100 bins the optimum needs · Code Zero ${fmt(start.waste, 2)}` : "per 100 bins the optimal packing needs";
+  $("tScore").textContent = b ? fmt(b.score) : "–";
+  const ho = state && state.heldout;
+  $("tScoreS").textContent = (start ? `Code Zero ${fmt(start.score)}` : "") + (ho ? ` · held-out ${fmt(ho.score)}${ho.progress != null ? ` (${pct(ho.progress)})` : ""}` : "");
+  if (b && bc) {
+    const usePct = b.progress != null && bc.progress != null;
+    const ahead = usePct ? `${signed(b.progress - bc.progress, 1)} pts` : signed(b.score - bc.score);
+    $("tClassic").innerHTML = `<span class="${b.score > bc.score ? "ok" : "warn"}">${esc(ahead)}</span>`;
+    $("tClassicS").textContent = `${bc.label}: ${usePct ? pct(bc.progress) : fmt(bc.score)}`;
+  } else { $("tClassic").textContent = "–"; $("tClassicS").textContent = "computing…"; }
+}
+
+function renderState() {
+  const st = state.status || {};
+  setHTML($("console"), esc(state.console || "–"));
+  const gens = (state.generations || []).map((g) => g.generation);
+  const live = st.state === "running" ? st.flow_generation : null;
+  const all = [...new Set([...gens, ...(live != null ? [live] : [])])].sort((a, b) => a - b);
+  if ($("follow").checked || selGen == null) selGen = live != null ? live : (all.length ? all[all.length - 1] : null);
+  setHTML($("genPicker"), all.map((g) => `<option value="${g}" ${g === selGen ? "selected" : ""}>${g}${g === live ? " (live)" : ""}</option>`).join(""));
+  $("flowGen").textContent = selGen ?? "–";
+  $("phaseLine").textContent = st.state === "running" ? (st.phase || "working…") : `Run ${st.state || "unknown"}${st.error ? ": " + st.error.split("\n").pop() : ""}`;
+}
+$("genPicker").onchange = () => { selGen = +$("genPicker").value; $("follow").checked = false; renderFlowAndDetail(true); };
+$("genPrev").onclick = () => stepGen(-1); $("genNext").onclick = () => stepGen(1);
+function stepGen(d) {
+  const opts = [...$("genPicker").options].map((o) => +o.value), i = opts.indexOf(selGen), j = Math.max(0, Math.min(opts.length - 1, i + d));
+  if (opts[j] != null) { selGen = opts[j]; $("follow").checked = false; renderState(); renderFlowAndDetail(true); }
+}
+
+// ---------------------------------------------------------------- the loop (flowchart)
+const NODES = {
+  pool:       { x: 20,  y: 120, w: 150, h: 76, title: "Pool", sub: "best programs so far", color: "var(--ink2)" },
+  researcher: { x: 230, y: 18,  w: 180, h: 76, title: "Researcher", sub: "why does the best win?", color: "var(--deep)" },
+  coder:      { x: 450, y: 18,  w: 180, h: 76, title: "Coder", sub: "one test per hypothesis", color: "var(--deep)" },
+  mutator:    { x: 340, y: 120, w: 180, h: 76, title: "Mutator", sub: "variants + fresh ideas", color: "var(--wide)" },
+  tune:       { x: 340, y: 222, w: 180, h: 76, title: "Tune", sub: "polish the numbers", color: "var(--tune)" },
+  evaluator:  { x: 700, y: 120, w: 170, h: 76, title: "Evaluator", sub: "scores every program", color: "var(--ink2)" },
+  merge:      { x: 930, y: 120, w: 170, h: 76, title: "Merge", sub: "keep the best 8", color: "var(--ink2)" },
+};
+const EDGES = [
+  ["pool", "researcher", "M170 150 C 200 150, 200 56, 228 56"], ["researcher", "coder", "M410 56 L 448 56"],
+  ["coder", "evaluator", "M630 56 C 670 56, 660 150, 698 150"], ["pool", "mutator", "M170 158 L 338 158"],
+  ["mutator", "evaluator", "M520 158 L 698 158"], ["pool", "tune", "M170 166 C 250 166, 250 260, 338 260"],
+  ["tune", "evaluator", "M520 260 C 620 260, 640 172, 698 172"], ["evaluator", "merge", "M870 158 L 928 158"],
+  ["merge", "pool", "M1015 196 L 1015 318 L 95 318 L 95 198"],
+];
+function verdictNote(hyps) { const c = {}; hyps.forEach((h) => c[h.verdict] = (c[h.verdict] || 0) + 1); return Object.entries(c).map(([k, v]) => `${v} ${k}`).join(", "); }
+function flowStates(detail) {
+  const st = state.status || {};
+  if (st.flow_generation === selGen && st.flow && Object.keys(st.flow).length) return st.flow;
+  const f = {}, rec = detail && detail.record, br = (rec && rec.branches) || [], progs = (detail && detail.programs) || [];
+  const by = (b) => progs.filter((p) => p.branch === b), hyps = (detail && detail.hypotheses) || [];
+  f.pool = { state: "done", note: `${(detail && detail.pool_in.length) || 0} programs in` };
+  f.researcher = br.includes("deep") ? { state: hyps.length ? "done" : "failed", note: hyps.length ? `${hyps.length} hypotheses` : "no hypotheses" } : { state: "off" };
+  f.coder = br.includes("deep") && hyps.length ? { state: "done", done: by("deep").length, total: hyps.length, note: verdictNote(hyps) } : { state: "off" };
+  const w = by("wide");
+  f.mutator = br.includes("wide") ? { state: "done", done: w.length, total: w.length, note: `${w.filter((p) => p.valid).length}/${w.length} valid` } : { state: "off" };
+  const t = (rec && rec.tune) || null;
+  f.tune = br.includes("tune") ? { state: "done", note: t ? `${t.improved || 0} of ${(t.targets || []).length} improved` : "" } : { state: "off" };
+  f.evaluator = { state: progs.length ? "done" : "waiting", done: progs.length, note: `${progs.filter((p) => p.valid).length} valid of ${progs.length}` };
+  f.merge = rec ? { state: "done", note: `best ${fmt(rec.best_score)} (${rec.best_id})` } : { state: "waiting" };
+  return f;
+}
+function drawFlow(flow) {
+  const st = state.status || {}, live = st.state === "running" && st.flow_generation === selGen;
+  let svg = `<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>`;
+  for (const [a, b, d] of EDGES) {
+    const on = live && ((flow[a] || {}).state === "active" || (flow[b] || {}).state === "active");
+    svg += `<path class="edge ${on ? "live" : ""}" d="${d}" marker-end="url(#ah)"/>`;
   }
-  return out.join("");
+  svg += `<text class="note" x="760" y="334" text-anchor="middle">next generation: the merged pool goes round again</text>`;
+  svg += `<text class="note" x="430" y="110" text-anchor="middle">air gap: the Mutator sees only code and scores</text>`;
+  for (const [key, n] of Object.entries(NODES)) {
+    const f = flow[key] || { state: "waiting" };
+    const count = f.total ? `${f.done ?? 0}/${f.total}` : f.running ? `${f.running} running` : f.done ? `${f.done} done` : "";
+    const stateText = { active: "running", done: "done", waiting: "waiting", off: "not used", failed: "failed" }[f.state] || f.state;
+    const room = Math.floor((n.w - 24) / 6.2), note = (f.note || "").length > room ? f.note.slice(0, room - 1) + "…" : (f.note || "");
+    svg += `<g class="node ${esc(f.state)} ${selNode === key ? "sel" : ""}" data-node="${key}" tabindex="0" role="button" aria-label="${n.title}: ${stateText}${note ? ", " + esc(note) : ""}">
+      <rect class="box" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="12" stroke="${n.color}"/>
+      <text x="${n.x + 12}" y="${n.y + 22}" font-weight="700" font-size="15">${n.title}</text>
+      <text class="sub" x="${n.x + n.w - 10}" y="${n.y + 22}" text-anchor="end">${esc(count)}</text>
+      <text class="sub" x="${n.x + 12}" y="${n.y + 42}">${esc(f.state === "waiting" || f.state === "off" ? n.sub : stateText)}</text>
+      <text class="note" x="${n.x + 12}" y="${n.y + 62}">${esc(note)}</text>
+    </g>`;
+  }
+  setHTML($("flow"), svg);
+  $("flow").querySelectorAll(".node").forEach((g) => {
+    const go = () => { selNode = g.dataset.node; renderFlowAndDetail(true); };
+    g.onclick = go; g.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+  });
+}
+let lastDetailFetch = 0;
+async function renderFlowAndDetail(force) {
+  if (selGen == null) { drawFlow({}); return; }
+  const st = state.status || {}, live = st.state === "running" && st.flow_generation === selGen;
+  const key = `${current}/${selGen}`;
+  let detail = detailCache[key];
+  if (!detail || force || (live && Date.now() - lastDetailFetch > 4000)) {
+    lastDetailFetch = Date.now();
+    try { detail = await api(`/api/runs/${current}/gen/${selGen}`); detailCache[key] = detail; } catch { detail = null; }
+  }
+  $("flowGen").textContent = selGen;
+  drawFlow(flowStates(detail));
+  renderDetail(detail);
 }
 
-document.addEventListener("click", (e) => {
-  const tr = e.target.closest("tr[data-line]"); if (tr) return showCall(tr.dataset.line);
-  const tp = e.target.closest("tr[data-pid]"); if (tp) return showProgram(tp.dataset.pid);
-});
-
-async function boot() {
-  try { await loadSettings(); } catch (e) { $("connectOut").innerHTML = `<span class="bad">${esc(e.message)}</span>`; }
-  await refreshRuns(); await refreshState();
-  const pollBaselines = async () => { try { baselines = await api("/api/baselines"); } catch { } if (Object.keys(baselines).length < 2) setTimeout(pollBaselines, 3000); else if (lastState) render(lastState); };
-  pollBaselines();
-  setInterval(() => { if (!document.hidden) refreshState(); }, 3000);
-  setInterval(() => { if (!document.hidden) refreshRuns(); }, 10000);
+// ---------------------------------------------------------------- what each step did
+function progTable(progs) {
+  if (!progs.length) return `<div class="empty">Nothing here in this generation.</div>`;
+  const rows = progs.map((p) => {
+    const u = p.units || {}, delta = p.score != null && p.parent_score != null ? p.score - p.parent_score : null;
+    return `<tr class="click" data-pid="${esc(p.id)}"><td>${esc(p.id)}</td><td><span class="chip ${esc(p.branch)}">${esc(p.branch)}</span>${p.probe ? ' <span class="tag">knock-out</span>' : ""}${p.repaired ? ' <span class="tag">repaired</span>' : ""}${p.duplicate_of ? ` <span class="tag">= ${esc(p.duplicate_of)}</span>` : ""}</td>
+      <td>${esc(p.parent_id || (p.branch === "wide" ? "fresh idea" : ""))}</td>
+      <td class="num">${p.valid ? fmt(p.score) : '<span class="bad">invalid</span>'}</td><td class="num">${u.progress != null ? pct(u.progress) : "–"}</td>
+      <td class="num">${delta != null ? `<span class="${delta > 0 ? "ok" : delta < 0 ? "bad" : ""}">${signed(delta)}</span>` : "–"}</td>
+      <td>${esc(((p.valid ? p.note : p.error) || "").split("\n").pop().slice(0, 140))}</td></tr>`;
+  });
+  return `<div class="tablewrap"><table><thead><tr><th>Program</th><th>Branch</th><th>From</th><th class="num">Score</th><th class="num">Progress</th><th class="num">vs parent</th><th>What it did</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
 }
-boot();
+function poolTable(list, fresh = new Set()) {
+  if (!list.length) return `<div class="empty">Empty.</div>`;
+  return `<div class="tablewrap"><table><thead><tr><th>Program</th><th>Branch</th><th class="num">Made in generation</th><th class="num">Score</th><th class="num">Progress</th></tr></thead><tbody>${list.map((p) => `<tr class="click" data-pid="${esc(p.id)}"><td>${esc(p.id)}${fresh.has(p.id) ? ' <span class="tag">new</span>' : ""}</td><td><span class="chip ${esc(p.branch)}">${esc(p.branch)}</span></td><td class="num">${p.generation}</td><td class="num">${fmt(p.score)}</td><td class="num">${p.progress != null ? pct(p.progress) : "–"}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function callTable(calls) {
+  if (!calls.length) return `<div class="empty">No agent calls recorded for this step.</div>`;
+  const ended = (c) => c.error ? '<span class="bad">error</span>' : c.finish === "length" ? '<span class="warn">cut off</span>' : c.finish === "thinking" ? '<span class="warn">stopped: thinking</span>' : esc(c.finish || "ok");
+  return `<div class="tablewrap"><table><thead><tr><th>Time</th><th>Agent</th><th class="num">Took</th><th class="num">Tokens out</th><th>Ended</th><th>Says</th></tr></thead><tbody>${calls.map((c) => `<tr class="click" data-line="${c.line}"><td>${esc(c.time)}</td><td>${esc(c.role)}${c.program ? ` · ${esc(c.program)}` : ""}</td><td class="num">${esc(c.seconds)}s</td><td class="num">${c.tokens_out ?? "–"}</td><td>${ended(c)}</td><td>${c.error ? `<span class="bad">${esc(c.error.slice(0, 120))}</span>` : esc(c.preview)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function diffHTML(a, b) {
+  if (!a || !b) return `<pre class="code">${esc(b || "")}</pre>`;
+  const A = a.trim().split("\n"), B = b.trim().split("\n"), n = A.length, m = B.length;
+  const L = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i].trim() === B[j].trim() ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  let i = 0, j = 0; const out = [];
+  while (i < n || j < m) {
+    if (i < n && j < m && A[i].trim() === B[j].trim()) { out.push("  " + esc(B[j])); i++; j++; }
+    else if (j < m && (i >= n || L[i][j + 1] >= L[i + 1][j])) { out.push(`<span class="add">+ ${esc(B[j])}</span>`); j++; }
+    else { out.push(`<span class="del">- ${esc(A[i])}</span>`); i++; }
+  }
+  return `<pre class="code">${out.join("\n")}</pre>`;
+}
+function hypBlock(h, progs, withCode) {
+  const p = progs.find((x) => x.id === h.program_id);
+  const raw = h.raw_delta != null && h.delta != null && h.raw_delta !== h.delta ? ` <span class="hint">(as written ${signed(h.raw_delta)}; after tuning its new numbers ${signed(h.delta)})</span>` : "";
+  return `<div class="hyp"><div class="meta"><span class="tag">${esc(h.kind || "improve")}</span> ${esc(h.id)} on ${esc(h.base_id)}${h.builds_on ? ` · builds on ${esc(h.builds_on)}` : ""} · <b class="v-${esc(h.verdict)}">${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</b>${raw}</div>
+    <div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>${h.prediction ? `<div class="hint">Predicted: ${esc(h.prediction)}</div>` : ""}
+    ${withCode && p ? `<details><summary>${esc(p.id)}: what changed from ${esc(h.base_id)}</summary>${diffHTML(p.parent_code, p.code)}</details>` : ""}</div>`;
+}
+function renderDetail(d) {
+  const titles = { pool: "Pool going in", researcher: "Researcher: hypotheses", coder: "Coder: the tests and their verdicts", mutator: "Mutator: variants and fresh ideas", tune: "Tune: polished numbers", evaluator: "Evaluator: everything scored", merge: "Merge: the pool going out" };
+  $("detailTitle").textContent = `${titles[selNode] || selNode} · generation ${selGen}`;
+  if (!d) { setHTML($("detail"), `<div class="empty">Nothing recorded for generation ${selGen} yet.</div>`); return; }
+  const progs = d.programs || [], hyps = d.hypotheses || [], calls = (re) => (d.calls || []).filter((c) => re.test(c.role || ""));
+  let html = "";
+  if (selNode === "pool") html = `<p class="hint">The programs this generation started from: the best found so far.</p>` + poolTable(d.pool_in);
+  else if (selNode === "researcher") html = (hyps.length ? hyps.map((h) => hypBlock(h, progs, false)).join("") : `<div class="empty">No hypotheses this generation.</div>`)
+      + `<h3>Calls (click one for the full prompt, reply and reasoning)</h3>` + callTable(calls(/^researcher/));
+  else if (selNode === "coder") html = (hyps.length ? hyps.map((h) => hypBlock(h, progs, true)).join("") : `<div class="empty">No tests this generation.</div>`) + `<h3>Calls</h3>` + callTable(calls(/^coder/));
+  else if (selNode === "mutator") html = progTable(progs.filter((p) => p.branch === "wide")) + `<h3>Calls</h3>` + callTable(calls(/^mutator/));
+  else if (selNode === "tune") {
+    const t = d.record && d.record.tune;
+    html = (t ? `<p class="hint">Tuned ${esc((t.targets || []).join(", ") || "nothing")}: ${t.tried || 0} evaluations, ${t.improved || 0} kept.</p>` : "")
+      + progTable(progs.filter((p) => p.branch === "tune")) + `<p class="hint">Deep tests also get their new numbers tuned before they're judged: see the Coder step.</p>`;
+  } else if (selNode === "evaluator") html = progTable(progs);
+  else if (selNode === "merge") html = `<p class="hint">The next generation's pool; programs made in this generation are marked new.</p>` + poolTable(d.pool_out, new Set(progs.map((p) => p.id)));
+  setHTML($("detail"), html);
+  $("detail").querySelectorAll("tr[data-pid]").forEach((tr) => tr.onclick = () => showProgram(tr.dataset.pid));
+  $("detail").querySelectorAll("tr[data-line]").forEach((tr) => tr.onclick = () => showCall(tr.dataset.line));
+}
+async function showProgram(pid) {
+  const p = await api(`/api/runs/${current}/program/${pid}`);
+  openDlg(`${p.id} · ${p.branch} · ${p.valid ? fmt(p.score) : "invalid"}`,
+    `<p>${esc(p.note || "")}</p>${p.error ? `<pre class="code text bad">${esc(p.error)}</pre>` : ""}
+     ${p.families ? `<div class="tablewrap"><table><tr>${Object.keys(p.families).map((f) => `<th class="num">${esc(f)}</th>`).join("")}</tr><tr>${Object.values(p.families).map((v) => `<td class="num">${fmt(v, 2)}</td>`).join("")}</tr></table></div><div class="hint">Excess % over the simple lower bound, by family (the evaluator's units).</div>` : ""}
+     <pre class="code">${esc(p.code || "")}</pre>`);
+}
+async function showCall(line) {
+  const c = await api(`/api/runs/${current}/call?line=${line}`);
+  openDlg(`${c.role} · ${c.model || ""} · ${c.seconds}s${c.finish ? " · " + c.finish : ""}`,
+    `${c.error ? `<pre class="code text bad">${esc(c.error)}</pre>` : ""}
+     <details open><summary>Reply</summary><pre class="code text">${esc(c.reply || "")}</pre></details>
+     ${c.reasoning ? `<details><summary>Hidden reasoning (${c.reasoning.length.toLocaleString()} characters)</summary><pre class="code text">${esc(c.reasoning)}</pre></details>` : ""}
+     <details><summary>What the agent received</summary><pre class="code text">${esc(c.user || "")}</pre></details>
+     <details><summary>System prompt</summary><pre class="code text">${esc(c.system || "")}</pre></details>`);
+}
+function openDlg(title, html) { $("dlgTitle").textContent = title; $("dlgBody").innerHTML = html; $("dlg").showModal(); }
+$("dlgClose").onclick = () => $("dlg").close();
+document.querySelectorAll("dialog [data-close]").forEach((b) => b.onclick = () => b.closest("dialog").close());
+
+// ---------------------------------------------------------------- progress chart
+$("unitSeg").querySelectorAll("button").forEach((b) => b.onclick = () => { unit = b.dataset.u; $("unitSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); drawChart(); });
+$("xSeg").querySelectorAll("button").forEach((b) => b.onclick = () => { xAxis = b.dataset.x; $("xSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); drawChart(); });
+let chartGeom = null;
+const val = (row) => unit === "progress" ? row.progress : row.score;
+const show = (v) => unit === "progress" ? pct(v) : fmt(v);
+function drawChart() {
+  const main = series[current];
+  if (!main || !main.series.length) { setHTML($("chart"), `<text x="500" y="180" text-anchor="middle">No generations yet.</text>`); $("cmpTable").innerHTML = ""; setHTML($("chartLegend"), ""); return; }
+  if (unit === "progress" && main.series[0].progress == null) { unit = "score"; $("unitSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.u === "score")); }
+  const runs = [{ name: current, color: "var(--ink)", data: main.series, main: true }, ...compare.filter((n) => series[n]).map((n, i) => ({ name: n, color: CMP_COLORS[i], data: series[n].series }))];
+  const refLines = [], short = (s) => s.split(" (")[0];
+  if (unit === "progress") {
+    refLines.push(["Code Zero", 0]);
+    if (refs.best_classic && refs.best_classic.progress != null) refLines.push([`Best classic: ${short(refs.best_classic.label)}`, refs.best_classic.progress]);
+    if (refs.offline_ffd && refs.offline_ffd.progress != null) refLines.push(["Offline packer (sees all jobs)", refs.offline_ffd.progress]);
+    if (refs.optimal) refLines.push(["Optimal packing", 100]);
+  } else {
+    if (main.start) refLines.push(["Code Zero", main.start.score]);
+    if (refs.best_classic) refLines.push([`Best classic: ${short(refs.best_classic.label)}`, refs.best_classic.score]);
+    if (refs.offline_ffd) refLines.push(["Offline packer (sees all jobs)", refs.offline_ffd.score]);
+    if (refs.optimal) refLines.push(["Optimal packing", refs.optimal.score]);
+  }
+  const marks = [];
+  if (!compare.length) for (const row of main.series) for (const b of ["deep", "wide", "tune"]) if (row[b] && val(row[b]) != null) marks.push({ x: row[xAxis], y: val(row[b]), b });
+  const ys = runs.flatMap((r) => r.data.map(val).filter((v) => v != null)).concat(refLines.map((r) => r[1]), marks.map((m) => m.y));
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if (unit === "progress") { lo = Math.min(0, lo); hi = Math.max(hi, 10); }
+  const pad = (hi - lo) * 0.06 || 1; lo -= pad; hi += pad;
+  const maxX = Math.max(1, ...runs.flatMap((r) => r.data.map((d) => d[xAxis])));
+  const W = 1000, H = 360, L = 58, R = 220, T = 14, B = 40;
+  const X = (x) => L + (x / maxX) * (W - L - R), Y = (y) => T + (1 - (y - lo) / (hi - lo)) * (H - T - B);
+  let svg = "";
+  for (let i = 0; i <= 5; i++) { const v = lo + (hi - lo) * i / 5, y = Y(v); svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--rule)"/><text x="${L - 8}" y="${y + 4}" text-anchor="end">${unit === "progress" ? v.toFixed(0) + "%" : v.toFixed(2)}</text>`; }
+  const step = Math.max(1, Math.ceil(maxX / (xAxis === "generation" ? 12 : 10)));
+  for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
+  svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">${xAxis}</text>`;
+  const used = [];
+  for (const [name, v] of refLines) {
+    if (v < lo || v > hi) continue;
+    const y = Y(v); let ly = y + 4; for (const u of used.sort((a, b) => a - b)) if (Math.abs(u - ly) < 13) ly = u + 13; used.push(ly);
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${W - R + 8}" y="${ly}">${esc(name)} ${unit === "progress" ? v.toFixed(0) + "%" : v.toFixed(2)}</text>`;
+  }
+  for (const r of [...runs].reverse()) {
+    let d = "", first = true;
+    for (const row of r.data) { const v = val(row); if (v == null) continue; const x = X(row[xAxis]), y = Y(v); d += first ? `M${x},${y}` : ` H${x} V${y}`; first = false; }
+    if (d) svg += `<path d="${d}" fill="none" stroke="${r.color}" stroke-width="${r.main ? 2.5 : 2}"/>`;
+  }
+  for (const m of marks) {
+    const x = X(m.x), y = Y(m.y);
+    svg += m.b === "deep" ? `<circle cx="${x}" cy="${y}" r="4.5" fill="var(--deep)" stroke="var(--card)" stroke-width="2"/>`
+      : m.b === "wide" ? `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" fill="var(--wide)" stroke="var(--card)" stroke-width="2"/>`
+      : `<path d="M${x},${y - 5.5} L${x + 5.5},${y} L${x},${y + 5.5} L${x - 5.5},${y} Z" fill="var(--tune)" stroke="var(--card)" stroke-width="2"/>`;
+  }
+  const last = main.series[main.series.length - 1], lv = val(last);
+  if (lv != null) svg += `<text x="${X(last[xAxis]) + 6}" y="${Y(lv) - 8}" style="fill:var(--ink);font-weight:700">${show(lv)}</text>`;
+  svg += `<line id="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--ink2)" stroke-width="1" visibility="hidden"/>`;
+  svg += `<rect id="hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+  setHTML($("chart"), svg);
+  chartGeom = { runs, maxX, L, R, W };
+  const hit = $("hit"); if (hit) { hit.onmousemove = chartHover; hit.onmouseleave = () => { $("tip").style.display = "none"; const xh = $("xh"); if (xh) xh.setAttribute("visibility", "hidden"); }; }
+  setHTML($("chartLegend"), runs.map((r) => `<span><i style="background:${r.color}"></i>${esc(r.main ? "this run" : r.name)}</span>`).join("")
+    + (marks.length ? `<span><i class="dot2" style="background:var(--deep)"></i>best new, deep</span><span><i class="dot2" style="background:var(--wide);border-radius:2px"></i>best new, wide</span><span><i class="dot2" style="background:var(--tune);border-radius:1px"></i>tuned</span>` : "")
+    + `<span><i class="dash"></i>yardsticks</span>`);
+  renderCmpTable(runs);
+}
+function chartHover(e) {
+  const g = chartGeom, rect = $("chart").getBoundingClientRect();
+  const sx = (e.clientX - rect.left) * (1000 / rect.width), xv = (sx - g.L) / (g.W - g.L - g.R) * g.maxX;
+  const lines = [];
+  for (const r of g.runs) {
+    let best = null; for (const row of r.data) if (row[xAxis] <= xv + 1e-9 && val(row) != null) best = row;
+    if (best) lines.push(`<div><span style="color:${r.color}">■</span> ${esc(r.main ? "this run" : r.name)}: <b>${show(val(best))}</b> <span class="hint">generation ${best.generation}, ${best.minutes} min</span></div>`);
+  }
+  if (!lines.length) return;
+  const xh = $("xh"); xh.setAttribute("x1", sx); xh.setAttribute("x2", sx); xh.setAttribute("visibility", "visible");
+  const tip = $("tip"); tip.innerHTML = `<div class="hint">${xAxis} ${xAxis === "generation" ? Math.floor(xv) : xv.toFixed(1)}</div>` + lines.join("");
+  tip.style.display = "block"; tip.style.left = Math.min(e.clientX + 14, innerWidth - 280) + "px"; tip.style.top = (e.clientY + 14) + "px";
+}
+function renderCmpTable(runs) {
+  if (runs.length < 2) { $("cmpTable").innerHTML = ""; return; }
+  const n = Math.min(...runs.map((r) => r.data.length)) - 1;
+  const row = (r) => { const end = r.data[r.data.length - 1], at = r.data[Math.min(n, r.data.length - 1)];
+    return `<tr><td><span style="color:${r.color}">■</span> ${esc(r.main ? "this run" : r.name)}</td><td class="num">${end.generation}</td><td class="num">${end.minutes}</td><td class="num">${pct(end.progress)}</td><td class="num">${fmt(end.score)}</td><td class="num">${pct(at.progress)}</td><td class="num">${fmt(at.score)}</td></tr>`; };
+  $("cmpTable").innerHTML = `<table style="margin-top:8px"><thead><tr><th>Run</th><th class="num">Generations</th><th class="num">Minutes</th><th class="num">Best progress</th><th class="num">Best score</th><th class="num">Progress at gen ${n}</th><th class="num">Score at gen ${n}</th></tr></thead><tbody>${runs.map(row).join("")}</tbody></table>`;
+}
+
+// ---------------------------------------------------------------- controls
+async function act(fn, label) { try { const r = await fn(); $("phaseLine").textContent = r && r.message ? r.message : `${label}: done`; tick(true); } catch (e) { $("phaseLine").innerHTML = `<span class="bad">${esc(e.message)}</span>`; } }
+$("stopBtn").onclick = () => act(() => api(`/api/runs/${current}/stop`, { method: "POST", body: {} }), "Stop");
+$("killBtn").onclick = () => { if (confirm("Kill the run now? Everything up to the last finished generation is kept.")) act(() => api(`/api/runs/${current}/stop`, { method: "POST", body: { force: true } }), "Kill"); };
+$("resumeBtn").onclick = () => { const more = prompt("How many more generations?", "10"); if (more) act(() => api(`/api/runs/${current}/resume`, { method: "POST", body: { more: +more } }), "Resume"); };
+$("reportBtn").onclick = () => { $("phaseLine").textContent = "Scoring on held-out instances…"; act(() => api(`/api/runs/${current}/report`, { method: "POST", body: {} }), "Held-out check"); };
+$("publishBtn").onclick = () => act(() => api(`/api/runs/${current}/publish`, { method: "POST", body: {} }), "Publish");
+$("newBtn").onclick = () => $("newDlg").showModal();
+$("settingsBtn").onclick = async () => { await loadSettings(); $("settingsDlg").showModal(); };
+$("runBtn").onclick = async () => {
+  const body = { mode: $("mode").value, fake: $("fake").checked, tune: $("tune").checked };
+  for (const k of ["generations", "max_minutes", "workers", "variants", "fresh", "hypotheses", "pool_size", "epsilon", "judge_tune_evals", "pro_every"]) body[k] = $(k).value;
+  try { const r = await api("/api/runs/start", { method: "POST", body }); current = r.name; selGen = null; $("follow").checked = true; $("newDlg").close(); await refreshRuns(); tick(true); }
+  catch (e) { $("runOut").textContent = e.message; }
+};
+const FIELDS = ["HELIX_PROVIDER", "LUMINAL_BASE_URL", "LUMINAL_API_KEY", "HELIX_FLASH_MODEL", "HELIX_PRO_MODEL", "LUMINAL_EXTRA_BODY", "LOCAL_BASE_URL", "LOCAL_MODEL", "MONGODB_URI", "MONGODB_DB"];
+async function loadSettings() {
+  const s = await api("/api/settings");
+  for (const k of FIELDS) { const f = s[k], el = $(k); if (!f || !el) continue; if (f.secret) { el.value = ""; el.placeholder = f.set ? `saved (${f.hint || "set"}); leave blank to keep` : "not set"; } else el.value = f.value || ""; }
+}
+$("saveBtn").onclick = async () => { const body = {}; for (const k of FIELDS) body[k] = $(k).value; try { await api("/api/settings", { method: "POST", body }); $("connectOut").textContent = "Saved."; loadSettings(); } catch (e) { $("connectOut").textContent = e.message; } };
+$("testLlmBtn").onclick = async () => { $("connectOut").textContent = "Asking the model…"; try { const r = await api("/api/check/llm", { method: "POST" }); $("connectOut").textContent = r.results.map((x) => `${x.ok ? "OK  " : "FAIL"} ${x.tier} ${x.model}: ${x.detail}`).join("\n"); } catch (e) { $("connectOut").textContent = e.message; } };
+$("testMongoBtn").onclick = async () => { $("connectOut").textContent = "Connecting…"; try { const r = await api("/api/check/mongo", { method: "POST" }); $("connectOut").textContent = JSON.stringify(r, null, 1); } catch (e) { $("connectOut").textContent = e.message; } };
+
+(async function init() {
+  renderCmpChips();
+  await refreshRuns();
+  const loadRefs = async () => { try { refs = await api("/api/references"); } catch { } if (!refs.best_classic) setTimeout(loadRefs, 4000); else { renderTiles(); drawChart(); } };
+  loadRefs();
+  tick(true);
+  setInterval(tick, 2500);
+  setInterval(refreshRuns, 15000);
+})();
 </script>
 </body>
 </html>

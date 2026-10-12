@@ -22,7 +22,8 @@ import time
 from collections import Counter
 from pathlib import Path
 
-from .peek import load_state, read_json, snapshot
+from . import metrics
+from .peek import load_state, read_json, read_jsonl as read_jsonl_safe, snapshot
 from .reference import gap_closed, offline_reference
 from .sandbox import REPO_ROOT
 
@@ -85,8 +86,15 @@ def _summary(run_dir):
     cfg, st = s["config"], s["status"]
     best = s["best"]
     heldout = read_json(Path(run_dir) / "heldout.json", None)
-    best_test = code_zero_test = None
+    best_test = code_zero_test = progress_test = None
+    seed = next((p for p in read_jsonl_safe(Path(run_dir) / "programs.jsonl") if p.get("branch") == "seed"), None)
+    progress_train = (metrics.progress(best["families"], seed["families"], "train")
+                      if best and seed and best.get("families") and seed.get("families") else None)
     if heldout:
+        b = next((r for r in heldout if r["label"].startswith("Evolved best")), None)
+        z = next((r for r in heldout if r["label"] == "Code Zero"), None)
+        if b and z and b.get("valid"):
+            progress_test = metrics.progress(b["test_families"], z["test_families"], "test")
         best_test = next((r["test_score"] for r in heldout if r["label"].startswith("Evolved best")), None)
         code_zero_test = next((r["test_score"] for r in heldout if r["label"] == "Code Zero"), None)
     try:
@@ -112,6 +120,8 @@ def _summary(run_dir):
         "best_test_score": best_test,
         "code_zero_test_score": code_zero_test,
         "offline_reference": ref,
+        "progress_to_optimal_train": progress_train,
+        "progress_to_optimal_test": progress_test,
         "gap_closed_train": gap_closed(best["score"] if best else None, s["seed_score"], ref["train"]),
         "gap_closed_test": gap_closed(best_test, code_zero_test, ref["test"]),
         "programs": s["counts"]["programs"],
@@ -143,13 +153,16 @@ def _write_index():
              "The held-out score uses the evaluator's `test` split, which the search never sees.", "",
              "Gap closed = share of the gap between Code Zero and an offline packer that sees every job in advance "
              "(`python -m helix.reference`) that the best program has closed.", "",
-             "| Run | Mode | Model | Generations | Code Zero | Best (train) | Gain | Gap closed | Best (held-out) | LLM calls | State |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
+             "Progress to optimal: 0% = Code Zero, 100% = the optimal packing (`helix/bounds.py`).", "",
+             "| Run | Mode | Model | Generations | Code Zero | Best (train) | Gain | Gap closed | Progress to optimal | Best (held-out) | LLM calls | State |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for s in rows:
         gain = f"+{s['gain']:.3f}" if s.get("gain") is not None else "—"
         closed = f"{s['gap_closed_train']:.0f}%" if s.get("gap_closed_train") is not None else "—"
         lines.append(f"| [{s['run']}]({s['run']}/) | {s.get('mode')} | {s.get('model')} | {s.get('generations_completed')} | "
-                     f"{fmt(s.get('code_zero'))} | {fmt(s.get('best_score'))} | {gain} | {closed} | {fmt(s.get('best_test_score'))} | "
+                     f"{fmt(s.get('code_zero'))} | {fmt(s.get('best_score'))} | {gain} | {closed} | "
+                     f"{(str(round(s['progress_to_optimal_train'])) + '%') if s.get('progress_to_optimal_train') is not None else '—'} | "
+                     f"{fmt(s.get('best_test_score'))} | "
                      f"{s.get('llm_calls')} | {s.get('state')} |")
     lines += ["", "In each folder: `report.md` (held-out check, where improvements came from, research log), "
               "`progress.png`, `best_program.py`, the full trace as JSONL, and every agent call in `llm_calls.jsonl.gz`."]
