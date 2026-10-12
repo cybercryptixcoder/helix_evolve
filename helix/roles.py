@@ -18,8 +18,10 @@ LOG_SHOWN = 30          # how many recent hypotheses the Researcher sees
 
 
 def system_prompt(role):
-    """mutator | researcher | coder | zeroshot → role prompt + shared problem statement."""
-    return (PROMPTS / f"{role}.md").read_text().strip() + "\n\n" + (PROMPTS / "problem.md").read_text().strip()
+    """mutator | researcher | coder | zeroshot (program engine), feature_researcher | feature_coder |
+    feature_mutator (feature engine) → role prompt + the shared problem statement for that engine."""
+    problem = "feature_problem.md" if role.startswith("feature_") else "problem.md"
+    return (PROMPTS / f"{role}.md").read_text().strip() + "\n\n" + (PROMPTS / problem).read_text().strip()
 
 
 @dataclass(frozen=True)
@@ -197,12 +199,12 @@ def format_hypothesis(h):
 _FENCE = re.compile(r"```([a-zA-Z0-9_+-]*)\s*\n(.*?)```", re.S)
 
 
-def extract_code(text):
-    """The last fenced code block that defines priority(); None if there isn't one."""
-    blocks = [body for _, body in _FENCE.findall(text) if "def priority" in body]
+def extract_code(text, define="priority"):
+    """The last fenced code block that defines `define()`; None if there isn't one."""
+    blocks = [body for _, body in _FENCE.findall(text) if f"def {define}" in body]
     if blocks:
         return blocks[-1].strip() + "\n"
-    if "def priority" in text and "```" not in text:
+    if f"def {define}" in text and "```" not in text:
         return text.strip() + "\n"
     return None
 
@@ -286,3 +288,83 @@ def _complete_objects(text):
             if isinstance(obj, dict) and "claim" in obj:
                 out.append(obj)
     return out
+
+
+# ================================================================ the feature engine
+def feature_researcher_message(generation, champion, library_lines, room_lines, packings_text, log_lines, n,
+                               progress=None, stuck=0):
+    parts = [f"Generation {generation}. Score = −(mean excess %); higher is better."]
+    head = (f"## The policy (champion {champion['id']}): train score {champion['train']:.3f}, "
+            f"validation score {champion['valid']:.3f}")
+    if progress is not None:
+        head += f"; {progress:.1f}% of the way from Code Zero to the optimal packing"
+    parts.append(head + "\npriority = weighted sum of these features (weights fitted by the optimiser; importance = "
+                 "validation score lost when the feature is switched off):\n" + "\n".join(library_lines))
+    if room_lines:
+        parts.append("## Where the room is (excess % over the simple bound: policy / best possible / room)\n"
+                     + "\n".join(room_lines))
+    parts.append("## What the packings look like (policy vs a near-optimal packing of the same jobs)\n" + packings_text)
+    parts.append("## Research log (most recent last)\nVerdicts: supported = kept; redundant = helped on its own but "
+                 "added nothing on top of the features kept with it; flat = no clear change; refuted = worse on "
+                 "validation; invalid = the code didn't work. The number is the validation change when the feature "
+                 "was tried alone on top of the policy.\n" + ("\n".join(log_lines) if log_lines else "(nothing tried yet)"))
+    ask = f"## Plan\nPropose exactly {n} new features, each aimed at a specific difference you see in the packings."
+    if stuck:
+        ask += (f" The policy hasn't improved for {stuck} generations: the small refinements are used up. Look for "
+                "a mechanism the policy can't see at all (for example, whether the room left after placing can "
+                "still take a likely future job, or which job sizes complete the bins the optimum builds).")
+    parts.append(ask + " Put the JSON block first.")
+    return "\n\n".join(parts)
+
+
+def feature_coder_message(idea, existing_lines):
+    return ("## Existing features (don't duplicate them)\n" + "\n".join(existing_lines)
+            + f"\n\n## The feature to write: `{idea['name']}`\n\nWhy: {idea['claim']}\n\n"
+            f"What to measure: {idea['feature']}\n\nExpected effect: {idea.get('target', '')}\n\n"
+            "Write this feature.")
+
+
+def feature_mutator_message(policy, target=None):
+    """policy: Scored(code, score) only (the air gap). target: the name of a feature in that code to vary,
+    or None for a fresh feature."""
+    if not isinstance(policy, Scored):
+        raise TypeError("the Mutator only receives code and scores (air gap)")
+    ask = (f"Write a **variant of the feature `{target}`** shown above." if target
+           else "Write a **fresh feature**: a measurement none of the features above captures.")
+    return (f"## The current policy (score {policy.score:.3f})\n\n```python\n{policy.code.strip()}\n```\n\n"
+            f"{ask} Start your reply with the ```python block.")
+
+
+def extract_feature_ideas(text):
+    """The Researcher's feature ideas: [{"name", "claim", "feature", "target", "builds_on"}]."""
+    candidates = [body for lang, body in _FENCE.findall(text) if lang.lower() in ("json", "")]
+    candidates.append(text[text.find("{"): text.rfind("}") + 1] if "{" in text else "")
+    parsed = []
+    for raw in candidates:
+        try:
+            parsed.append(json.loads(raw))
+        except (json.JSONDecodeError, ValueError):
+            continue
+    parsed.append({"hypotheses": [o for o in _complete_objects(text) if "feature" in o]})
+    for data in parsed:
+        items = data.get("hypotheses", []) if isinstance(data, dict) else data
+        out = []
+        for item in items if isinstance(items, list) else []:
+            if not isinstance(item, dict):
+                continue
+            claim = str(item.get("claim", "")).strip()
+            feature = str(item.get("feature") or item.get("change") or "").strip()
+            if not claim or not feature:
+                continue
+            name = re.sub(r"[^a-z0-9_]+", "_", str(item.get("name") or "idea").strip().lower()).strip("_")[:40] or "idea"
+            out.append({"name": name, "claim": claim, "feature": feature,
+                        "target": str(item.get("target") or item.get("prediction") or "").strip(),
+                        "builds_on": str(item.get("builds_on") or "").strip()})
+        if out:
+            return out
+    return []
+
+
+def extract_feature_name(text, default):
+    m = re.search(r"name:\s*`?([A-Za-z0-9_]+)`?", text.split("```")[-1] if "```" in text else text)
+    return (m.group(1).lower()[:40] if m else default)

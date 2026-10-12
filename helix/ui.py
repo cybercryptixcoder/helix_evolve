@@ -138,7 +138,8 @@ def list_runs():
         state = st.get("state", "unknown")
         if state == "running" and not process_alive(d.name, st.get("pid")):
             state = "died"
-        runs.append({"name": d.name, "state": state, "mode": cfg.get("mode"), "provider": cfg.get("provider"),
+        runs.append({"name": d.name, "state": state, "mode": cfg.get("mode"), "engine": engine_of(cfg),
+                     "provider": cfg.get("provider"),
                      "model": cfg.get("flash_model"), "generation": st.get("generation"),
                      "generations": st.get("generations"), "best_score": st.get("best_score"),
                      "published": d.parent == RESULTS_DIR})
@@ -185,12 +186,19 @@ def start_run(body):
     name = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}" + ("-offline" if fake else "")
     if (RUNS_DIR / name).exists():
         raise RuntimeError(f"{name} was started a moment ago; wait a second and press Run again")
+    engine = body.get("engine") or "features"
+    if engine not in ("features", "programs"):
+        raise ValueError("engine must be features or programs")
     args = ["--run-dir", str(RUNS_DIR / name), "--mode", mode]
-    for key in ("schedule", "generations", "max_minutes", "top_x", "variants", "fresh", "hypotheses", "n",
-                "pro_every", "epsilon", "workers", "pool_size", "judge_tune_evals", "tune_evals"):
+    if mode != "zero-shot":
+        args += ["--engine", engine]
+    keys = ["schedule", "generations", "max_minutes", "top_x", "variants", "fresh", "hypotheses", "n", "pro_every", "workers"]
+    keys += (["initial_evals", "trial_evals", "refit_evals", "accept_margin", "fit_workers"] if engine == "features"
+             else ["epsilon", "pool_size", "judge_tune_evals", "tune_evals"])
+    for key in keys:
         if body.get(key) not in (None, ""):
             args += [f"--{key.replace('_', '-')}", str(body[key])]
-    if body.get("tune") is not None and mode == "full":
+    if body.get("tune") is not None and mode == "full" and engine == "programs":
         args.append("--tune" if body["tune"] else "--no-tune")
     if fake:
         args.append("--fake-llm")
@@ -290,6 +298,9 @@ def run_state(name):
     if best and best.get("families"):
         start = _start_families(_programs(d))
         s["best"]["units"] = {"score": best["score"], **metrics.units(best["families"], start)} if start else None
+    s["engine"] = engine_of(s["config"])
+    heavy = ("diagnostics", "library", "champion")      # per-generation detail comes from generation_detail
+    s["generations"] = [{k: v for k, v in g.items() if k not in heavy} for g in s["generations"]]
     s["calls"] = call_list(d)
     s["researcher"] = latest_researcher(d)
     s["console"] = tail_text(d / "console.log", 60)
@@ -298,6 +309,14 @@ def run_state(name):
     s["heldout"] = heldout_units(d)
     s["published"] = d.parent == RESULTS_DIR
     return s
+
+
+def engine_of(config):
+    """features (v2: agents write features, an optimiser fits the weights) or programs (v1). Zero-shot
+    controls and runs from before the feature engine are programs."""
+    if config.get("mode") == "zero-shot":
+        return "programs"
+    return config.get("engine") or "programs"
 
 
 def heldout_units(d):
@@ -333,6 +352,22 @@ def _cached(key, path, build):
 
 def _programs(d):
     return _cached(("programs", str(d)), d / "programs.jsonl", lambda: {p["id"]: p for p in read_jsonl(d / "programs.jsonl")})
+
+
+def _features(d):
+    """{feature id: its latest record}; a feature is written again whenever its status changes."""
+    def build():
+        out = {}
+        for f in read_jsonl(d / "features.jsonl"):
+            out[f["id"]] = f
+        return out
+    return _cached(("features", str(d)), d / "features.jsonl", build)
+
+
+def _feature_view(f, code=False):
+    keep = ("id", "name", "branch", "generation", "status", "description", "note", "error", "hypothesis_id",
+            "parent_ids", "columns", "weights", "importance", "delta_train", "delta_valid")
+    return {**{k: f.get(k) for k in keep}, **({"code": f.get("code")} if code else {})}
 
 
 def _start_families(progs):
@@ -388,7 +423,8 @@ def _call_index(d):
             if not head and reply.count("```") >= 2:          # a reply that starts with its code or JSON
                 head = reply.rsplit("```", 1)[1].strip() or reply.split("```", 2)[1][:200]
             rows.append({"line": no, "generation": c.get("generation"), "role": c.get("role"), "time": c.get("time"),
-                         "program": c.get("program"), "hypothesis": c.get("hypothesis"), "seconds": c.get("seconds"),
+                         "program": c.get("program"), "hypothesis": c.get("hypothesis"), "feature": c.get("feature"),
+                         "branch": c.get("branch"), "seconds": c.get("seconds"),
                          "tokens_out": c.get("tokens_out"), "finish": c.get("finish"), "error": c.get("error"),
                          "has_reasoning": bool(c.get("reasoning")),
                          "preview": " ".join(head.split())[:160]})
@@ -410,7 +446,8 @@ def generation_detail(name, gen):
     def prog_view(p):
         parent = progs.get(p.get("parent_id") or "")
         return {**{k: p.get(k) for k in ("id", "branch", "parent_id", "hypothesis_id", "note", "valid", "score",
-                                        "families", "error", "repaired", "duplicate_of", "probe", "code")},
+                                        "families", "error", "repaired", "duplicate_of", "probe", "code",
+                                        "trial", "valid_score", "features")},
                 **{"units": _units(p, start)},
                 "parent_score": parent.get("score") if parent else None,
                 "parent_code": parent.get("code") if parent and p.get("branch") in ("deep", "tune") else None}
@@ -423,8 +460,30 @@ def generation_detail(name, gen):
     pool_out = [progs[i] for i in (record or {}).get("pool", []) if i in progs]
     view = lambda ps: [{"id": p["id"], "branch": p.get("branch"), "generation": p.get("generation"),
                         **_units(p, start)} for p in ps]
-    return {"generation": gen, "record": record, "programs": made, "hypotheses": hyps, "calls": calls,
-            "pool_in": view(pool_in), "pool_out": view(pool_out)}
+    out = {"generation": gen, "engine": engine_of(read_json(d / "config.json", {}) or {}), "record": record,
+           "programs": made, "hypotheses": hyps, "calls": calls, "pool_in": view(pool_in), "pool_out": view(pool_out)}
+    if out["engine"] == "features":
+        feats = _features(d)
+
+        def lib_view(rec):
+            rows = []
+            for row in (rec or {}).get("library") or []:
+                f = feats.get(row["id"], {})
+                rows.append({**row, "generation": f.get("generation"), "description": f.get("description"),
+                             "status": f.get("status")})
+            return rows
+        out["features"] = [_feature_view(f, code=True) for f in feats.values() if f.get("generation") == gen
+                           and f.get("branch") != "seed"]
+        out["library_in"] = lib_view(before)
+        out["library_out"] = lib_view(record)
+        out["diagnostics"] = (record or {}).get("diagnostics") or {}
+        champ = (record or {}).get("champion") or {}
+        out["champion"] = {k: champ.get(k) for k in ("id", "features", "train", "valid", "fams", "vfams")} if champ else None
+        prev = (before or {}).get("champion") or {}
+        out["champion_in"] = {k: prev.get(k) for k in ("id", "train", "valid")} if prev else None
+        if record:
+            out["record"] = {k: v for k, v in record.items() if k not in ("diagnostics", "library", "champion")}
+    return out
 
 
 def _calls_by_count(d, gens, gen):
@@ -578,6 +637,11 @@ class Handler(BaseHTTPRequestHandler):
                 if method == "GET" and len(rest) == 2 and rest[0] == "program":
                     progs = read_jsonl(run_dir(name) / "programs.jsonl")
                     return self._send(200, next(x for x in progs if x["id"] == rest[1]))
+                if method == "GET" and len(rest) == 2 and rest[0] == "feature":
+                    f = _features(run_dir(name)).get(rest[1])
+                    if not f:
+                        raise KeyError(f"no feature {rest[1]}")
+                    return self._send(200, _feature_view(f, code=True))
                 if method == "GET" and len(rest) == 2 and rest[0] == "file" and rest[1] in FILES_OK:
                     f = run_dir(name) / rest[1]
                     ctype = "image/png" if f.suffix == ".png" else "text/plain"

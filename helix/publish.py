@@ -7,6 +7,7 @@
 results/<run>/ holds:
   summary.json         headline numbers: Code Zero, best score, gain, held-out score, generations, LLM calls
   config.json, generations.jsonl, hypotheses.jsonl, programs.jsonl     the full trace of the search
+  features.jsonl       every feature (feature engine)
   llm_calls.jsonl.gz   every prompt, reply and model reasoning, compressed
   best_program.py, snapshot.txt, progress.png
   report.md, heldout.json, compare.png                                 after --report (or at the end of a run)
@@ -29,7 +30,7 @@ from .sandbox import REPO_ROOT
 
 RESULTS_DIR = REPO_ROOT / "results"
 TRACE_FILES = ["config.json", "status.json", "generations.jsonl", "hypotheses.jsonl", "programs.jsonl",
-               "best_program.py", "report.md", "heldout.json", "progress.png", "compare.png"]
+               "features.jsonl", "best_program.py", "report.md", "heldout.json", "progress.png", "compare.png"]
 
 
 def export(run_dir, report=False):

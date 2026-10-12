@@ -10,6 +10,7 @@ Plain text, meant to be read or pasted into a chat. Each section answers one que
   deep        Do the Researcher's tests move the score, and do the verdicts mean anything?
   tune        How much do the tuned numbers add?
   pool        Does the pool remember good programs, or only the latest batch?
+  features    (feature engine) What did each branch's features add, and does validation agree with train?
   headroom    How far is the best program from an offline packer that sees every job in advance?
 """
 import difflib
@@ -39,7 +40,7 @@ def analyze(run_dir):
 
     # ------------------------------------------------------------ overview
     seed = next((p for p in progs.values() if p["branch"] == "seed"), None)
-    leaders = [p for p in progs.values() if p.get("valid") and not p.get("probe")]
+    leaders = [p for p in progs.values() if p.get("valid") and not p.get("probe") and not p.get("trial")]
     best = max(leaders, key=lambda p: p["score"], default=None)
     secs = [g["seconds"] for g in gens if g.get("seconds")]
     minutes = ((status.get("finished") or status.get("updated") or 0) - status.get("started", 0)) / 60 if status.get("started") else None
@@ -58,7 +59,8 @@ def analyze(run_dir):
 
     # ------------------------------------------------------------ calls
     out.append("\n== Calls: are the agents answering?")
-    out.append(f"{'role':18s} {'calls':>5s} {'errors':>6s} {'median s':>8s} {'cut off':>7s} {'thinking':>8s}")
+    w = max([18] + [len(c.get("role") or "?") for c in calls])
+    out.append(f"{'role':{w}s} {'calls':>5s} {'errors':>6s} {'median s':>8s} {'cut off':>7s} {'thinking':>8s}")
     default_limit = (cfg.get("max_tokens") or 8000)
     by_role = defaultdict(list)
     for c in calls:
@@ -70,7 +72,7 @@ def analyze(run_dir):
         cut = [c for c in cs if _cut_off(c, default_limit)]
         wasted_tokens += sum(c.get("tokens_out") or 0 for c in cut)
         wasted_secs += sum(c.get("seconds") or 0 for c in cut)
-        out.append(f"{role:18s} {len(cs):5d} {sum(bool(c.get('error')) for c in cs):6d} "
+        out.append(f"{role:{w}s} {len(cs):5d} {sum(bool(c.get('error')) for c in cs):6d} "
                    f"{statistics.median(c.get('seconds') or 0 for c in cs):8.1f} {len(cut):7d} "
                    f"{sum(bool(c.get('reasoning')) for c in cs):8d}")
     if total_tokens:
@@ -82,7 +84,7 @@ def analyze(run_dir):
     out.append("\n== Champions: who found each new best, building on whom?")
     running = float("-inf")
     for p in sorted(progs.values(), key=lambda p: int(p["id"][1:])):
-        if p.get("valid") and not p.get("probe") and p["score"] is not None and p["score"] > running:
+        if p.get("valid") and not p.get("probe") and not p.get("trial") and p["score"] is not None and p["score"] > running:
             parent = progs.get(p.get("parent_id") or "")
             gain = f"+{p['score'] - running:.3f}" if running > float("-inf") else "start"
             out.append(f"gen {p['generation']:>3}  {p['id']}  {p['branch']:5s} {p['score']:.3f} ({gain})"
@@ -96,6 +98,11 @@ def analyze(run_dir):
             streak += 1
             longest = max(longest, streak)
     out.append(f"Longest run of generations without a new best: {longest}")
+
+    if cfg.get("engine") == "features" and cfg.get("mode") != "zero-shot":
+        out.append(features_section(d, gens, hyps))
+        _headroom(out, best, seed)
+        return "\n".join(out)
 
     # ------------------------------------------------------------ wide
     wide = [p for p in progs.values() if p["branch"] == "wide" and p.get("valid") and p["generation"] > 0]
@@ -170,6 +177,61 @@ def analyze(run_dir):
                        f"{100 * statistics.mean(latest_share):.0f}% of the pool is from the latest generation; "
                        f"median worst member {statistics.median(worst):.2f}")
 
+    _headroom(out, best, seed)
+    return "\n".join(out)
+
+
+def features_section(d, gens, hyps):
+    """The feature engine: what each branch wrote, what was kept, and whether validation agrees with train."""
+    feats = {}
+    for f in read_jsonl(d / "features.jsonl"):
+        feats[f["id"]] = f                      # the latest record of each feature
+    made = [f for f in feats.values() if f.get("branch") != "seed"]
+    out = ["\n== Features: what did each branch add?"]
+    out.append(f"{'branch':6s} {'written':>7s} {'invalid':>7s} {'tried':>5s} {'kept':>4s} {'retired':>7s} "
+               f"{'median valid':>12s} {'best valid':>10s}")
+    for b in ("deep", "wide"):
+        fs = [f for f in made if f.get("branch") == b]
+        if not fs:
+            continue
+        tried = [f for f in fs if f.get("delta_valid") is not None]
+        dv = [f["delta_valid"] for f in tried]
+        out.append(f"{b:6s} {len(fs):7d} {sum(f.get('status') == 'invalid' for f in fs):7d} {len(tried):5d} "
+                   f"{sum(f.get('status') in ('active', 'retired') for f in fs):4d} {sum(f.get('status') == 'retired' for f in fs):7d} "
+                   + (f"{statistics.median(dv):+12.3f} {max(dv):+10.3f}" if dv else f"{'-':>12s} {'-':>10s}"))
+    tried = [f for f in made if f.get("delta_valid") is not None and f.get("delta_train") is not None]
+    if tried:
+        over = [f for f in tried if f["delta_train"] > 0 > f["delta_valid"]]
+        out.append(f"train gain but validation loss (overfitting): {len(over)} of {len(tried)} tried")
+    fh = [h for h in hyps if h.get("kind") == "feature"]
+    if fh:
+        out.append("Researcher's ideas: " + ", ".join(f"{v} {n}" for v, n in Counter(h["verdict"] for h in fh).most_common()))
+    kept = [f for f in made if f.get("status") in ("active", "retired")]
+    if kept:
+        out.append("kept:")
+        for f in sorted(kept, key=lambda f: int(f["id"][1:])):
+            imp = sum(x or 0 for x in (f.get("importance") or []))
+            out.append(f"  gen {f.get('generation'):>3}  {f['id']}  {f['branch']:4s} {f.get('name', '')[:34]:34s} "
+                       f"valid {f.get('delta_valid') or 0:+.3f}  importance {imp:+.3f}  {f.get('status')}")
+    errors = Counter((f.get("error") or "").split("\n")[-1][:70] for f in made if f.get("status") == "invalid")
+    if errors:
+        out.append("most common reasons a feature was invalid: " + "; ".join(f"{e} ({n})" for e, n in errors.most_common(3)))
+    ph = [g.get("phase_seconds") for g in gens if g.get("phase_seconds")]
+    if ph:
+        a, ft = sum(x.get("agents", 0) for x in ph), sum(x.get("fit", 0) for x in ph)
+        out.append(f"time: agents {a / 60:.0f} min, fitting {ft / 60:.0f} min "
+                   f"({sum((g.get('fit') or {}).get('evals', 0) for g in gens)} evaluations)")
+    sizes = [(g["generation"], sum(len(r.get("columns") or []) for r in g.get("library") or [])) for g in gens if g.get("library")]
+    if sizes:
+        out.append("weights in the policy by generation: " + " ".join(f"{g}:{n}" for g, n in sizes))
+    vs = [(g["generation"], g.get("best_score"), g.get("valid_score")) for g in gens if g.get("valid_score") is not None]
+    if vs:
+        out.append("champion by generation (train / validation): "
+                   + "  ".join(f"{g}: {t:.3f}/{v:.3f}" for g, t, v in vs[-12:]))
+    return "\n".join(out)
+
+
+def _headroom(out, best, seed):
     # ------------------------------------------------------------ headroom
     if best and best.get("families"):
         try:
@@ -188,7 +250,6 @@ def analyze(run_dir):
                                f"{u['waste']:.2f} extra bins per 100 the optimum needs")
         except Exception as exc:
             out.append(f"(no headroom table: {exc})")
-    return "\n".join(out)
 
 
 def shared_lines(old, new):

@@ -687,6 +687,9 @@ def _has_split(name):
 
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(prog="python -m helix.run", description=__doc__.split("\n\n")[0])
+    ap.add_argument("--engine", choices=["features", "programs"], default="features",
+                    help="features: agents write features, an optimiser fits the weights (helix/evolve.py); "
+                         "programs: agents write whole programs (the engine of runs 1-3)")
     ap.add_argument("--mode", choices=["full", "wide-only", "deep-only", "zero-shot"], default="full")
     ap.add_argument("--schedule", choices=["parallel", "alternate"], default="parallel",
                     help="parallel: deep and wide every generation; alternate: deep on odd, wide on even")
@@ -695,8 +698,9 @@ def parse_args(argv=None):
     ap.add_argument("--top-x", type=int, default=4, help="programs the Mutator works from (the top of the pool)")
     ap.add_argument("--pool-size", type=int, default=8, help="programs kept from one generation to the next")
     ap.add_argument("--max-siblings", type=int, default=3, help="most pool slots that children of one parent can hold")
-    ap.add_argument("--variants", type=int, default=6, help="Mutator programs per generation")
-    ap.add_argument("--fresh", type=int, default=2, help="of those, how many ask for a fresh idea instead of a variant")
+    ap.add_argument("--variants", type=int, default=None,
+                    help="Mutator programs (programs engine, default 6) or features (features engine, default 4) per generation")
+    ap.add_argument("--fresh", type=int, default=None, help="of those, how many ask for a fresh idea (default 2 / 1)")
     ap.add_argument("--hypotheses", type=int, default=4, help="Researcher hypotheses per generation")
     ap.add_argument("--n", type=int, default=40, help="answers in zero-shot mode")
     ap.add_argument("--epsilon", type=float, default=0.05,
@@ -725,6 +729,23 @@ def parse_args(argv=None):
     ap.add_argument("--tune-workers", type=int, default=max(2, (os.cpu_count() or 4) // 2),
                     help="evaluations in parallel while tuning")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
+    fe = ap.add_argument_group("features engine")
+    fe.add_argument("--seed-features", choices=["textbook", "none"], default="textbook",
+                    help="start from the textbook measurements (fitted in generation 0), or from nothing")
+    fe.add_argument("--initial-evals", type=int, default=1200, help="evaluations fitting the starting features")
+    fe.add_argument("--trial-evals", type=int, default=24, help="evaluations searching a new feature's weights")
+    fe.add_argument("--trial-sigma", type=float, default=0.5, help="step size searching a new feature's weights")
+    fe.add_argument("--refit-evals", type=int, default=64, help="evaluations of the joint refit when features are kept")
+    fe.add_argument("--champion-refit-evals", type=int, default=24,
+                    help="evaluations refitting the champion's own weights each generation, before features are tried")
+    fe.add_argument("--refit-sigma", type=float, default=0.15)
+    fe.add_argument("--accept-margin", type=float, default=0.03,
+                    help="validation gain a feature needs to be kept, and loss that retires one (one bin on one "
+                         "validation instance is about 0.017)")
+    fe.add_argument("--max-columns", type=int, default=60, help="most weights the policy may have")
+    fe.add_argument("--fit-workers", type=int, default=max(1, (os.cpu_count() or 2) - 1),
+                    help="processes scoring policies in parallel")
+    fe.add_argument("--fit-timeout", type=float, default=900, help="seconds before a batch of evaluations counts as hung")
     ap.add_argument("--fake-llm", action="store_true", help="offline test double instead of Luminal")
     ap.add_argument("--publish", action=argparse.BooleanOptionalAction, default=None,
                     help="keep results/<run>/ updated every generation (default: on for real runs, off with --fake-llm)")
@@ -734,7 +755,9 @@ def parse_args(argv=None):
 
 
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
-KEPT_ON_RESUME = ["mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
+KEPT_ON_RESUME = ["engine", "seed_features", "initial_evals", "trial_evals", "trial_sigma", "refit_evals",
+                  "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns",
+                  "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
                   "tune", "tune_evals", "tune_targets",
                   "tune_seconds", "tune_margin"]
@@ -752,8 +775,18 @@ def main(argv=None):
 
     if args.publish is None:
         args.publish = not args.fake_llm
+    old_cfg = Path(args.resume) / "config.json" if args.resume else None
+    if old_cfg and old_cfg.exists() and "engine" not in json.loads(old_cfg.read_text()):
+        args.engine = "programs"                    # runs from before the feature engine existed
+    features = args.engine == "features"
+    if args.variants is None:
+        args.variants = 4 if features else 6
+    if args.fresh is None:
+        args.fresh = 1 if features else 2
     if args.tune is None:
-        args.tune = args.mode == "full"
+        args.tune = args.mode == "full" and not features
+    if features and args.mode == "zero-shot":
+        args.engine, features = "programs", False   # zero-shot is a control of the programs engine
     settings = Settings.from_env(pro_every=args.pro_every)
     if not args.fake_llm and settings.problems():
         sys.exit(f"Missing {', '.join(settings.problems())}. Fill them in on the dashboard (python -m helix.ui) "
@@ -779,13 +812,17 @@ def main(argv=None):
     llm = llm_cls(settings, store.dir / "llm_calls.jsonl")
     pro = f", pro {settings.pro_model} every {args.pro_every} calls" if settings.pro_model and args.pro_every else ""
     model = "fake (offline)" if args.fake_llm else f"{settings.provider}: {settings.flash_model}"
-    say(f"Helix | mode {args.mode} | schedule {args.schedule} | models {model}{pro}")
+    say(f"Helix | engine {args.engine} | mode {args.mode} | models {model}{pro}")
     say(f"run folder: {store.dir}")
     if store.mirror.enabled:
         say(f"mirroring to MongoDB database '{store.mirror.db_name}'")
     elif store.mirror.status["error"]:
         say(f"MongoDB mirror off: {store.mirror.status['error']}")
-    Search(args, store, llm).run(start_gen, pool)
+    if args.engine == "features":
+        from .evolve import FeatureSearch
+        FeatureSearch(args, store, llm).run(start_gen, pool)
+    else:
+        Search(args, store, llm).run(start_gen, pool)
 
 
 if __name__ == "__main__":

@@ -67,12 +67,59 @@ class Run:
         events, best = [], self.seed.score if self.seed else float("-inf")
         for gen in sorted({p.generation for p in self.store.programs.values()}):
             fresh = [p for p in self.store.programs.values()
-                     if p.generation == gen and p.valid and p.duplicate_of is None and p.branch != "seed"]
+                     if p.generation == gen and p.valid and p.duplicate_of is None and p.branch != "seed"
+                     and not p.probe and not p.trial]
             top = max(fresh, key=lambda p: p.score, default=None)
             if top and top.score > best:
                 events.append((top, top.score - best if best > float("-inf") else None))
                 best = top.score
         return events
+
+
+# ---------------------------------------------------------------- feature engine
+def feature_records(folder):
+    """{feature id: latest record} for a feature-engine run, else {}."""
+    out = {}
+    for f in read_jsonl(Path(folder) / "features.jsonl"):
+        out[f["id"]] = f
+    return out
+
+
+def feature_sections(run, features):
+    clean = lambda s: " ".join(str(s or "").split()).replace("|", "/")
+    lines = ["## Features by branch", "",
+             "Each feature is tried by searching its own weights with the rest of the policy fixed; *validation gain* "
+             "is the change in score on validation instances the fitting never sees, which decides what is kept.", "",
+             "| Branch | Written | Invalid | Tried | Kept | Retired later | Best validation gain |", "|---|---|---|---|---|---|---|"]
+    for b in ("deep", "wide"):
+        fs = [f for f in features.values() if f.get("branch") == b]
+        if not fs:
+            continue
+        dv = [f["delta_valid"] for f in fs if f.get("delta_valid") is not None]
+        lines.append(f"| {b} | {len(fs)} | {sum(f.get('status') == 'invalid' for f in fs)} | {len(dv)} | "
+                     f"{sum(f.get('status') in ('active', 'retired') for f in fs)} | {sum(f.get('status') == 'retired' for f in fs)} | "
+                     f"{'+' + fmt(max(dv)) if dv and max(dv) > 0 else fmt(max(dv) if dv else None)} |")
+    last = next((g for g in reversed(run.gens) if g.get("library")), None)
+    if last:
+        lines += ["", "## The final policy", "",
+                  f"A weighted sum of {len(last['library'])} features with "
+                  f"{sum(len(r.get('columns') or []) for r in last['library'])} fitted weights (validation score "
+                  f"{fmt(last.get('valid_score'))}). *Importance* is how much the validation score drops when the "
+                  "feature is switched off.", "",
+                  "| Feature | Name | Branch | Made in generation | Weights | Importance | What it measures |",
+                  "|---|---|---|---|---|---|---|"]
+        for r in last["library"]:
+            f = features.get(r["id"], {})
+            imp, cols = r.get("importance") or [], r.get("columns") or []
+            if len(imp) > 1:                             # several values: the most important one, named
+                k = max(range(len(imp)), key=lambda i: imp[i] if imp[i] is not None else -1e9)
+                imp_txt = f"{fmt(imp[k])} ({cols[k] if k < len(cols) else k})"
+            else:
+                imp_txt = fmt(imp[0] if imp else None)
+            lines.append(f"| {r['id']} | {clean(r.get('name'))} | {r.get('branch')} | {f.get('generation', 0)} | "
+                         f"{len(cols)} | {imp_txt} | {clean(f.get('description'))[:150]} |")
+    lines.append("")
+    return lines
 
 
 # ---------------------------------------------------------------- held-out check
@@ -181,7 +228,8 @@ def write_report(runs):
     lines = [f"# Run report: {main.dir.name}", ""]
     cfg = main.config
     lines += [
-        f"- Mode: **{main.mode}**, schedule {cfg.get('schedule', '?')}, {len(main.gens) - 1} generations after Code Zero",
+        f"- Engine: **{cfg.get('engine') or 'programs'}**, mode **{main.mode}**, schedule {cfg.get('schedule', '?')}, "
+        f"{len(main.gens) - 1} generations after Code Zero",
         f"- Models: {cfg.get('flash_model', '?')}" + (f", pro {cfg['pro_model']} every {cfg.get('pro_every')} calls"
                                                          if cfg.get("pro_model") else ""),
         f"- LLM calls: {len(main.calls)} "
@@ -241,10 +289,15 @@ def write_report(runs):
         lines.append(f"| {p.generation} | {p.branch} | {p.id} | {fmt(p.score)} | {'+' + fmt(gain) if gain else '—'} | {what} |")
     lines.append("")
 
-    lines += ["## Branches", "", "| Branch | Programs | Valid | Repaired | Duplicates | New bests | Best score |",
-              "|---|---|---|---|---|---|---|"]
+    features = feature_records(main.dir)
+    if features:
+        lines += feature_sections(main, features)
+    branches = () if features else ("seed", "wide", "deep", "tune", "zeroshot")
+    if branches:
+        lines += ["## Branches", "", "| Branch | Programs | Valid | Repaired | Duplicates | New bests | Best score |",
+                  "|---|---|---|---|---|---|---|"]
     events = main.improvements()
-    for branch in ("seed", "wide", "deep", "tune", "zeroshot"):
+    for branch in branches:
         progs = [p for p in main.store.programs.values() if p.branch == branch]
         if not progs:
             continue
@@ -252,7 +305,8 @@ def write_report(runs):
         lines.append(f"| {branch} | {len(progs)} | {len(valid)} | {sum(p.repaired for p in progs)} | "
                      f"{sum(p.duplicate_of is not None for p in progs)} | {sum(p.branch == branch for p, _ in events)} | "
                      f"{fmt(max((p.score for p in valid), default=None))} |")
-    lines.append("")
+    if branches:
+        lines.append("")
 
     if main.store.hypotheses:
         from collections import Counter
@@ -263,6 +317,8 @@ def write_report(runs):
                   "| Hypothesis | Base | Gain | Claim | Change | Families that moved most (excess %) |",
                   "|---|---|---|---|---|---|"]
         supported = sorted((h for h in main.store.hypotheses if h.verdict == "supported"), key=lambda h: -h.delta)
+        if not supported:
+            lines = lines[:-4] + ["None was supported.", "", ""]
         for h in supported[:15]:
             moved = sorted(h.family_shift.items(), key=lambda kv: abs(kv[1]), reverse=True)[:3]
             clean = lambda s: " ".join(s.split()).replace("|", "/")[:140]

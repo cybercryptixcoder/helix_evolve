@@ -96,7 +96,7 @@
   .add { color: var(--good); } .del { color: var(--bad); }
   .hyp { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
   .hyp .meta { color: var(--ink2); font-size: 12.5px; margin-bottom: 4px; }
-  .v-supported, .v-removal-helps { color: var(--good); } .v-refuted, .v-invalid { color: var(--bad); } .v-matters { color: var(--deep); }
+  .v-supported, .v-removal-helps { color: var(--good); } .v-redundant { color: var(--warn); } .v-refuted, .v-invalid { color: var(--bad); } .v-matters { color: var(--deep); }
   .empty { color: var(--muted); padding: 18px 0; text-align: center; }
   #chart { width: 100%; min-width: 620px; height: auto; display: block; }
   #chart text { font-family: var(--sans); fill: var(--ink2); font-size: 12px; }
@@ -126,7 +126,7 @@
   <header>
     <div class="brand">
       <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><path d="M5 1 C 21 8, 21 22, 5 29" fill="none" stroke="var(--deep)" stroke-width="2.4" stroke-linecap="round"/><path d="M21 1 C 5 8, 5 22, 21 29" fill="none" stroke="var(--wide)" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <div><h1>Helix</h1><small>deep + wide evolutionary search</small></div>
+      <div><h1>Helix</h1><small id="brandSub">deep + wide evolutionary search</small></div>
     </div>
     <div class="bar">
       <select id="runPicker" aria-label="Run"></select>
@@ -218,20 +218,32 @@
   <div class="dh"><b>New run</b><button data-close>Close</button></div>
   <div class="db">
     <div class="grid2">
-      <div><label for="mode">Mode</label><select id="mode"><option value="full">Full: deep + wide + tune</option><option value="wide-only">Wide only (control)</option><option value="deep-only">Deep only (control)</option><option value="zero-shot">Zero-shot (control)</option></select></div>
+      <div style="grid-column:1/-1"><label for="engine">Engine</label><select id="engine">
+        <option value="features">Feature engine: agents write features, an optimiser fits the weights</option>
+        <option value="programs">Program engine (version 1): agents write whole programs</option></select></div>
+      <div><label for="mode">Mode</label><select id="mode"><option value="full">Full: deep + wide</option><option value="wide-only">Wide only (control)</option><option value="deep-only">Deep only (control)</option><option value="zero-shot">Zero-shot (control, program engine)</option></select></div>
       <div><label for="generations">Generations</label><input type="number" id="generations" value="30" min="1"></div>
       <div><label for="max_minutes">Time limit (minutes, 0 = none)</label><input type="number" id="max_minutes" value="0" min="0"></div>
       <div><label for="workers">Agent calls in parallel</label><input type="number" id="workers" value="12" min="1"></div>
     </div>
     <details style="margin-top:10px"><summary>More settings</summary>
       <div class="grid2" style="margin-top:8px">
-        <div><label for="variants">Mutator programs per generation</label><input type="number" id="variants" value="6" min="1"></div>
-        <div><label for="fresh">…of which fresh ideas</label><input type="number" id="fresh" value="2" min="0"></div>
-        <div><label for="hypotheses">Researcher hypotheses</label><input type="number" id="hypotheses" value="4" min="1"></div>
+        <div><label for="variants" id="variantsLabel">Mutator features per generation</label><input type="number" id="variants" min="1" placeholder="4"></div>
+        <div><label for="fresh">…of which fresh ideas</label><input type="number" id="fresh" min="0" placeholder="1"></div>
+        <div><label for="hypotheses" id="hypothesesLabel">Researcher feature ideas</label><input type="number" id="hypotheses" value="4" min="1"></div>
+        <div><label for="pro_every">Pro model every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
+      </div>
+      <div class="grid2 eng-features" style="margin-top:10px">
+        <div><label for="initial_evals">Fitting the textbook features (evaluations)</label><input type="number" id="initial_evals" value="1200" min="0"></div>
+        <div><label for="trial_evals">Weight search per feature tried (evaluations)</label><input type="number" id="trial_evals" value="24" min="4"></div>
+        <div><label for="refit_evals">Joint refit when features are kept (evaluations)</label><input type="number" id="refit_evals" value="64" min="4"></div>
+        <div><label for="accept_margin">Validation gain needed to keep a feature</label><input type="number" id="accept_margin" value="0.03" step="0.01" min="0"></div>
+        <div><label for="fit_workers">CPU cores for fitting (blank = all but one)</label><input type="number" id="fit_workers" min="1" placeholder="all but one"></div>
+      </div>
+      <div class="grid2 eng-programs" style="margin-top:10px">
         <div><label for="pool_size">Pool size</label><input type="number" id="pool_size" value="8" min="2"></div>
         <div><label for="epsilon">Verdict threshold</label><input type="number" id="epsilon" value="0.05" step="0.01" min="0"></div>
         <div><label for="judge_tune_evals">Tuning per deep test (evaluations)</label><input type="number" id="judge_tune_evals" value="16" min="0"></div>
-        <div><label for="pro_every">Pro model every N calls (0 = never)</label><input type="number" id="pro_every" value="10" min="0"></div>
         <div><label><input type="checkbox" id="tune" checked> Tune branch</label></div>
       </div>
     </details>
@@ -334,6 +346,7 @@ function renderTiles() {
 
 function renderState() {
   const st = state.status || {};
+  $("brandSub").textContent = engine() === "features" ? "feature engine: agents invent features, an optimiser fits the weights" : "program engine: agents write whole programs";
   setHTML($("console"), esc(state.console || "–"));
   const gens = (state.generations || []).map((g) => g.generation);
   const live = st.state === "running" ? st.flow_generation : null;
@@ -351,26 +364,72 @@ function stepGen(d) {
 }
 
 // ---------------------------------------------------------------- the loop (flowchart)
-const NODES = {
-  pool:       { x: 20,  y: 120, w: 150, h: 76, title: "Pool", sub: "best programs so far", color: "var(--ink2)" },
-  researcher: { x: 230, y: 18,  w: 180, h: 76, title: "Researcher", sub: "why does the best win?", color: "var(--deep)" },
-  coder:      { x: 450, y: 18,  w: 180, h: 76, title: "Coder", sub: "one test per hypothesis", color: "var(--deep)" },
-  mutator:    { x: 340, y: 120, w: 180, h: 76, title: "Mutator", sub: "variants + fresh ideas", color: "var(--wide)" },
-  tune:       { x: 340, y: 222, w: 180, h: 76, title: "Tune", sub: "polish the numbers", color: "var(--tune)" },
-  evaluator:  { x: 700, y: 120, w: 170, h: 76, title: "Evaluator", sub: "scores every program", color: "var(--ink2)" },
-  merge:      { x: 930, y: 120, w: 170, h: 76, title: "Merge", sub: "keep the best 8", color: "var(--ink2)" },
+// Two engines, two loops. programs (v1): agents write whole programs. features (v2): agents write features,
+// an optimiser fits the weights, validation decides what is kept.
+const LAYOUTS = {
+  programs: {
+    nodes: {
+      pool:       { x: 20,  y: 120, w: 150, h: 76, title: "Pool", sub: "best programs so far", color: "var(--ink2)" },
+      researcher: { x: 230, y: 18,  w: 180, h: 76, title: "Researcher", sub: "why does the best win?", color: "var(--deep)" },
+      coder:      { x: 450, y: 18,  w: 180, h: 76, title: "Coder", sub: "one test per hypothesis", color: "var(--deep)" },
+      mutator:    { x: 340, y: 120, w: 180, h: 76, title: "Mutator", sub: "variants + fresh ideas", color: "var(--wide)" },
+      tune:       { x: 340, y: 222, w: 180, h: 76, title: "Tune", sub: "polish the numbers", color: "var(--tune)" },
+      evaluator:  { x: 700, y: 120, w: 170, h: 76, title: "Evaluator", sub: "scores every program", color: "var(--ink2)" },
+      merge:      { x: 930, y: 120, w: 170, h: 76, title: "Merge", sub: "keep the best 8", color: "var(--ink2)" },
+    },
+    edges: [
+      ["pool", "researcher", "M170 150 C 200 150, 200 56, 228 56"], ["researcher", "coder", "M410 56 L 448 56"],
+      ["coder", "evaluator", "M630 56 C 670 56, 660 150, 698 150"], ["pool", "mutator", "M170 158 L 338 158"],
+      ["mutator", "evaluator", "M520 158 L 698 158"], ["pool", "tune", "M170 166 C 250 166, 250 260, 338 260"],
+      ["tune", "evaluator", "M520 260 C 620 260, 640 172, 698 172"], ["evaluator", "merge", "M870 158 L 928 158"],
+      ["merge", "pool", "M1015 196 L 1015 318 L 95 318 L 95 198"],
+    ],
+    notes: [[760, 334, "next generation: the merged pool goes round again"], [430, 110, "air gap: the Mutator sees only code and scores"]],
+  },
+  features: {
+    nodes: {
+      library:    { x: 20,  y: 130, w: 140, h: 76, title: "Library", sub: "the champion's features", color: "var(--ink2)" },
+      inspect:    { x: 196, y: 26,  w: 168, h: 76, title: "Inspect", sub: "packings vs optimum", color: "var(--ink2)" },
+      researcher: { x: 400, y: 26,  w: 172, h: 76, title: "Researcher", sub: "what can't it see?", color: "var(--deep)" },
+      coder:      { x: 608, y: 26,  w: 164, h: 76, title: "Coder", sub: "writes each feature", color: "var(--deep)" },
+      mutator:    { x: 400, y: 234, w: 172, h: 76, title: "Mutator", sub: "variants + fresh ones", color: "var(--wide)" },
+      fit:        { x: 812, y: 130, w: 140, h: 76, title: "Fit", sub: "refit, validate", color: "var(--tune)" },
+      accept:     { x: 972, y: 130, w: 132, h: 76, title: "Accept", sub: "keep what helps", color: "var(--ink2)" },
+    },
+    edges: [
+      ["library", "inspect", "M160 160 C 178 160, 176 64, 194 64"], ["inspect", "researcher", "M364 64 L 398 64"],
+      ["researcher", "coder", "M572 64 L 606 64"], ["coder", "fit", "M772 64 C 800 64, 790 160, 810 160"],
+      ["library", "mutator", "M160 176 C 290 176, 270 272, 398 272"], ["mutator", "fit", "M572 272 C 720 272, 770 176, 810 176"],
+      ["fit", "accept", "M952 168 L 970 168"], ["accept", "library", "M1038 206 L 1038 322 L 90 322 L 90 208"],
+    ],
+    notes: [[560, 337, "next generation: the new champion goes round again"], [486, 162, "air gap: the Mutator sees only"], [486, 177, "the policy's code and its score"]],
+  },
 };
-const EDGES = [
-  ["pool", "researcher", "M170 150 C 200 150, 200 56, 228 56"], ["researcher", "coder", "M410 56 L 448 56"],
-  ["coder", "evaluator", "M630 56 C 670 56, 660 150, 698 150"], ["pool", "mutator", "M170 158 L 338 158"],
-  ["mutator", "evaluator", "M520 158 L 698 158"], ["pool", "tune", "M170 166 C 250 166, 250 260, 338 260"],
-  ["tune", "evaluator", "M520 260 C 620 260, 640 172, 698 172"], ["evaluator", "merge", "M870 158 L 928 158"],
-  ["merge", "pool", "M1015 196 L 1015 318 L 95 318 L 95 198"],
-];
+const engine = () => (state && state.engine) || "programs";
+const layout = () => LAYOUTS[engine()] || LAYOUTS.programs;
 function verdictNote(hyps) { const c = {}; hyps.forEach((h) => c[h.verdict] = (c[h.verdict] || 0) + 1); return Object.entries(c).map(([k, v]) => `${v} ${k}`).join(", "); }
+const gapsOf = (diag) => Object.entries(diag || {}).map(([fam, c]) => [fam, c.champion.bins - ((c.optimum || {}).bins ?? c.champion.bins)]).sort((a, b) => b[1] - a[1]);
+const colsOf = (lib) => (lib || []).reduce((n, x) => n + (x.columns || []).length, 0);
+function flowStatesFeatures(d) {
+  const f = {}, rec = d && d.record, br = (rec && rec.branches) || [], feats = (d && d.features) || [], hyps = (d && d.hypotheses) || [];
+  const lib = selGen === 0 ? (d && d.library_out) || [] : (d && d.library_in) || [];
+  f.library = { state: "done", sub: `${lib.length} feature${lib.length === 1 ? "" : "s"}`, note: `${colsOf(lib)} weights` };
+  const gaps = gapsOf(d && d.diagnostics);
+  f.inspect = selGen === 0 ? { state: "off" } : gaps.length ? { state: "done", sub: "extra bins vs optimum", note: gaps.slice(0, 2).map(([k, g]) => `${k} +${g}`).join(", ") } : { state: rec ? "failed" : "waiting", note: rec ? "no comparison" : "" };
+  const deep = feats.filter((x) => x.branch === "deep"), wide = feats.filter((x) => x.branch === "wide"), usable = (x) => x.status !== "invalid";
+  f.researcher = br.includes("deep") ? { state: hyps.length ? "done" : "failed", note: hyps.length ? `${hyps.length} feature ideas` : "no usable ideas" } : { state: "off" };
+  f.coder = br.includes("deep") && deep.length ? { state: "done", done: deep.filter(usable).length, total: deep.length, note: verdictNote(hyps) } : { state: "off" };
+  f.mutator = br.includes("wide") ? { state: "done", done: wide.filter(usable).length, total: wide.length, note: `${wide.filter((x) => x.status === "active" || x.status === "retired").length} kept` } : { state: "off" };
+  const fit = rec && rec.fit;
+  f.fit = rec ? (fit ? { state: "done", sub: `${fit.trials} of ${fit.candidates} tried`, note: `${fit.evals} evaluations` } : { state: "done", sub: "weights fitted", note: `train ${fmt(rec.best_score)}` }) : { state: "waiting" };
+  const kept = (rec && rec.accepted) || [], ret = (rec && rec.retired) || [];
+  f.accept = rec ? { state: "done", sub: `champion ${rec.best_id}`, note: selGen === 0 ? "the first champion" : (kept.length ? `kept ${kept.length}` : "nothing kept") + (ret.length ? `, retired ${ret.length}` : "") } : { state: "waiting" };
+  return f;
+}
 function flowStates(detail) {
   const st = state.status || {};
   if (st.flow_generation === selGen && st.flow && Object.keys(st.flow).length) return st.flow;
+  if (engine() === "features") return flowStatesFeatures(detail);
   const f = {}, rec = detail && detail.record, br = (rec && rec.branches) || [], progs = (detail && detail.programs) || [];
   const by = (b) => progs.filter((p) => p.branch === b), hyps = (detail && detail.hypotheses) || [];
   f.pool = { state: "done", note: `${(detail && detail.pool_in.length) || 0} programs in` };
@@ -386,14 +445,15 @@ function flowStates(detail) {
 }
 function drawFlow(flow) {
   const st = state.status || {}, live = st.state === "running" && st.flow_generation === selGen;
+  const lay = layout();
+  if (!lay.nodes[selNode]) selNode = "researcher";
   let svg = `<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>`;
-  for (const [a, b, d] of EDGES) {
+  for (const [a, b, d] of lay.edges) {
     const on = live && ((flow[a] || {}).state === "active" || (flow[b] || {}).state === "active");
     svg += `<path class="edge ${on ? "live" : ""}" d="${d}" marker-end="url(#ah)"/>`;
   }
-  svg += `<text class="note" x="760" y="334" text-anchor="middle">next generation: the merged pool goes round again</text>`;
-  svg += `<text class="note" x="430" y="110" text-anchor="middle">air gap: the Mutator sees only code and scores</text>`;
-  for (const [key, n] of Object.entries(NODES)) {
+  for (const [x, y, t] of lay.notes) svg += `<text class="note" x="${x}" y="${y}" text-anchor="middle">${esc(t)}</text>`;
+  for (const [key, n] of Object.entries(lay.nodes)) {
     const f = flow[key] || { state: "waiting" };
     const count = f.total ? `${f.done ?? 0}/${f.total}` : f.running ? `${f.running} running` : f.done ? `${f.done} done` : "";
     const stateText = { active: "running", done: "done", waiting: "waiting", off: "not used", failed: "failed" }[f.state] || f.state;
@@ -402,7 +462,7 @@ function drawFlow(flow) {
       <rect class="box" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="12" stroke="${n.color}"/>
       <text x="${n.x + 12}" y="${n.y + 22}" font-weight="700" font-size="15">${n.title}</text>
       <text class="sub" x="${n.x + n.w - 10}" y="${n.y + 22}" text-anchor="end">${esc(count)}</text>
-      <text class="sub" x="${n.x + 12}" y="${n.y + 42}">${esc(f.state === "waiting" || f.state === "off" ? n.sub : stateText)}</text>
+      <text class="sub" x="${n.x + 12}" y="${n.y + 42}">${esc(f.state === "waiting" || f.state === "off" ? n.sub : f.state === "done" && f.sub ? f.sub : stateText)}</text>
       <text class="note" x="${n.x + 12}" y="${n.y + 62}">${esc(note)}</text>
     </g>`;
   }
@@ -447,7 +507,7 @@ function poolTable(list, fresh = new Set()) {
 function callTable(calls) {
   if (!calls.length) return `<div class="empty">No agent calls recorded for this step.</div>`;
   const ended = (c) => c.error ? '<span class="bad">error</span>' : c.finish === "length" ? '<span class="warn">cut off</span>' : c.finish === "thinking" ? '<span class="warn">stopped: thinking</span>' : esc(c.finish || "ok");
-  return `<div class="tablewrap"><table><thead><tr><th>Time</th><th>Agent</th><th class="num">Took</th><th class="num">Tokens out</th><th>Ended</th><th>Says</th></tr></thead><tbody>${calls.map((c) => `<tr class="click" data-line="${c.line}"><td>${esc(c.time)}</td><td>${esc(c.role)}${c.program ? ` · ${esc(c.program)}` : ""}</td><td class="num">${esc(c.seconds)}s</td><td class="num">${c.tokens_out ?? "–"}</td><td>${ended(c)}</td><td>${c.error ? `<span class="bad">${esc(c.error.slice(0, 120))}</span>` : esc(c.preview)}</td></tr>`).join("")}</tbody></table></div>`;
+  return `<div class="tablewrap"><table><thead><tr><th>Time</th><th>Agent</th><th class="num">Took</th><th class="num">Tokens out</th><th>Ended</th><th>Says</th></tr></thead><tbody>${calls.map((c) => `<tr class="click" data-line="${c.line}"><td>${esc(c.time)}</td><td>${esc(c.role)}${c.program ? ` · ${esc(c.program)}` : c.feature ? ` · ${esc(c.feature)}` : ""}</td><td class="num">${esc(c.seconds)}s</td><td class="num">${c.tokens_out ?? "–"}</td><td>${ended(c)}</td><td>${c.error ? `<span class="bad">${esc(c.error.slice(0, 120))}</span>` : esc(c.preview)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 function diffHTML(a, b) {
   if (!a || !b) return `<pre class="code">${esc(b || "")}</pre>`;
@@ -469,8 +529,107 @@ function hypBlock(h, progs, withCode) {
     <div>${esc(h.claim)}</div><div class="hint">Change: ${esc(h.change)}</div>${h.prediction ? `<div class="hint">Predicted: ${esc(h.prediction)}</div>` : ""}
     ${withCode && p ? `<details><summary>${esc(p.id)}: what changed from ${esc(h.base_id)}</summary>${diffHTML(p.parent_code, p.code)}</details>` : ""}</div>`;
 }
+// ---- feature engine
+const STATUS = { active: ["kept", "ok"], retired: ["retired later", "warn"], rejected: ["not kept", ""], redundant: ["helped alone; overlaps what was kept", "warn"], invalid: ["invalid", "bad"], candidate: ["being tried", ""] };
+const statusHTML = (s) => { const [t, c] = STATUS[s] || [s || "–", ""]; return `<span class="${c}">${esc(t)}</span>`; };
+const deltaHTML = (x) => x == null ? "–" : `<span class="${x > 0 ? "ok" : x < 0 ? "bad" : ""}">${signed(x)}</span>`;
+const impSum = (f) => f.importance ? f.importance.reduce((a, b) => a + (b || 0), 0) : null;
+function impHTML(r) {   // one value: its importance; several: the most important one, named
+  const imp = r.importance || [];
+  if (!imp.length) return "–";
+  if (imp.length === 1) return deltaHTML(imp[0]);
+  let k = 0; imp.forEach((v, i) => { if ((v ?? -1e9) > (imp[k] ?? -1e9)) k = i; });
+  return `${deltaHTML(imp[k])} <span class="hint">${esc((r.columns || [])[k] || "")}</span>`;
+}
+function featTable(fs, sortByValid = false) {
+  if (!fs.length) return `<div class="empty">No features here in this generation.</div>`;
+  const list = sortByValid ? [...fs].sort((a, b) => (b.delta_valid ?? -1e9) - (a.delta_valid ?? -1e9)) : fs;
+  const rows = list.map((f) => `<tr class="click" data-fid="${esc(f.id)}"><td>${esc(f.id)}</td><td><b>${esc(f.name || "–")}</b></td><td><span class="chip ${esc(f.branch)}">${esc(f.branch)}</span></td>
+    <td class="num">${deltaHTML(f.delta_train)}</td><td class="num">${deltaHTML(f.delta_valid)}</td><td>${statusHTML(f.status)}</td>
+    <td>${esc(((f.status === "invalid" ? f.error : f.description || f.note) || "").split("\n").pop().slice(0, 150))}</td></tr>`);
+  return `<div class="tablewrap"><table><thead><tr><th>Feature</th><th>Name</th><th>Branch</th><th class="num">Train</th><th class="num">Validation</th><th>Verdict</th><th>What it measures</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+    <div class="hint">Train and Validation: how much the score moves when the feature is added, with only its own weights searched and the rest of the policy fixed (higher is better). Validation instances are never used for fitting; they decide what is kept. Click a row for the code.</div>`;
+}
+function libTable(rows) {
+  if (!rows.length) return `<div class="empty">The library is empty: the policy is Code Zero.</div>`;
+  const top = (r) => { const cols = (r.columns || []).map((c, i) => [c, (r.weights || [])[i], (r.importance || [])[i]]);
+    cols.sort((a, b) => Math.abs(b[2] ?? b[1] ?? 0) - Math.abs(a[2] ?? a[1] ?? 0));
+    return cols.slice(0, 3).map(([c, w]) => `${esc(c)} ${w != null ? signed(w, 2) : ""}`).join(" · ") + (cols.length > 3 ? ` <span class="hint">+${cols.length - 3} more</span>` : ""); };
+  return `<div class="tablewrap"><table><thead><tr><th>Feature</th><th>Name</th><th>Branch</th><th class="num">Made in</th><th class="num">Weights</th><th class="num">Importance</th><th>Largest weights</th></tr></thead><tbody>${rows.map((r) => `<tr class="click" data-fid="${esc(r.id)}"><td>${esc(r.id)}</td><td><b>${esc(r.name)}</b></td><td><span class="chip ${esc(r.branch)}">${esc(r.branch)}</span></td><td class="num">${r.generation ?? 0}</td><td class="num">${(r.columns || []).length}</td><td class="num">${impHTML(r)}</td><td>${top(r)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="hint">Importance: how much the validation score drops when the value's weight is set to zero (bigger = it matters more; a feature whose values together score below zero hurts and is retired). For a feature with several values, the most important one is shown.</div>`;
+}
+function diagTable(diag) {
+  const fams = gapsOf(diag);
+  if (!fams.length) return `<div class="empty">No packing comparison for this generation.</div>`;
+  const jobs = (d) => Object.entries(d || {}).sort((a, b) => +a[0] - +b[0]).map(([k, v]) => `${k}:${v}`).join(" ");
+  const pats = (d) => Object.entries(d || {}).slice(0, 3).map(([k, v]) => `${esc(k)} ×${v}`).join("<br>");
+  const rows = fams.map(([fam, gap]) => { const c = diag[fam], ch = c.champion, op = c.optimum || {};
+    return `<tr><td><b>${esc(fam)}</b><div class="hint">${esc(c.instance)}</div></td><td class="num">${ch.bins}<br><span class="hint">${op.bins ?? "–"}</span></td><td class="num"><b class="${gap > 0 ? "warn" : "ok"}">+${gap}</b></td>
+      <td class="num">${fmt(ch.mean_jobs, 2)}<br><span class="hint">${op.mean_jobs != null ? fmt(op.mean_jobs, 2) : "–"}</span></td><td>${jobs(ch.jobs_per_bin)}<br><span class="hint">${jobs(op.jobs_per_bin)}</span></td>
+      <td class="num">${ch.stranded}<br><span class="hint">${op.stranded ?? "–"}</span></td><td class="num">${pct(ch.left_cpu * 100, 0)} / ${pct(ch.left_mem * 100, 0)}<br><span class="hint">${op.left_cpu != null ? `${pct(op.left_cpu * 100, 0)} / ${pct(op.left_mem * 100, 0)}` : "–"}</span></td>
+      <td>${pats(ch.patterns)}</td><td class="hint">${pats(op.patterns)}</td></tr>`; });
+  return `<div class="tablewrap"><table><thead><tr><th>Family</th><th class="num">Bins</th><th class="num">Extra</th><th class="num">Jobs / bin</th><th>Bins by number of jobs</th><th class="num">Stranded</th><th class="num">Room left CPU / mem</th><th>Most common bins: policy</th><th>near-optimal</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+    <div class="hint">Each cell: the policy's packing on top, a near-optimal packing of the same jobs below (grey). Job classes per resource, CPU then memory: S under 20% of a bin, M 20–40%, L 40% or more. Stranded: one resource nearly full while over a quarter of the other is left. This is what the Researcher reads; the Mutator never sees it.</div>`;
+}
+function featHypBlock(h, feats) {
+  const f = feats.find((x) => x.id === h.feature_id);
+  return `<div class="hyp"><div class="meta">${esc(h.id)}${f ? ` → <a href="#" data-fid="${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a>` : ""}${h.builds_on ? ` · builds on ${esc(h.builds_on)}` : ""} · <b class="v-${esc(h.verdict)}">${esc(h.verdict)} ${h.delta != null ? signed(h.delta) : ""}</b> <span class="hint">on validation</span></div>
+    <div>${esc(h.claim)}</div><div class="hint"><b>Feature:</b> ${esc(h.change)}</div>${h.prediction ? `<div class="hint"><b>Should move:</b> ${esc(h.prediction)}</div>` : ""}</div>`;
+}
+function renderDetailFeatures(d) {
+  const titles = { library: "Library: the policy going in", inspect: "Inspect: the policy's packings next to near-optimal ones", researcher: "Researcher: feature ideas", coder: "Coder: the features written", mutator: "Mutator: variants and fresh features", fit: "Fit: every feature tried", accept: "Accept: what was kept" };
+  $("detailTitle").textContent = `${titles[selNode] || selNode} · generation ${selGen}`;
+  if (!d) return `<div class="empty">Nothing recorded for generation ${selGen} yet.</div>`;
+  const feats = d.features || [], hyps = d.hypotheses || [], rec = d.record || {}, calls = (re) => (d.calls || []).filter((c) => re.test(c.role || ""));
+  const champLine = (c, label) => c ? `<p>${label} <a href="#" data-pid="${esc(c.id)}">${esc(c.id)}</a>: train ${fmt(c.train)}, validation ${fmt(c.valid)}</p>` : "";
+  if (selNode === "library") return selGen === 0
+    ? `<p class="hint">Generation 0: Code Zero, then the textbook measurements of a bin (Best Fit and its relatives) with weights fitted by the optimiser. No agent has written anything yet.</p>` + libTable(d.library_out || [])
+    : champLine(d.champion_in, "Champion going in:") + libTable(d.library_in || []);
+  if (selNode === "inspect") return selGen === 0 ? `<div class="empty">Generation 0 has no inspection.</div>` : diagTable(d.diagnostics);
+  const deepF = feats.filter((f) => f.branch === "deep");
+  if (selNode === "researcher") return (hyps.length ? hyps.map((h) => featHypBlock(h, feats)).join("")
+      : deepF.length ? `<p class="hint">The ideas and their verdicts are written when this generation ends. The features written from them so far:</p>` + featTable(deepF)
+      : `<div class="empty">No feature ideas this generation${rec.generation == null ? " yet" : ""}.</div>`)
+    + `<h3>Calls (click one for the full prompt, reply and reasoning)</h3>` + callTable(calls(/^feature_researcher/));
+  if (selNode === "coder") return featTable(feats.filter((f) => f.branch === "deep")) + `<h3>Calls</h3>` + callTable(calls(/^feature_coder/));
+  if (selNode === "mutator") return `<p class="hint">Variants of the policy's features and fresh ones, written from the policy's code and score only.</p>` + featTable(feats.filter((f) => f.branch === "wide")) + `<h3>Calls</h3>` + callTable(calls(/^feature_mutator/));
+  if (selNode === "fit") {
+    const fit = rec.fit, ph = rec.phase_seconds;
+    const c = rec.champion_refit, ci = d.champion_in;
+    const refitLine = c && ci ? (c.kept
+        ? `<p><b>Champion refit</b> (its own weights, no new feature): train ${deltaHTML(c.train - ci.train)}, validation ${deltaHTML(c.valid - ci.valid)}, credited to fitting. The features below were tried on top of it.</p>`
+        : `<p><b>Champion refit</b> (its own weights, no new feature): no gain on ${c.valid == null ? "train" : "validation"}.</p>`) : "";
+    return (fit ? `<p class="hint">${fit.candidates} candidates, ${fit.invalid} invalid, ${fit.trials} tried; ${fit.evals} evaluations${ph ? `; agents ${Math.round(ph.agents)}s, fitting ${Math.round(ph.fit)}s` : ""}.</p>` : "")
+      + champLine(ci, "Champion going in:") + refitLine + featTable(feats, true);
+  }
+  if (selNode === "accept") {
+    const kept = feats.filter((f) => (rec.accepted || []).includes(f.id)), retired = rec.retired || [];
+    return champLine(d.champion, "Champion going out:")
+      + (selGen === 0 ? "" : kept.length ? `<h3>Kept</h3>` + featTable(kept) : `<p>Nothing kept this generation${rec.best_id !== (d.champion_in || {}).id ? "; the weights were refitted" : ""}.</p>`)
+      + (retired.length ? `<p class="warn">Retired: ${retired.map((r) => `<a href="#" data-fid="${esc(r)}">${esc(r)}</a>`).join(", ")} (switching them off scored better on validation).</p>` : "")
+      + `<h3>Library going out</h3>` + libTable(d.library_out || []);
+  }
+  return "";
+}
+async function showFeature(fid) {
+  const f = await api(`/api/runs/${current}/feature/${fid}`);
+  const cols = (f.columns || []).map((c, i) => `<tr><td>${esc(c)}</td><td class="num">${f.weights && f.weights[i] != null ? signed(f.weights[i], 3) : "–"}</td><td class="num">${f.importance && f.importance[i] != null ? signed(f.importance[i], 3) : "–"}</td></tr>`).join("");
+  openDlg(`${f.id} · ${f.name} · ${f.branch} · ${(STATUS[f.status] || [f.status])[0]}`,
+    `<p>${esc(f.description || "")}</p>${f.note ? `<p class="hint">${esc(f.note)}</p>` : ""}
+     <p>Made in generation ${f.generation ?? 0}${f.hypothesis_id ? ` for ${esc(f.hypothesis_id)}` : ""}${(f.parent_ids || []).length ? ` · variant of ${esc(f.parent_ids.join(", "))}` : ""} · train ${deltaHTML(f.delta_train)} · validation ${deltaHTML(f.delta_valid)}</p>
+     ${f.error ? `<pre class="code text bad">${esc(f.error)}</pre>` : ""}
+     ${cols && f.status !== "invalid" ? `<details ${(f.columns || []).length <= 20 ? "open" : ""}><summary>Values, weights and importance (latest)</summary><div class="tablewrap"><table><thead><tr><th>Value</th><th class="num">Weight</th><th class="num">Importance</th></tr></thead><tbody>${cols}</tbody></table></div></details>` : ""}
+     <pre class="code">${esc(f.code || "")}</pre>`);
+}
 function renderDetail(d) {
-  const titles = { pool: "Pool going in", researcher: "Researcher: hypotheses", coder: "Coder: the tests and their verdicts", mutator: "Mutator: variants and fresh ideas", tune: "Tune: polished numbers", evaluator: "Evaluator: everything scored", merge: "Merge: the pool going out" };
+  if (engine() === "features") {
+    setHTML($("detail"), renderDetailFeatures(d));
+    $("detail").querySelectorAll("tr[data-fid], a[data-fid]").forEach((el) => el.onclick = (e) => { e.preventDefault(); showFeature(el.dataset.fid); });
+    $("detail").querySelectorAll("a[data-pid]").forEach((el) => el.onclick = (e) => { e.preventDefault(); showProgram(el.dataset.pid); });
+    $("detail").querySelectorAll("tr[data-line]").forEach((tr) => tr.onclick = () => showCall(tr.dataset.line));
+    return;
+  }
+  const titles ={ pool: "Pool going in", researcher: "Researcher: hypotheses", coder: "Coder: the tests and their verdicts", mutator: "Mutator: variants and fresh ideas", tune: "Tune: polished numbers", evaluator: "Evaluator: everything scored", merge: "Merge: the pool going out" };
   $("detailTitle").textContent = `${titles[selNode] || selNode} · generation ${selGen}`;
   if (!d) { setHTML($("detail"), `<div class="empty">Nothing recorded for generation ${selGen} yet.</div>`); return; }
   const progs = d.programs || [], hyps = d.hypotheses || [], calls = (re) => (d.calls || []).filter((c) => re.test(c.role || ""));
@@ -533,8 +692,8 @@ function drawChart() {
     if (refs.offline_ffd) refLines.push(["Offline packer (sees all jobs)", refs.offline_ffd.score]);
     if (refs.optimal) refLines.push(["Optimal packing", refs.optimal.score]);
   }
-  const marks = [];
-  if (!compare.length) for (const row of main.series) for (const b of ["deep", "wide", "tune"]) if (row[b] && val(row[b]) != null) marks.push({ x: row[xAxis], y: val(row[b]), b });
+  const marks = [];   // each generation's best new program per branch, for this run (always shown)
+  for (const row of main.series) for (const b of ["deep", "wide", "tune"]) if (row[b] && val(row[b]) != null) marks.push({ x: row[xAxis], y: val(row[b]), b });
   const ys = runs.flatMap((r) => r.data.map(val).filter((v) => v != null)).concat(refLines.map((r) => r[1]), marks.map((m) => m.y));
   let lo = Math.min(...ys), hi = Math.max(...ys);
   if (unit === "progress") { lo = Math.min(0, lo); hi = Math.max(hi, 10); }
@@ -573,8 +732,11 @@ function drawChart() {
   setHTML($("chart"), svg);
   chartGeom = { runs, maxX, L, R, W };
   const hit = $("hit"); if (hit) { hit.onmousemove = chartHover; hit.onmouseleave = () => { $("tip").style.display = "none"; const xh = $("xh"); if (xh) xh.setAttribute("visibility", "hidden"); }; }
-  setHTML($("chartLegend"), runs.map((r) => `<span><i style="background:${r.color}"></i>${esc(r.main ? "this run" : r.name)}</span>`).join("")
-    + (marks.length ? `<span><i class="dot2" style="background:var(--deep)"></i>best new, deep</span><span><i class="dot2" style="background:var(--wide);border-radius:2px"></i>best new, wide</span><span><i class="dot2" style="background:var(--tune);border-radius:1px"></i>tuned</span>` : "")
+  const has = (b) => marks.some((m) => m.b === b), feat = engine() === "features";
+  setHTML($("chartLegend"), runs.map((r) => `<span><i style="background:${r.color}"></i>${esc(r.main ? (feat ? "this run: champion" : "this run: best") : r.name)}</span>`).join("")
+    + (has("deep") ? `<span><i class="dot2" style="background:var(--deep)"></i>${feat ? "best deep feature (policy refitted with it)" : "best new deep program"}</span>` : "")
+    + (has("wide") ? `<span><i class="dot2" style="background:var(--wide);border-radius:2px"></i>${feat ? "best Mutator feature (policy refitted with it)" : "best new Mutator program"}</span>` : "")
+    + (has("tune") ? `<span><i class="dot2" style="background:var(--tune);border-radius:1px"></i>best tuned program</span>` : "")
     + `<span><i class="dash"></i>yardsticks</span>`);
   renderCmpTable(runs);
 }
@@ -585,6 +747,8 @@ function chartHover(e) {
   for (const r of g.runs) {
     let best = null; for (const row of r.data) if (row[xAxis] <= xv + 1e-9 && val(row) != null) best = row;
     if (best) lines.push(`<div><span style="color:${r.color}">■</span> ${esc(r.main ? "this run" : r.name)}: <b>${show(val(best))}</b> <span class="hint">generation ${best.generation}, ${best.minutes} min</span></div>`);
+    if (best && r.main) for (const [b, label, color] of [["deep", "best deep", "var(--deep)"], ["wide", "best Mutator", "var(--wide)"], ["tune", "best tuned", "var(--tune)"]])
+      if (best[b] && val(best[b]) != null) lines.push(`<div class="hint" style="padding-left:14px"><span style="color:${color}">●</span> ${label} in generation ${best.generation}: ${show(val(best[b]))} (${esc(best[b].id)})</div>`);
   }
   if (!lines.length) return;
   const xh = $("xh"); xh.setAttribute("x1", sx); xh.setAttribute("x2", sx); xh.setAttribute("visibility", "visible");
@@ -608,9 +772,21 @@ $("reportBtn").onclick = () => { $("phaseLine").textContent = "Scoring on held-o
 $("publishBtn").onclick = () => act(() => api(`/api/runs/${current}/publish`, { method: "POST", body: {} }), "Publish");
 $("newBtn").onclick = () => $("newDlg").showModal();
 $("settingsBtn").onclick = async () => { await loadSettings(); $("settingsDlg").showModal(); };
+function engineFields() {
+  const feat = $("engine").value === "features";
+  document.querySelectorAll(".eng-features").forEach((el) => el.style.display = feat ? "" : "none");
+  document.querySelectorAll(".eng-programs").forEach((el) => el.style.display = feat ? "none" : "");
+  $("variantsLabel").textContent = feat ? "Mutator features per generation" : "Mutator programs per generation";
+  $("hypothesesLabel").textContent = feat ? "Researcher feature ideas" : "Researcher hypotheses";
+  $("variants").placeholder = feat ? "4" : "6"; $("fresh").placeholder = feat ? "1" : "2";
+}
+$("engine").onchange = engineFields; engineFields();
 $("runBtn").onclick = async () => {
-  const body = { mode: $("mode").value, fake: $("fake").checked, tune: $("tune").checked };
-  for (const k of ["generations", "max_minutes", "workers", "variants", "fresh", "hypotheses", "pool_size", "epsilon", "judge_tune_evals", "pro_every"]) body[k] = $(k).value;
+  const feat = $("engine").value === "features";
+  const body = { engine: $("engine").value, mode: $("mode").value, fake: $("fake").checked, tune: $("tune").checked };
+  const keys = ["generations", "max_minutes", "workers", "variants", "fresh", "hypotheses", "pro_every"]
+    .concat(feat ? ["initial_evals", "trial_evals", "refit_evals", "accept_margin", "fit_workers"] : ["pool_size", "epsilon", "judge_tune_evals"]);
+  for (const k of keys) body[k] = $(k).value;
   try { const r = await api("/api/runs/start", { method: "POST", body }); current = r.name; selGen = null; $("follow").checked = true; $("newDlg").close(); await refreshRuns(); tick(true); }
   catch (e) { $("runOut").textContent = e.message; }
 };
