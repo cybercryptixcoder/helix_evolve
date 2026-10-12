@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix: two loops, one library</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #15191e; --ink2: #4b535d; --muted: #7d8590; --rule: #cfd5dc;
+    --deep: #2a6fc9; --deep-bg: #e8f0fb; --wide: #c95a24; --wide-bg: #fbeee6;
+    --core: #157f5c; --core-bg: #e5f4ee; --start: #3b4450; --start-bg: #eceff3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111418; --panel: #181c21; --ink: #e9edf1; --ink2: #b4bcc6; --muted: #858e99; --rule: #2e353e;
+      --deep: #5b9bea; --deep-bg: #15243a; --wide: #e5814f; --wide-bg: #33200f;
+      --core: #3fbf8f; --core-bg: #10291f; --start: #c9d0d8; --start-bg: #1f252c; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111418; --panel: #181c21; --ink: #e9edf1; --ink2: #b4bcc6; --muted: #858e99; --rule: #2e353e;
+    --deep: #5b9bea; --deep-bg: #15243a; --wide: #e5814f; --wide-bg: #33200f;
+    --core: #3fbf8f; --core-bg: #10291f; --start: #c9d0d8; --start-bg: #1f252c; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 40px; }
+  h1 { font-size: clamp(24px, 3.6vw, 32px); margin: 0 0 6px; line-height: 1.15; }
+  p.lede { margin: 0 0 18px; color: var(--ink2); max-width: 70ch; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { font-family: inherit; fill: var(--ink); }
+  .t { font-size: 17px; font-weight: 700; }
+  .s { font-size: 13px; fill: var(--ink2); }
+  .lab { font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+  .note { font-size: 12.5px; fill: var(--muted); }
+  .edge { fill: none; stroke: var(--muted); stroke-width: 2; }
+  .edge.deep { stroke: var(--deep); } .edge.wide { stroke: var(--wide); } .edge.back { stroke: var(--core); stroke-dasharray: 7 5; }
+</style>
+
+<div class="wrap">
+  <h1>Helix: two loops, one library</h1>
+  <p class="lede">Every run starts from Code Zero with an empty library. Each generation, the deep loop (left) and the wide loop (right) run side by side from the same champion. Both send new features into the same fit-and-accept step, which produces the next champion.</p>
+
+  <svg viewBox="0 0 900 760" role="img" aria-label="Flowchart: Code Zero feeds the library. From the library, the deep loop goes through Inspect, Researcher and Coder, and the wide loop goes through the Mutator. Both meet at Fit and accept, which returns the new champion to the library.">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker>
+      <marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--deep)"/></marker>
+      <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--wide)"/></marker>
+      <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--core)"/></marker>
+    </defs>
+
+    <!-- loop labels -->
+    <text class="lab" x="40" y="200" style="fill:var(--deep)">DEEP LOOP</text>
+    <text class="lab" x="860" y="200" text-anchor="end" style="fill:var(--wide)">WIDE LOOP</text>
+
+    <!-- start -->
+    <rect x="330" y="14" width="240" height="52" rx="26" fill="var(--start-bg)" stroke="var(--start)" stroke-width="2"/>
+    <text class="t" x="450" y="38" text-anchor="middle">Code Zero</text>
+    <text class="s" x="450" y="56" text-anchor="middle">generation 0, nothing added</text>
+    <path class="edge" d="M450 66 V 104" marker-end="url(#a)"/>
+
+    <!-- library -->
+    <rect x="300" y="108" width="300" height="78" rx="12" fill="var(--core-bg)" stroke="var(--core)" stroke-width="2"/>
+    <text class="t" x="450" y="138" text-anchor="middle">Library</text>
+    <text class="s" x="450" y="158" text-anchor="middle">the champion: a weighted sum</text>
+    <text class="s" x="450" y="176" text-anchor="middle">of the features kept so far</text>
+
+    <!-- deep loop -->
+    <path class="edge deep" d="M300 147 C 160 147, 160 160, 160 244" marker-end="url(#ad)"/>
+    <rect x="50" y="248" width="220" height="70" rx="12" fill="var(--deep-bg)" stroke="var(--deep)" stroke-width="2"/>
+    <text class="t" x="160" y="276" text-anchor="middle">Inspect</text>
+    <text class="s" x="160" y="298" text-anchor="middle">its packings vs near-optimal</text>
+    <path class="edge deep" d="M160 318 V 354" marker-end="url(#ad)"/>
+    <rect x="50" y="358" width="220" height="70" rx="12" fill="var(--deep-bg)" stroke="var(--deep)" stroke-width="2"/>
+    <text class="t" x="160" y="386" text-anchor="middle">Researcher</text>
+    <text class="s" x="160" y="408" text-anchor="middle">proposes feature ideas</text>
+    <path class="edge deep" d="M160 428 V 464" marker-end="url(#ad)"/>
+    <rect x="50" y="468" width="220" height="70" rx="12" fill="var(--deep-bg)" stroke="var(--deep)" stroke-width="2"/>
+    <text class="t" x="160" y="496" text-anchor="middle">Coder</text>
+    <text class="s" x="160" y="518" text-anchor="middle">writes each idea as a feature</text>
+    <path class="edge deep" d="M160 538 C 160 620, 220 640, 296 640" marker-end="url(#ad)"/>
+
+    <!-- wide loop -->
+    <path class="edge wide" d="M600 147 C 740 147, 740 160, 740 354" marker-end="url(#aw)"/>
+    <rect x="630" y="358" width="220" height="70" rx="12" fill="var(--wide-bg)" stroke="var(--wide)" stroke-width="2"/>
+    <text class="t" x="740" y="386" text-anchor="middle">Mutator</text>
+    <text class="s" x="740" y="408" text-anchor="middle">variants + fresh features</text>
+    <text class="note" x="740" y="452" text-anchor="middle">air gap: sees only the</text>
+    <text class="note" x="740" y="468" text-anchor="middle">champion's code and score</text>
+    <path class="edge wide" d="M740 480 C 740 620, 680 640, 604 640" marker-end="url(#aw)"/>
+
+    <!-- fit and accept -->
+    <rect x="300" y="580" width="300" height="120" rx="12" fill="var(--core-bg)" stroke="var(--core)" stroke-width="2"/>
+    <text class="t" x="450" y="610" text-anchor="middle">Fit and accept</text>
+    <text class="s" x="450" y="634" text-anchor="middle">optimiser sets every weight</text>
+    <text class="s" x="450" y="654" text-anchor="middle">each feature tested with vs without it</text>
+    <text class="s" x="450" y="674" text-anchor="middle">kept only if it helps on validation</text>
+
+    <!-- back to the library -->
+    <path class="edge back" d="M450 580 V 190" marker-end="url(#ac)"/>
+    <text class="note" x="462" y="380">new champion,</text>
+    <text class="note" x="462" y="396">next generation</text>
+
+    <text class="note" x="450" y="740" text-anchor="middle">The evaluator scores every champion; the held-out test split is used only at the end.</text>
+  </svg>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evolutionary Code Search — Two-Loop Algorithm</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #EEF2F6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #263238;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1560px;
+    margin: 28px auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(15, 30, 50, 0.10);
+    padding: 28px 28px 8px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    letter-spacing: -0.2px;
+    color: #1A237E;
+  }
+  .sub {
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    color: #607D8B;
+    line-height: 1.55;
+    max-width: 1100px;
+  }
+  .sub strong { color: #37474F; }
+  svg { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Evolutionary Code Search — Two-Loop Algorithm</h1>
+  <p class="sub">
+    One shared <strong>evaluator</strong>. Two directions branch out of it: a
+    <strong>deep</strong> branch that forms and tests hypotheses, and a
+    <strong>wide</strong> branch that keeps generating diversity. Both loops return to the same evaluator.
+  </p>
+
+  <svg viewBox="0 0 1500 1100" xmlns="http://www.w3.org/2000/svg"
+       role="img" aria-label="Flowchart of the two-loop evolutionary code search algorithm">
+
+    <defs>
+      <marker id="arw-deep" viewBox="0 0 10 10" refX="10" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="#E8710A"/>
+      </marker>
+      <marker id="arw-wide" viewBox="0 0 10 10" refX="10" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="#1A73E8"/>
+      </marker>
+    </defs>
+
+    <!-- ================= LOOP BADGES ================= -->
+    <g>
+      <rect x="155" y="288" width="190" height="28" rx="14"
+            fill="#FFF4E5" stroke="#E8710A" stroke-width="1.5"/>
+      <text x="250" y="306" text-anchor="middle" font-size="12"
+            font-weight="700" fill="#B45309" letter-spacing="1">DEEP LOOP</text>
+
+      <rect x="1145" y="288" width="190" height="28" rx="14"
+            fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
+      <text x="1240" y="306" text-anchor="middle" font-size="12"
+            font-weight="700" fill="#174EA6" letter-spacing="1">WIDE LOOP</text>
+    </g>
+
+    <!-- ================= EVALUATOR (single shared node) ================= -->
+    <g>
+      <rect x="570" y="80" width="340" height="180" rx="18"
+            fill="#FFF4E5" stroke="#E8710A" stroke-width="3.5"/>
+      <text x="740" y="118" text-anchor="middle" font-size="18"
+            font-weight="700" fill="#B45309" letter-spacing="0.5">EVALUATOR</text>
+      <text x="740" y="140" text-anchor="middle" font-size="11.5"
+            fill="#B45309">the single shared node — both loops pass through it</text>
+
+      <rect x="600" y="155" width="280" height="86" rx="10"
+            fill="#FFFFFF" stroke="#E8710A" stroke-width="1.5" stroke-dasharray="6 4"/>
+      <text x="740" y="180" text-anchor="middle" font-size="12"
+            font-weight="700" fill="#B45309">THE PROBLEM LIVES HERE</text>
+      <text x="740" y="200" text-anchor="middle" font-size="11"
+            fill="#B45309">fitness / scoring function, treated as a black box.</text>
+      <text x="740" y="219" text-anchor="middle" font-size="11"
+            fill="#B45309">Every generated algorithm is written to solve it.</text>
+    </g>
+
+    <!-- ================= DEEP LOOP NODES ================= -->
+    <!-- Researcher LLM -->
+    <g>
+      <rect x="120" y="340" width="260" height="110" rx="14"
+            fill="#F3E5F5" stroke="#6A1B9A" stroke-width="2"/>
+      <text x="250" y="376" text-anchor="middle" font-size="16"
+            font-weight="700" fill="#4A148C">Researcher LLM</text>
+      <text x="250" y="398" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">reads ranked scores, works out</text>
+      <text x="250" y="416" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">why programs did well or badly</text>
+      <text x="250" y="434" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">→ forms hypotheses</text>
+    </g>
+
+    <!-- Coder LLM -->
+    <g>
+      <rect x="120" y="550" width="260" height="110" rx="14"
+            fill="#F3E5F5" stroke="#6A1B9A" stroke-width="2"/>
+      <text x="250" y="586" text-anchor="middle" font-size="16"
+            font-weight="700" fill="#4A148C">Coder LLM</text>
+      <text x="250" y="608" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">writes one program per hypothesis,</text>
+      <text x="250" y="626" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">isolating a single variable</text>
+      <text x="250" y="644" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">(Wordle-style: change one letter)</text>
+    </g>
+
+    <!-- Specialized Programs (code) -->
+    <g>
+      <rect x="120" y="760" width="260" height="90" rx="14"
+            fill="#E6F4EA" stroke="#188038" stroke-width="2"/>
+      <text x="250" y="793" text-anchor="middle" font-size="15"
+            font-weight="700" fill="#0D652D">Specialized Programs</text>
+      <text x="250" y="814" text-anchor="middle" font-size="11"
+            fill="#0D652D">generated code — one per hypothesis,</text>
+      <text x="250" y="831" text-anchor="middle" font-size="11"
+            fill="#0D652D">each exaggerating one aspect</text>
+    </g>
+
+    <!-- ================= WIDE LOOP NODES ================= -->
+    <!-- Code Zero (code) -->
+    <g>
+      <rect x="1110" y="330" width="260" height="70" rx="14"
+            fill="#E6F4EA" stroke="#188038" stroke-width="2"/>
+      <text x="1240" y="361" text-anchor="middle" font-size="15"
+            font-weight="700" fill="#0D652D">Code Zero</text>
+      <text x="1240" y="381" text-anchor="middle" font-size="11"
+            fill="#0D652D">the initial seed program</text>
+    </g>
+
+    <!-- Mutator LLM -->
+    <g>
+      <rect x="1110" y="520" width="260" height="110" rx="14"
+            fill="#F3E5F5" stroke="#6A1B9A" stroke-width="2"/>
+      <text x="1240" y="556" text-anchor="middle" font-size="16"
+            font-weight="700" fill="#4A148C">Mutator LLM</text>
+      <text x="1240" y="578" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">diversifies — generates variants</text>
+      <text x="1240" y="596" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">with no research direction.</text>
+      <text x="1240" y="614" text-anchor="middle" font-size="11.5"
+            fill="#4A148C">Goes wide, on purpose.</text>
+    </g>
+
+    <!-- Variant Programs (code) -->
+    <g>
+      <rect x="1110" y="740" width="260" height="90" rx="14"
+            fill="#E6F4EA" stroke="#188038" stroke-width="2"/>
+      <text x="1240" y="773" text-anchor="middle" font-size="15"
+            font-weight="700" fill="#0D652D">Variant Programs</text>
+      <text x="1240" y="794" text-anchor="middle" font-size="11"
+            fill="#0D652D">generated code — new candidates</text>
+      <text x="1240" y="811" text-anchor="middle" font-size="11"
+            fill="#0D652D">aimed at general improvement</text>
+    </g>
+
+    <!-- ================= DEEP LOOP ARROWS (amber) ================= -->
+    <g fill="none" stroke="#E8710A" stroke-width="2.2" stroke-linecap="round">
+      <!-- Evaluator -> Researcher -->
+      <path d="M 570 200 C 480 200, 470 395, 382 395" marker-end="url(#arw-deep)"/>
+      <!-- Researcher -> Coder -->
+      <path d="M 250 450 L 250 546" marker-end="url(#arw-deep)"/>
+      <!-- Coder -> Specialized -->
+      <path d="M 250 660 L 250 756" marker-end="url(#arw-deep)"/>
+      <!-- Specialized -> Evaluator -->
+      <path d="M 380 805 C 520 805, 560 500, 660 262" marker-end="url(#arw-deep)"/>
+    </g>
+
+    <!-- ================= WIDE LOOP ARROWS (blue) ================= -->
+    <g fill="none" stroke="#1A73E8" stroke-width="2.2" stroke-linecap="round">
+      <!-- Evaluator -> Mutator -->
+      <path d="M 910 200 C 1000 200, 1010 575, 1108 575" marker-end="url(#arw-wide)"/>
+      <!-- Mutator -> Variant -->
+      <path d="M 1240 630 L 1240 736" marker-end="url(#arw-wide)"/>
+      <!-- Variant -> Evaluator -->
+      <path d="M 1110 785 C 990 785, 950 500, 820 262" marker-end="url(#arw-wide)"/>
+      <!-- Code Zero -> Mutator -->
+      <path d="M 1240 400 L 1240 516" marker-end="url(#arw-wide)"/>
+    </g>
+
+    <!-- ================= EDGE LABELS ================= -->
+    <!-- 1. Evaluator -> Researcher -->
+    <g>
+      <rect x="395" y="286" width="162" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="476" y="301" text-anchor="middle" font-size="11.5" fill="#8D4E00">ranked programs + scores</text>
+    </g>
+
+    <!-- 2. Researcher -> Coder -->
+    <g>
+      <rect x="262" y="492" width="126" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="325" y="507" text-anchor="middle" font-size="11.5" fill="#8D4E00">hypotheses H1 … Hn</text>
+    </g>
+
+    <!-- 3. Coder -> Specialized -->
+    <g>
+      <rect x="262" y="701" width="176" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="350" y="716" text-anchor="middle" font-size="11.5" fill="#8D4E00">one program per hypothesis</text>
+    </g>
+
+    <!-- 4. Specialized -> Evaluator -->
+    <g>
+      <rect x="450" y="612" width="172" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="536" y="627" text-anchor="middle" font-size="11.5" fill="#8D4E00">specialized test programs</text>
+    </g>
+
+    <!-- 5. Evaluator -> Mutator -->
+    <g>
+      <rect x="958" y="377" width="98" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="1007" y="392" text-anchor="middle" font-size="11.5" fill="#0D47A1">top X programs</text>
+    </g>
+
+    <!-- 6. Mutator -> Variant -->
+    <g>
+      <rect x="1094" y="677" width="132" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="1160" y="692" text-anchor="middle" font-size="11.5" fill="#0D47A1">diversified variants</text>
+    </g>
+
+    <!-- 7. Variant -> Evaluator -->
+    <g>
+      <rect x="930" y="722" width="176" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="1018" y="737" text-anchor="middle" font-size="11.5" fill="#0D47A1">new candidate programs</text>
+    </g>
+
+    <!-- 8. Code Zero -> Mutator -->
+    <g>
+      <rect x="1148" y="448" width="92" height="22" rx="5" fill="#FFFFFF" opacity="0.94"/>
+      <text x="1194" y="463" text-anchor="middle" font-size="11.5" fill="#0D47A1">initial seed</text>
+    </g>
+
+    <!-- ================= LEGEND ================= -->
+    <g>
+      <rect x="120" y="880" width="400" height="140" rx="12"
+            fill="#F8FAFC" stroke="#CFD8DC" stroke-width="1.5"/>
+      <text x="142" y="908" font-size="12" font-weight="700"
+            fill="#37474F" letter-spacing="0.9">NODE TYPES</text>
+
+      <rect x="142" y="922" width="26" height="18" rx="5"
+            fill="#F3E5F5" stroke="#6A1B9A" stroke-width="1.8"/>
+      <text x="178" y="936" font-size="11.5" fill="#37474F">
+        <tspan font-weight="700" fill="#4A148C">LLM agent</tspan> — mutator / researcher / coder
+      </text>
+
+      <rect x="142" y="952" width="26" height="18" rx="5"
+            fill="#FFF4E5" stroke="#E8710A" stroke-width="1.8"/>
+      <text x="178" y="966" font-size="11.5" fill="#37474F">
+        <tspan font-weight="700" fill="#B45309">Evaluator</tspan> — exactly one, shared by both loops
+      </text>
+
+      <rect x="142" y="982" width="26" height="18" rx="5"
+            fill="#E6F4EA" stroke="#188038" stroke-width="1.8"/>
+      <text x="178" y="996" font-size="11.5" fill="#37474F">
+        <tspan font-weight="700" fill="#0D652D">Code / algorithm</tspan> — generated programs
+      </text>
+    </g>
+
+    <!-- ================= AIR GAP NOTE ================= -->
+    <g>
+      <rect x="560" y="880" width="460" height="140" rx="12"
+            fill="#FFFDE7" stroke="#F9A825" stroke-width="1.6" stroke-dasharray="7 5"/>
+      <text x="582" y="908" font-size="12" font-weight="700"
+            fill="#F57F17" letter-spacing="0.9">AIR GAP</text>
+      <text x="582" y="934" font-size="11.5" fill="#5D4037">
+        The Mutator only ever receives selected programs
+      </text>
+      <text x="582" y="953" font-size="11.5" fill="#5D4037">
+        and their scores. It never sees the hypotheses or
+      </text>
+      <text x="582" y="972" font-size="11.5" fill="#5D4037">
+        the research direction.
+      </text>
+      <text x="582" y="998" font-size="11.5" font-style="italic" fill="#8D6E63">
+        This is what keeps the wide loop wide.
+      </text>
+    </g>
+
+    <!-- ================= WHY TWO LOOPS NOTE ================= -->
+    <g>
+      <rect x="1050" y="880" width="350" height="140" rx="12"
+            fill="#F8FAFC" stroke="#CFD8DC" stroke-width="1.5"/>
+      <text x="1072" y="908" font-size="12" font-weight="700"
+            fill="#37474F" letter-spacing="0.9">WHY TWO LOOPS</text>
+
+      <text x="1072" y="934" font-size="11.5" fill="#37474F">
+        <tspan font-weight="700" fill="#B45309">DEEP</tspan> — hypothesise, test in isolation,
+      </text>
+      <text x="1072" y="952" font-size="11.5" fill="#37474F">
+        keep what works. Goes narrow.
+      </text>
+
+      <text x="1072" y="978" font-size="11.5" fill="#37474F">
+        <tspan font-weight="700" fill="#174EA6">WIDE</tspan> — mutate broadly with no direction.
+      </text>
+      <text x="1072" y="996" font-size="11.5" fill="#37474F">
+        Prevents premature narrowing.
+      </text>
+    </g>
+
+  </svg>
+</div>
+</body>
+</html>
