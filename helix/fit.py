@@ -232,9 +232,10 @@ class Fitter:
         return best[1], best[0], best[2]
 
     def line_search(self, features, x0, index, budget, best, split="train", scale=1.0):
-        """One weight: a log-spaced grid of both signs in one batch, then a finer grid around the best point."""
+        """One weight: steps of both signs from its current value on a log-spaced grid, in one batch, then a
+        finer grid around the best point."""
         mags = scale * np.array([0.01, 0.03, 0.1, 0.3, 1.0, 3.0])
-        grid = sorted(set(np.round(np.concatenate([-mags, mags, [x0[index]]]), 6)))
+        grid = sorted(set(np.round(x0[index] + np.concatenate([-mags, [0.0], mags]), 6)))
         tried = {}
 
         def run(values):
@@ -251,7 +252,7 @@ class Fitter:
                 tried[round(v, 6)] = s
                 if s is not None and s > best[0]:
                     best = (s, x, fams)
-        run([v for v in grid if v != round(x0[index], 6)])
+        run(sorted((v for v in grid if v != round(x0[index], 6)), key=lambda v: abs(v - x0[index])))   # small steps first
         if budget > len(tried):
             w = best[1][index]
             pos = grid.index(min(grid, key=lambda g: abs(g - w)))

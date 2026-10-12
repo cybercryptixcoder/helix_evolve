@@ -88,8 +88,8 @@ def feature_records(folder):
 def feature_sections(run, features):
     clean = lambda s: " ".join(str(s or "").split()).replace("|", "/")
     lines = ["## Features by branch", "",
-             "Each feature is tried by searching its own weights with the rest of the policy fixed; *validation gain* "
-             "is the change in score on validation instances the fitting never sees, which decides what is kept.", "",
+             "Each feature is tried against the same refit without it; *validation gain* is the difference in score "
+             "on validation instances the fitting never sees, which decides what is kept.", "",
              "| Branch | Written | Invalid | Tried | Kept | Retired later | Best validation gain |", "|---|---|---|---|---|---|---|"]
     for b in ("deep", "wide"):
         fs = [f for f in features.values() if f.get("branch") == b]

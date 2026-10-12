@@ -30,7 +30,7 @@ class Feature:
     name: str                       # short_snake_case name
     code: str                       # source defining `feature(item, bins, capacity)`
     description: str = ""
-    branch: str = "seed"            # seed | deep | wide
+    branch: str = "deep"            # deep | wide
     generation: int = 0
     hypothesis_id: str | None = None
     parent_ids: list = field(default_factory=list)   # features it varies or combines (wide)
@@ -212,63 +212,3 @@ def split_vector(features, x):
 
 def join_vector(features):
     return [w for f in features for w in f.weights]
-
-
-# ---------------------------------------------------------------- the textbook starting library
-# The usual measurements of a candidate bin, from Best Fit and its relatives in the vector-packing
-# literature, computed together in one feature (one pass is much faster than eighteen).
-# Leftovers are computed as (bins - item) / cap: integers subtracted first, so equal leftovers stay exactly
-# equal and ties still go to the oldest bin (bins/cap - item/cap would break ties at random, which costs
-# Best Fit about 0.15 of score).
-TEXTBOOK_COLUMNS = [
-    ("leftover_sum", "total room left after placing the job (CPU + memory, as fractions)"),
-    ("leftover_max", "the larger leftover after placing"),
-    ("leftover_min", "the smaller leftover after placing"),
-    ("imbalance", "|CPU left - memory left| after placing"),
-    ("complement", "leftover skewed against the job's own skew"),
-    ("leftover_product", "product of the two leftovers"),
-    ("alignment", "cosine between the bin's room and the job"),
-    ("fullness", "how full the bin already is"),
-    ("closes_one", "close to exhausting one resource after placing"),
-    ("closes_both", "close to full in both resources after placing"),
-    ("new_bin", "1 for the new bin"),
-    ("new_bin_x_size", "the new bin, weighted by the job's size"),
-    ("new_bin_x_skew", "the new bin, weighted by how lopsided the job is"),
-    ("leftover_sq", "sum of squared leftovers"),
-    ("skew_x_imbalance", "lopsided job times lopsided leftover"),
-    ("age", "older bins first"),
-    ("leftover_geomean", "geometric mean of the leftovers"),
-    ("fit_ratio", "share of the bin's tighter remaining resource the job takes"),
-]
-
-TEXTBOOK_CODE = '''def feature(item, bins, capacity):
-    """The textbook measurements of each candidate bin (18 values per bin, in TEXTBOOK_COLUMNS order)."""
-    cap = capacity.astype(float)
-    d = item / cap
-    r = bins / cap
-    L = (bins - item) / cap
-    Lc, Lm = L[:, 0], L[:, 1]
-    mx, mn = np.maximum(Lc, Lm), np.minimum(Lc, Lm)
-    skew = d[0] - d[1]
-    k = len(bins)
-    new = np.zeros(k)
-    new[-1] = 1.0
-    rn = np.sqrt((r * r).sum(axis=1)) + 1e-9
-    dn = math.sqrt(float(d[0] * d[0] + d[1] * d[1])) + 1e-9
-    return np.stack([
-        Lc + Lm, mx, mn, np.abs(Lc - Lm), (Lm - Lc) * skew, Lc * Lm, (r @ d) / (rn * dn),
-        2.0 - r.sum(axis=1), np.exp(-np.maximum(mn, 0.0) / 0.05), np.exp(-np.maximum(mx, 0.0) / 0.1),
-        new, new * (d[0] + d[1]), new * abs(skew), Lc * Lc + Lm * Lm, abs(skew) * np.abs(Lc - Lm),
-        -np.arange(k) / max(k, 1), np.sqrt(np.maximum(Lc * Lm, 0.0)),
-        np.minimum(d[0] / np.maximum(r[:, 0], 1e-9), d[1] / np.maximum(r[:, 1], 1e-9)),
-    ], axis=1)
-'''
-
-
-def textbook_feature():
-    """The starting library: the textbook measurements, all weights 0 except Best Fit's (-1 on leftover_sum
-    once scaled), so generation 0 starts from Code Zero and the first fit starts from Best Fit."""
-    names = [c for c, _ in TEXTBOOK_COLUMNS]
-    return Feature(id="f0001", name="textbook", code=TEXTBOOK_CODE, branch="seed", status="active",
-                   description="the usual measurements of a candidate bin: " + "; ".join(f"{c}: {d}" for c, d in TEXTBOOK_COLUMNS),
-                   columns=names, scales=[1.0] * len(names), weights=[0.0] * len(names))
