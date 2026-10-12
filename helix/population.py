@@ -37,6 +37,9 @@ class Program:
     repaired: bool = False
     duplicate_of: str | None = None
     probe: bool = False               # a knock-out measurement: kept in the log, not a candidate for the pool
+    trial: bool = False               # feature engine: a candidate feature tried on the champion; never the best
+    valid_score: float | None = None  # feature engine: score on the validation instances
+    features: list | None = None      # feature engine: the feature ids this policy uses
 
     @property
     def rank_key(self):
@@ -63,6 +66,7 @@ class Hypothesis:
     kind: str = "improve"             # cause = knock-out measurement; improve = attempt to beat the base
     builds_on: str = ""               # the hypothesis id this test follows from, if any
     raw_delta: float | None = None    # score change as the Coder wrote it, when its new numbers were then tuned
+    feature_id: str | None = None     # feature engine: the feature written for this idea
 
 
 def judge(h, base, new, epsilon):
@@ -113,7 +117,7 @@ class Store:
         self.programs = {}
         self.hypotheses = []
         self._by_hash = {}
-        self._counters = {"p": 0, "h": 0}
+        self._counters = {"p": 0, "h": 0, "f": 0}
         self._lock = threading.Lock()
         self.mirror = None        # optional MongoDB copy (helix/mongo.py), set by run.py
 
@@ -142,7 +146,7 @@ class Store:
             return self._best_unlocked()
 
     def _best_unlocked(self):
-        valid = [p for p in self.programs.values() if p.valid and not p.probe]   # measurements never lead
+        valid = [p for p in self.programs.values() if p.valid and not p.probe and not p.trial]   # measurements never lead
         return max(valid, key=lambda p: p.rank_key) if valid else None
 
     # ------------------------------------------------------------ recording

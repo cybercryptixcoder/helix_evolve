@@ -105,12 +105,16 @@ class Settings:
         except json.JSONDecodeError:
             raise SystemExit(f"LUMINAL_EXTRA_BODY isn't valid JSON: {extra!r}")
         s.stream = (env("HELIX_STREAM") or "1").strip().lower() not in ("0", "false", "no", "off")
-        # DeepSeek-V4.1-Flash on Luminal: with hidden thinking on it reasons for 16k+ tokens (~90 s) and
-        # often never answers; with it off it answers in seconds. The agents still reason, in the reply
-        # itself (every prompt asks for reasoning before the answer). HELIX_THINKING=on turns it back on.
-        thinking_on = (env("HELIX_THINKING") or "off").strip().lower() in ("1", "on", "true", "yes")
-        if s.provider == "luminal" and "chat_template_kwargs" not in s.extra_body:
-            s.extra_body["chat_template_kwargs"] = {"thinking": thinking_on}
+        # Hidden thinking. Luminal passes DeepSeek-V4.1-Flash requests through to DeepSeek's own API, where
+        # the switch is `reasoning_effort`: the chat-template flags (thinking / enable_thinking) are ignored.
+        # Measured with Helix's real prompts (luminal_probe, Oct 2026): with "none" the Mutator answered 3/3
+        # in ~5 s; with anything else it thought for ~12,000 characters and was cut off 3/3. Default "none";
+        # HELIX_THINKING=low|medium|high turns thinking back on.
+        effort = (env("HELIX_THINKING") or "none").strip().lower()
+        effort = {"off": "none", "0": "none", "false": "none", "no": "none", "on": "medium", "1": "medium",
+                  "true": "medium", "yes": "medium"}.get(effort, effort)
+        if s.provider == "luminal" and "reasoning_effort" not in s.extra_body:
+            s.extra_body["reasoning_effort"] = effort
         if env("HELIX_MAX_TOKENS"):
             s.max_tokens = int(env("HELIX_MAX_TOKENS"))
         for key, value in overrides.items():
@@ -446,7 +450,16 @@ class FakeLLM(LLM):
         finish = "stop"
         with self._lock:
             roll = self.rng.random()
-            if role == "researcher":
+            if role.startswith("feature_researcher"):
+                text = self._feature_ideas(user)
+            elif role.startswith(("feature_coder", "feature_mutator")):
+                if role == "feature_mutator" and roll < 0.15:
+                    text, finish = "We need a new feature. Let me think about the bins...\n```python\ndef feature(item, bins", "length"
+                elif roll > 0.9 and not role.endswith(("repair", "retry")):
+                    text = "```python\nimport numpy as np\n\ndef feature(item, bins, capacity):\n    return np.zeros(3)\n```\nname: broken_shape"
+                else:
+                    text = self._feature()
+            elif role == "researcher":
                 text = self._hypotheses(user)
             elif role == "mutator" and roll < 0.15:   # deliberates until it's cut off: exercises the retry
                 text, finish = "We need to write a new priority function. Let me think about the bins...\n```python\nimport numpy as np\n\ndef priority(item, bins", "length"
@@ -468,6 +481,27 @@ class FakeLLM(LLM):
             "    return scores\n```\n"
             f"Weighted leftover with a balance term (a={a}, b={b}, c={c}, new-bin penalty {d})."
         )
+
+    def _feature(self):
+        kind = self.rng.randrange(4)
+        t = round(self.rng.uniform(0.05, 0.4), 3)
+        body = ["return np.exp(-np.maximum(L.min(axis=1), 0) / %s)" % t,
+                "return ((L[:, 0] >= %s) & (L[:, 1] >= %s)).astype(float)" % (t, t),
+                "return np.abs(L[:, 0] - L[:, 1]) * (abs(d[0] - d[1]) > %s)" % t,
+                "return np.minimum(L[:, 0], L[:, 1]) - %s * np.maximum(L[:, 0], L[:, 1])" % t][kind]
+        name = ["near_full_%d" % int(t * 100), "room_for_more_%d" % int(t * 100), "lopsided_gap_%d" % int(t * 100),
+                "balanced_room_%d" % int(t * 100)][kind]
+        return ("```python\nimport numpy as np\n\n\ndef feature(item, bins, capacity):\n"
+                f'    """Fake feature {name}."""\n'
+                "    cap = capacity.astype(float)\n    d = item / cap\n    L = (bins - item) / cap\n"
+                f"    {body}\n```\nname: {name}")
+
+    def _feature_ideas(self, user):
+        n = int((re.search(r"exactly (\d+) new features", user) or [0, 3])[1])
+        ideas = [{"name": f"fake_idea_{i}", "claim": "Fake: the policy strands bins in large; the optimum builds triples.",
+                  "feature": "1 if the room left after placing could still take a medium job in both resources",
+                  "target": "large: fewer 2-job bins", "builds_on": ""} for i in range(n)]
+        return "```json\n" + json.dumps({"hypotheses": ideas}, indent=1) + "\n```\nAnalysis: fake."
 
     def _hypotheses(self, user):
         champ = (re.search(r"## The champion: (\S+),", user) or [0, "unknown"])[1]

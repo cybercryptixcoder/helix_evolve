@@ -157,9 +157,10 @@ def _greedy_packing(sizes, cap, order):
     return bins
 
 
-def optimal_bounds(items, cap, seconds=600, extra_columns=20, naive=0, dive_seconds=180):
+def optimal_bounds(items, cap, seconds=600, extra_columns=20, naive=0, dive_seconds=180, keep_packing=None):
     """(lower, upper, lp, iterations, proven): bounds on the optimal number of bins for one instance.
-    `naive` is the simple bound: once the LP can't beat it, column generation stops early."""
+    `naive` is the simple bound: once the LP can't beat it, column generation stops early. Pass a list as
+    `keep_packing` to receive the best packing found (lists of job indices)."""
     import highspy
     from .reference import bins_used
 
@@ -226,8 +227,11 @@ def optimal_bounds(items, cap, seconds=600, extra_columns=20, naive=0, dive_seco
         added = add(sets, duals if price_at is duals else None) + add(_greedy_packing(sizes, cap, order), duals)
         if added == 0:
             break
-    if math.ceil(lower - 1e-6) < upper:
-        upper = min(upper, _dive(h, columns, add, sizes, cap, time.time() + dive_seconds, extra_columns))
+    if math.ceil(lower - 1e-6) < upper or keep_packing is not None:
+        packing = _dive(h, columns, add, sizes, cap, time.time() + dive_seconds, extra_columns)
+        if keep_packing is not None:
+            keep_packing[:] = packing
+        upper = min(upper, len(packing))
     return math.ceil(lower - 1e-6), upper, round(lp, 4), it, proven
 
 
@@ -237,7 +241,7 @@ def _dive(h, columns, add, sizes, cap, deadline, extra_columns):
     and pack whatever remains biggest first when time runs out."""
     n = len(sizes)
     covered = np.zeros(n, dtype=bool)
-    bins = 0
+    packing = []
     inf = 1e30
     steps = 0
     while not covered.all() and time.time() < deadline:
@@ -258,7 +262,7 @@ def _dive(h, columns, add, sizes, cap, deadline, extra_columns):
             if rest:
                 covered[rest] = True
                 newly += rest
-                bins += 1
+                packing.append([int(i) for i in rest])
         if not newly:
             break
         idx = np.asarray(sorted(set(newly)), dtype=np.int32)
@@ -266,8 +270,61 @@ def _dive(h, columns, add, sizes, cap, deadline, extra_columns):
     left = np.nonzero(~covered)[0]
     if len(left):
         norm = sizes[left] / np.asarray(cap, dtype=float)
-        bins += len(_greedy_packing(sizes, cap, left[np.argsort(-norm.max(axis=1), kind="stable")]))
-    return bins
+        packing += _greedy_packing(sizes, cap, left[np.argsort(-norm.max(axis=1), kind="stable")])
+    return packing
+
+
+# ---------------------------------------------------------------- near-optimal packings to compare against
+PACKINGS_FILE = Path(__file__).resolve().parent / "optimal_packings.json"
+
+
+def diagnostic_instances():
+    """One train instance per family: the ones whose packings the Researcher gets to look at."""
+    seen, out = set(), []
+    for inst in _instances("train"):
+        if inst["family"] not in seen:
+            seen.add(inst["family"])
+            out.append(inst)
+    return out
+
+
+def load_packings():
+    """{instance id: {"family", "bins": [[job index, ...], ...], "lower", "fingerprint"}} for instances whose
+    fingerprint still matches the evaluator's; {} if the file is missing."""
+    try:
+        stored = json.loads(PACKINGS_FILE.read_text())["instances"]
+    except (OSError, ValueError, KeyError):
+        return {}
+    current = {inst["id"]: fingerprint(inst) for inst in diagnostic_instances()}
+    return {k: v for k, v in stored.items() if current.get(k) == v.get("fingerprint")}
+
+
+def _packing_one(args):
+    inst, seconds = args
+    packing = []
+    lower, upper, lp, it, proven = optimal_bounds(inst["items"], inst["capacity"], seconds=seconds,
+                                                  naive=inst["lower_bound"], dive_seconds=seconds,
+                                                  keep_packing=packing)
+    if not packing or len(packing) > upper:
+        return inst["id"], None
+    return inst["id"], {"family": inst["family"], "bins": packing, "lower": max(lower, inst["lower_bound"]),
+                        "fingerprint": fingerprint(inst)}
+
+
+def compute_packings(seconds=400, workers=2):
+    """Near-optimal packings of the diagnostic instances (LP + dive), saved to optimal_packings.json."""
+    have = load_packings()
+    jobs = [(inst, seconds) for inst in diagnostic_instances() if inst["id"] not in have]
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        for key, r in pool.map(_packing_one, jobs):
+            if r is None:
+                print(f"{key}: no packing found", flush=True)
+                continue
+            have[key] = r
+            print(f"{key:16s} near-optimal packing: {len(r['bins'])} bins (optimum at least {r['lower']})", flush=True)
+            PACKINGS_FILE.write_text(json.dumps({"about": "Near-optimal packings of one train instance per family "
+                                                 "(python -m helix.bounds --packings), for helix/instruments.py.",
+                                                 "instances": have}))
 
 
 def _compute_one(args):
@@ -319,7 +376,10 @@ if __name__ == "__main__":
     ap.add_argument("--workers", type=int, default=2, help="instances solved in parallel")
     ap.add_argument("--family", action="append", help="only these families (repeatable)")
     ap.add_argument("--force", action="store_true", help="recompute instances that already have bounds")
+    ap.add_argument("--packings", action="store_true", help="compute near-optimal packings for the instruments")
     a = ap.parse_args()
     if a.compute:
         compute(a.seconds, a.workers, set(a.family) if a.family else None, a.force)
+    if a.packings:
+        compute_packings(a.seconds, a.workers)
     show()

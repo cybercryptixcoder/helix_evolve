@@ -1,4 +1,6 @@
 numpy          # required (also needed by the evaluator)
+cma            # the feature engine's optimiser (CMA-ES)
 certifi        # root certificates for HTTPS (python.org Python on macOS has none)
 matplotlib     # charts in the report and published results
 pymongo        # only if you set MONGODB_URI
+# highspy      # only to recompute the optimal-packing bounds (python -m helix.bounds --compute)

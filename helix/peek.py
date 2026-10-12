@@ -98,7 +98,7 @@ def load_state(run_dir):
     programs = read_jsonl(d / "programs.jsonl")
     hyps = read_jsonl(d / "hypotheses.jsonl")
     valid = [p for p in programs if p.get("valid")]
-    leaders = [p for p in valid if not p.get("probe")]       # knock-out measurements never lead
+    leaders = [p for p in valid if not p.get("probe") and not p.get("trial")]   # measurements never lead
     best = max(leaders, key=lambda p: p["score"]) if leaders else None
     seed = next((p for p in programs if p.get("branch") == "seed"), None)
     errors = Counter(_first_error_line(p["error"]) for p in programs if not p.get("valid") and p.get("error"))
@@ -108,7 +108,8 @@ def load_state(run_dir):
         "config": read_json(d / "config.json", {}) or {},
         "generations": read_jsonl(d / "generations.jsonl"),
         "programs": [{k: p.get(k) for k in ("id", "generation", "branch", "parent_id", "hypothesis_id", "note",
-                                            "valid", "score", "families", "repaired", "duplicate_of", "model", "probe")}
+                                            "valid", "score", "families", "repaired", "duplicate_of", "model", "probe", "trial",
+                                            "valid_score")}
                      | {"error": _first_error_line(p.get("error"))} for p in programs],
         "hypotheses": hyps,
         "best": best,
@@ -154,7 +155,8 @@ def snapshot(run_dir):
 
     out.append("\n== Generations (score = -mean excess %, higher is better)")
     for g in s["generations"][-12:]:
-        parts = [f"gen {g['generation']:>2}: best {g.get('best_score', 0):.3f}"]
+        parts = [f"gen {g['generation']:>2}: best {g.get('best_score', 0):.3f}"
+                 + (f" (validation {g['valid_score']:.3f})" if g.get("valid_score") is not None else "")]
         for b in ("deep", "wide"):
             r = g.get(b)
             if r:
@@ -165,6 +167,8 @@ def snapshot(run_dir):
         if t:
             bn = f", best {t['best_new']:.3f}" if t.get("best_new") is not None else ""
             parts.append(f"tune {t.get('improved', 0)}/{len(t.get('targets', []))} improved{bn} ({t.get('tried', 0)} tries)")
+        if g.get("accepted") is not None:
+            parts.append(f"kept {', '.join(g['accepted']) or 'nothing'}" + (f", retired {', '.join(g['retired'])}" if g.get("retired") else ""))
         if g.get("seconds"):
             parts.append(f"{g['seconds']}s")
         out.append(" | ".join(parts))
@@ -179,7 +183,7 @@ def snapshot(run_dir):
             out.append(f"{p['id']} {p['score']:.3f} {p['branch']} | {fams} | {(p['note'] or '')[:120]}")
 
     calls = tail_jsonl(Path(run_dir) / "llm_calls.jsonl", 150)
-    research = [c for c in calls if c.get("role") == "researcher" and c.get("reply")]
+    research = [c for c in calls if c.get("role") in ("researcher", "feature_researcher") and c.get("reply")]
     if research:
         r = research[-1]
         out.append(f"\n== Latest Researcher call ({r.get('model')}, {r.get('seconds')}s)")

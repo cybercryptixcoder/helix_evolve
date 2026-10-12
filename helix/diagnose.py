@@ -40,7 +40,7 @@ def main():
         ("1. real prompt, streamed (what runs use now)", {}),
         ("2. real prompt, NOT streamed (the old way)", {"stream": False}),
         ("3. streamed + reasoning_effort low", {"extra": {"reasoning_effort": "low"}}),
-        ("4. streamed + thinking off (chat_template_kwargs)", {"extra": {"chat_template_kwargs": {"thinking": False}}}),
+        ("4. streamed + reasoning_effort none (the default)", {"extra": {"reasoning_effort": "none"}}),
     ]
     print("Sending 4 real-sized requests at once (up to a few minutes)...\n", flush=True)
     with ThreadPoolExecutor(len(tests)) as ex:

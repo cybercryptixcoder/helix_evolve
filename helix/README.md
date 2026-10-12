@@ -1,6 +1,13 @@
 # Helix: the evolution loop
 
-Two loops of LLM agents share one evaluator. The **deep** loop works out why the best program wins and tests one idea at a time. The **wide** loop writes variants of the best programs, plus a few fresh ideas, without seeing the research (the air gap). A **tune** step polishes the numbers in the programs, so the agents can spend their effort on structure. The problem and the evaluator are described in `../CONTRACT.md` and `../evaluator/README.md`.
+Two loops of LLM agents share one evaluator. The **deep** loop studies how the best policy loses and tests one idea at a time. The **wide** loop writes variations without seeing the research (the air gap). The problem and the evaluator are described in `../CONTRACT.md` and `../evaluator/README.md`.
+
+There are two engines:
+
+- **Feature engine** (the default): agents write *features*, small functions that measure a candidate bin. The policy is a weighted sum of them; an optimiser (CMA-ES) fits the weights on the training instances, and separate validation instances decide which features are kept. The Researcher sees the policy's packings next to near-optimal packings of the same jobs.
+- **Program engine** (`--engine programs`, version 1): agents write whole `priority()` programs, numbers included, and a tune step polishes the numbers.
+
+Why the switch: two runs of the program engine stalled at 19% and 27% of the way from Code Zero to the optimal packing, while the optimiser alone, over textbook measurements and with no LLM, reached 35%, and 40% with ten features aimed at what optimal packings do differently. Agents are good at ideas and bad at numbers, and they were working blind. The feature engine gives each job to the part that's good at it.
 
 ## Start here: the dashboard
 
@@ -10,12 +17,12 @@ python -m helix.ui            # opens http://127.0.0.1:8765
 ```
 
 1. **Connect:** pick Luminal Cloud or a local model, paste the URL, key and model, press **Test model**. MongoDB is optional. Everything is saved to `helix/.env`, which is gitignored.
-2. **New run:** pick the mode and the number of generations, press **Start**. Tick *Offline test* to check the whole pipeline with a fake model at no cost.
+2. **New run:** pick the engine, the mode and the number of generations, press **Start**. Tick *Offline test* to check the whole pipeline with a fake model at no cost.
 3. **Watch:**
    - **Health:** whether the run, the model, the evaluator, MongoDB and the optimal-packing bounds are connected and working.
    - **Tiles:** progress to optimal, extra bins vs the optimal packing, the evaluator's own score (the unit of earlier runs), and the lead over the best classic heuristic.
-   - **The loop:** a live flowchart of the current generation. The step that's running pulses, with counts (for example, Coder 3/4). Pick any past generation with the arrows. Click a step to see what it did in that generation: the Researcher's hypotheses, each test's verdict and code diff, the Mutator's variants, tuned programs, everything scored, and the pool going in and out. Click a row for the program's code, or for an agent call's full prompt, reply and reasoning.
-   - **Progress:** best program by generation or by minutes, in either unit, against the yardsticks (Code Zero, the best classic heuristic, an offline packer, the optimum). Add up to three earlier runs to compare; a table lines them up at the same generation.
+   - **The loop:** a live flowchart of the current generation. The step that's running pulses, with counts (for example, Coder 3/4). Pick any past generation with the arrows. Click a step to see what it did in that generation. Feature engine: the library going in (each feature's weights and importance), the packing comparison the Researcher read, its feature ideas and their verdicts, each feature's code and its gain on train and validation, and what was kept or retired. Program engine: the hypotheses, each test's code diff, the Mutator's variants, tuned programs and the pool. Click a row for the code, or for an agent call's full prompt, reply and reasoning.
+   - **Progress:** best program by generation or by minutes, in either unit, against the yardsticks (Code Zero, the best classic heuristic, an offline packer, the optimum). Markers show each generation's best deep and best Mutator result. Add up to three earlier runs to compare; a table lines them up at the same generation.
 4. **Controls:** **Stop** finishes the current generation; **Kill** stops at once; **Resume** continues a stopped run; **Held-out check** scores the best program on the test split; **Publish** copies the trace into `results/`.
 
 Runs are separate processes: closing the dashboard doesn't stop a run, and reopening it picks the run back up. Published runs in `results/` can be opened and compared too.
@@ -52,60 +59,59 @@ Run everything from the repo root.
 | Command | What it does |
 |---|---|
 | `python -m helix.llm` | Check the model connection |
-| `python -m helix.run --generations 30` | The full algorithm |
+| `python -m helix.diagnose` | Probe the model: does it answer, does it slip into hidden reasoning |
+| `python -m helix.run --generations 30` | The full algorithm (feature engine) |
+| `python -m helix.run --engine programs --generations 30` | The program engine (version 1) |
 | `python -m helix.run --fake-llm --generations 3` | Offline test of the whole pipeline, no keys needed |
 | `python -m helix.run --mode wide-only` / `deep-only` | Controls: one loop only |
 | `python -m helix.run --mode zero-shot --n 40` | Control: best of N plain answers, no search |
 | `python -m helix.run --resume helix/runs/<run> --generations 40` | Continue a stopped run up to generation 40 |
-| `python -m helix.analyze [helix/runs/<run>]` | Diagnose a run: cut-off calls, whether wide makes variants, whether deep's tests move the score, pool memory, headroom by family |
+| `python -m helix.analyze [helix/runs/<run>]` | Diagnose a run: cut-off calls, what each branch contributed, headroom by family |
 | `python -m helix.peek [helix/runs/<run>]` | Text snapshot of a run |
 | `python -m helix.report helix/runs/<run> [more runs]` | Held-out check, charts, research log |
 | `python -m helix.publish helix/runs/<run> [--report] [--push]` | Copy the trace into `results/<run>/` |
-| `python -m helix.bounds [--compute]` | The optimal-packing bounds, by family |
+| `python -m helix.bounds [--compute] [--packings]` | The optimal-packing bounds by family; recompute them, or the near-optimal packings |
 | `python -m helix.reference` | The offline packer's score on train and test |
-| `python -m helix.tune programs/tuned_params.py` | Tune one program's numbers |
 | `python -m helix.sandbox programs/code_zero.py` | Score one program by hand |
 
 Main options (defaults in brackets):
-- **Wide:** `--variants 6` Mutator programs per generation, of which `--fresh 2` are fresh ideas; `--top-x 4` programs the Mutator works from.
-- **Deep:** `--hypotheses 4` per generation; `--epsilon 0.05` smallest score change judged supported or refuted; `--jump 0.15` gain that earns a new champion knock-out tests; `--stall 3` generations without progress before the search pushes for bigger changes; `--judge-tune-evals 16` evaluations spent tuning a test's new numbers before it's judged.
-- **Tune:** `--tune/--no-tune` (on in full mode), `--tune-evals 48`, `--tune-targets 2`, `--tune-seconds 40`.
-- **Pool:** `--pool-size 8`, `--max-siblings 3`.
-- **Run:** `--max-minutes`, `--workers 12`, `--pro-every 10`.
+- **Both engines:** `--hypotheses 4` Researcher ideas per generation; `--variants` Mutator outputs per generation (4 features / 6 programs), of which `--fresh` are fresh ideas (1 / 2); `--max-minutes`, `--workers 12` agent calls in parallel, `--pro-every 10`.
+- **Feature engine:** `--initial-evals 1200` evaluations fitting the textbook features at the start (about 5 minutes on 8 cores); `--trial-evals 24` evaluations searching a new feature's weights; `--champion-refit-evals 24` evaluations refitting the champion's weights each generation; `--refit-evals 64` for the joint refit when features are kept; `--accept-margin 0.03` validation gain a feature needs (one bin saved on one of the 24 validation instances is worth about 0.017); `--max-columns 60` most weights the policy may have; `--fit-workers` CPU cores for fitting (all but one); `--seed-features textbook|none`.
+- **Program engine:** `--epsilon 0.05` smallest score change judged supported or refuted; `--jump 0.15`, `--stall 3`, `--judge-tune-evals 16`; `--tune/--no-tune`, `--tune-evals 48`, `--tune-targets 2`; `--pool-size 8`, `--max-siblings 3`, `--top-x 4`.
 
 To stop a command-line run cleanly, create a file called `STOP` in its run folder.
 
-## One generation
+## One generation of the feature engine
+
+1. **Library:** the champion policy: the features kept so far and their fitted weights. It's written out as an ordinary `priority()` program (`features.compose`), which the unchanged evaluator scores, so both engines are compared on the same score.
+2. **Inspect:** for one training instance per family, the champion's packing next to a near-optimal packing of the same jobs (`instruments.py`, from `optimal_packings.json`): jobs per bin, the most common bin make-ups by job size class, bins stranded with one resource full, room left.
+3. **Deep:** the Researcher reads that comparison, the room left per family, each feature's weight and importance, and the research log. It proposes features aimed at specific structural differences, each with the number in the comparison that should move. A Coder writes each one as `feature(item, bins, capacity)`.
+4. **Wide**, at the same time: the Mutator sees only the policy's code and its score. It writes variants of the policy's features (a different form, a condition, a combination) and fresh ones.
+5. **Fit:** first the champion's own weights are refitted (no new feature), so fitting keeps improving the policy and that gain is credited to fitting, never to a feature. Then each new feature is checked (it runs, returns finite values of the right shape, isn't much slower; one repair if not) and tried: **only its own weights are searched**, with the champion's weights fixed (a line search for a single value, CMA-ES for several), so it's judged by what it adds. The result is scored on the validation instances, which the fitting never sees: 24 new instances (4 per training family) from the evaluator's own generator, with a seed no split uses.
+6. **Accept:** features that gain at least `--accept-margin` on validation (and anything on train) are combined greedily, best first: each joins only if validation improves again with it, so the result is never worse than the best single feature. Then all the weights are refitted together. Features whose removal would score better on validation are retired. The new champion is scored by the evaluator; each idea's verdict goes into the research log.
+
+Generation 0 is Code Zero plus the textbook features (Best Fit and its relatives, 18 values) with fitted weights, before any agent has written anything. The fitting runs the evaluator's simulation in-process on a pool of worker processes, with the evaluator's own restricted builtins; features may only import `numpy` and `math`.
+
+**The air gap is enforced in code.** `roles.feature_mutator_message` (and `mutator_message` in the program engine) only accepts a `Scored(code, score)` object and raises an error on anything else, so the Mutator can't see the packings, the hypotheses or the research log.
+
+## One generation of the program engine
 
 The branches run at the same time, from the same pool.
 
-1. **Pool:** the best `--pool-size` programs found so far, with at most `--max-siblings` children of one parent. Selection is (μ+λ): the old pool and everything new compete on score, so good programs aren't forgotten.
-2. **Deep** (`researcher`, then `coder`):
-   - The Researcher studies the **champion** (the best program). It sees:
-     - what changed from the champion's parent;
-     - knock-out results on the champion and its ancestors;
-     - where the real room is: each family's excess minus the optimum's;
-     - the other pool programs and the research log.
-   - It proposes **cause** tests (knock-outs, only on a champion that jumped by `--jump` and only on its new parts) and **improve** tests (one new mechanism each).
-   - The Coder writes each test. An improve test's new numbers are tuned before it's judged (**tune-then-judge**), so a new idea is compared at a good weight, not at a guessed one. In run 2, five of the eight near-miss tests on the stuck champion would have beaten it this way.
-   - After `--stall` generations without a structural gain, the Researcher is told small edits are exhausted, and the Mutator gets an extra fresh-idea slot.
-3. **Wide** (`mutator`): from only the top programs' code and scores, the Mutator writes **variants** (keep the core, make one or two bold changes) and a few **fresh ideas**.
-4. **Tune:** a local search over the numeric constants of the champion and of the best untuned newcomer. A tuned program joins the pool if it gains `--tune-margin`.
+1. **Pool:** the best `--pool-size` programs found so far, with at most `--max-siblings` children of one parent. Selection is (μ+λ).
+2. **Deep:** the Researcher studies the champion (what changed from its parent, knock-out results, the room per family, the research log) and proposes cause tests (knock-outs) and improve tests. The Coder writes each test; an improve test's new numbers are tuned before it's judged.
+3. **Wide:** from only the top programs' code and scores, the Mutator writes variants and a few fresh ideas.
+4. **Tune:** a local search over the numeric constants of the champion and of the best untuned newcomer.
 5. **Merge** into the next pool.
-
-Generation 0 is Code Zero plus one wide batch. Each candidate is checked on the evaluator's tiny `quick` split before the full `train` split, and a failed program gets one repair attempt with its error.
-
-**The air gap is enforced in code.** `roles.mutator_message` only accepts `Scored(code, score)` objects and raises an error on anything else, so the Mutator can't see hypotheses or the research log.
 
 ### Keeping calls short and reliable
 
-Run 2 lost most of its LLM time to replies that never answered: with thinking switched off, the model still slipped into hidden reasoning in 102 of 186 Mutator calls and ran to the token limit. Now:
+Run 2 lost most of its LLM time to replies that never answered, and run 3 failed outright: the model kept slipping into hidden reasoning and running to the token limit. On Luminal, only `reasoning_effort: "none"` switches that off (a probe: 3 of 3 Mutator calls answered in about 5 s, against 0 of 3 with every other setting), so Helix sends it by default (`HELIX_THINKING=on` turns reasoning back on). Also:
 
-- Every role has its own output limit (Mutator 4,000 tokens, Coder 4,000, Researcher 6,000).
-- A streamed reply that has produced only hidden reasoning for too long is cut short at once.
-- The Mutator and Coder write code first. A reply without a program gets one retry asking for only the code, showing the agent what it had written so the idea isn't lost.
-- The Researcher writes its JSON first. Hypotheses it finished are kept even if the reply is cut off, and a reply with none gets one JSON-only retry.
-- Overload (HTTP 429/503) halves the number of calls in flight and recovers gradually; a model that isn't answering is waited for before a generation is spent on it.
+- Every role has its own output limit, and a streamed reply that has produced only hidden reasoning for too long is cut short at once.
+- Coders and the Mutator write code first; a reply without code gets one code-only retry.
+- The Researcher writes its JSON first; finished ideas are kept even if the reply is cut off, and a reply with none gets one JSON-only retry.
+- Overload (HTTP 429/503) halves the number of calls in flight and recovers gradually.
 
 `python -m helix.analyze` shows how often each of these still happens in a run.
 
@@ -116,9 +122,10 @@ Every run writes everything as it happens to `helix/runs/<run>/` (gitignored):
 | File | Contents |
 |---|---|
 | `llm_calls.jsonl` | Every prompt and reply, the model's reasoning, tokens, seconds, why it ended, and the generation, program and hypothesis it belongs to |
-| `programs.jsonl` | Every program: code, scores per family, branch, parent, hypothesis |
+| `programs.jsonl` | Every program: code, scores per family, branch, parent, hypothesis. In the feature engine: each champion, and each feature's trial (the champion plus that feature, refitted; marked `trial`, never the best) |
+| `features.jsonl` | Feature engine: every feature, with its code, author, verdict, gain on train and validation, weights and importance |
 | `hypotheses.jsonl` | The research log, with verdicts, score change as written and after tuning, and which families moved |
-| `generations.jsonl` | Each generation's pool, best program, branch results, timing and LLM usage |
+| `generations.jsonl` | Each generation's best program, branch results, timing and LLM usage; in the feature engine also the library, the packing comparison and the champion's weights (which is what `--resume` continues from) |
 | `status.json` | Live state: generation, what each step of the loop is doing, best score, errors |
 | `best_program.py`, `candidates/` | The best program so far, and every candidate as a `.py` file |
 | `console.log` | Console output when started from the dashboard |
@@ -137,12 +144,17 @@ With `MONGODB_URI` set, every program, hypothesis, generation and the run's stat
 | File | Purpose |
 |---|---|
 | `ui.py`, `dashboard.html` | The dashboard: local server and its single page |
-| `run.py` | The loop, the controls, live status, stop and resume |
+| `run.py` | The program engine, the controls, live status, stop and resume |
+| `evolve.py` | The feature engine's loop |
+| `features.py` | Features: checking an agent's code, the textbook features, composing a policy into a `priority()` program |
+| `fit.py` | Fitting: parallel scoring of weight vectors, CMA-ES, validation, importance |
+| `instruments.py` | The packing comparison the Researcher reads |
 | `roles.py` | Builds each agent's message and parses its reply |
-| `prompts/*.md` | The system prompts: `mutator`, `researcher`, `coder`, `zeroshot`, and the shared `problem` statement |
+| `prompts/*.md` | The system prompts: `feature_*` for the feature engine; `mutator`, `researcher`, `coder`, `zeroshot` and `problem` for the program engine |
 | `llm.py` | Model client: Luminal or local, per-role limits, streaming, retries, call log, offline fake |
-| `tune.py` | Finds a program's tunable numbers and runs the local search |
-| `bounds.py`, `bounds.json` | Bounds on the optimal packing of every instance |
+| `diagnose.py` | Probes the model connection and its reasoning settings |
+| `tune.py` | Finds a program's tunable numbers and runs the local search (program engine) |
+| `bounds.py`, `bounds.json`, `optimal_packings.json` | Bounds on the optimal packing of every instance, and near-optimal packings of the diagnostic instances |
 | `metrics.py` | The readable units and the yardsticks |
 | `reference.py`, `references/` | The offline packer, and the classic online heuristics |
 | `analyze.py` | Run diagnostics |
