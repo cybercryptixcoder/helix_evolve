@@ -214,7 +214,9 @@ class Fitter:
             x = x0.copy()
             x[idx] = z
             return x
-        pop = max(4, min(12, self.workers * 2 if self.workers > 1 else 6))
+        # CMA-ES's own population size (12 for 18 weights). Parallelism doesn't depend on it: every
+        # (weights, instance) pair is its own task.
+        pop = 4 + int(3 * math.log(len(idx)))
         es = cma.CMAEvolutionStrategy(x0[idx], sigma, {"popsize": pop, "maxfevals": budget, "verbose": -9,
                                                        "seed": seed + 1, "CMA_diagonal": len(idx) > 20})
         while not es.stop():
