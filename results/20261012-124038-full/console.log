@@ -1,0 +1,140 @@
+
+$ python -m helix.run --run-dir /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-124038-full --mode full --engine features --generations 10 --max-minutes 0 --hypotheses 4 --pro-every 10 --workers 12 --initial-evals 1200 --trial-evals 24 --refit-evals 64 --accept-margin 0.03
+Helix | engine features | mode full | models luminal: deepseek-ai/DeepSeek-V4.1-Flash
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-124038-full
+   checking the model is answering (before starting)...
+   model is answering
+── generation 0: Code Zero scores -9.181 (p0001)
+   textbook features, weights fitted (1200 evaluations): train -6.320, valid -6.817
+
+── generation 1: deep + wide | champion p0002 train -6.320 valid -6.817 | 1 features, 18 weights
+   champion refit (no new feature): train +0.066, valid +0.081
+   f0007 deep anticorr_strand_avoidance    train +0.034  valid -0.043
+   f0008 deep bimodal_big_pair_completion  train +0.018  valid -0.030
+   f0009 deep small_bin_fill_efficiency    train +0.000  valid +0.000
+   f0006 deep large_3job_viability         train +0.019  valid -0.040
+   f0005 wide balanced_fill_ratio          train +0.005  valid +0.047
+   f0002 wide new_bin_shape_mismatch       train +0.031  valid -0.040
+   f0004 wide wide_f0004                   train +0.070  valid -0.003
+   f0003 wide wide_f0003                   train +0.036  valid -0.070
+   kept f0005 (wide) balanced_fill_ratio
+   champion p0003: train -6.214, valid -6.503 | 9 LLM calls | 71.8s (agents 12s, fit 59s)
+
+── generation 2: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0016 deep last_fit_slot                train +0.020  valid +0.015
+   f0017 deep future_medium_capacity       train +0.000  valid +0.000
+   f0014 deep third_job_slot_exists        train +0.000  valid +0.000
+   f0015 deep residual_shape_match         train +0.028  valid -0.289
+   f0012 wide wide_f0012                   train +0.000  valid +0.000
+   f0011 wide balanced_fill_ratio_lopsided train +0.061  valid -0.156
+   f0013 wide wide_f0013                   train +0.000  valid +0.000
+   f0010 wide wide_f0010                   train +0.000  valid +0.000
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 18 LLM calls | 62.7s (agents 11s, fit 52s)
+
+── generation 3: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0023 deep last_fitting_job_penalty     train +0.082  valid -0.101
+   f0024 deep residual_matches_lopsided_sh train +0.000  valid +0.000
+   f0022 deep residual_fits_medium_pair    train +0.000  valid +0.029
+   f0025 deep count_of_small_jobs_remainin train +0.000  valid +0.000
+   f0021 wide binding_axis_shape_match     train +0.000  valid +0.000
+   f0019 wide age_gated_tightness          train +0.052  valid -0.028
+   f0020 wide tight_fill_min_resource      train +0.020  valid -0.042
+   f0018 wide lopsided_tight_fill_gap      invalid: ```python import numpy as np import math def _f0005_variant(item, bins, capacity): """Fil…
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 28 LLM calls | 54.3s (agents 10s, fit 44s)
+
+── generation 4: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0031 deep future_lopsided_fit          train +0.028  valid -0.289
+   f0033 deep two_large_pair_residual      train +0.000  valid +0.000
+   f0030 deep residual_pair_fit_count      train +0.000  valid +0.000
+   f0032 deep residual_small_job_capacity  train +0.020  valid -0.123
+   f0027 wide wide_f0027                   train +0.000  valid +0.000
+   f0028 wide wide_f0028                   train +0.000  valid +0.000
+   f0026 wide age_weighted_leftover        train +0.000  valid +0.000
+   f0029 wide tight_side_room              train +0.000  valid +0.000
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 38 LLM calls | 58.8s (agents 13s, fit 46s)
+
+── generation 5: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0038 deep residual_fits_medium_pair    train +0.000  valid +0.000
+   f0041 deep residual_matches_arriving_sh train +0.000  valid +0.000
+   f0039 deep lopsided_residual_room       train +0.059  valid -0.126
+   f0040 deep residual_can_close_with_smal train +0.053  valid -0.043
+   f0034 wide new_bin_tight_slack_gap      train +0.000  valid +0.000
+   f0036 wide near_full_leftover_balance   train +0.000  valid +0.000
+   f0037 wide slack_direction_alignment    train +0.000  valid +0.000
+   f0035 wide textbook_complement_shape_mi train +0.000  valid +0.000
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 47 LLM calls | 63.6s (agents 17s, fit 46s)
+
+── generation 6: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0046 deep residual_can_take_second_lar train +0.032  valid +0.015
+   f0048 deep future_small_job_count       train +0.000  valid +0.000
+   f0049 deep second_large_pairing_room    train +0.032  valid +0.015
+   f0047 deep lopsided_pair_completion     train +0.000  valid +0.000
+   f0045 wide memory_scarcity_agreement    train +0.000  valid +0.000
+   f0043 wide asymmetric_tight_fill_balanc train +0.000  valid +0.000
+   f0042 wide wide_f0042                   train +0.061  valid -0.048
+   f0044 wide wide_f0044                   train +0.133  valid -0.053
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 56 LLM calls | 67.7s (agents 12s, fit 56s)
+
+── generation 7: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0056 deep residual_fits_medium_complem train +0.000  valid +0.000
+   f0055 deep residual_holds_lopsided_pair train +0.000  valid +0.000
+   f0057 deep residual_holds_two_large_bim train +0.073  valid -0.155
+   f0054 deep residual_holds_second_large  train +0.041  valid -0.042
+   f0052 wide wide_f0052                   train +0.000  valid +0.000
+   f0051 wide age_weighted_fit_tightness   train +0.000  valid +0.000
+   f0053 wide complementary_slack_after_bi train +0.062  valid -0.074
+   f0050 wide tight_bin_residual_balance   train +0.020  valid +0.017
+   kept nothing
+   champion p0003: train -6.214, valid -6.503 | 65 LLM calls | 60.2s (agents 10s, fit 50s)
+
+── generation 8: deep + wide | champion p0003 train -6.214 valid -6.503 | 2 features, 19 weights
+   f0064 deep residual_takes_two_small     train +0.000  valid +0.000
+   f0065 deep large_job_pair_or_three      train +0.090  valid -0.071
+   f0062 deep residual_takes_typical_small train +0.000  valid +0.000
+   f0063 deep residual_pair_complement     train +0.000  valid +0.000
+   f0061 wide wide_f0061                   train +0.060  valid -0.022
+   f0059 wide wide_f0059                   train +0.000  valid +0.000
+   f0058 wide age_discounted_tight_fill    train +0.029  valid +0.074
+   f0060 wide wide_f0060                   train +0.014  valid -0.128
+   joint refit gained on train (-6.166) but not on validation (-6.524); not used
+   kept f0058 (wide) age_discounted_tight_fill
+   champion p0060: train -6.185, valid -6.430 | 74 LLM calls | 88.7s (agents 11s, fit 76s)
+
+── generation 9: deep + wide | champion p0060 train -6.185 valid -6.430 | 3 features, 20 weights
+   f0071 deep three_job_completion_count   train +0.005  valid +0.000
+   f0072 deep small_job_headroom_after_pla train +0.044  valid -0.080
+   f0073 deep bimodal_large_pair_residual  train +0.022  valid -0.043
+   f0070 deep residual_pair_completability train +0.032  valid -0.235
+   f0066 wide age_gated_both_tight_fill    train +0.064  valid -0.084
+   f0069 wide wide_f0069                   train +0.044  valid -0.013
+   f0067 wide recency_weighted_geometry    train +0.037  valid -0.110
+   f0068 wide wide_f0068                   invalid: ```python import numpy as np import math def _f0001_new_bin_variant(item, bins, capacity)…
+   kept nothing
+   champion p0060: train -6.185, valid -6.430 | 85 LLM calls | 73.9s (agents 12s, fit 62s)
+
+── generation 10: deep + wide | champion p0060 train -6.185 valid -6.430 | 3 features, 20 weights
+   f0081 deep large_pair_residual_shape    train +0.040  valid -0.185
+   f0078 deep residual_pair_completable    train +0.075  valid -0.015
+   f0080 deep residual_small_fit_count     train +0.045  valid -0.101
+   f0079 deep completes_to_medium_triple   train +0.069  valid -0.115
+   f0075 wide new_bin_signed_by_skew       train +0.005  valid +0.000
+   f0077 wide paired_leftover_harmonic_hea train +0.007  valid -0.137
+   f0074 wide wide_f0074                   train +0.005  valid +0.000
+   f0076 wide unabsorbable_waste           invalid: ValueError: the feature returned shape (2,) for 1 candidate bins; it must return one valu…
+   kept nothing
+   champion p0060: train -6.185, valid -6.430 | 95 LLM calls | 69.1s (agents 12s, fit 57s)
+
+══ done
+best: p0060 score -6.185 (Code Zero -9.181, gain +2.996), found in generation 8 by the wide branch
+LLM: 95 calls (0 pro), 208,399 tokens in, 39,693 out
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-124038-full
+final held-out check:  python -m helix.report /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-124038-full
+features kept: 2 (f0005 balanced_fill_ratio (wide), f0058 age_discounted_tight_fill (wide)); tried: 80
+Publishing the final trace with the held-out check...
+Scoring the best program, Code Zero and the baselines on the held-out test split...
+published to results/20261012-124038-full  (commit it, or use Publish on the dashboard)

@@ -1,0 +1,64 @@
+{
+  "state": "stopped",
+  "pid": 24174,
+  "mode": "full",
+  "schedule": "parallel",
+  "generation": 17,
+  "generations": 30,
+  "started": 1791806835.83427,
+  "error": null,
+  "phase": "",
+  "flow": {
+    "pool": {
+      "state": "done",
+      "note": "8 programs, best -7.511 (p0074)"
+    },
+    "researcher": {
+      "state": "failed",
+      "note": "no usable hypotheses after a retry"
+    },
+    "coder": {
+      "state": "off"
+    },
+    "mutator": {
+      "state": "done",
+      "done": 6,
+      "total": 6,
+      "note": "3/6 valid, best -7.995"
+    },
+    "tune": {
+      "state": "done",
+      "note": "0 of 0 improved (0 evaluations)"
+    },
+    "evaluator": {
+      "state": "done",
+      "running": 0,
+      "done": 3
+    },
+    "merge": {
+      "state": "done",
+      "note": "kept 0 new of 6; best -7.511 (p0074)"
+    }
+  },
+  "flow_generation": 17,
+  "updated": 1791809099.71574,
+  "llm": {
+    "calls": 273,
+    "tokens_in": 730702,
+    "tokens_out": 991757,
+    "pro_calls": 0,
+    "in_flight": 0,
+    "retrying": 0,
+    "limit": 12,
+    "note": null
+  },
+  "best_id": "p0074",
+  "best_score": -7.5115,
+  "mongo": {
+    "enabled": false,
+    "written": 0,
+    "dropped": 0,
+    "error": null
+  },
+  "finished": 1791809099.7157052
+}

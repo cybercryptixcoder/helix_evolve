@@ -1,0 +1,153 @@
+HELIX SNAPSHOT  run 20261011-185558-full  (19:42:12)
+State: finished | generation 30/30 | phase: - | elapsed 46.2 min
+Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 6, hypotheses 4
+LLM so far: 423 calls (0 pro), 1,433,858 tokens in, 1,434,639 out
+Programs: 291 made, 284 valid, 90 repaired, 1 duplicates
+Best: p0279 score -6.793 (deep branch, generation 29), gain +2.388 over Code Zero -9.181
+
+== Generations (score = -mean excess %, higher is better)
+gen 19: best -6.855 | deep 4/4 valid, best new -6.905 [flat 4] | wide 6/6 valid, best new -7.002 | 106.1s
+gen 20: best -6.855 | deep 4/4 valid, best new -6.887 [flat 4] | wide 5/6 valid, best new -7.213 | 111.3s
+gen 21: best -6.855 | deep 4/4 valid, best new -6.965 [flat 4] | wide 6/6 valid, best new -8.216 | 90.0s
+gen 22: best -6.855 | deep 4/4 valid, best new -6.868 [flat 4] | wide 6/6 valid, best new -7.209 | 97.8s
+gen 23: best -6.855 | deep 0/0 valid, best new none | wide 6/6 valid, best new -7.744 | 100.0s
+gen 24: best -6.855 | deep 0/0 valid, best new none | wide 5/6 valid, best new -7.923 | 104.9s
+gen 25: best -6.855 | deep 0/0 valid, best new none | wide 6/6 valid, best new -7.698 | 104.3s
+gen 26: best -6.855 | deep 4/4 valid, best new -6.926 [flat 4] | wide 6/6 valid, best new -7.098 | 91.4s
+gen 27: best -6.855 | deep 4/4 valid, best new -6.907 [flat 4] | wide 6/6 valid, best new -7.293 | 104.6s
+gen 28: best -6.855 | deep 0/0 valid, best new none | wide 6/6 valid, best new -6.950 | 93.2s
+gen 29: best -6.793 | deep 4/4 valid, best new -6.793 [flat 4] | wide 6/6 valid, best new -7.190 | 91.3s
+gen 30: best -6.793 | deep 4/4 valid, best new -6.835 [minor 1, flat 2, matters 1] | wide 6/6 valid, best new -6.943 | 50.9s
+
+== Current pool, best first
+p0279 -6.793 deep | uniform 4.4 correlated 3.1 anticorr 15.1 small 1.9 large 10.6 bimodal 5.7 | I added the skew-weighted compensation term with a squared skew factor, keeping all existing coefficients and the new-bi
+p0290 -6.835 deep | uniform 4.5 correlated 3.1 anticorr 15.3 small 1.9 large 10.6 bimodal 5.7 | I changed only the comp coefficient from 0.35 to 0.50 in the skew-weighted compensation term, leaving everything else id
+p0287 -6.943 wide | uniform 4.2 correlated 3.1 anticorr 15.3 small 2.2 large 10.6 bimodal 6.3 | The family of programs shown all score the same way: fit + balance + geometry + a soft new-bin penalty. Their weakness i
+p0286 -6.959 wide | uniform 4.4 correlated 3.2 anticorr 15.2 small 2.5 large 10.6 bimodal 5.9 | I need to design a new priority function for online 2D vector bin packing. The current best is around -6.79 to -7.02. Le
+p0291 -6.990 deep | uniform 4.2 correlated 3.1 anticorr 15.7 small 2.8 large 10.5 bimodal 5.6 | I add the directional `align` term (cosine between the leftover direction and the job direction, scaled by job-magnitude
+
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 43.73s)
+Reasoning (excerpt): Let me analyze the champion p0279. Its parts:
+1. fit = min(min(it/rc, it/rm), 1.0), coefficient (1.05 + 0.25*used)
+2. bal = -|Lc - Lm|, coefficient 0.90
+3. geom = -sqrt(Lc*Lm), coefficient 0.50
+4. usable = min(2*weak, 1.0), coefficient 0.35
+5. accept = min(2*Lc,1)*min(2*Lm,1), coefficient 0.15
+6. comp = clip(d0-d1, -1,1)*(Lm-Lc), coefficient (0.35*|d0-d1|^2) — this is the new part! Note it's |d0-d1|^2, which corresponds to h0098 which scored +0.062. So the champion's jump came from squaring the skew factor (h0098). That's the new thing.
+7. Adaptive new-bin penalty: score[-1] -= 0.16 - 0.12*used.
+
+So the champion is p0137 + comp with squared skew coefficient 0.35*|d0-d1|^2. This matches h0098, which was the +0.062 improvement.
+
+No knock-outs yet on this champion. So I should do cause tests on parts not knocked out yet. The plan says 2 cause tests knocking out one part each, choosing parts not knocked out yet. Since none have been knocked out, I can choose any. Good candidates: the comp term (the new one), the fit term, bal, geom, usable, accept, the adaptive penalty.
+
+Let me pick two cause tests. Good choices: 
+- Knock out the comp term (set coefficient to 0) — but that's the new part, likely the biggest contributor. Actually we want to know its worth. But since we already know h0098 gave +0.062 from squaring the skew, the term itself... we don't know the removal cost. Let's do it.
+- Knock out the adaptive new-bin penalty (score[-1] -= ...) — set to 0. This is historically the most load-bearing part.
+
+Actually the instructions say pick parts not knocked out yet. Since no knock-outs, I can pick any two. Let me choose the two most informative: the comp term (new part that made the jump) and the adaptive penalty (historically biggest lever).
+
+For improve tests: moderate cha
+[...]
+se removal cost the most are why it wins: aim improve tests at those." We don't have knock-outs, but historically penalty (-1.836), usable (-0.865), bal (-0.571), accept (-0.345). These matter. Two improve tests should aim at these. But they've been probed heavily...
+
+The only unexplored direction is the comp term (new). So I1 on comp is right. For I2, maybe refine comp further with a second independent knob: the leftover asymmetry term (Lm-Lc) saturating. h0097 tried tanh and lost -0.167 (but that was comp^1 on p0137). With comp^2 now, maybe tanh helps? Hmm.
+
+Alternatively I2: change comp to use the leftover direction properly with normalization. 
+
+I think I'll do I2 as: sharpen the skew ex
+Reply: ```json
+{"hypotheses": [
+  {"kind": "cause",
+   "base": "p0279",
+   "claim": "p0279 is p0137 plus the complementarity term comp = clip(d0-d1,-1,1)*(Lm-Lc) scaled by |d0-d1|^2 at 0.35 (the h0098 edit, which is exactly the +0.062 jump). Knock it out to measure the whole term's worth; h0098 moved anticorr -0.46 with negligible collateral, so removal should cost the most on anticorr.",
+   "change": "Delete the comp contribution: remove the final '+ (0.35*np.abs(d0-d1)**2)*comp' from the score line (keep d0,d1 computed and every other term/coefficient and the adaptive new-bin penalty identical).",
+   "prediction": "Score drops notably; worst damage on anticorr (the family comp targets), small/uniform essentially unchanged.",
+   "builds_on": "h0098"},
+  {"kind": "cause",
+   "base": "p0279",
+   "claim": "The adaptive new-bin penalty score[-1] -= (0.16 - 0.12*used) is historically the single most load-bearing structural part (h0049: -1.836 on removal, damage worst on small). p0279 keeps it unchanged, so removing it on this champion should reproduce that dominant small-family cost and calibrate how much of p0279's edge rests on it.",
+   "change": "Delete the line 'score[-1] -= 0.16 - 0.12*used' entirely (keep all term coefficients and comp as-is).",
+   "prediction": "Large score drop; excess blows up most on small and uniform where jobs are tiny and would flood into fresh bins.",
+   "builds_on": ""},
+  {"kind": "improve",
+   "base": "p0279",
+   "claim": "h0098 squaring the skew factor (0.35*|d0-d1|^2) removed almost all the collateral damage that the linear comp (0.35*|d0-d1|, h0085) still paid on small (+0.31) and uniform (+0.26), and it moved anticorr -0.46 for a net +0.062. That means the comp signal is now nearly free and still under-weighted: anticorr remains by far the worst family (15.15), so a moderate coefficient increase should convert more anticorr gain while the squared skew keeps balanced jobs quiet.",
+   "change": "In p0279 change the comp coefficient from 0.35 to 0.50: score += (0.50*np.abs(d0-d1)**2)*comp, keeping comp = np.clip(d0-d1,-1,1)*(Lm-Lc), all other coefficients and the adaptive new-bin penalty identical.",
+   "prediction": "Anticorr improves further; small/uniform stay near flat (small risk of mild bimodal drift).",
+   "builds_on": "h0098"},
+  {"kind": "improve",
+   "base": "p0279",
+   "claim": "p0281 (=-7.016) carries a distinct directional signal, align = -cos(item dir, leftover dir)*(dn/sqrt2), which penalises a bin whose leftover points the same way as the arriving job - a normalised cousin of comp aimed at exactly the anticorr/large pairing problem. p0279 has comp but no directional term, and its two worst families are anticorr (15.15) and large (10.62). Transplanting align at a modest weight should reinforce the same pairing pressure comp gives without the over-commitment seen when p0268's align ran at 0.55 (h0100).",
+   "change": "In p0279 add d = [it0/cap0, it1/cap1], dn = norm(d)+1e-9, du = d/dn, Ln = norm([Lc,Lm])+1e-9
+
+== Latest verdicts
+h0100 gen 29 improve flat -0.067 on p0268: p0268 is the strongest child of the champion (-6.950) and is p0137 plus an alignment term (cosine between item direction and leftover direction, scaled by item  || change: In p0268 change the align coefficient from 0.55 to 0.40, keeping align = -cos * (dn / np.sqrt(2.0)), bal 0.85, geom 0.45
+h0099 gen 29 improve flat -0.147 on p0137 (builds on h0093): bal = -|Lc - Lm| is the champion's second-biggest lever (h0057: removal -0.571, damage worst on large +2.22, small +1.57). Its weight is peaked (h0060 up -0.169 || change: In p0137 replace bal = -np.abs(Lc - Lm) with bal = -(0.5 * np.abs(Lc - Lm) + 0.5 * (Lc - Lm)**2); keep the bal coefficie
+h0098 gen 29 improve flat +0.062 on p0137 (builds on h0085): h0085 (skew-coefficient 0.35) was the best comp variant at only -0.012 overall, essentially break-even on the champion. The remaining damage is concentrated in  || change: In p0137 add d0 = it[0]/cap[0], d1 = it[1]/cap[1], comp = np.clip(d0 - d1, -1.0, 1.0) * (Lm - Lc); append (0.35 * np.abs
+h0097 gen 29 improve flat -0.167 on p0137 (builds on h0085): The skew-scaled complementarity term is the only structural addition that reliably improves anticorr (15.61, by far the worst family). The logged sweep is nearl || change: In p0137 add d0 = it[0]/cap[0], d1 = it[1]/cap[1], comp = np.clip(d0 - d1, -1.0, 1.0) * np.tanh(2.0 * (Lm - Lc)); append
+h0101 gen 30 cause minor -0.062 on p0279 (builds on h0098): p0279 is p0137 plus the complementarity term comp = clip(d0-d1,-1,1)*(Lm-Lc) scaled by |d0-d1|^2 at 0.35 (the h0098 edit, which is exactly the +0.062 jump). Kno || change: Delete the comp contribution: remove the final '+ (0.35*np.abs(d0-d1)**2)*comp' from the score line (keep d0,d1 computed
+h0103 gen 30 improve flat -0.041 on p0279 (builds on h0098): h0098 squaring the skew factor (0.35*|d0-d1|^2) removed almost all the collateral damage that the linear comp (0.35*|d0-d1|, h0085) still paid on small (+0.31)  || change: In p0279 change the comp coefficient from 0.35 to 0.50: score += (0.50*np.abs(d0-d1)**2)*comp, keeping comp = np.clip(d0
+h0102 gen 30 cause matters -2.093 on p0279: The adaptive new-bin penalty score[-1] -= (0.16 - 0.12*used) is historically the single most load-bearing structural part (h0049: -1.836 on removal, damage wors || change: Delete the line 'score[-1] -= 0.16 - 0.12*used' entirely (keep all term coefficients and comp as-is).
+h0104 gen 30 improve flat -0.197 on p0279 (builds on h0100): p0281 (=-7.016) carries a distinct directional signal, align = -cos(item dir, leftover dir)*(dn/sqrt2), which penalises a bin whose leftover points the same way || change: In p0279 add d = [it0/cap0, it1/cap1], dn = norm(d)+1e-9, du = d/dn, Ln = norm([Lc,Lm])+1e-9, cos = (Lc*du0+Lm*du1)/Ln, 
+
+== Latest Mutator ideas
+p0282 -8.900: *Idea: score bins by the "waste" they leave in the *scarcer* future resource, using an exponential decay on leftover plus a residual-capacity tiebreaker instead of a linear weighte
+p0283 -11.518: *Idea: score bins by the *residual-shape match* — a soft-max over how well the item's demand vector aligns with the bin's remaining capacity vector, replacing the ad-hoc blend of f
+p0284 -13.596: I'll try a different structural idea: instead of scoring each bin by additive handcrafted features, I'll model the **residual "shape"** of each bin as a point and score by a *produ
+p0286 -6.959: I need to design a new priority function for online 2D vector bin packing. The current best is around -6.79 to -7.02. Let me think about what might do better. The scoring is excess
+p0285 -7.129: I need to design a new priority function that beats -7.002. Let me think about the structure. All these programs share a lot: fit, balance, geom, usable, accept, fresh-bin penalty.
+
+== Most common failures
+2x ValueError: priority returned shape (), expected (1,)
+2x reply had no ```python block defining priority()
+1x NameError: name 'np' is not defined
+1x IndexError: index 1 is out of bounds for axis 0 with size 1
+1x SyntaxError: invalid syntax
+
+== Best program (p0279)
+import numpy as np
+
+def priority(item, bins, capacity):
+    cap = np.maximum(np.asarray(capacity, dtype=float), 1.0)
+    it = np.asarray(item, dtype=float)
+    rem = np.asarray(bins, dtype=float)
+
+    rc = np.maximum(rem[:, 0], 1e-9)
+    rm = np.maximum(rem[:, 1], 1e-9)
+
+    # Normalised leftover in each resource after placing the item.
+    Lc = np.clip(rem[:, 0] - it[0], 0.0, None) / cap[0]
+    Lm = np.clip(rem[:, 1] - it[1], 0.0, None) / cap[1]
+
+    # Fit: binding-dimension tightness (prefer the bin the item nearly fills).
+    fit = np.minimum(np.minimum(it[0] / rc, it[1] / rm), 1.0)
+
+    # Balance: prefer leftover that is even across the two resources.
+    bal = -np.abs(Lc - Lm)
+
+    # Geom: prefer the small leftover *area* (well-filled bin).
+    geom = -np.sqrt(Lc * Lm)
+
+    # Usable: keep the weaker resource reasonably large for future jobs.
+    weak = np.minimum(Lc, Lm)
+    usable = np.minimum(2.0 * weak, 1.0)
+
+    # Accept: reward both leftovers being at least half a bin.
+    accept = np.minimum(2.0 * Lc, 1.0) * np.minimum(2.0 * Lm, 1.0)
+
+    # Adaptive penalty discouraging a fresh bin, weaker for big jobs.
+    used = 0.5 * (it[0] / cap[0] + it[1] / cap[1])
+    used = min(max(used, 0.0), 1.0)
+
+    # Skew-weighted compensation: only fires strongly for lopsided jobs.
+    d0 = it[0] / cap[0]
+    d1 = it[1] / cap[1]
+    comp = np.clip(d0 - d1, -1.0, 1.0) * (Lm - Lc)
+
+    score = ((1.05 + 0.25 * used) * fit + 0.90 * bal + 0.50 * geom
+             + 0.35 * usable + 0.15 * accept
+             + (0.35 * np.abs(d0 - d1) ** 2) * comp)
+
+    score[-1] -= 0.16 - 0.12 * used
+
+    return score

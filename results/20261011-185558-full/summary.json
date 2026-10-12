@@ -1,0 +1,29 @@
+{
+  "run": "20261011-185558-full",
+  "published": "2026-10-11 19:42:12",
+  "state": "finished",
+  "mode": "full",
+  "schedule": "parallel",
+  "provider": "luminal",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "pro_model": null,
+  "generations_completed": 30,
+  "code_zero": -9.1812,
+  "best_score": -6.7935,
+  "best_id": "p0279",
+  "best_branch": "deep",
+  "gain": 2.3877,
+  "best_test_score": -6.7554,
+  "code_zero_test_score": -8.9093,
+  "programs": 291,
+  "hypotheses": {
+    "no-effect": 1,
+    "minor": 9,
+    "flat": 75,
+    "matters": 16,
+    "refuted": 3
+  },
+  "llm_calls": 423,
+  "tokens_in": 1433858,
+  "tokens_out": 1434639
+}

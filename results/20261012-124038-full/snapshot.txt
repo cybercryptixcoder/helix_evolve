@@ -1,0 +1,137 @@
+HELIX SNAPSHOT  run 20261012-124038-full  (12:55:19)
+State: finished | generation 10/10 | phase: - | elapsed 14.6 min
+Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 4, hypotheses 4
+LLM so far: 95 calls (0 pro), 208,399 tokens in, 39,693 out
+Programs: 84 made, 81 valid, 0 repaired, 0 duplicates
+Best: p0060 score -6.185 (wide branch, generation 8), gain +2.996 over Code Zero -9.181
+
+== Generations (score = -mean excess %, higher is better)
+gen  0: best -6.320 (validation -6.817)
+gen  1: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.221 [refuted 3, flat 1] | wide 4/4 valid, best new -6.185 [supported 1, refuted 2, flat 1] | kept f0005 | 71.8s
+gen  2: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.187 [flat 3, refuted 1] | wide 4/4 valid, best new -6.154 [flat 3, refuted 1] | kept nothing | 62.7s
+gen  3: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.133 [refuted 1, flat 3] | wide 3/4 valid, best new -6.162 [flat 2, refuted 1, invalid 1] | kept nothing | 54.3s
+gen  4: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.187 [refuted 2, flat 2] | wide 4/4 valid, best new -6.214 [flat 4] | kept nothing | 58.8s
+gen  5: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.155 [flat 2, refuted 2] | wide 4/4 valid, best new -6.214 [flat 4] | kept nothing | 63.6s
+gen  6: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.183 [flat 4] | wide 4/4 valid, best new -6.082 [flat 2, refuted 2] | kept nothing | 67.7s
+gen  7: best -6.214 (validation -6.503) | deep 4/4 valid, best new -6.141 [flat 2, refuted 2] | wide 4/4 valid, best new -6.152 [flat 3, refuted 1] | kept nothing | 60.2s
+gen  8: best -6.185 (validation -6.430) | deep 4/4 valid, best new -6.124 [flat 3, refuted 1] | wide 4/4 valid, best new -6.154 [flat 2, supported 1, refuted 1] | kept f0058 | 88.7s
+gen  9: best -6.185 (validation -6.430) | deep 4/4 valid, best new -6.141 [flat 1, refuted 3] | wide 3/4 valid, best new -6.121 [refuted 2, flat 1, invalid 1] | kept nothing | 73.9s
+gen 10: best -6.185 (validation -6.430) | deep 4/4 valid, best new -6.110 [refuted 3, flat 1] | wide 3/4 valid, best new -6.178 [flat 2, refuted 1, invalid 1] | kept nothing | 69.1s
+
+== Current pool, best first
+p0060 -6.185 wide | uniform 4.0 correlated 2.9 anticorr 13.9 small 1.6 large 9.6 bimodal 5.2 | added f0058 age_discounted_tight_fill; validation -6.430
+
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 9.39s)
+Reply: ```json
+{"hypotheses": [
+  {"name": "residual_pair_completable",
+   "claim": "In anticorr the champion strands 25 bins (optimum 0) and makes 284 three-job bins vs 193, missing 105 four-job bins; its dominant bins LS+MS+SL and LS+SL+SM leave a residual that is lopsided (one resource ~0, the other ~30%), so it can never take the complementary lopsided job. The optimum's 4-job bins pair a CPU-heavy with a memory-heavy leftover. The mechanism: when placing a job, the policy cannot see whether the residual it creates is still 'completable' by the opposite lopsided job.",
+   "feature": "Let r = bins - item, a = r[:,0]/capacity[0], b = r[:,1]/capacity[1]. Reference lopsided jobs c=(0.35,0.10)*capacity and m=(0.10,0.35)*capacity. Return per bin: max( min(a/c[0], b/c[1]), min(a/m[0], b/m[1]) ) clipped to [0,1] — 1.0 when the residual could still take a full-size lopsided job of either orientation. Conditional: nonzero only when item is itself lopsided (|item[0]-item[1]| >= 0.2*capacity[0]).",
+   "target": "anticorr: 3-job bins should fall below 250 and stranded bins below 10 (from 25); 4-job bins should rise above 60.",
+   "builds_on": "h0033"},
+  {"name": "completes_to_medium_triple",
+   "claim": "In large the champion makes 239 two-job bins vs 146 and only 173 three-job bins vs 236; its LM+ML / LL+ML pairings leave a residual that is below 0.3*capacity in one resource, so no medium job can complete a 3-job bin. The optimum's dominant bin is LM+ML+MM. The mechanism: the policy cannot see that the residual after placing this job is exactly in the medium band on both resources, i.e. that it invites a medium job rather than being dead.",
+   "feature": "Let r = bins - item, m = 0.3*capacity, s = 0.15*capacity. Return per bin: indicator(r[:,0]>=m[0] and r[:,1]>=m[1]) * min(r[:,0]/m[0], r[:,1]/m[1]) clipped to [0,1] — high only when the residual can still take a typical medium job on BOTH resources (not just one). Conditional on item being large (item[0]>=0.4*cap[0] or item[1]>=0.4*cap[1]).",
+   "target": "large: 2-job bins should fall below 190 and 3-job bins should rise above 210.",
+   "builds_on": "h0034"},
+  {"name": "residual_small_fit_count",
+   "claim": "In uniform the champion makes 116 three-job bins and 114 four-job bins while the optimum shifts mass to 4-5 job bins (LM+ML+MM x15, 2LL+SS x12, 2ML+MS x8). The champion's bins are full in one resource but not the other, so a small job fits in only one dimension. The mechanism: the policy rewards fullness but not 'this residual can still absorb several typical small jobs on both resources'.",
+   "feature": "Let r = bins - item, s = 0.15*capacity. Return per bin: min( floor(r[:,0]/s[0]), floor(r[:,1]/s[1]) ) / 3.0, clipped to [0,1] — the number of typical small jobs that still fit on BOTH resources, saturating at 3. Nonzero only when the job just placed is not itself small (item[0]>=0.2*cap[0] or item[1]>=0.2*cap[1]).",
+   "target": "uniform: 3-job bins should fall below 100 and 5-job bins should rise abo
+
+== Latest verdicts
+h0034 gen 9 feature flat +0.000 on p0060 (builds on h0013): In large the champion makes 239 two-job bins vs 146 and only 173 three-job bins vs 236; its top bins LM+ML/LL+ML/LL+LM leave a residual that fits no third job b || change: Let r = bins - item, m = 0.3*capacity, s = 0.15*capacity. Return per bin: indicator(r[:,0]>=m[0] and r[:,1]>=m[1]) * 1.0
+h0035 gen 9 feature refuted -0.080 on p0060 (builds on h0015): In small the champion uses 9.09 jobs/bin with only 1 stranded bin and 2% CPU room, while the optimum uses 9.01 jobs/bin with 14 stranded bins and 3% CPU / 6% me || change: Let r = bins - item, s = 0.15*capacity. Return per bin: min(r[:,0]/s[0], r[:,1]/s[1]) clipped to [0,2] / 2.0 — the numbe
+h0036 gen 9 feature refuted -0.043 on p0060 (builds on h0032): In bimodal the champion makes 2LL bins 35x vs 44x for the optimum and 73 two-job bins vs 54, with 9 stranded bins vs 3. The champion pairs two large jobs but le || change: Conditional on item being large (item[0]>=0.4*cap[0] or item[1]>=0.4*cap[1]). Let r = bins - item, s = 0.15*capacity. Re
+h0033 gen 9 feature refuted -0.235 on p0060 (builds on h0022): In anticorr the champion makes 284 three-job bins vs 193 and only 28 four-job bins vs 105, stranding 25 bins (optimum 0). The dominant champion bins LS+MS+SL an || change: Let r = bins - item, a = r[:,0]/cap[0], b = r[:,1]/cap[1]. Reference lopsided pair c=(0.35,0.1)*cap, m=(0.1,0.35)*cap. R
+h0040 gen 10 feature refuted -0.185 on p0060 (builds on h0036): In bimodal the champion makes 2LL bins 35x vs 44x for the optimum and 73 two-job bins vs 54, with 9 stranded bins vs 3. The optimum pairs two large jobs deliber || change: Let r = bins - item, L = 0.4*capacity, s = 0.15*capacity. Return per bin: indicator(r[:,0]>=s[0] and r[:,1]>=s[1]) * (1 
+h0037 gen 10 feature flat -0.015 on p0060 (builds on h0033): In anticorr the champion strands 25 bins (optimum 0) and makes 284 three-job bins vs 193, missing 105 four-job bins; its dominant bins LS+MS+SL and LS+SL+SM lea || change: Let r = bins - item, a = r[:,0]/capacity[0], b = r[:,1]/capacity[1]. Reference lopsided jobs c=(0.35,0.10)*capacity and 
+h0039 gen 10 feature refuted -0.101 on p0060 (builds on h0031): In uniform the champion makes 116 three-job bins and 114 four-job bins while the optimum shifts mass to 4-5 job bins (LM+ML+MM x15, 2LL+SS x12, 2ML+MS x8). The  || change: Let r = bins - item, s = 0.15*capacity. Return per bin: min( floor(r[:,0]/s[0]), floor(r[:,1]/s[1]) ) / 3.0, clipped to 
+h0038 gen 10 feature refuted -0.115 on p0060 (builds on h0034): In large the champion makes 239 two-job bins vs 146 and only 173 three-job bins vs 236; its LM+ML / LL+ML pairings leave a residual that is below 0.3*capacity i || change: Let r = bins - item, m = 0.3*capacity, s = 0.15*capacity. Return per bin: indicator(r[:,0]>=m[0] and r[:,1]>=m[1]) * min
+
+== Latest Mutator ideas
+p0076 invalid: f0068 wide_f0068: invalid
+p0081 -6.180: + f0075 new_bin_signed_by_skew: train +0.005, validation +0.000
+p0082 -6.178: + f0077 paired_leftover_harmonic_headroom: train +0.007, validation -0.137
+p0083 -6.180: + f0074 wide_f0074: train +0.005, validation +0.000
+p0084 invalid: f0076 unabsorbable_waste: invalid
+
+== Most common failures
+1x cap = capacity.as
+1x n
+1x ValueError: the feature returned shape (2,) for 1 candidate bins; it must return one value per row of bins
+
+== Best program (p0060)
+# Helix feature policy | p0060, generation 8, 3 features
+# priority() = sum over features of (weight x scale) . feature(item, bins, capacity); the weights were fitted
+# by an optimiser. With every weight at 0 all bins tie and the simulator picks the oldest bin that fits
+# (first fit), so the empty policy is Code Zero.
+import numpy as np
+import math
+
+
+
+# f0001 textbook (seed, 18 values): the usual measurements of a candidate bin: leftover_sum: total room left after placing the job (CPU + memory, as fractions); leftover_max: t
+def _f0001(item, bins, capacity):
+    """The textbook measurements of each candidate bin (18 values per bin, in TEXTBOOK_COLUMNS order)."""
+    cap = capacity.astype(float)
+    d = item / cap
+    r = bins / cap
+    L = (bins - item) / cap
+    Lc, Lm = (L[:, 0], L[:, 1])
+    mx, mn = (np.maximum(Lc, Lm), np.minimum(Lc, Lm))
+    skew = d[0] - d[1]
+    k = len(bins)
+    new = np.zeros(k)
+    new[-1] = 1.0
+    rn = np.sqrt((r * r).sum(axis=1)) + 1e-09
+    dn = math.sqrt(float(d[0] * d[0] + d[1] * d[1])) + 1e-09
+    return np.stack([Lc + Lm, mx, mn, np.abs(Lc - Lm), (Lm - Lc) * skew, Lc * Lm, r @ d / (rn * dn), 2.0 - r.sum(axis=1), np.exp(-np.maximum(mn, 0.0) / 0.05), np.exp(-np.maximum(mx, 0.0) / 0.1), new, new * (d[0] + d[1]), new * abs(skew), Lc * Lc + Lm * Lm, abs(skew) * np.abs(Lc - Lm), -np.arange(k) / max(k, 1), np.sqrt(np.maximum(Lc * Lm, 0.0)), np.minimum(d[0] / np.maximum(r[:, 0], 1e-09), d[1] / np.maximum(r[:, 1], 1e-09))], axis=1)
+
+
+# f0005 balanced_fill_ratio (wide, 1 value): Fraction of each bin's free CPU/mem that this job would consume, penalised by the imbalance between the two.
+def _f0005(item, bins, capacity):
+    """Fraction of each bin's free CPU/mem that this job would consume, penalised by the imbalance between the two."""
+    cap = capacity.astype(float)
+    d = item / cap
+    r = np.maximum(bins / cap, 1e-09)
+    u = np.minimum(d / r, 1.0)
+    uc, um = (u[:, 0], u[:, 1])
+    spread = np.abs(uc - um)
+    return (np.minimum(uc, um) - spread) * 0.5 + 0.5 * np.minimum(uc, um)
+
+
+# f0058 age_discounted_tight_fill (wide, 1 value): Age-aware best-fit: how full the bin becomes, weighted down for older (earlier) bins, so a good fit in a young bin beats an equal fit in an 
+def _f0058(item, bins, capacity):
+    """Age-aware best-fit: how full the bin becomes, weighted down for older (earlier) bins, so a good fit in a young bin beats an equal fit in an old one."""
+    cap = capacity.astype(float)
+    d = item / cap
+    L = (bins - item) / cap
+    Lc, Lm = (L[:, 0], L[:, 1])
+    mn = np.minimum(Lc, Lm)
+    k = len(bins)
+    age = np.arange(k, dtype=float) / max(k - 1, 1)
+    fill = 1.0 - np.clip(mn, 0.0, 1.0)
+    return fill * (0.25 + 0.75 * age)
+
+_TERMS = [(_f0001, np.array([-3.420533090900932, 6.107922014990574, 7.841740313317702, -17.97951060547126, -58.476587047169325, -2.8353542213654124, -16.05830578300361, -6.159280926175289, -4.646013585004563, 34.302415332514556, -8.22766489348096, 16.049215548246146, 0.8219013889464095, -0.9805045734225906, 78.02009752570294, 12.07118283622632, 1.0843656980899972, 6.365063820712797])), (_f0005, np.array([1.5414495098742318])), (_f0058, np.array([1.6946272437869343]))]
+
+
+def priority(item, bins, capacity):
+    for a in (item, bins, capacity):
+        a.setflags(write=False)                    # features may read the inputs, never change them
+    k = len(bins)
+    total = np.zeros(k)
+    for f, w in _TERMS:
+        if not w.any():
+            continue
+        v = np.asarray(f(item, bins, capacity), dtype=float)
+        if v.ndim == 1:
+            v = v[:, None]
+        if v.shape[0] != k:
+            v = np.broadcast_to(v.reshape(1, -1)[:, :len(w)], (k, len(w)))
+        total += v @ w
+    if not np.isfinite(total).all():
+        total = np.nan_to_num(total, nan=0.0, posinf=1e3, neginf=-1e3)
+    # Bins that differ only by floating-point noise count as tied, so the oldest wins whatever the scale.
+    return np.round(total, 9)
