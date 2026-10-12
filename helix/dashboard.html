@@ -233,7 +233,7 @@
     <div class="tiles">
       <div class="tile"><div class="k">Generation</div><div class="v" id="tGen">–</div><div class="s" id="tGenS"></div></div>
       <div class="tile"><div class="k">Best score</div><div class="v" id="tBest">–</div><div class="s" id="tBestS"></div></div>
-      <div class="tile"><div class="k">Bar to beat</div><div class="v" id="tBar">–</div><div class="s" id="tBarS"></div></div>
+      <div class="tile"><div class="k">Gap closed</div><div class="v" id="tBar">–</div><div class="s" id="tBarS"></div></div>
       <div class="tile"><div class="k">LLM calls</div><div class="v" id="tCalls">–</div><div class="s" id="tCallsS"></div></div>
       <div class="tile"><div class="k">Programs</div><div class="v" id="tProgs">–</div><div class="s" id="tProgsS"></div></div>
       <div class="tile"><div class="k">Elapsed</div><div class="v" id="tTime">–</div><div class="s" id="tTimeS"></div></div>
@@ -247,6 +247,7 @@
         <span><i class="sw deep"></i>Best new, deep branch</span>
         <span><i class="sw wide"></i>Best new, wide branch</span>
         <span><i class="sw tune"></i>Tuned numbers</span>
+        <span><i class="sw ref"></i>Offline packer (sees every job in advance)</span>
       </div>
       <div id="chartGain"><div class="empty">No generations yet.</div></div>
     </section>
@@ -258,7 +259,7 @@
         <span><i class="sw deep"></i>Best new, deep branch</span>
         <span><i class="sw wide"></i>Best new, wide branch</span>
         <span><i class="sw tune"></i>Tuned numbers</span>
-        <span><i class="sw ref"></i>Code Zero</span>
+        <span><i class="sw ref"></i>Code Zero, offline packer (sees every job in advance)</span>
       </div>
       <div id="chart"><div class="empty">No generations yet.</div></div>
     </section>
@@ -461,9 +462,13 @@ function render(s) {
   const best = s.best;
   $("tBest").textContent = best ? fmt(best.score) : "–";
   $("tBestS").textContent = best && s.seed_score != null ? `${signed(best.score - s.seed_score)} vs Code Zero ${fmt(s.seed_score)}` : "";
-  const barName = Object.keys(baselines).filter((k) => k !== "code_zero").sort((a, b) => baselines[b] - baselines[a])[0];
-  $("tBar").textContent = barName ? fmt(baselines[barName]) : "–";
-  $("tBarS").innerHTML = barName ? `${esc(barName)}${best ? ` · <span class="${best.score > baselines[barName] ? "ok" : "warn"}">${best.score > baselines[barName] ? "beaten" : "not yet"}</span>` : ""}` : "computing baselines…";
+  const barName = Object.keys(baselines).filter((k) => k !== "code_zero" && k !== "offline_reference").sort((a, b) => baselines[b] - baselines[a])[0];
+  const ref = baselines.offline_reference, seed = s.seed_score;
+  const closed = best && seed != null && ref != null && ref > seed ? 100 * (best.score - seed) / (ref - seed) : null;
+  $("tBar").textContent = closed != null ? `${closed.toFixed(0)}%` : "–";
+  $("tBarS").innerHTML = ref != null ? `of the way from Code Zero to an offline packer that sees every job (${fmt(ref)})`
+    + (barName && best ? ` · best baseline ${esc(barName)} <span class="${best.score > baselines[barName] ? "ok" : "warn"}">${best.score > baselines[barName] ? "beaten" : "not yet"}</span>` : "")
+    : "computing the reference…";
   const llm = st.llm || {};
   $("tCalls").textContent = llm.calls ?? "–";
   $("tCallsS").textContent = (state === "running" ? `${llm.in_flight || 0} in flight · ${llm.retrying || 0} retrying · ` : "")
@@ -508,6 +513,7 @@ function renderChart(s, barName, target, asGain) {
   if (!gens.length || (asGain && !seed)) return setHTML($(target), `<div class="empty">No generations yet.</div>`);
   const pts = [], refs = [];
   if (seed != null && !asGain) refs.push(["Code Zero", seed]);
+  if (baselines.offline_reference != null && seed) refs.push(["Offline packer", conv(baselines.offline_reference)]);
   for (const g of gens) for (const b of ["deep", "wide", "tune"]) if (g[b] && g[b].best_new != null) pts.push({ x: g.generation, y: conv(g[b].best_new), b });
   const ys = gens.map((g) => g.best_score).concat(pts.map((p) => p.y), refs.map((r) => r[1]));
   let lo = Math.min(...ys), hi = Math.max(...ys); const pad = (hi - lo) * 0.08 || 0.5; lo -= pad; hi += pad;
@@ -523,7 +529,7 @@ function renderChart(s, barName, target, asGain) {
   for (let g = 0; g <= maxX; g += step) svg += `<text x="${X(g)}" y="${H - B + 18}" text-anchor="middle">${g}</text>`;
   svg += `<text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">generation</text>`;
   for (const [name, v] of refs) { const y = Y(v);
-    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-dasharray="5 4" stroke-width="1.2"/><text class="refl" x="${W - R + 6}" y="${y + 4}">${esc(name)} ${v.toFixed(2)}</text>`; }
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-dasharray="5 4" stroke-width="1.2"/><text class="refl" x="${W - R + 6}" y="${y + 4}">${esc(name)} ${asGain ? v.toFixed(1) + "%" : v.toFixed(2)}</text>`; }
   let d = ""; gens.forEach((g, i) => { const x = X(g.generation), y = Y(g.best_score);
     d += i === 0 ? `M${x},${y}` : ` H${x} V${y}`; });
   d += ` H${X(maxX)}`;

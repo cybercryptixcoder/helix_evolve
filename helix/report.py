@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from .population import Store
+from .reference import gap_closed, offline_reference
 from .sandbox import REPO_ROOT, evaluate_file
 
 INK, MUTED, GRID = "#0b0b0b", "#8a8984", "#e4e3df"
@@ -167,6 +168,9 @@ def compare_chart(runs, path):
 
 
 # ---------------------------------------------------------------- report text
+REF_LABEL = "Reference: offline best-fit decreasing (sees every job in advance)"
+
+
 def fmt(x, nd=3):
     return "—" if x is None else f"{x:.{nd}f}"
 
@@ -189,10 +193,13 @@ def write_report(runs):
 
     print("Scoring the best program, Code Zero and the baselines on the held-out test split...", flush=True)
     rows, held_out = held_out_table(main)
+    ref = {split: offline_reference(split) for split in ("train", "test")}
     (main.dir / "heldout.json").write_text(json.dumps([
         {"label": label, "train_score": tr["score"], "test_score": te["score"], "valid": te["valid"],
          "test_families": {f: v["excess_pct"] for f, v in te["families"].items()}}
-        for label, tr, te in rows], indent=2))
+        for label, tr, te in rows] + [
+        {"label": REF_LABEL, "train_score": ref["train"]["score"], "test_score": ref["test"]["score"], "valid": True,
+         "test_families": ref["test"]["families"], "reference": True}], indent=2))
     lines += ["## Held-out check", "",
               "Scored on the evaluator's `test` split: new instances, plus families the search never saw "
               f"({', '.join(held_out) or 'none'}).", ""]
@@ -201,7 +208,19 @@ def write_report(runs):
     for label, tr, te in rows:
         fams = [fmt(te["families"].get(f, {}).get("excess_pct"), 2) if te["valid"] else "invalid" for f in held_out]
         lines.append(f"| {label} | {fmt(tr['score'])} | {fmt(te['score'])} | " + " | ".join(fams) + " |")
+    lines.append(f"| *{REF_LABEL}* | {fmt(ref['train']['score'])} | {fmt(ref['test']['score'])} | "
+                 + " | ".join(fmt(ref["test"]["families"].get(f), 2) for f in held_out) + " |")
     lines.append("")
+    best_row = next((r for r in rows if r[0].startswith("Evolved best")), None)
+    zero_row = next((r for r in rows if r[0] == "Code Zero"), None)
+    if best_row and zero_row and best_row[1]["valid"] and best_row[2]["valid"]:
+        g_train = gap_closed(best_row[1]["score"], zero_row[1]["score"], ref["train"]["score"])
+        g_test = gap_closed(best_row[2]["score"], zero_row[2]["score"], ref["test"]["score"])
+        lines += [f"The score counts bins above a lower bound that ignores job shapes, so 0 can't be reached. As a "
+                  f"practical yardstick, an offline packer that sees every job before placing any scores "
+                  f"{fmt(ref['train']['score'])} on train. The evolved program has closed **{fmt(g_train, 1)}%** of "
+                  f"the gap between Code Zero and that packer on train, and **{fmt(g_test, 1)}%** on the held-out "
+                  f"test split (`python -m helix.reference`).", ""]
 
     lines += ["## Where the improvements came from", "", "| Generation | Branch | Program | Score | Gain | What it did |",
               "|---|---|---|---|---|---|"]
@@ -255,7 +274,8 @@ def write_report(runs):
         baseline_train = [(label.replace("Baseline: ", ""), tr["score"]) for label, tr, _ in rows
                           if label.startswith("Baseline") and tr["valid"]]
         best_baseline = max(baseline_train, key=lambda x: x[1], default=None)
-        if progress_chart(main, [best_baseline] if best_baseline else [], main.dir / "progress.png"):
+        refs = ([best_baseline] if best_baseline else []) + [("Offline packer (sees all jobs)", ref["train"]["score"])]
+        if progress_chart(main, refs, main.dir / "progress.png"):
             lines += ["![Best score by generation](progress.png)", ""]
         if len(runs) > 1:
             compare_chart(runs, main.dir / "compare.png")

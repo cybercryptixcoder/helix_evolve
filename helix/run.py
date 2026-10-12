@@ -56,7 +56,8 @@ class Search:
         self.phases = {}          # branch -> what it's doing right now
         self.status = {"state": "starting", "pid": os.getpid(), "mode": args.mode, "schedule": args.schedule,
                        "generation": None, "generations": args.generations, "started": time.time()}
-        self.tune_eval = tuner.evaluator("train", args.eval_timeout, args.tune_workers) if args.tune else None
+        # Scores many variants of one program in parallel: the tune branch, and tune-then-judge in the deep branch.
+        self.tune_eval = tuner.evaluator("train", args.eval_timeout, args.tune_workers)
         self.rng = random.Random()
         # Programs whose numbers have been tuned already (restored from the log on --resume).
         self.tuned = {t for g in read_records(store.dir / "generations.jsonl")
@@ -197,7 +198,8 @@ class Search:
         # Most requests are variants: half of them start from the best program, so a hit gets built on;
         # the rest go round the other top programs (a different one first each generation). The last
         # one or two requests ask for a fresh idea, to keep variety.
-        fresh = min(self.a.fresh, self.a.variants)
+        stuck = self.stall(generation) >= self.a.stall
+        fresh = min(self.a.fresh + (1 if stuck else 0), self.a.variants)   # more exploration while stuck
         n_var = self.a.variants - fresh
         half = (n_var + 1) // 2
         rest = list(range(1, len(top))) or [0]
@@ -229,27 +231,41 @@ class Search:
 
         Knock-outs are spent only where they teach something new: on a champion that jumped by at least
         epsilon, and then only on its new or changed parts (knock-outs on its ancestors are inherited).
-        A small step, or a tuned champion (same parts, new numbers), gets improve tests only."""
+        A small step, a tuned champion (same parts, new numbers) or a deep champion (its own test already
+        measured the one part it changed) gets improve tests only."""
         champ = self.store.best()
         older = [p for p in self.store.programs.values()
                  if p.valid and not p.probe and int(p.id[1:]) < int(champ.id[1:])]
         prev_best = max((p.score for p in older), default=None)
         jump = round(champ.score - prev_best, 4) if prev_best is not None else None
         info = {"new": champ.generation >= generation - 1 and champ.branch != "seed", "jump": jump,
-                "real_jump": jump is None or jump >= self.a.epsilon}
+                "real_jump": jump is None or jump >= self.a.jump, "stall": self.stall(generation)}
         line = self.lineage(champ)
         done = [h for h in self.store.hypotheses if h.kind == "cause" and h.verdict not in ("pending", "invalid")]
         own = sum(h.base_id == champ.id for h in done)
         inherited = sum(h.base_id in line[1:] for h in done)
         n = self.a.hypotheses
-        if champ.branch in ("seed", "tune") or own:
-            cause = 0                      # Code Zero, new numbers only, or already taken apart: improve it
+        if champ.branch in ("seed", "tune", "deep") or own:
+            cause = 0                      # nothing new to take apart, or already taken apart: improve it
         elif info["real_jump"]:
             cause = 1 if inherited else max(1, n // 2)   # only the new parts need measuring if the rest is known
         else:
             cause = 0 if inherited else 1                # a small step: measure once if nothing in its line ever was
         cause = min(cause, n)
-        return champ, info, {"cause": cause, "improve": n - cause, "tuned": bool(self.a.tune)}
+        return champ, info, {"cause": cause, "improve": n - cause, "tuned": bool(self.a.tune),
+                             "stuck": info["stall"] >= self.a.stall, "stall": info["stall"]}
+
+    def stall(self, generation):
+        """Generations since the last new best that changed the program's structure (from the deep or wide
+        branch, or Code Zero): 0 if it came last generation. New bests from the tune branch only change
+        numbers, so they don't count: the LLMs still need to find a better idea."""
+        best, last = float("-inf"), 0
+        for p in sorted(self.store.programs.values(), key=lambda p: int(p.id[1:])):
+            if p.valid and not p.probe and p.score is not None and p.score > best:
+                best = p.score
+                if p.branch != "tune":
+                    last = p.generation
+        return max(0, generation - 1 - last)
 
     def deep(self, pool, generation):
         """Researcher: knock-outs to learn why the champion wins, moderate improve tests to beat it.
@@ -293,7 +309,7 @@ class Search:
                            claim=prop["claim"], change=prop["change"], prediction=prop["prediction"],
                            kind=prop["kind"], builds_on=prop["builds_on"])
             prog = self.candidate("coder", roles.coder_message(base, h), generation, "deep", base.id, h.id,
-                                  finalize=lambda p: judge(h, base, p, self.a.epsilon))
+                                  finalize=lambda p: self.judge_test(h, base, p))
             self.store.add_hypothesis(h)
             return prog, h
 
@@ -309,6 +325,41 @@ class Search:
         self.set_phase("deep", None)
         kinds = {k: sum(h.kind == k for _, h in results) for k in ("cause", "improve")}
         return [prog for prog, _ in results], {"tested": len(results), **kinds, **verdicts}
+
+    def judge_test(self, h, base, prog):
+        """Tune-then-judge: an improve test that adds or changes numbers gets a short search over just those
+        numbers before it's judged, so a new mechanism is compared with its base at a good weight, not at
+        the weight the Coder guessed. Knock-outs are measurements and are judged as written."""
+        if h.kind == "improve":
+            raw = self.tune_new_part(prog, base)
+            if raw is not None:
+                h.raw_delta = round(raw - base.score, 4)
+        judge(h, base, prog, self.a.epsilon)
+
+    def tune_new_part(self, prog, base):
+        """Tune the numbers `prog` added relative to `base` (see tune.new_constants), in place.
+        Returns the score before tuning if tuning improved it, else None."""
+        if not (self.tune_eval and self.a.judge_tune_evals > 0 and prog.valid and prog.duplicate_of is None
+                and prog.code and base.code):
+            return None
+        try:
+            fresh = tuner.new_constants(base.code, prog.code)
+            if not fresh:
+                return None
+            out = tuner.tune(prog.code, prog.score, self.tune_eval, evals=self.a.judge_tune_evals,
+                             batch=min(8, self.a.judge_tune_evals), rng=self.rng, consts=fresh)
+        except Exception as exc:          # a tuning failure must never lose the test itself
+            say(f"   (tuning {prog.id}'s new weights failed: {type(exc).__name__}: {exc})")
+            return None
+        if not out or out["code"] is None:
+            return None
+        raw = prog.score
+        prog.code, prog.score = out["code"], out["score"]
+        prog.families = {f: v["excess_pct"] for f, v in out["result"]["families"].items()}
+        self.store.candidate_path(prog.id).write_text(prog.code)
+        changes = ", ".join(f"{a:g}→{b:g}" for a, b in out["changes"][:6])
+        prog.note = (prog.note + " | " if prog.note else "") + f"new weights tuned {raw:.3f} → {out['score']:.3f}: {changes}"
+        return raw
 
     def tune(self, pool, generation):
         """Tune branch: local search over the numbers of the champion and of the best untuned newcomer.
@@ -569,9 +620,16 @@ def parse_args(argv=None):
     ap.add_argument("--fresh", type=int, default=2, help="of those, how many ask for a fresh idea instead of a variant")
     ap.add_argument("--hypotheses", type=int, default=4, help="Researcher hypotheses per generation")
     ap.add_argument("--n", type=int, default=40, help="answers in zero-shot mode")
-    ap.add_argument("--epsilon", type=float, default=0.4,
-                    help="score change that counts as supported/refuted; smaller changes are 'flat'. 0.4 is about "
-                         "the gap between baselines, so smaller differences may just be noise across instances")
+    ap.add_argument("--epsilon", type=float, default=0.05,
+                    help="score change that counts as supported/refuted; smaller changes are 'flat'. Scoring is "
+                         "deterministic and champions in past runs gained 0.01-0.2, so this stays small; the "
+                         "held-out check at the end guards against overfitting")
+    ap.add_argument("--jump", type=float, default=0.15,
+                    help="a new champion that beats the old one by at least this much gets knock-out tests")
+    ap.add_argument("--stall", type=int, default=3,
+                    help="generations without a new best before the search pushes for bigger changes")
+    ap.add_argument("--judge-tune-evals", type=int, default=16,
+                    help="evaluations spent tuning a deep test's new numbers before it's judged (0 = off)")
     ap.add_argument("--repairs", type=int, default=1, help="repair attempts for a program that fails")
     ap.add_argument("--workers", type=int, default=12,
                     help="LLM calls and evaluations in flight at once (12 = a whole generation at once)")
@@ -598,7 +656,8 @@ def parse_args(argv=None):
 
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
 KEPT_ON_RESUME = ["mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
-                  "epsilon", "repairs", "pro_every", "seed_program", "fake_llm", "tune", "tune_evals", "tune_targets",
+                  "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
+                  "tune", "tune_evals", "tune_targets",
                   "tune_seconds", "tune_margin"]
 
 

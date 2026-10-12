@@ -23,6 +23,7 @@ from collections import Counter
 from pathlib import Path
 
 from .peek import load_state, read_json, snapshot
+from .reference import gap_closed, offline_reference
 from .sandbox import REPO_ROOT
 
 RESULTS_DIR = REPO_ROOT / "results"
@@ -88,6 +89,10 @@ def _summary(run_dir):
     if heldout:
         best_test = next((r["test_score"] for r in heldout if r["label"].startswith("Evolved best")), None)
         code_zero_test = next((r["test_score"] for r in heldout if r["label"] == "Code Zero"), None)
+    try:
+        ref = {split: offline_reference(split)["score"] for split in ("train", "test")}
+    except Exception:
+        ref = {"train": None, "test": None}
     llm = st.get("llm") or {}
     return {
         "run": s["name"],
@@ -106,6 +111,9 @@ def _summary(run_dir):
         "gain": round(best["score"] - s["seed_score"], 4) if best and s["seed_score"] is not None else None,
         "best_test_score": best_test,
         "code_zero_test_score": code_zero_test,
+        "offline_reference": ref,
+        "gap_closed_train": gap_closed(best["score"] if best else None, s["seed_score"], ref["train"]),
+        "gap_closed_test": gap_closed(best_test, code_zero_test, ref["test"]),
         "programs": s["counts"]["programs"],
         "hypotheses": dict(Counter(h["verdict"] for h in s["hypotheses"])),
         "llm_calls": llm.get("calls"),
@@ -133,12 +141,15 @@ def _write_index():
              "Each folder is one run of the two-loop search, published from `helix/runs/` by `python -m helix.publish`.",
              "Scores are −(mean excess % over the lower bound): higher is better, 0 would be perfect. "
              "The held-out score uses the evaluator's `test` split, which the search never sees.", "",
-             "| Run | Mode | Model | Generations | Code Zero | Best (train) | Gain | Best (held-out) | LLM calls | State |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
+             "Gap closed = share of the gap between Code Zero and an offline packer that sees every job in advance "
+             "(`python -m helix.reference`) that the best program has closed.", "",
+             "| Run | Mode | Model | Generations | Code Zero | Best (train) | Gain | Gap closed | Best (held-out) | LLM calls | State |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     for s in rows:
         gain = f"+{s['gain']:.3f}" if s.get("gain") is not None else "—"
+        closed = f"{s['gap_closed_train']:.0f}%" if s.get("gap_closed_train") is not None else "—"
         lines.append(f"| [{s['run']}]({s['run']}/) | {s.get('mode')} | {s.get('model')} | {s.get('generations_completed')} | "
-                     f"{fmt(s.get('code_zero'))} | {fmt(s.get('best_score'))} | {gain} | {fmt(s.get('best_test_score'))} | "
+                     f"{fmt(s.get('code_zero'))} | {fmt(s.get('best_score'))} | {gain} | {closed} | {fmt(s.get('best_test_score'))} | "
                      f"{s.get('llm_calls')} | {s.get('state')} |")
     lines += ["", "In each folder: `report.md` (held-out check, where improvements came from, research log), "
               "`progress.png`, `best_program.py`, the full trace as JSONL, and every agent call in `llm_calls.jsonl.gz`."]

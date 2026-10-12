@@ -273,6 +273,11 @@ def run_state(name):
 
 
 def compute_baselines():
+    try:   # the yardstick for "gap closed": an offline packer that sees every job in advance
+        from .reference import offline_reference
+        BASELINES["offline_reference"] = offline_reference("train")["score"]
+    except Exception:
+        pass
     for path in sorted((REPO_ROOT / "programs").glob("*.py")):
         try:
             r = evaluate_file(path, "train", 60)
