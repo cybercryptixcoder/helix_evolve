@@ -1,0 +1,31 @@
+{
+  "state": "finished",
+  "pid": 18723,
+  "mode": "full",
+  "schedule": "parallel",
+  "generation": 30,
+  "generations": 30,
+  "started": 1791759358.510546,
+  "error": null,
+  "phase": "",
+  "updated": 1791762130.633533,
+  "llm": {
+    "calls": 423,
+    "tokens_in": 1433858,
+    "tokens_out": 1434639,
+    "pro_calls": 0,
+    "in_flight": 0,
+    "retrying": 0,
+    "limit": 12,
+    "note": null
+  },
+  "best_id": "p0279",
+  "best_score": -6.7935,
+  "mongo": {
+    "enabled": false,
+    "written": 0,
+    "dropped": 0,
+    "error": null
+  },
+  "finished": 1791762130.633485
+}

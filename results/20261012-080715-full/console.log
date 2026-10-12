@@ -1,0 +1,187 @@
+
+$ python -m helix.run --run-dir /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-080715-full --mode full --generations 30 --max-minutes 0 --variants 6 --fresh 2 --hypotheses 4 --pro-every 10 --epsilon 0.05 --workers 12 --pool-size 8 --judge-tune-evals 16 --tune
+Helix | mode full | schedule parallel | models luminal: deepseek-ai/DeepSeek-V4.1-Flash
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-080715-full
+   checking the model is answering (before starting)...
+   model is answering
+── generation 0: Code Zero scores -9.181 (p0001)
+   wide: 0/6 valid, best so far -9.181
+
+── generation 1: deep + wide + tune | pool best -9.181 (p0001)
+   deep: champion p0001 (-9.181); plan 0 cause + 4 improve
+   h0001 improve supported     +0.268  on p0001: All-equal scores give First Fit, which opens bins too eagerly and wastes the ti…
+   h0002 improve supported     +0.053  on p0001: First Fit ignores the shape of the residual, which is fatal when jobs are one-s…
+   h0003 improve supported     +0.647  on p0001: Minimising total leftover can leave one resource nearly exhausted while the oth…
+   h0004 improve supported     +0.268  on p0001: Opening a new bin is free under First Fit, so bins are opened even when a sligh…
+   deep: 4/4 valid, best new -8.534
+   wide: 2/6 valid, best new -8.662
+   tune: 0/0 valid, best new none valid
+   best so far -8.534 (p0016, deep) | 29 LLM calls total | 33.1s
+
+── generation 2: deep + wide + tune | pool best -8.534 (p0016)
+   deep: champion p0016 (-8.534, new by +0.128); plan 0 cause + 4 improve
+   h0006 improve no-effect     +0.000  on p0016: Under the pure max norm the empty last row can tie a fitting bin whose residual…
+   h0005 improve flat          -0.022  on p0016: Pure L-infinity fit ignores total leftover, so a bin tight in one dimension but…
+   h0007 improve supported     +0.501  on p0016: L-infinity controls the worst resource but permits one-sided residuals that str…
+   h0008 improve refuted       -0.102  on p0016: The hard max is discontinuous in the residuals, so near-ties are decided by one…
+   deep: 4/4 valid, best new -8.033
+   wide: 4/6 valid, best new -8.916
+   tune: 0/0 valid, best new none valid
+   best so far -8.033 (p0026, deep) | 43 LLM calls total | 58.2s
+
+── generation 3: deep + wide + tune | pool best -8.033 (p0026)
+   deep: champion p0026 (-8.033, new by +0.501); plan 0 cause + 4 improve
+   h0009 improve supported     +0.141  on p0026: The balance term w*|n_c-n_m| is what made the champion jump (h0007), but a line…
+   h0011 improve refuted       -0.172  on p0026: The champion minimises the worst residual plus imbalance but never rewards genu…
+   h0012 improve refuted       -0.376  on p0026: The absolute imbalance penalty treats an almost-empty bin and an almost-full bi…
+   h0010 improve flat          +0.012  on p0026: p0026 keeps bins square but ignores whether the arriving item's shape is consis…
+   deep: 4/4 valid, best new -7.893
+   wide: 0/6 valid, best new none valid
+   tune: 0/0 valid, best new none valid
+   best so far -7.893 (p0034, deep) | 60 LLM calls total | 39.7s
+
+── generation 4: deep + wide + tune | pool best -7.893 (p0034)
+   deep: champion p0034 (-7.893, new by +0.141); plan 0 cause + 4 improve
+   tune: p0035 -8.021 → p0048 -7.933 (48 tries)
+   h0015 improve flat          -0.022  on p0034: The champion never explicitly penalises opening a new bin beyond the max-norm c…
+   h0016 improve refuted       -0.169  on p0034: The quadratic imbalance term penalises lopsided residuals symmetrically, but a …
+   h0014 improve refuted       -0.259  on p0034: h0010 (shape-match cosine bonus) was flat alone on p0026, but the champion now …
+   h0013 improve supported     +0.103  on p0034: The champion's quadratic imbalance penalty (h0009) fixed anticorr but the resid…
+   deep: 4/4 valid, best new -7.790
+   wide: 4/6 valid, best new -7.970
+   tune: 1/1 valid, best new -7.933
+   best so far -7.790 (p0044, deep) | 76 LLM calls total | 42.9s
+
+── generation 5: deep + wide + tune | pool best -7.790 (p0044)
+   deep: champion p0044 (-7.790, new by +0.103); plan 0 cause + 4 improve
+   tune: p0044 -7.790 → p0055 -7.724 (48 tries)
+   h0020 improve refuted       -0.206  on p0044: The shape term only compares the residual's imbalance to the item's, ignoring m…
+   h0017 improve flat          -0.041  on p0044: The empty last row carries no item-scaled cost, so large jobs open new bins too…
+   h0018 improve refuted       -0.183  on p0044: A bin whose smaller residual fraction is near zero is effectively dead but is o…
+   h0019 improve refuted       -0.147  on p0044: The squared imbalance punishes any residual lopsidedness, even when the arrivin…
+   deep: 4/4 valid, best new -7.830
+   wide: 1/6 valid, best new -7.790
+   tune: 1/1 valid, best new -7.724
+   best so far -7.724 (p0055, tune) | 95 LLM calls total | 76.4s
+
+── generation 6: deep + wide + tune | pool best -7.724 (p0055)
+   deep: champion p0055 (-7.724, new by +0.065); plan 0 cause + 4 improve
+   tune: p0055 -7.724 → p0066 -7.630 (48 tries)
+   tune: p0049 -7.790 → p0067 -7.703 (48 tries)
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 1/6 valid, best new -7.780
+   tune: 2/2 valid, best new -7.630
+   best so far -7.630 (p0066, tune) | 109 LLM calls total | 62.5s
+
+── generation 7: deep + wide + tune | pool best -7.630 (p0066)
+   deep: champion p0066 (-7.630, new by +0.094); plan 0 cause + 4 improve
+   tune: p0063 -7.780 → p0074 -7.511 (48 tries)
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 1/6 valid, best new -7.657
+   tune: 1/1 valid, best new -7.511
+   best so far -7.511 (p0074, tune) | 122 LLM calls total | 64.3s
+
+── generation 8: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511, new by +0.119); plan 0 cause + 4 improve
+   h0023 improve refuted       -0.257  on p0074: The base is piecewise linear in the max residual, so it cannot tell a bin that …
+   h0024 improve supported     +0.083  on p0066: p0066 beats the champion on uniform (3.98) and bimodal (6.52) but lacks any ali…
+   h0021 improve refuted       -0.352  on p0074: The champion's align term rewards residuals pointing along the item, but never …
+   h0022 improve refuted       -0.258  on p0074: Constant last-row penalties were flat (h0015, h0017) because opening a bin is c…
+   deep: 4/4 valid, best new -7.548
+   wide: 3/6 valid, best new -7.778
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 139 LLM calls total | 85.0s
+
+── generation 9: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   h0028 improve supported     +0.069  on p0067: h0024 showed p0066 gains +0.083 from the champion's dot-product alignment, best…
+   h0027 improve flat          -0.014  on p0074: Best-fit never rewards closing a bin exactly. An exponential bonus for a near-z…
+   h0025 improve refuted       -0.203  on p0074: The champion only looks at the worst residual via max; a bin whose BOTH residua…
+   h0026 improve refuted       -0.229  on p0074: Opening a whole bin for a small item is wasteful; the empty row should be expen…
+   deep: 4/4 valid, best new -7.526
+   wide: 2/6 valid, best new -8.087
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 157 LLM calls total | 81.1s
+
+── generation 10: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   tune: p0094 -7.634 → p0101 -7.545 (48 tries)
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 1/6 valid, best new -8.014
+   tune: 1/1 valid, best new -7.545
+   best so far -7.511 (p0074, tune) | 171 LLM calls total | 61.1s
+
+── generation 11: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 4/6 valid, best new -7.803
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 185 LLM calls total | 63.7s
+
+── generation 12: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 2/6 valid, best new -7.927
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 199 LLM calls total | 63.5s
+
+── generation 13: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   h0032 improve refuted       -0.092  on p0101: p0101 has the best uniform (3.98) and bimodal (6.52) but no closing bonus; tran…
+   h0029 improve refuted       -7.306  on p0074: Quadratic imbalance ignores scale; a log-ratio imbalance punishes lopsidedness …
+   h0030 improve refuted       -0.742  on p0074: Best-fit is measured in capacity units, not item units; scaling residual by the…
+   h0031 improve flat          +0.007  on p0093: Its constant closing bonus over-commits bins for large jobs (large 12.66); gati…
+   deep: 4/4 valid, best new -7.519
+   wide: 1/6 valid, best new -7.961
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 217 LLM calls total | 72.5s
+
+── generation 14: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   tune: p0123 -7.637 → p0130 -7.558 (48 tries)
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 0/6 valid, best new none valid
+   tune: 1/1 valid, best new -7.558
+   best so far -7.511 (p0074, tune) | 231 LLM calls total | 61.8s
+
+── generation 15: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 4/6 valid, best new -7.980
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 246 LLM calls total | 63.0s
+
+── generation 16: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 3/6 valid, best new -7.928
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 259 LLM calls total | 65.4s
+
+── generation 17: deep + wide + tune | pool best -7.511 (p0074)
+   deep: champion p0074 (-7.511); plan 0 cause + 4 improve
+   deep: no usable hypotheses after a retry; skipping the deep branch this generation
+   deep: 0/0 valid, best new none valid
+   wide: 3/6 valid, best new -7.995
+   tune: 0/0 valid, best new none valid
+   best so far -7.511 (p0074, tune) | 273 LLM calls total | 1229.3s
+
+Stop requested. Everything so far is saved.
+
+══ done
+best: p0074 score -7.511 (Code Zero -9.181, gain +1.670), found in generation 7 by the tune branch
+improve tests: 9 supported, 1 no-effect, 6 flat, 16 refuted
+LLM: 273 calls (0 pro), 730,702 tokens in, 991,757 out
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-080715-full
+final held-out check:  python -m helix.report /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-080715-full
+Publishing the final trace with the held-out check...
+Scoring the best program, Code Zero and the baselines on the held-out test split...
+published to results/20261012-080715-full  (commit it, or use Publish on the dashboard)

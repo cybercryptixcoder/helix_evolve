@@ -1,0 +1,31 @@
+{
+  "mode": "full",
+  "schedule": "parallel",
+  "generations": 30,
+  "max_minutes": 0.0,
+  "top_x": 4,
+  "variants": 6,
+  "hypotheses": 4,
+  "n": 40,
+  "epsilon": 0.4,
+  "repairs": 1,
+  "workers": 12,
+  "wait_minutes": 15,
+  "eval_timeout": 60.0,
+  "pro_every": 10,
+  "seed_program": "/Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/programs/code_zero.py",
+  "fake_llm": false,
+  "publish": true,
+  "run_dir": "/Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261011-185558-full",
+  "resume": null,
+  "provider": "luminal",
+  "flash_model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "pro_model": "",
+  "base_url": "https://flash.luminal.cloud/v1",
+  "temperature": {
+    "mutator": 0.8,
+    "researcher": 0.6,
+    "coder": 0.3,
+    "zeroshot": 0.8
+  }
+}

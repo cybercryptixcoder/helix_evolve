@@ -1,0 +1,72 @@
+{
+  "state": "finished",
+  "pid": 27944,
+  "mode": "full",
+  "schedule": "parallel",
+  "generation": 10,
+  "generations": 10,
+  "started": 1791823238.531498,
+  "error": null,
+  "phase": "",
+  "flow": {
+    "library": {
+      "state": "done",
+      "sub": "3 features",
+      "note": "20 weights"
+    },
+    "inspect": {
+      "state": "done",
+      "note": "anticorr +34, large +33",
+      "sub": "extra bins vs optimum"
+    },
+    "researcher": {
+      "state": "done",
+      "note": "4 feature ideas"
+    },
+    "coder": {
+      "state": "done",
+      "done": 4,
+      "total": 4,
+      "note": "4 of 4 written"
+    },
+    "mutator": {
+      "state": "done",
+      "done": 4,
+      "total": 4,
+      "note": "4 of 4 written"
+    },
+    "fit": {
+      "state": "done",
+      "note": "169 evaluations",
+      "done": 8,
+      "total": 8,
+      "sub": "7 of 8 tried"
+    },
+    "accept": {
+      "state": "done",
+      "note": "nothing kept",
+      "sub": "champion p0060"
+    }
+  },
+  "flow_generation": 10,
+  "updated": 1791824116.9449751,
+  "llm": {
+    "calls": 95,
+    "tokens_in": 208399,
+    "tokens_out": 39693,
+    "pro_calls": 0,
+    "in_flight": 0,
+    "retrying": 0,
+    "limit": 12,
+    "note": null
+  },
+  "best_id": "p0060",
+  "best_score": -6.1851,
+  "mongo": {
+    "enabled": false,
+    "written": 0,
+    "dropped": 0,
+    "error": null
+  },
+  "finished": 1791824116.94496
+}

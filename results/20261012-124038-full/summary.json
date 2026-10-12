@@ -1,0 +1,34 @@
+{
+  "run": "20261012-124038-full",
+  "published": "2026-10-12 12:55:19",
+  "state": "finished",
+  "mode": "full",
+  "schedule": "parallel",
+  "provider": "luminal",
+  "model": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "pro_model": null,
+  "generations_completed": 10,
+  "code_zero": -9.1812,
+  "best_score": -6.1851,
+  "best_id": "p0060",
+  "best_branch": "wide",
+  "gain": 2.9961,
+  "best_test_score": -5.9715,
+  "code_zero_test_score": -8.9093,
+  "offline_reference": {
+    "train": -5.6338,
+    "test": -4.9046
+  },
+  "progress_to_optimal_train": 34.33,
+  "progress_to_optimal_test": 34.07,
+  "gap_closed_train": 84.5,
+  "gap_closed_test": 73.4,
+  "programs": 84,
+  "hypotheses": {
+    "refuted": 18,
+    "flat": 22
+  },
+  "llm_calls": 95,
+  "tokens_in": 208399,
+  "tokens_out": 39693
+}

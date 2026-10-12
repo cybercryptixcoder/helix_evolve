@@ -1,0 +1,143 @@
+
+$ python -m helix.run --run-dir /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-134507-full --mode full --engine features --generations 10 --max-minutes 0 --hypotheses 4 --pro-every 10 --workers 12 --trial-evals 24 --refit-evals 64 --accept-margin 0.03
+Helix | engine features | mode full | models luminal: deepseek-ai/DeepSeek-V4.1-Flash
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-134507-full
+   checking the model is answering (before starting)...
+   model is answering
+── generation 0: Code Zero scores -9.181 (p0001); the library starts empty
+
+── generation 1: deep + wide | champion p0001 train -9.181 valid -9.168 | 0 features, 0 weights
+   f0005 deep cross_resource_complement    train +0.000  valid +0.000
+   f0007 deep residual_balance_after_place train +0.000  valid +0.000
+   f0008 deep tight_fit_small_jobs         train +0.028  valid +0.074
+   f0006 deep same_axis_heavy_pairing      train +0.053  valid -0.105
+   f0003 wide leftover_demand_direction_co train +0.000  valid +0.000
+   f0002 wide post_placement_imbalance_wei train +0.000  valid +0.000
+   f0001 wide balanced_fit_after_placement train +0.000  valid +0.000
+   f0004 wide tight_minus_loose_slack      train +0.000  valid +0.000
+   kept f0008 (deep) tight_fit_small_jobs
+   champion p0002: train -9.154, valid -9.094 | 9 LLM calls | 25.1s (agents 9s, fit 16s)
+
+── generation 2: deep + wide | champion p0002 train -9.154 valid -9.094 | 1 features, 1 weights
+   f0014 deep same_resource_pairing        train +0.000  valid +0.000
+   f0016 deep residual_waste_for_large_ite train +0.035  valid -0.095
+   f0015 deep small_job_consolidation_pena train +0.133  valid +0.052
+   f0013 deep complementary_residual_balan train +0.000  valid +0.000
+   f0011 wide tight_fit_small_jobs_in_full train +0.126  valid -0.062
+   f0012 wide residual_axis_imbalance      train +0.000  valid +0.000
+   f0009 wide residual_imbalance_tightfit  train +0.000  valid +0.000
+   f0010 wide tight_fit_small_jobs_scarce_ train +0.491  valid +0.450
+   combined 1 of 2 good features: train -8.662, valid -8.644
+   joint refit gained on train (-8.538) but not on validation (-8.704); not used
+   kept f0010 (wide) tight_fit_small_jobs_scarce_gated
+   champion p0011: train -8.662, valid -8.644 | 18 LLM calls | 72.4s (agents 10s, fit 61s)
+
+── generation 3: deep + wide | champion p0011 train -8.662 valid -8.644 | 2 features, 2 weights
+   f0022 deep anticorr_quad_residual_balan train +0.000  valid +0.000
+   f0023 deep bimodal_heavy_same_class_slo train +0.000  valid +0.000
+   f0021 deep same_resource_pairing        train +0.771  valid +0.896
+   f0024 deep uniform_medium_stack_room    train +0.000  valid +0.000
+   f0018 wide tight_fit_small_jobs_bottlen train +0.058  valid -0.057
+   f0020 wide residual_balance_match       train +0.000  valid +0.000
+   f0019 wide tight_fit_scarce_balance_gat train +0.004  valid +0.004
+   f0017 wide small_job_balance_gap_gated  invalid: ```python import numpy as np import math def _f0012(item, bins, capacity): """Small-job f…
+   joint refit gained on train (-7.747) but not on validation (-7.813); not used
+   kept f0021 (deep) same_resource_pairing
+   champion p0020: train -7.891, valid -7.748 | 28 LLM calls | 101.3s (agents 11s, fit 89s)
+
+── generation 4: deep + wide | champion p0020 train -7.891 valid -7.748 | 3 features, 3 weights
+   f0030 deep two_large_same_resource_fit  train +0.487  valid +0.077
+   f0029 deep avoid_stranding_after_place  train +0.000  valid +0.000
+   f0031 deep residual_usable_by_typical_j train +0.128  valid +0.028
+   f0032 deep small_job_fill_tightest_resi train +0.000  valid +0.000
+   f0025 wide tight_fit_small_jobs_worst_r train +0.014  valid +0.044
+   f0028 wide light_resource_residual_shar train +0.000  valid +0.000
+   f0026 wide same_resource_pairing_slot_q train +0.437  valid +0.052
+   f0027 wide tight_fit_small_jobs_squared train +0.000  valid +0.000
+   combined 1 of 2 good features: train -7.405, valid -7.671
+   kept f0030 (deep) two_large_same_resource_fit
+   champion p0029: train -7.405, valid -7.671 | 37 LLM calls | 401.4s (agents 12s, fit 387s)
+
+── generation 5: deep + wide | champion p0029 train -7.405 valid -7.671 | 4 features, 4 weights
+   f0038 deep large_second_large_same_axis train +0.000  valid +0.000
+   f0037 deep anticorr_complementary_axis_ train +0.000  valid +0.000
+   f0040 deep uniform_fourth_slot_readines train +0.000  valid +0.000
+   f0039 deep bimodal_same_axis_large_pair train +0.000  valid +0.000
+   f0036 wide total_used_fraction          train +0.000  valid +0.000
+   f0034 wide same_resource_pairing_nearfu train +0.000  valid +0.000
+   f0033 wide tight_fit_small_jobs_harmoni train +0.000  valid +0.000
+   f0035 wide heavy_residual_jobs_fit_tanh invalid: ```python import numpy as np import math def _f0030_variant(item, bins, capacity): """Res…
+   kept nothing
+   champion p0029: train -7.405, valid -7.671 | 47 LLM calls | 271.5s (agents 10s, fit 261s)
+
+── generation 6: deep + wide | champion p0029 train -7.405 valid -7.671 | 4 features, 4 weights
+   f0045 deep reserve_complement_axis      invalid: too slow: an evaluation takes 6.3s with it, 1.5s without; vectorise it (no Python loops o…
+   f0046 deep fourth_slot_headroom         train +0.000  valid +0.000
+   f0047 deep same_axis_large_pairing_bimo train +0.000  valid +0.000
+   f0048 deep uniform_fourth_job_fit       train +0.000  valid +0.000
+   f0043 wide tight_fit_small_jobs_max_occ train +0.086  valid +0.040
+   f0044 wide residual_balance_alignment   train +0.000  valid +0.000
+   f0042 wide heavy_light_residual_asymmet train +0.014  valid +0.049
+   f0041 wide same_resource_pairing_light_ invalid: ```python import numpy as np import math def _f0021b(item, bins, capacity): """Same-resou…
+   combined 1 of 2 good features: train -7.390, valid -7.622
+   kept f0042 (wide) heavy_light_residual_asymmetry
+   champion p0046: train -7.391, valid -7.622 | 60 LLM calls | 478.9s (agents 12s, fit 465s)
+
+── generation 7: deep + wide | champion p0046 train -7.391 valid -7.622 | 5 features, 5 weights
+   f0056 deep small_job_residual_room_gate train +0.000  valid +0.000
+   f0053 deep large_item_open_bin_reserve  train +0.000  valid +0.000
+   f0054 deep same_resource_double_large_p train +0.000  valid +0.000
+   f0055 deep anticorr_quad_residual_balan train +0.000  valid +0.000
+   f0052 wide min_dimension_residual_healt train +0.000  valid +0.000
+   f0050 wide worn_heavy_light_room        train +0.000  valid +0.000
+   f0049 wide mirrored_class_pairing       train +0.000  valid +0.000
+   f0051 wide balanced_item_scarce_resourc train +0.000  valid +0.000
+   kept nothing
+   champion p0046: train -7.391, valid -7.622 | 69 LLM calls | 490.6s (agents 10s, fit 480s)
+
+── generation 8: deep + wide | champion p0046 train -7.391 valid -7.622 | 5 features, 5 weights
+   f0062 deep large_job_second_large_slot  train +0.000  valid +0.000
+   f0061 deep small_job_aggregate_residual train +0.000  valid +0.000
+   f0064 deep uniform_medium_triple_balanc train +0.000  valid +0.000
+   f0063 deep bimodal_pair_large_same_axis train +0.000  valid +0.000
+   f0058 wide wide_f0058                   train +0.000  valid +0.000
+   f0060 wide residual_fragmentation_ratio train +0.000  valid +0.000
+   f0057 wide two_slot_same_resource_fit   invalid: ```python import numpy as np import math def _f0030_variant(item, bins, capacity): """Res…
+   f0059 wide tight_fit_residual_kernel_sm invalid: ```python import numpy as np import math def _f0008_var(item, bins, capacity): """For sma…
+   kept nothing
+   champion p0046: train -7.391, valid -7.622 | 80 LLM calls | 283.3s (agents 11s, fit 272s)
+
+── generation 9: deep + wide | champion p0046 train -7.391 valid -7.622 | 5 features, 5 weights
+   f0072 deep residual_balance_for_small_j train +0.000  valid +0.000
+   f0069 deep two_large_same_resource_pair train +0.000  valid +0.000
+   f0071 deep avoid_stranding_medium_pair  train +0.176  valid +0.198
+   f0070 deep fourth_job_room_for_anticorr train +0.000  valid +0.000
+   f0067 wide wide_f0067                   train +0.000  valid +0.000
+   f0066 wide corner_fit_small_jobs        train +0.000  valid +0.000
+   f0068 wide extreme_fill_tightness_gate  train +0.000  valid +0.000
+   f0065 wide heavy_light_residual_asymmet invalid: ```python import numpy as np import math def _f0042_variant(item, bins, capacity): """Sig…
+   kept f0071 (deep) avoid_stranding_medium_pair; retired f0042
+   champion p0071: train -7.290, valid -7.389 | 90 LLM calls | 311.4s (agents 10s, fit 299s)
+
+── generation 10: deep + wide | champion p0071 train -7.290 valid -7.389 | 5 features, 5 weights
+   f0079 deep bimodal_second_large_same_ax train +0.000  valid +0.000
+   f0077 deep large_pair_same_axis_complet train +0.304  valid +0.225
+   f0078 deep anticorr_fourth_slot_opennes train +0.000  valid +0.000
+   f0080 deep uniform_fourth_medium_slot   train +0.163  valid -0.029
+   f0073 wide wide_f0073                   train +0.000  valid +0.000
+   f0076 wide looser_residual_seal         train +0.025  valid -0.090
+   f0074 wide tight_fit_small_jobs_tighter train +0.031  valid +0.170
+   f0075 wide oriented_residual_pairing    train +0.150  valid -0.055
+   combined 2 of 2 good features: train -6.986, valid -7.008
+   kept f0077 (deep) large_pair_same_axis_completion, f0074 (wide) tight_fit_small_jobs_tighter_side_gated
+   champion p0080: train -6.986, valid -7.008 | 99 LLM calls | 390.0s (agents 10s, fit 377s)
+
+══ done
+best: p0080 score -6.986 (Code Zero -9.181, gain +2.195), found in generation 10 by the deep branch
+LLM: 99 calls (0 pro), 222,755 tokens in, 38,143 out
+run folder: /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-134507-full
+final held-out check:  python -m helix.report /Users/shreyasmac/Downloads/Helix_evolve/helix_evolve/helix/runs/20261012-134507-full
+features kept: 7 (f0008 tight_fit_small_jobs (deep), f0010 tight_fit_small_jobs_scarce_gated (wide), f0021 same_resource_pairing (deep), f0030 two_large_same_resource_fit (deep), f0071 avoid_stranding_medium_pair (deep), f0074 tight_fit_small_jobs_tighter_side_gated (wide), f0077 large_pair_same_axis_completion (deep)); tried: 80
+Publishing the final trace with the held-out check...
+Scoring the best program, Code Zero and the baselines on the held-out test split...
+published to results/20261012-134507-full  (commit it, or use Publish on the dashboard)

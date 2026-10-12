@@ -1,0 +1,157 @@
+HELIX SNAPSHOT  run 20261012-080715-full  (08:45:01)
+State: stopped | generation 17/30 | phase: - | elapsed 37.7 min
+Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 6, hypotheses 4
+LLM so far: 273 calls (0 pro), 730,702 tokens in, 991,757 out
+Programs: 148 made, 76 valid, 4 repaired, 0 duplicates
+Best: p0074 score -7.511 (tune branch, generation 7), gain +1.670 over Code Zero -9.181
+
+== Generations (score = -mean excess %, higher is better)
+gen  6: best -7.630 | deep 0/0 valid, best new none | wide 1/6 valid, best new -7.780 | tune 2/2 improved, best -7.630 (96 tries) | 62.5s
+gen  7: best -7.511 | deep 0/0 valid, best new none | wide 1/6 valid, best new -7.657 | tune 1/2 improved, best -7.511 (96 tries) | 64.3s
+gen  8: best -7.511 | deep 4/4 valid, best new -7.548 [refuted 3, supported 1] | wide 3/6 valid, best new -7.778 | tune 0/2 improved (96 tries) | 85.0s
+gen  9: best -7.511 | deep 4/4 valid, best new -7.526 [supported 1, flat 1, refuted 2] | wide 2/6 valid, best new -8.087 | tune 0/2 improved (96 tries) | 81.1s
+gen 10: best -7.511 | deep 0/0 valid, best new none | wide 1/6 valid, best new -8.014 | tune 1/2 improved, best -7.545 (96 tries) | 61.1s
+gen 11: best -7.511 | deep 0/0 valid, best new none | wide 4/6 valid, best new -7.803 | tune 0/0 improved (0 tries) | 63.7s
+gen 12: best -7.511 | deep 0/0 valid, best new none | wide 2/6 valid, best new -7.927 | tune 0/0 improved (0 tries) | 63.5s
+gen 13: best -7.511 | deep 4/4 valid, best new -7.519 [refuted 3, flat 1] | wide 1/6 valid, best new -7.961 | tune 0/0 improved (0 tries) | 72.5s
+gen 14: best -7.511 | deep 0/0 valid, best new none | wide 0/6 valid, best new none | tune 1/2 improved, best -7.558 (96 tries) | 61.8s
+gen 15: best -7.511 | deep 0/0 valid, best new none | wide 4/6 valid, best new -7.980 | tune 0/0 improved (0 tries) | 63.0s
+gen 16: best -7.511 | deep 0/0 valid, best new none | wide 3/6 valid, best new -7.928 | tune 0/0 improved (0 tries) | 65.4s
+gen 17: best -7.511 | deep 0/0 valid, best new none | wide 3/6 valid, best new -7.995 | tune 0/0 improved (0 tries) | 1229.3s
+
+== Current pool, best first
+p0074 -7.511 tune | uniform 4.2 correlated 3.2 anticorr 15.3 small 2.8 large 12.6 bimodal 7.0 | tuned 2 constants of p0063 (+0.269): 0.5685→0.6302, 0.3→0.3096
+p0122 -7.519 deep | uniform 4.1 correlated 3.3 anticorr 15.0 small 3.1 large 12.7 bimodal 6.9 | I multiplied the closing bonus by `(1 - np.maximum(f_c, f_m))`, keeping its weight and decay constant unchanged. | new w
+p0093 -7.526 deep | uniform 4.1 correlated 3.3 anticorr 15.5 small 2.8 large 12.7 bimodal 6.8 | I added the exponential near-zero-residual bonus with weight 0.3 to the base score, keeping every other term unchanged. 
+p0101 -7.545 tune | uniform 4.0 correlated 3.3 anticorr 15.5 small 3.1 large 12.8 bimodal 6.5 | tuned 2 constants of p0094 (+0.089): 0.3273→0.3228, 0.2129→0.2135
+p0084 -7.548 deep | uniform 4.2 correlated 3.2 anticorr 15.3 small 3.1 large 12.5 bimodal 7.0 | I added the champion's alignment term `0.3 * (n_c * f_c + n_m * f_m)` to p0066's existing score, keeping the imbalance (
+
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 79.4s)
+Reasoning (excerpt): Let me analyze what's going on.
+
+Champion p0074: score -7.511. Parts:
+- base = -max(n_c, n_m) : L-infinity best fit
+- imb = -0.6302*(n_c-n_m)^2
+- shape = -0.211*((n_c-f_c)-(n_m-f_m))^2
+- align = 0.3096*(n_c*f_c+n_m*f_m)
+
+No knock-outs yet on this champion. Wait, the plan says 4 improve tests only. So no cause tests allowed this generation. Hmm, "Propose exactly 4 hypotheses: 4 improve tests".
+
+Key observations from the log: many terms tried. Notable that h0027 (closing bonus) was flat (-0.014 tuned) but p0093 was built from it (deep, from p0074) with close term: -0.014 over its parent. Then p0122 from p0093 with size-gated close, +0.007. p0130 = p0101 + close, +0.079 over p0123.
+
+Best scores haven't moved for 12 generations. Lots of things tried.
+
+The room is in anticorr (12.8) and large (12.3). Champion's biggest excess: anticorr 15.26, large 12.57.
+
+What mechanisms haven't been tried?
+
+Ideas:
+1. **Look-ahead / pairwise bin features**: the champion only uses per-bin residual. A new mechanism: consider joint/2-bin packing, e.g. score based on how well the item plus the residual pairs. Hmm hard to code into single score per bin.
+
+2. **Nonlinear transformation of the base**: base is -max(n_c,n_m). Tried convexifying (h0023 refuted). 
+
+3. **Sigmoid / softmax-like transformation**: soft-plus: -log-sum-exp approximation of max. A smooth max: base = -(1/k)*log(exp(k*n_c)+exp(k*n_m)). This blends max but still behaves like max. Not tried explicitly (h0008 p-norm was tried, refuted).
+
+4. **Per-family adaptive**: not possible without state.
+
+5. **A "closed bin" term**: reward when placing the item makes the bin exactly full in one dimension. Tried closing bonus (h0027 flat, h0031 flat). 
+
+6. **Relative/scale-aware imbalance**: tried h0029 log-ratio, refuted badly.
+
+7. **Score ba
+[...]
+older bins (lower index) to close them, or prefer newer. E.g., subtract w * (index / k). Actually index is available as np.arange. This is a genuinely new mechanism (state/order-based). Could help by systematically draining old bins → fewer open bins. Let's propose: add term -w * (row_index / (k-1))?? Hmm but opening the last row (new bin) vs old. Actually preferring to fill OLD bins (index 0) means penalize high index. That's the classic "first fit" flavor. Might help.
+
+Actually wait, since bins are listed oldest first, and the last row is always new. Adding a preference for old bins: score += w*(1 - index/k)? Let's just do score -= w * (index/(k-1+eps)) so older bins get higher score. This
+Reply: Let me analyze what's going on.
+
+Champion p0074: score -7.511. Parts:
+- base = -max(n_c, n_m) : L-infinity best fit
+- imb = -0.6302*(n_c-n_m)^2
+- shape = -0.211*((n_c-f_c)-(n_m-f_m))^2
+- align = 0.3096*(n_c*f_c+n_m*f_m)
+
+No knock-outs yet on this champion. Wait, the plan says 4 improve tests only. So no cause tests allowed this generation. Hmm, "Propose exactly 4 hypotheses: 4 improve tests".
+
+Key observations from the log: many terms tried. Notable that h0027 (closing bonus) was flat (-0.014 tuned) but p0093 was built from it (deep, from p0074) with close term: -0.014 over its parent. Then p0122 from p0093 with size-gated close, +0.007. p0130 = p0101 + close, +0.079 over p0123.
+
+Best scores haven't moved for 12 generations. Lots of things tried.
+
+The room is in anticorr (12.8) and large (12.3). Champion's biggest excess: anticorr 15.26, large 12.57.
+
+What mechanisms haven't been tried?
+
+Ideas:
+1. **Look-ahead / pairwise bin features**: the champion only uses per-bin residual. A new mechanism: consider joint/2-bin packing, e.g. score based on how well the item plus the residual pairs. Hmm hard to code into single score per bin.
+
+2. **Nonlinear transformation of the base**: base is -max(n_c,n_m). Tried convexifying (h0023 refuted). 
+
+3. **Sigmoid / softmax-like transformation**: soft-plus: -log-sum-exp approximation of max. A smooth max: base = -(1/k)*log(exp(k*n_c)+exp(k*n_m)). This blends max but still behaves like max. Not tried explicitly (h0008 p-norm was tried, refuted).
+
+4. **Per-family adaptive**: not possible without state.
+
+5. **A "closed bin" term**: reward when placing the item makes the bin exactly full in one dimension. Tried closing bonus (h0027 flat, h0031 flat). 
+
+6. **Relative/scale-aware imbalance**: tried h0029 log-ratio, refuted badly.
+
+7. **Score based on the fraction of the item that fits**: base uses residual after; maybe also consider residual before? bin's current remaining must fit item. Already implied.
+
+8. **Weighted best-fit using geometric mean or harmonic**: base = -max, could try -sqrt(n_c*n_m) or something? Tried product h0025 refuted.
+
+9. **Rule for opening a new bin**: tried several penalties, refuted (h0022 state-dependent refuted).
+
+10. **Transplant from another lineage**: p0066 lineage (no align) — h0024 showed transplanting align into p0066 gave +0.083, producing p0084. p0101 (from p0094/67 lineage) has align 0.3228 and imb 0.5558. 
+
+Actually let's think about the structure. p0101 and p0130 come from p0067 lineage with imb 0.5558 and shape 0.2135 and align 0.3228. p0101 score -7.545 with uniform 3.98, bimodal 6.52, anticorr 15.48. p0130 = -7.558.
+
+Hmm, p0101 has pretty good uniform (3.98) and bimodal (6.52). But that's still behind champion overall.
+
+Idea: **Score combining L-infinity with a "remainder-fits-common-item" term**. Not tried.
+
+Better: think about what's fundamentally missing. The champion's excess on anticorr is 15.26 vs bound 2.4 → room 12.8. Anticorr: half jobs CPU-heavy, half memory-heavy. Th
+
+== Latest verdicts
+h0028 gen 9 improve supported +0.069 on p0067 (builds on h0024): h0024 showed p0066 gains +0.083 from the champion's dot-product alignment, best on large. p0067 is stronger on bimodal/uniform and also lacks alignment, so the  || change: In p0067 add align = 0.3*(n_c*f_c + n_m*f_m) with n=(bins-item)/capacity, f=item/capacity, keeping its imbalance 0.5558 
+h0027 gen 9 improve flat -0.014 on p0074 (builds on h0018): Best-fit never rewards closing a bin exactly. An exponential bonus for a near-zero binding residual makes the packer actively finish bins, which should cut the  || change: Add +w*np.exp(-8*np.maximum(n_c,n_m)) to the champion score (exp is safe), w moderate (~0.3), tuned.
+h0025 gen 9 improve refuted -0.203 on p0074: The champion only looks at the worst residual via max; a bin whose BOTH residuals end small is genuinely tighter for future jobs. Rewarding small residual produ || change: Add term -w * n_c * n_m to the champion score (n = (bins-item)/capacity), moderate w (~0.4), tuned automatically.
+h0026 gen 9 improve refuted -0.229 on p0074: Opening a whole bin for a small item is wasteful; the empty row should be expensive for small items and cheap for large ones, since large jobs have no other hom || change: On rows where np.all(bins==capacity,axis=1), subtract w*(1-np.maximum(f_c,f_m)) from the score, w moderate (~0.3), tuned
+h0032 gen 13 improve refuted -0.092 on p0101 (builds on h0027): p0101 has the best uniform (3.98) and bimodal (6.52) but no closing bonus; transplanting p0093's exponential close term should finish bins and cut slivers. || change: Add +w*np.exp(-k*np.maximum(n_c,n_m)) to p0101 with w~0.33, k~9, tuned; keep all other terms.
+h0029 gen 13 improve refuted -7.306 on p0074 (builds on h0009): Quadratic imbalance ignores scale; a log-ratio imbalance punishes lopsidedness hardest in nearly-full bins, which is where anticorr and large strand. || change: Replace imb with -w*(log(n_c+1e-3)-log(n_m+1e-3))**2, keeping base, shape, align; w moderate (~0.6), tuned.
+h0030 gen 13 improve refuted -0.742 on p0074: Best-fit is measured in capacity units, not item units; scaling residual by the item shows how many more similar jobs fit, which matters for big jobs. || change: Replace base -np.maximum(n_c,n_m) with -np.maximum(n_c/(f_c+0.02), n_m/(f_m+0.02)); keep imb, shape, align; tune.
+h0031 gen 13 improve flat +0.007 on p0093 (builds on h0027): Its constant closing bonus over-commits bins for large jobs (large 12.66); gating the bonus by item size stops pushing big jobs into slivers. || change: Multiply close by (1-np.maximum(f_c,f_m)): close = w*np.exp(-k*np.maximum(n_c,n_m))*(1-np.maximum(f_c,f_m)); tune w,k.
+
+== Latest Mutator ideas
+p0144 invalid: Let me reconstruct. The program to improve (-7.511) has base + imb + shape + align, no close term. Wait, the -7.511 block shown has 4 terms and returns base + imb + shape + align. 
+p0147 invalid: The user wants a completely new program. Let me think about a fresh approach for online 2D vector bin packing. The best program uses base = -max(n_c, n_m), imbalance penalty, shape
+p0146 -7.995: Let me design a fresh idea that could beat -7.511. I need a different scoring approach. The shown family: base = -max(n_c, n_m) (best fit L∞), plus imbalance, shape, alignment, clo
+p0145 -8.008: I need to write a complete program following the format. Let me continue the idea: use a smooth-max (p-norm) base instead of max, keep the other terms, plus a differently-shaped cl
+p0148 invalid: Let me design a genuinely different program. I'll consider using min/max residual formulation with different powers, plus a "completion" term. Let me make it vectorized and robust.
+
+== Most common failures
+72x reply had no ```python block defining priority()
+
+== Best program (p0074)
+import numpy as np
+
+def priority(item, bins, capacity):
+    residual = bins - item                      # remaining after placing (>=0 for all candidates)
+    n_c = residual[:, 0] / capacity[0]          # normalised residual CPU
+    n_m = residual[:, 1] / capacity[1]          # normalised residual memory
+    f_c = item[0] / capacity[0]                 # normalised item demand
+    f_m = item[1] / capacity[1]
+
+    # base: best-fit in the tighter resource (small remaining is good)
+    base = -np.maximum(n_c, n_m)
+
+    # imbalance penalty: punish a leftover that is lopsided in one resource
+    imb = -0.6302 * (n_c - n_m) ** 2
+
+    # shape penalty: punish a residual whose "free-space shape" drifts from the item's shape
+    shape = -0.211 * ((n_c - f_c) - (n_m - f_m)) ** 2
+
+    # alignment reward: prefer bins whose residual points along the item's aspect ratio,
+    # so future jobs of similar shape still fit (kept from the original idea)
+    align = 0.3096 * (n_c * f_c + n_m * f_m)
+
+    # IMPORTANT: return one score per candidate bin -> shape (k,)
+    return base + imb + shape + align
