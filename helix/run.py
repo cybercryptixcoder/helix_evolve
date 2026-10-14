@@ -730,22 +730,28 @@ def parse_args(argv=None):
                     help="evaluations in parallel while tuning")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
     fe = ap.add_argument_group("features engine")
-    fe.add_argument("--trial-evals", type=int, default=24, help="evaluations searching a new feature's weights")
+    fe.add_argument("--trial-evals", type=int, default=10, help="evaluations searching a new feature's weights")
     fe.add_argument("--trial-sigma", type=float, default=0.5, help="step size searching a new feature's weights")
-    fe.add_argument("--refit-evals", type=int, default=64, help="evaluations of the joint refit when features are kept")
+    fe.add_argument("--refit-evals", type=int, default=24, help="evaluations of the joint refit when features are kept")
     fe.add_argument("--inspect", action=argparse.BooleanOptionalAction, default=True,
                     help="show the Researcher the champion's packings next to near-optimal packings of the same jobs")
-    fe.add_argument("--trial-refit-evals", type=int, default=24,
+    fe.add_argument("--trial-refit-evals", type=int, default=10,
                     help="evaluations of each of a feature's two paired refits (with it, and with it switched off)")
-    fe.add_argument("--champion-refit-evals", type=int, default=24,
+    fe.add_argument("--champion-refit-evals", type=int, default=12,
                     help="evaluations refitting the champion's own weights each generation, before features are tried")
+    fe.add_argument("--probe-margin", type=float, default=0.08,
+                    help="a feature whose cheap probe loses to the champion by more than this is rejected "
+                         "without the full weight search and paired refits")
+    fe.add_argument("--overlap", action=argparse.BooleanOptionalAction, default=True,
+                    help="start the champion refit and try each feature as soon as it is written, while the "
+                         "agents are still working (generations spend the fit time under the agent time)")
     fe.add_argument("--refit-sigma", type=float, default=0.15)
     fe.add_argument("--accept-margin", type=float, default=0.03,
                     help="validation gain a feature needs to be kept, and loss that retires one (one bin on one "
                          "validation instance is about 0.017)")
     fe.add_argument("--max-columns", type=int, default=60, help="most weights the policy may have")
-    fe.add_argument("--fit-workers", type=int, default=max(1, (os.cpu_count() or 2) - 1),
-                    help="processes scoring policies in parallel")
+    fe.add_argument("--fit-workers", type=int, default=max(1, os.cpu_count() or 2),
+                    help="processes scoring policies in parallel (default: all cores — the fit phase is CPU-bound)")
     fe.add_argument("--fit-timeout", type=float, default=900, help="seconds before a batch of evaluations counts as hung")
     ap.add_argument("--fake-llm", action="store_true", help="offline test double instead of Luminal")
     ap.add_argument("--publish", action=argparse.BooleanOptionalAction, default=None,
@@ -757,7 +763,7 @@ def parse_args(argv=None):
 
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
 KEPT_ON_RESUME = ["engine", "inspect", "trial_evals", "trial_sigma", "trial_refit_evals", "refit_evals",
-                  "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns",
+                  "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns", "probe_margin", "overlap",
                   "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
                   "tune", "tune_evals", "tune_targets",
