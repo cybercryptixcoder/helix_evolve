@@ -1,5 +1,5 @@
-# p0112 | score -6.2121 | generation 14 | wide branch
-# Helix feature policy | p0112, generation 14, 9 features
+# p0121 | score -6.1556 | generation 15 | deep branch
+# Helix feature policy | p0121, generation 15, 10 features
 # priority() = sum over features of (weight x scale) . feature(item, bins, capacity); the weights were fitted
 # by an optimiser. With every weight at 0 all bins tie and the simulator picks the oldest bin that fits
 # (first fit), so the empty policy is Code Zero.
@@ -112,7 +112,19 @@ def _f0112(item, bins, capacity):
     ratio = np.clip(item_l / (bin_l + 1e-06), 0, 2)
     return item_big * ratio * (1 - np.minimum(after[:, 0], after[:, 1]))
 
-_TERMS = [(_f0008, np.array([-0.6713766491359417])), (_f0024, np.array([4.405559270518047])), (_f0031, np.array([18.068572213234294])), (_f0032, np.array([0.5513681515659591])), (_f0046, np.array([8.87839759390958])), (_f0053, np.array([4.223347288454902])), (_f0101, np.array([-22.36737365624814])), (_f0107, np.array([29.600484195569067])), (_f0112, np.array([-1.5231352693285196]))]
+
+# f0119 two_large_pair_priority_bimodal (deep, 1 value): after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); roo
+def _f0119(item, bins, capacity):
+    """For large jobs, prefer bins whose tight-axis room after placement mirrors the job's tight demand."""
+    after = np.clip(bins - item, 0, None) / capacity
+    item_t = min(item) / capacity[0]
+    item_l = max(item) / capacity[0]
+    item_big = 1.0 if item_t >= 0.3 else 0.0
+    room_t = np.minimum(after[:, 0], after[:, 1])
+    room_l = np.maximum(after[:, 0], after[:, 1])
+    return item_big * (1.0 - np.abs(room_t - item_t)) * (room_l >= item_l)
+
+_TERMS = [(_f0008, np.array([-0.6425159866024088])), (_f0024, np.array([4.655641719622989])), (_f0031, np.array([20.817372717469638])), (_f0032, np.array([1.41621024562004])), (_f0046, np.array([6.981695288907082])), (_f0053, np.array([5.459969796148487])), (_f0101, np.array([-20.661712108115136])), (_f0107, np.array([30.685032291212014])), (_f0112, np.array([-3.048246916825951])), (_f0119, np.array([8.292140948667662]))]
 
 
 def priority(item, bins, capacity):
