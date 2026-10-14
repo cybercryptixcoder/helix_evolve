@@ -745,6 +745,9 @@ def parse_args(argv=None):
     fe.add_argument("--max-combine", type=int, default=4,
                     help="most features the greedy combine tries to add in one generation (bounds the time an "
                          "unusually rich generation spends on combination attempts)")
+    fe.add_argument("--gen-eval-cap", type=int, default=320,
+                    help="per generation, skip the optional acceptance extras (second chances, backlog revisits) "
+                         "once this many evaluations are spent; keeps rich generations near a minute (0 = off)")
     fe.add_argument("--combo-evals", type=int, default=8,
                     help="evaluations each second-chance feature gets")
     fe.add_argument("--combine-refit", type=int, default=6,
@@ -781,7 +784,7 @@ def parse_args(argv=None):
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
 KEPT_ON_RESUME = ["engine", "inspect", "trial_evals", "trial_sigma", "trial_refit_evals", "refit_evals",
                   "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns", "probe_margin", "overlap",
-                  "combo", "combo_evals", "combine_refit", "revisit", "fit_split",
+                  "combo", "combo_evals", "combine_refit", "revisit", "gen_eval_cap", "fit_split",
                   "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
                   "tune", "tune_evals", "tune_targets",
