@@ -142,7 +142,7 @@ def list_runs():
                      "provider": cfg.get("provider"),
                      "model": cfg.get("flash_model"), "generation": st.get("generation"),
                      "generations": st.get("generations"), "best_score": st.get("best_score"),
-                     "published": d.parent == RESULTS_DIR})
+                     "published": d.parent == RESULTS_DIR or (RESULTS_DIR / d.name / "generations.jsonl").exists()})
     return runs
 
 
@@ -309,7 +309,7 @@ def run_state(name):
     s["has_report"] = (d / "report.md").exists()
     s["stop_requested"] = (d / "STOP").exists()
     s["heldout"] = heldout_units(d)
-    s["published"] = d.parent == RESULTS_DIR
+    s["published"] = d.parent == RESULTS_DIR or (RESULTS_DIR / d.name / "generations.jsonl").exists()
     return s
 
 
