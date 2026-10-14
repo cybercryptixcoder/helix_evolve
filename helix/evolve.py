@@ -602,14 +602,15 @@ class FeatureSearch(Search):
         # ---- second chance: near-miss features, tried once more next to what was kept. A feature can pay
         # off only next to another one; its solo trial had to rescue it on its own, so a feature that came
         # close is retried together with the kept set (both sets of weights refitted).
+        # Each optional extra class checks the soft budget for itself, so a long trial section no longer
+        # starves all of them: whichever extra still fits the budget runs.
         n_combo = int(getattr(self.a, "combo", 0) or 0)
-        soft = int(getattr(self.a, "gen_soft_seconds", 0) or 0)
-        over_soft = soft > 0 and self._fit_started and (time.time() - self._fit_started) > soft
-        if over_soft and (n_combo > 0 or int(getattr(self.a, "pairs", 0) or 0) > 0
-                         or int(getattr(self.a, "revisit", 0) or 0) > 0):
-            say(f"   skipping the optional acceptance extras: this generation is already "
-                f"{time.time() - self._fit_started:.0f}s old (soft budget {soft}s)")
-        if n_combo > 0 and not over_soft:
+
+        def over_soft():
+            soft = int(getattr(self.a, "gen_soft_seconds", 0) or 0)
+            return bool(soft > 0 and self._fit_started and (time.time() - self._fit_started) > soft)
+
+        if n_combo > 0 and not over_soft():
             near = [t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
                     and t["feature"].status not in ("invalid", "redundant")
                     and t["feature"].delta_valid > -margin]
@@ -641,7 +642,7 @@ class FeatureSearch(Search):
         # can pay off even when neither does on its own — the interaction the greedy combine can't see,
         # because it only combines features that already passed alone).
         n_pairs = int(getattr(self.a, "pairs", 0) or 0)
-        if n_pairs > 0 and not over_soft:
+        if n_pairs > 0 and not over_soft():
             pool = sorted([t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
                            and t["feature"].status not in ("invalid", "redundant")],
                           key=lambda t: -t["feature"].delta_valid)
@@ -679,7 +680,7 @@ class FeatureSearch(Search):
         # ---- backlog retry: near-miss features from past generations, re-fitted against the current
         # champion. A feature that lost against an older champion can win against a newer one.
         n_revisit = int(getattr(self.a, "revisit", 0) or 0)
-        if n_revisit > 0 and not over_soft:
+        if n_revisit > 0 and not over_soft():
             g = self.flow_generation or 0
             backlog = [f for f in self.features.values()
                        if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library

@@ -745,9 +745,9 @@ def parse_args(argv=None):
     fe.add_argument("--max-combine", type=int, default=4,
                     help="most features the greedy combine tries to add in one generation (bounds the time an "
                          "unusually rich generation spends on combination attempts)")
-    fe.add_argument("--gen-soft-seconds", type=int, default=180,
-                    help="per generation, skip the optional acceptance extras (second chances, pair trials, "
-                         "backlog revisits) once the fit phase ran this long; keeps rich generations bounded (0 = off)")
+    fe.add_argument("--gen-soft-seconds", type=int, default=330,
+                    help="per generation, each optional acceptance extra (second chances, pair trials, backlog "
+                         "revisits) is skipped if the fit phase already ran this long when its turn comes (0 = off)")
     fe.add_argument("--pairs", type=int, default=0,
                     help="pair trials per generation: up to N pairs among the best failed candidates are tried "
                          "together (an interaction two singly-failing features can still provide)")
