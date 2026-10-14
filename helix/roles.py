@@ -313,7 +313,7 @@ def _complete_objects(text):
 
 # ================================================================ the feature engine
 def feature_researcher_message(generation, champion, library_lines, room_lines, packings_text, log_lines, n,
-                               progress=None, stuck=0):
+                               progress=None, stuck=0, focus=""):
     parts = [f"Generation {generation}. Score = −(mean excess %); higher is better."]
     head = (f"## The policy (champion {champion['id']}): train score {champion['train']:.3f}, "
             f"validation score {champion['valid']:.3f}")
@@ -330,6 +330,8 @@ def feature_researcher_message(generation, champion, library_lines, room_lines, 
                  "validation; invalid = the code didn't work. The number is the validation change when the feature "
                  "was tried alone on top of the policy.\n" + ("\n".join(log_lines) if log_lines else "(nothing tried yet)"))
     ask = f"## Plan\nPropose exactly {n} new features, each aimed at a specific difference you see in the packings."
+    if focus:
+        ask += f" This generation, look at the packings through this lens: {focus}."
     if stuck:
         ask += (f" The policy hasn't improved for {stuck} generations: the small refinements are used up (see the "
                 "log). Look for a mechanism the policy can't see at all, not a refinement of a feature it already has.")
@@ -383,6 +385,15 @@ def extract_feature_ideas(text):
         if out:
             return out
     return []
+
+
+# Rotating attention lenses for the Researcher: each generation looks at the same packings through one
+# of these, so consecutive generations explore different decision points instead of re-mining one.
+FOCUS_LENSES = (
+    "the decision to open a new bin versus using one that is already open",
+    "what a bin looks like just before and just after its last placement",
+    "how jobs of different size classes end up sharing one bin over its lifetime",
+)
 
 
 def extract_feature_name(text, default):
