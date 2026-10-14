@@ -547,7 +547,8 @@ class Search:
         if not result["valid"]:
             sys.exit(f"Code Zero ({seed_path}) is invalid:\n{result['error']}")
         p = Program(id=self.store.new_id("p"), code=code, generation=0, branch="seed", valid=True,
-                    score=result["score"], families={f: v["excess_pct"] for f, v in result["families"].items()},
+                    score=result["score"], score_split="official",
+                    families={f: v["excess_pct"] for f, v in result["families"].items()},
                     note=f"Code Zero from {seed_path}")
         self.store.candidate_path(p.id).write_text(code)
         self.store.add_program(p)

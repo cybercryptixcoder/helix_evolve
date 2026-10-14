@@ -31,6 +31,7 @@ class Program:
     note: str = ""                    # the agent's own one-line description of what it did
     valid: bool = False
     score: float | None = None
+    score_split: str | None = None      # which split `score` was measured on: "official" (full train) or "fit" (search subset)
     families: dict = field(default_factory=dict)   # family -> excess %
     error: str | None = None
     model: str = ""

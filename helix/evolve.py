@@ -802,7 +802,7 @@ class FeatureSearch(Search):
         official = evaluate_file(path, "train", self.a.eval_timeout)
         branch = accepted[0].branch if accepted else "fit"
         prog = Program(id=pid, code=code, generation=gen, branch=branch, parent_id=prev.get("id"),
-                       valid=bool(official.get("valid")), score=official.get("score"),
+                       valid=bool(official.get("valid")), score=official.get("score"), score_split="official",
                        families={f: v["excess_pct"] for f, v in official.get("families", {}).items()},
                        error=official.get("error"), valid_score=self.champ["valid"], features=list(self.library),
                        note=(note or (f"added {', '.join(f'{f.id} {f.name}' for f in accepted)}" if accepted
@@ -833,8 +833,8 @@ class FeatureSearch(Search):
                 code = compose(feats, split_vector(feats, t["x"]), title=f"trial of {f.id} {f.name}")
                 self.store.candidate_path(pid).write_text(code)
                 prog = Program(id=pid, code=code, generation=gen, branch=f.branch, parent_id=prev.get("id"), trial=True,
-                               hypothesis_id=f.hypothesis_id, valid=True, score=round(t["train"], 4), families=t["fams"],
-                               valid_score=round(t["valid"], 4), features=[x.id for x in feats],
+                               hypothesis_id=f.hypothesis_id, valid=True, score=round(t["train"], 4), score_split="fit",
+                               families=t["fams"], valid_score=round(t["valid"], 4), features=[x.id for x in feats],
                                note=f"+ {f.id} {f.name}: train {f.delta_train:+.3f}, validation {f.delta_valid:+.3f}"
                                     + (" (kept)" if f in accepted else ""))
             else:
