@@ -635,6 +635,19 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, generation_detail(name, rest[1]))
                 if method == "GET" and rest == ["snapshot"]:
                     return self._send(200, snapshot(run_dir(name)), "text/plain")
+                if method == "GET" and rest == ["transcript"]:
+                    d = run_dir(name)
+                    t, calls = d / "transcript.md", d / "llm_calls.jsonl"
+                    fresh = t.exists() and (not calls.exists() or t.stat().st_mtime >= calls.stat().st_mtime)
+                    if not fresh:
+                        from .transcript import write_transcript
+                        try:
+                            write_transcript(d)
+                        except Exception as exc:
+                            return self._send(500, {"error": f"transcript export failed: {exc}"})
+                    if not t.exists():
+                        return self._send(404, {"error": "no records to export yet"})
+                    return self._send(200, t.read_text(encoding="utf-8", errors="replace"), "text/markdown")
                 if method == "GET" and rest == ["call"]:
                     return self._send(200, call_detail(run_dir(name), q["line"][0]))
                 if method == "GET" and len(rest) == 2 and rest[0] == "program":
