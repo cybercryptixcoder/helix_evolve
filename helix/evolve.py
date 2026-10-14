@@ -280,7 +280,10 @@ class FeatureSearch(Search):
         x0 = np.concatenate([self.champ["x"], np.zeros(1)])
         # Large magnitudes catch catastrophic features; the small ones catch subtle tie-breakers that
         # only pay off at low weight (a win can live anywhere on the line — measure both ends).
-        mags = (2.0, -2.0, 0.4, -0.4, 0.1, -0.1)
+        # Trimmed from (2.0, -2.0, 0.4, -0.4, 0.1, -0.1) after auditing the [mag] lines: across dozens of
+        # probes the best magnitude was never ±2.0 (features lose tens of points out there) and the
+        # decision almost always came from ±0.1 — dropping ±2.0 loses no signal, cuts a third of the sims.
+        mags = (0.4, -0.4, 0.1, -0.1)
         X = []
         for m in mags:
             x = x0.copy()
