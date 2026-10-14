@@ -118,9 +118,10 @@ Every call is logged in the run's `llm_calls.jsonl`: the prompt, the reply, any 
 
 ## What we don't know
 
-- **Whether thinking would make the agents better.** We switched it off because it never finished. Nobody has compared the quality of ideas with thinking on (with a much larger budget) against thinking off. `reasoning_effort` `low`, `medium` and `high` were not tested for how much they think when given room.
-- **Rate limits, quotas and prices.** We never saw published numbers for the text API. 12 parallel calls worked; we don't know the ceiling or the cost per token.
+- ~~**Whether thinking would make the agents better.**~~ *Probed 2026-10-14:* `reasoning_effort` `low` and `medium` (with a large `max_tokens`, streamed and not) both come back as `service_unavailable` after ≈20 s — the thinking tier is not servable on this deployment right now, so `none` is the only usable mode. The question above stays open until that changes; `HELIX_THINKING=on` is how to retry it.
+- ~~**Rate limits, quotas and prices.**~~ *Probed 2026-10-14:* 8 parallel calls fine; at 16 parallel small calls, 6 of 16 returned `rate limit exceeded` at ≈1.6 s. So the free ceiling sits between 8 and 16 concurrent; Helix's adaptive backoff in `llm.py` (halve in-flight on 429/5xx) covers bursts. Prices still unknown.
 - **Official documentation for the text API.** We didn't find any. The GitHub repository `luminal-ai/luminal` documents Luminal's inference compiler, not the hosted API. The one Luminal document we had covers the Images API (`https://images.luminal.cloud`, Ideogram 4.5), which uses the same keys and prepaid wallet.
-- **Other models.** The hackathon brief mentioned "DeepSeek or GLM Flash models hosted on Luminal Cloud", but the endpoint only listed `deepseek-ai/DeepSeek-V4.1-Flash`. A "Pro" model was never available to us, so `--pro-every` has never actually been used.
+- ~~**Other models.**~~ *Probed 2026-10-14:* `/v1/models` lists only `deepseek-ai/DeepSeek-V4.1-Flash`. A "Pro" model is still not available, so `--pro-every` has never actually been used.
+- **Parameter edges** *probed 2026-10-14:* `temperature` ∈ [0, 2] (2.5 → 400); `max_tokens` ∈ [1, 393216] (0 and −5 → 400); unknown extra fields are ignored, not rejected; a 10,000-character system prompt is fine; an empty user message is fine.
 - **Whether the ~20 s non-streaming cutoff still exists.** Helix streams, so we never re-checked.
 - **The LLM Gateway route** in `helix/.env.example` (`https://api.llmgateway.io/v1`, model `luminal/deepseek-v4.1-flash`) came from the hackathon setup notes and was never tested.
