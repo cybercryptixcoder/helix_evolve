@@ -698,17 +698,22 @@ class FeatureSearch(Search):
                        and ((f.delta_valid > -margin) or (f.delta_train or -1.0) > 0.1)
                        and len(f.revisited_at or []) < 3      # evidence-based pruning: three fair retries is enough
                        and g not in (f.revisited_at or [])]
-            # Rotation: never-tried features first (best validation first within a tier), and never the
-            # same feature in back-to-back generations — re-testing an unchanged verdict burns refits.
+            # Rotation: never-tried features first (best validation first within a tier), never the same
+            # feature in back-to-back generations, and never a retry against a champion feature set the
+            # feature has already faced — a verdict can only change when the champion itself does.
             backlog.sort(key=lambda f: (len(f.revisited_at or []), -(f.delta_valid or -1)))
             picked = 0
+            lib_now = tuple(self.library)
             for f in backlog:
                 if picked >= n_revisit:
                     break
                 if f.revisited_at and (g - f.revisited_at[-1]) < 2:
                     continue
+                if lib_now in [tuple(x) for x in (f.revisited_lib or [])]:
+                    continue
                 picked += 1
                 f.revisited_at = (f.revisited_at or []) + [g]
+                f.revisited_lib = (f.revisited_lib or []) + [list(lib_now)]
                 feats2 = self.lib() + [f]
                 x2 = np.concatenate([self.champ["x"], np.zeros(f.width)])
                 try:
