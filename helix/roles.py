@@ -197,15 +197,25 @@ def format_hypothesis(h):
 
 # ---------------------------------------------------------------- reading replies
 _FENCE = re.compile(r"```([a-zA-Z0-9_+-]*)\s*\n(.*?)```", re.S)
+_FUNC_DEF = re.compile(r"^def\s+[A-Za-z_]\w*\s*\(", re.M)
 
 
-def extract_code(text, define="priority"):
-    """The last fenced code block that defines `define()`; None if there isn't one."""
+def extract_code(text, define="priority", flexible=False):
+    """The last fenced code block that defines `define()`; None if there isn't one.
+    flexible=True (features): a block defining any function also counts. The feature loader
+    renames the function anyway, and a Mutator told to vary `_f0015 (empty_bin_penalty_...)`
+    sometimes keeps that name in its variant instead of writing `def feature(...)`."""
     blocks = [body for _, body in _FENCE.findall(text) if f"def {define}" in body]
     if blocks:
         return blocks[-1].strip() + "\n"
     if f"def {define}" in text and "```" not in text:
         return text.strip() + "\n"
+    if flexible:
+        blocks = [body for _, body in _FENCE.findall(text) if _FUNC_DEF.search(body)]
+        if blocks:
+            return blocks[-1].strip() + "\n"
+        if _FUNC_DEF.search(text) and "```" not in text:
+            return text.strip() + "\n"
     return None
 
 
