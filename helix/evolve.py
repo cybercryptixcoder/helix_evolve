@@ -634,6 +634,9 @@ class FeatureSearch(Search):
                     self.base_seconds = None
                     say(f"   second chance: {f.id} {f.name} works next to the kept features "
                         f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+                else:
+                    say(f"   second chance {f.id} {f.name}: no gain "
+                        f"(train {sr - self.champ['train']:+.3f}, valid {vr - self.champ['valid']:+.3f})")
         # ---- pair trials: two candidates that each failed alone are tried together (a pair of features
         # can pay off even when neither does on its own — the interaction the greedy combine can't see,
         # because it only combines features that already passed alone).
@@ -670,6 +673,9 @@ class FeatureSearch(Search):
                         self.base_seconds = None
                         say(f"   pair trial: {f1.id} + {f2.id} work together "
                             f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+                    else:
+                        say(f"   pair trial {f1.id}+{f2.id}: no gain "
+                            f"(train {sr - self.champ['train']:+.3f}, valid {vr - self.champ['valid']:+.3f})")
         # ---- backlog retry: near-miss features from past generations, re-fitted against the current
         # champion. A feature that lost against an older champion can win against a newer one.
         n_revisit = int(getattr(self.a, "revisit", 0) or 0)
@@ -702,6 +708,9 @@ class FeatureSearch(Search):
                     self.base_seconds = None
                     say(f"   revisit: {f.id} {f.name} now works on top of the champion "
                         f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+                else:
+                    say(f"   revisit {f.id} {f.name}: no gain "
+                        f"(train {sr - self.champ['train']:+.3f}, valid {vr - self.champ['valid']:+.3f})")
                 self.save_feature(f)
         self.set_phase("fit", None)
         # importance on validation; retire non-seed features that hurt (checked when the library changed,
