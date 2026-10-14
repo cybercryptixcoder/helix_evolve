@@ -753,7 +753,8 @@ class FeatureSearch(Search):
                 for fam in sorted(floor, key=lambda k: -(champ["fams"].get(k, 0) - floor[k]["lower"]))] if floor and champ["fams"] else []
         log = []
         for h in [h for h in self.store.hypotheses if h.kind == "feature"][-20:]:
-            log.append(f"- {h.id} gen {h.generation} [{h.verdict}{f', validation {h.delta:+.3f}' if h.delta is not None else ''}] "
+            note = " — no weight changed the score; change the form of the measurement, not its scale" if h.delta == 0.0 else ""
+            log.append(f"- {h.id} gen {h.generation} [{h.verdict}{note}{f', validation {h.delta:+.3f}' if h.delta not in (None, 0.0) else ''}] "
                        f"feature: {short(h.change, 160)} | claim: {short(h.claim, 140)}")
         for f in [f for f in self.features.values() if f.branch == "wide" and f.status in ("active", "retired")][-6:]:
             log.append(f"- {f.id} (from the Mutator) {f.name}: {f.status}, validation {f.delta_valid:+.3f}: {short(f.description, 120)}")
