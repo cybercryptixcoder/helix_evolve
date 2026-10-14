@@ -74,7 +74,11 @@ def prepare(code, fid):
                 if n.split(".")[0] not in ALLOWED_MODULES:
                     raise FeatureError(f"imports {n!r}; only numpy and math are allowed")
             imports.append(node)
-        elif isinstance(node, (ast.FunctionDef, ast.Assign, ast.AnnAssign)):
+        elif isinstance(node, (ast.FunctionDef, ast.Assign)):
+            defs.append(node)
+        elif isinstance(node, ast.AnnAssign):
+            if node.value is None:
+                continue          # a bare annotation carries no code (agents sometimes leave metadata lines)
             defs.append(node)
         elif isinstance(node, ast.Expr) and isinstance(getattr(node, "value", None), ast.Constant):
             continue                                   # a module docstring

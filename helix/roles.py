@@ -204,19 +204,30 @@ def extract_code(text, define="priority", flexible=False):
     """The last fenced code block that defines `define()`; None if there isn't one.
     flexible=True (features): a block defining any function also counts. The feature loader
     renames the function anyway, and a Mutator told to vary `_f0015 (empty_bin_penalty_...)`
-    sometimes keeps that name in its variant instead of writing `def feature(...)`."""
+    sometimes keeps that name in its variant instead of writing `def feature(...)`.
+    A stray metadata line (`name: x`, `_f0015_name: x`) that an agent leaves inside the block
+    is stripped: stored at module level it is not executable code."""
     blocks = [body for _, body in _FENCE.findall(text) if f"def {define}" in body]
     if blocks:
-        return blocks[-1].strip() + "\n"
+        return _strip_metadata(blocks[-1].strip()) + "\n"
     if f"def {define}" in text and "```" not in text:
-        return text.strip() + "\n"
+        return _strip_metadata(text.strip()) + "\n"
     if flexible:
         blocks = [body for _, body in _FENCE.findall(text) if _FUNC_DEF.search(body)]
         if blocks:
-            return blocks[-1].strip() + "\n"
+            return _strip_metadata(blocks[-1].strip()) + "\n"
         if _FUNC_DEF.search(text) and "```" not in text:
-            return text.strip() + "\n"
+            return _strip_metadata(text.strip()) + "\n"
     return None
+
+
+_METADATA_LINE = re.compile(r"^\s*(?:_[A-Za-z0-9]+_)?name:\s*`?\S+`?\s*$", re.M)
+
+
+def _strip_metadata(code):
+    """Drop metadata lines an agent leaves inside its code block (they are not valid program code)."""
+    lines = [ln for ln in code.splitlines() if not _METADATA_LINE.match(ln)]
+    return "\n".join(lines)
 
 
 def extract_note(text):
@@ -375,5 +386,9 @@ def extract_feature_ideas(text):
 
 
 def extract_feature_name(text, default):
-    m = re.search(r"name:\s*`?([A-Za-z0-9_]+)`?", text.split("```")[-1] if "```" in text else text)
+    tail = text.split("```")[-1] if "```" in text else text
+    m = re.search(r"^\s*name:\s*`?([A-Za-z0-9_]+)`?", tail, re.M)
+    if not m and "```" in text:
+        # an agent sometimes puts its `name:` line inside the fence — still its name
+        m = re.search(r"^\s*name:\s*`?([A-Za-z0-9_]+)`?", text, re.M)
     return (m.group(1).lower()[:40] if m else default)
