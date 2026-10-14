@@ -696,6 +696,7 @@ class FeatureSearch(Search):
                        if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library
                        and f.delta_valid is not None and f.delta_valid > -0.3
                        and ((f.delta_valid > -margin) or (f.delta_train or -1.0) > 0.1)
+                       and len(f.revisited_at or []) < 3      # evidence-based pruning: three fair retries is enough
                        and g not in (f.revisited_at or [])]
             # Rotation: never-tried features first (best validation first within a tier), and never the
             # same feature in back-to-back generations — re-testing an unchanged verdict burns refits.
@@ -856,6 +857,7 @@ class FeatureSearch(Search):
         cz = next((p for p in self.store.programs.values() if p.branch == "seed"), None)
         progress = metrics.progress(champ.get("official_fams") or champ["fams"], cz.families) if cz and champ["fams"] else None
         lib_lines, existing, targets = [], [], []
+        tlist = []
         for f in self.lib():
             imp = f.importance or [None] * f.width
             lib_lines.append(f"- {f.id} {f.name} ({f.branch}, generation {f.generation}): {' '.join(f.description.split())[:160]}")
@@ -866,8 +868,12 @@ class FeatureSearch(Search):
             if len(cols) > len(shown):
                 lib_lines.append(f"    ({len(cols) - len(shown)} more values with importance under 0.005)")
             existing.append(f"- {f.name}: {' '.join(f.description.split())[:200]}")
+            weight_sum = sum(abs(v or 0) for v in (f.importance or [0] * f.width))
             for col, w, im in cols[:3]:
-                targets.append(f"_{f.id} ({col if f.width > 1 else f.name})")
+                tlist.append((weight_sum, f"_{f.id} ({col if f.width > 1 else f.name})"))
+        # Effort follows evidence: mutation targets are ordered by how much the policy relies on the
+        # feature (total importance), so the rotation spends more of its variants on what matters.
+        targets = [s for _, s in sorted(tlist, key=lambda t: -t[0])][:6]
         if not self.library:
             lib_lines = ["(no features yet: every bin scores 0, so each job goes into the oldest bin it fits; "
                          "this is Code Zero)"]
