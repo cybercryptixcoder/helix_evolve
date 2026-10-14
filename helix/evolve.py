@@ -117,12 +117,12 @@ class FeatureSearch(Search):
             reply = self.llm.chat(role, system, user, **kw)
         except Exception as exc:
             return None, f"LLM call failed: {exc}"
-        code = roles.extract_code(reply.text, define)
+        code = roles.extract_code(reply.text, define, flexible=(define == "feature"))
         text = reply.text
         if code is None:
             try:
                 again = self.llm.chat(f"{role}-retry", system, roles.code_only_message(user, reply.text), **kw)
-                code, text = roles.extract_code(again.text, define), again.text
+                code, text = roles.extract_code(again.text, define, flexible=(define == "feature")), again.text
             except Exception as exc:
                 return None, f"retry failed: {exc}"
         return code, text
