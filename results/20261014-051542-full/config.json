@@ -35,7 +35,7 @@
   "champion_refit_evals": 8,
   "combo": 2,
   "max_combine": 4,
-  "gen_soft_seconds": 180,
+  "gen_soft_seconds": 330,
   "pairs": 2,
   "combo_evals": 8,
   "combine_refit": 6,

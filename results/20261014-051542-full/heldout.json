@@ -1,18 +1,18 @@
 [
   {
-    "label": "Evolved best (p0112, wide)",
-    "train_score": -6.2121,
-    "test_score": -6.1847,
+    "label": "Evolved best (p0121, deep)",
+    "train_score": -6.1556,
+    "test_score": -6.0009,
     "valid": true,
     "test_families": {
-      "uniform": 4.8168,
-      "correlated": 3.4584,
-      "anticorr": 13.114,
-      "small": 1.8812,
-      "large": 11.0833,
-      "bimodal": 6.2721,
-      "lognormal": 3.7677,
-      "wide": 5.0843
+      "uniform": 4.9481,
+      "correlated": 3.8526,
+      "anticorr": 13.1155,
+      "small": 1.5637,
+      "large": 8.5123,
+      "bimodal": 6.8382,
+      "lognormal": 3.4416,
+      "wide": 5.7353
     }
   },
   {
