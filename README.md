@@ -87,6 +87,7 @@ Every run's full trace (every agent call with its reasoning, every program, gene
 | [helix/README.md](helix/README.md) | The search loop: dashboard, commands, options |
 | [evaluator/README.md](evaluator/README.md) | The evaluator and the baselines |
 | [results/](results/) | Full traces of every run |
+| [docs/next-concept/](docs/next-concept/) | The next concept: treating improvement as a search space of approaches, pruned by LLM reasoning |
 
 ## Quick start
 
