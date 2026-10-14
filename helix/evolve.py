@@ -677,7 +677,9 @@ class FeatureSearch(Search):
             g = self.flow_generation or 0
             backlog = [f for f in self.features.values()
                        if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library
-                       and f.delta_valid is not None and f.delta_valid > -margin and g not in (f.revisited_at or [])]
+                       and f.delta_valid is not None and f.delta_valid > -0.3
+                       and ((f.delta_valid > -margin) or (f.delta_train or -1.0) > 0.1)
+                       and g not in (f.revisited_at or [])]
             backlog.sort(key=lambda f: -(f.delta_valid or -1))
             for f in backlog[:n_revisit]:
                 f.revisited_at = (f.revisited_at or []) + [g]
