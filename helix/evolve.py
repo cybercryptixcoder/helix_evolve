@@ -687,8 +687,16 @@ class FeatureSearch(Search):
                        and f.delta_valid is not None and f.delta_valid > -0.3
                        and ((f.delta_valid > -margin) or (f.delta_train or -1.0) > 0.1)
                        and g not in (f.revisited_at or [])]
-            backlog.sort(key=lambda f: -(f.delta_valid or -1))
-            for f in backlog[:n_revisit]:
+            # Rotation: never-tried features first (best validation first within a tier), and never the
+            # same feature in back-to-back generations — re-testing an unchanged verdict burns refits.
+            backlog.sort(key=lambda f: (len(f.revisited_at or []), -(f.delta_valid or -1)))
+            picked = 0
+            for f in backlog:
+                if picked >= n_revisit:
+                    break
+                if f.revisited_at and (g - f.revisited_at[-1]) < 2:
+                    continue
+                picked += 1
                 f.revisited_at = (f.revisited_at or []) + [g]
                 feats2 = self.lib() + [f]
                 x2 = np.concatenate([self.champ["x"], np.zeros(f.width)])
