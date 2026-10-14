@@ -43,6 +43,7 @@ class Feature:
     delta_valid: float | None = None    # the same on the validation instances: what decides acceptance
     importance: list | None = None      # per column: validation score lost when its weight is set to 0
     note: str = ""
+    revisited_at: list = field(default_factory=list)   # generations a backlog retry was last run at
 
     @property
     def width(self):
