@@ -39,6 +39,11 @@ def export(run_dir, report=False):
     if report:
         from .report import Run, write_report
         write_report([Run(run_dir)])
+    try:                                    # make sure the readable document exists before copying
+        from .transcript import write_transcript
+        write_transcript(run_dir)
+    except Exception:
+        pass
     dest = RESULTS_DIR / run_dir.name
     dest.mkdir(parents=True, exist_ok=True)
 

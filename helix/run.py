@@ -663,6 +663,13 @@ class Search:
         say(f"LLM: {usage['calls']} calls ({usage['pro_calls']} pro), {usage['tokens_in']:,} tokens in, "
             f"{usage['tokens_out']:,} out")
         say(f"run folder: {self.store.dir}")
+        try:                                      # one readable document with every thought, number and change
+            from .transcript import write_transcript
+            path = write_transcript(self.store.dir)
+            if path:
+                say(f"full transcript: {path}")
+        except Exception as exc:                  # the export must never take a finished run down
+            say(f"transcript export failed: {type(exc).__name__}: {exc}")
         say(f"final held-out check:  python -m helix.report {self.store.dir}")
 
 
