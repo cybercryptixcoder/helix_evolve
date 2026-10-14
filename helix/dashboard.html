@@ -581,7 +581,8 @@ function renderDetailFeatures(d) {
   $("detailTitle").textContent = `${titles[selNode] || selNode} · generation ${selGen}`;
   if (!d) return `<div class="empty">Nothing recorded for generation ${selGen} yet.</div>`;
   const feats = d.features || [], hyps = d.hypotheses || [], rec = d.record || {}, calls = (re) => (d.calls || []).filter((c) => re.test(c.role || ""));
-  const champLine = (c, label) => c ? `<p>${label} <a href="#" data-pid="${esc(c.id)}">${esc(c.id)}</a>: train ${fmt(c.train)}, validation ${fmt(c.valid)}</p>` : "";
+  const off = (c) => c && c.official != null && c.official !== c.train ? ` <span class="hint">(official ${fmt(c.official)})</span>` : "";
+  const champLine = (c, label) => c ? `<p>${label} <a href="#" data-pid="${esc(c.id)}">${esc(c.id)}</a>: train ${fmt(c.train)}, validation ${fmt(c.valid)}${off(c)}</p>` : "";
   if (selNode === "library") return selGen === 0
     ? `<p class="hint">Generation 0 is Code Zero and nothing else: the library is empty, so every bin scores 0 and each job goes into the oldest bin it fits (first fit). Every gain after this is the search's own.</p>` + champLine(d.champion, "Code Zero:")
     : champLine(d.champion_in, "Champion going in:") + libTable(d.library_in || []);
@@ -599,7 +600,7 @@ function renderDetailFeatures(d) {
     const refitLine = c && ci ? (c.kept
         ? `<p><b>Champion refit</b> (its own weights, no new feature): train ${deltaHTML(c.train - ci.train)}, validation ${deltaHTML(c.valid - ci.valid)}, credited to fitting. The features below were tried on top of it.</p>`
         : `<p><b>Champion refit</b> (its own weights, no new feature): no gain on ${c.valid == null ? "train" : "validation"}.</p>`) : "";
-    return (fit ? `<p class="hint">${fit.candidates} candidates, ${fit.invalid} invalid, ${fit.trials} tried; ${fit.evals} evaluations${ph ? `; agents ${Math.round(ph.agents)}s, fitting ${Math.round(ph.fit)}s` : ""}.</p>` : "")
+    return (fit ? `<p class="hint">${fit.candidates} candidates, ${fit.invalid} invalid, ${fit.trials} tried; ${fit.evals} evaluations${ph ? `; agents ${Math.round(ph.agents)}s, fitting ${Math.round(ph.fit)}s${ph.overlap ? " (fitting overlapped the agents)" : ""}` : ""}.</p>` : "")
       + champLine(ci, "Champion going in:") + refitLine + featTable(feats, true);
   }
   if (selNode === "accept") {

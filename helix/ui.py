@@ -481,9 +481,9 @@ def generation_detail(name, gen):
         out["library_out"] = lib_view(record)
         out["diagnostics"] = (record or {}).get("diagnostics") or {}
         champ = (record or {}).get("champion") or {}
-        out["champion"] = {k: champ.get(k) for k in ("id", "features", "train", "valid", "fams", "vfams")} if champ else None
+        out["champion"] = {k: champ.get(k) for k in ("id", "features", "train", "valid", "fams", "vfams", "official")} if champ else None
         prev = (before or {}).get("champion") or {}
-        out["champion_in"] = {k: prev.get(k) for k in ("id", "train", "valid")} if prev else None
+        out["champion_in"] = {k: prev.get(k) for k in ("id", "train", "valid", "official")} if prev else None
         if record:
             out["record"] = {k: v for k, v in record.items() if k not in ("diagnostics", "library", "champion")}
     return out
