@@ -600,7 +600,9 @@ class FeatureSearch(Search):
         # off only next to another one; its solo trial had to rescue it on its own, so a feature that came
         # close is retried together with the kept set (both sets of weights refitted).
         n_combo = int(getattr(self.a, "combo", 0) or 0)
-        if n_combo > 0:
+        cap = int(getattr(self.a, "gen_eval_cap", 0) or 0)
+        spent = self.fitter.evals - evals0
+        if n_combo > 0 and (cap <= 0 or spent < cap):
             near = [t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
                     and t["feature"].status not in ("invalid", "redundant")
                     and t["feature"].delta_valid > -margin]
@@ -628,7 +630,8 @@ class FeatureSearch(Search):
         # ---- backlog retry: near-miss features from past generations, re-fitted against the current
         # champion. A feature that lost against an older champion can win against a newer one.
         n_revisit = int(getattr(self.a, "revisit", 0) or 0)
-        if n_revisit > 0:
+        spent = self.fitter.evals - evals0
+        if n_revisit > 0 and (cap <= 0 or spent < cap):
             g = self.flow_generation or 0
             backlog = [f for f in self.features.values()
                        if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library
