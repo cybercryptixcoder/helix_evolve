@@ -743,9 +743,9 @@ def parse_args(argv=None):
     fe.add_argument("--refit-evals", type=int, default=16, help="evaluations of the joint refit when features are kept")
     fe.add_argument("--inspect", action=argparse.BooleanOptionalAction, default=True,
                     help="show the Researcher the champion's packings next to near-optimal packings of the same jobs")
-    fe.add_argument("--trial-refit-evals", type=int, default=8,
+    fe.add_argument("--trial-refit-evals", type=int, default=5,
                     help="evaluations of each of a feature's two paired refits (with it, and with it switched off)")
-    fe.add_argument("--champion-refit-evals", type=int, default=8,
+    fe.add_argument("--champion-refit-evals", type=int, default=5,
                     help="evaluations refitting the champion's own weights each generation, before features are tried")
     fe.add_argument("--combo", type=int, default=2,
                     help="near-miss features (validation just under the bar) given a second chance combined "
@@ -759,7 +759,7 @@ def parse_args(argv=None):
     fe.add_argument("--pairs", type=int, default=0,
                     help="pair trials per generation: up to N pairs among the best failed candidates are tried "
                          "together (an interaction two singly-failing features can still provide)")
-    fe.add_argument("--combo-evals", type=int, default=8,
+    fe.add_argument("--combo-evals", type=int, default=5,
                     help="evaluations each second-chance feature gets")
     fe.add_argument("--combine-refit", type=int, default=6,
                     help="when a feature nearly joins the greedy combine, a small refit of its weights together "
