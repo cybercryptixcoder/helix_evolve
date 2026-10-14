@@ -352,7 +352,8 @@ function renderState() {
   const live = st.state === "running" ? st.flow_generation : null;
   const all = [...new Set([...gens, ...(live != null ? [live] : [])])].sort((a, b) => a - b);
   if ($("follow").checked || selGen == null) selGen = live != null ? live : (all.length ? all[all.length - 1] : null);
-  setHTML($("genPicker"), all.map((g) => `<option value="${g}" ${g === selGen ? "selected" : ""}>${g}${g === live ? " (live)" : ""}</option>`).join(""));
+  const gensInfo = {}; (state.generations || []).forEach((g) => { gensInfo[g.generation] = g; });
+  setHTML($("genPicker"), all.map((g) => { const rec = gensInfo[g]; const s = rec && rec.seconds; return `<option value="${g}" ${g === selGen ? "selected" : ""}>${g}${s ? " · " + Math.round(s) + "s" : ""}${g === live ? " (live)" : ""}</option>`; }).join(""));
   $("flowGen").textContent = selGen ?? "–";
   $("phaseLine").textContent = st.state === "running" ? (st.phase || "working…") : `Run ${st.state || "unknown"}${st.error ? ": " + st.error.split("\n").pop() : ""}`;
 }

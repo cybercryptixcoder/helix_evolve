@@ -540,8 +540,12 @@ class FeatureSearch(Search):
         """Combine the features that helped on validation (greedily, best first), refit them together, and
         retire features that hurt."""
         margin = self.a.accept_margin
+        # Acceptance: validation decides. A small train dip is allowed when the validation win clearly
+        # exceeds the bar (mirror of the retire guard): a feature that generalises can be worth a small
+        # train cost, and the doubled validation set makes the win meaningful.
         good = sorted([t for t in trials if t.get("valid") is not None and t["feature"].delta_valid > margin
-                       and (t["feature"].delta_train or 0) > 0], key=lambda t: -t["feature"].delta_valid)
+                       and (t["feature"].delta_train or 0) > -max(0.01, 0.25 * (t["feature"].delta_valid - margin))],
+                      key=lambda t: -t["feature"].delta_valid)
         accepted = []
         if good:
             # Greedy, so the result is never worse than the best single feature: start from the best one, add
