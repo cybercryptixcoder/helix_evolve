@@ -41,8 +41,12 @@ def _init():
     from evaluator.evaluate import _SAFE_BUILTINS
     from evaluator.problem import TRAIN_FAMILIES, load_split, make_instance
     _STATE["builtins"] = _SAFE_BUILTINS
+    # Search scale: HELIX_FIT_ITEMS shrinks the train-fast search set so a generation costs
+    # seconds, not minutes. 1000 = the original jobs (train-exact). Search-only: acceptance
+    # still uses the full-size valid set, and official records use the full train split.
+    fit_items = int(os.environ.get("HELIX_FIT_ITEMS", "1000"))
     _STATE["sets"] = {"train": load_split("train"),
-                      "train-fast": [make_instance(f, 1, i, 1000) for f in TRAIN_FAMILIES for i in (0, 1)],
+                      "train-fast": [make_instance(f, 1, i, fit_items) for f in TRAIN_FAMILIES for i in (0, 1)],
                       "valid": [make_instance(f, seed, i, VALID_ITEMS)
                                 for seed in VALID_SEEDS for f in TRAIN_FAMILIES
                                 for i in range(VALID_PER_FAMILY)]}
