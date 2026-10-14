@@ -730,20 +730,23 @@ def parse_args(argv=None):
                     help="evaluations in parallel while tuning")
     ap.add_argument("--seed-program", default=str(REPO_ROOT / "programs" / "code_zero.py"))
     fe = ap.add_argument_group("features engine")
-    fe.add_argument("--trial-evals", type=int, default=10, help="evaluations searching a new feature's weights")
+    fe.add_argument("--trial-evals", type=int, default=8, help="evaluations searching a new feature's weights")
     fe.add_argument("--trial-sigma", type=float, default=0.5, help="step size searching a new feature's weights")
-    fe.add_argument("--refit-evals", type=int, default=24, help="evaluations of the joint refit when features are kept")
+    fe.add_argument("--refit-evals", type=int, default=16, help="evaluations of the joint refit when features are kept")
     fe.add_argument("--inspect", action=argparse.BooleanOptionalAction, default=True,
                     help="show the Researcher the champion's packings next to near-optimal packings of the same jobs")
-    fe.add_argument("--trial-refit-evals", type=int, default=10,
+    fe.add_argument("--trial-refit-evals", type=int, default=8,
                     help="evaluations of each of a feature's two paired refits (with it, and with it switched off)")
-    fe.add_argument("--champion-refit-evals", type=int, default=12,
+    fe.add_argument("--champion-refit-evals", type=int, default=8,
                     help="evaluations refitting the champion's own weights each generation, before features are tried")
     fe.add_argument("--combo", type=int, default=2,
                     help="near-miss features (validation just under the bar) given a second chance combined "
                          "with the kept set each generation (0 = off)")
-    fe.add_argument("--combo-evals", type=int, default=12,
+    fe.add_argument("--combo-evals", type=int, default=8,
                     help="evaluations each second-chance feature gets")
+    fe.add_argument("--fit-split", choices=["train", "train-fast"], default="train-fast",
+                    help="where searches and refits run: train-fast (12 instances) makes generations about a "
+                         "minute; train (18) is slower but scores exactly as the evaluator does")
     fe.add_argument("--probe-margin", type=float, default=0.08,
                     help="a feature whose cheap probe loses to the champion by more than this is rejected "
                          "without the full weight search and paired refits")
@@ -769,7 +772,7 @@ def parse_args(argv=None):
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
 KEPT_ON_RESUME = ["engine", "inspect", "trial_evals", "trial_sigma", "trial_refit_evals", "refit_evals",
                   "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns", "probe_margin", "overlap",
-                  "combo", "combo_evals",
+                  "combo", "combo_evals", "fit_split",
                   "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
                   "tune", "tune_evals", "tune_targets",
@@ -785,6 +788,8 @@ def main(argv=None):
             for key in KEPT_ON_RESUME:
                 if key in cfg:
                     setattr(args, key, cfg[key])
+            if "fit_split" not in cfg:
+                args.fit_split = "train"      # runs from before the split existed search on the full train set
 
     if args.publish is None:
         args.publish = not args.fake_llm

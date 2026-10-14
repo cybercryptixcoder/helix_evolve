@@ -6,10 +6,14 @@ own scoring formula (mean over families of the mean excess %, negated), so a sco
 builtins (only numpy and math can be imported), in worker processes, with a timeout.
 
 Instance sets:
-  train   the evaluator's train split: weights are fitted on it, and it's the official score
-  valid   new instances from the evaluator's own generator with a seed no split uses (6 families x 4):
-          new features are accepted only if they help here too, so the search can't overfit train
-  test    never touched by the search (the held-out check at the end uses it)
+  train        the evaluator's train split: the official score, and the base for reported numbers
+  train-fast   the first two instances of every train family (the same jobs as train's first two):
+               searches, refits and probes run on this smaller set — 12 simulations instead of 18, so a
+               generation fits in about a minute; the champion is still recorded on the full train split
+               through the evaluator CLI
+  valid        new instances from the evaluator's own generator, two seeds (6 families x 4 x 2 = 48):
+               new features are accepted only if they help here too, so the search can't overfit train
+  test         never touched by the search (the held-out check at the end uses it)
 
 Weights are fitted with CMA-ES (the `cma` package), warm-started from the current champion.
 """
@@ -26,7 +30,7 @@ import numpy as np
 from .features import code_hash, flat, module_source
 from .sandbox import REPO_ROOT
 
-VALID_SEED, VALID_PER_FAMILY, VALID_ITEMS = 1001, 4, 1000
+VALID_SEEDS, VALID_PER_FAMILY, VALID_ITEMS = (1001, 1002), 4, 1000
 _STATE = {}
 
 
@@ -38,8 +42,10 @@ def _init():
     from evaluator.problem import TRAIN_FAMILIES, load_split, make_instance
     _STATE["builtins"] = _SAFE_BUILTINS
     _STATE["sets"] = {"train": load_split("train"),
-                      "valid": [make_instance(f, VALID_SEED, i, VALID_ITEMS)
-                                for f in TRAIN_FAMILIES for i in range(VALID_PER_FAMILY)]}
+                      "train-fast": [make_instance(f, 1, i, 1000) for f in TRAIN_FAMILIES for i in (0, 1)],
+                      "valid": [make_instance(f, seed, i, VALID_ITEMS)
+                                for seed in VALID_SEEDS for f in TRAIN_FAMILIES
+                                for i in range(VALID_PER_FAMILY)]}
     _STATE["mods"] = {}
 
 
@@ -126,9 +132,10 @@ class FitError(RuntimeError):
 
 
 class Fitter:
-    def __init__(self, workers=None, timeout=600):
+    def __init__(self, workers=None, timeout=600, fit_split="train"):
         self.workers = workers or max(1, (os.cpu_count() or 2) - 1)
         self.timeout = timeout
+        self.fit_split = fit_split          # "train" or "train-fast": the set searches and refits run on
         self.evals = 0
         self._pool = None
 
@@ -156,9 +163,10 @@ class Fitter:
         return {k: len(v) for k, v in _STATE["sets"].items()}
 
     # ------------------------------------------------------------ scoring
-    def evaluate(self, features, weight_vectors, split="train", timeout=None):
+    def evaluate(self, features, weight_vectors, split=None, timeout=None):
         """[(score, {family: excess %}) or (None, error)] for each weight vector (in scaled units)."""
         src = module_source(features)
+        split = split or self.fit_split
         n = self.sizes()[split]
         tasks = [("score", src, self._per_feature(features, w), split, i) for w in weight_vectors for i in range(n)]
         out = self._map(tasks, timeout)
@@ -194,12 +202,13 @@ class Fitter:
         return s, fams
 
     # ------------------------------------------------------------ fitting
-    def optimise(self, features, x0, budget, sigma=0.3, split="train", seed=0, base=None, on_step=None, free=None):
+    def optimise(self, features, x0, budget, sigma=0.3, split=None, seed=0, base=None, on_step=None, free=None):
         """CMA-ES from x0. Returns (x, score, families) of the best vector seen (x0 included).
         `base` is x0's known (score, families), to save an evaluation. `free`: indices of the weights to
         search (default all); the others stay as in x0. One free weight gets a line search instead."""
         import cma
         x0 = np.asarray(x0, dtype=float)
+        split = split or self.fit_split
         best = (base[0], x0.copy(), base[1]) if base else None
         if best is None:
             s, fams = self.score(features, x0, split)
@@ -279,10 +288,10 @@ class Fitter:
 
     def feature_scales(self, features, x, index):
         """(width, [1 / spread of each column]) of feature `index` along the policy's own path on a few
-        train instances. Raises FitError if the feature crashes or returns NaN or infinity."""
+        instances of the fit set. Raises FitError if the feature crashes or returns NaN or infinity."""
         src = module_source(features)
-        tasks = [("probe", src, self._per_feature(features, x), "train", i, index)
-                 for i in range(0, self.sizes()["train"], 3)]
+        tasks = [("probe", src, self._per_feature(features, x), self.fit_split, i, index)
+                 for i in range(0, self.sizes()[self.fit_split], 3)]
         out = self._map(tasks)
         err = next((e for _, _, e, _ in out if e), None)
         if err:
@@ -296,7 +305,7 @@ class Fitter:
     def seconds_per_eval(self, features, x):
         src = module_source(features)
         w = self._per_feature(features, x)
-        out = self._map([("time", src, w, "train", i) for i in range(0, self.sizes()["train"], 3)])
+        out = self._map([("time", src, w, self.fit_split, i) for i in range(0, self.sizes()[self.fit_split], 3)])
         err = next((e for _, _, e, _ in out if e), None)
         if err:
             raise FitError(err)

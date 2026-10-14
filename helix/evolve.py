@@ -56,7 +56,8 @@ class FeatureSearch(Search):
 
     def __init__(self, args, store, llm):
         super().__init__(args, store, llm)
-        self.fitter = Fitter(workers=args.fit_workers, timeout=args.fit_timeout)
+        self.fitter = Fitter(workers=args.fit_workers, timeout=args.fit_timeout,
+                             fit_split=getattr(args, "fit_split", "train"))
         self.features = {}            # id -> Feature (every feature ever tried)
         self.library = []             # ids of the active features, in order
         self.champ = None             # {"id", "x", "train", "fams", "valid", "vfams"}
@@ -90,6 +91,9 @@ class FeatureSearch(Search):
                 f.weights = w
             self.champ = {"id": c["id"], "x": np.asarray(c["x"], dtype=float), "train": c["train"],
                           "fams": c.get("fams") or {}, "valid": c["valid"], "vfams": c.get("vfams") or {}}
+            for extra in ("official", "official_fams"):
+                if c.get(extra) is not None:
+                    self.champ[extra] = c[extra]
 
     def lib(self, ids=None):
         return [self.features[i] for i in (ids if ids is not None else self.library)]
@@ -266,7 +270,7 @@ class FeatureSearch(Search):
             return None
         feats = self.lib() + [f]
         x0 = np.concatenate([self.champ["x"], np.zeros(1)])
-        mags = (2.0, -2.0, 0.6, -0.6, 0.2, -0.2)
+        mags = (2.0, -2.0, 0.6, -0.6)
         X = []
         for m in mags:
             x = x0.copy()
@@ -472,7 +476,8 @@ class FeatureSearch(Search):
                   "diagnostics": comparison,
                   "champion": {"id": self.champ["id"], "features": list(self.library), "x": [float(v) for v in self.champ["x"]],
                                "train": self.champ["train"], "valid": self.champ["valid"], "fams": self.champ["fams"],
-                               "vfams": self.champ["vfams"]}}
+                               "vfams": self.champ["vfams"], "official": self.champ.get("official"),
+                               "official_fams": self.champ.get("official_fams")}}
         for b in branches:
             mine = [t for t in trials if t["feature"].branch == b]
             fs = [f for f in candidates if f.branch == b]
@@ -672,10 +677,15 @@ class FeatureSearch(Search):
                        error=official.get("error"), valid_score=self.champ["valid"], features=list(self.library),
                        note=(note or (f"added {', '.join(f'{f.id} {f.name}' for f in accepted)}" if accepted
                                       else "weights refitted")) + f"; validation {self.champ['valid']:.3f}")
-        if prog.valid and abs(prog.score - self.champ["train"]) > 1e-3:
+        if prog.valid and self.fitter.fit_split == "train" and abs(prog.score - self.champ["train"]) > 1e-3:
             say(f"   note: the evaluator scores {pid} {prog.score:.4f}, the fitter {self.champ['train']:.4f}")
-        if prog.valid:
+        if prog.valid and self.fitter.fit_split == "train":
             self.champ["train"], self.champ["fams"] = prog.score, prog.families
+        elif prog.valid:
+            # searches run on the fit subset; keep the champion's fit-set score consistent with the refits,
+            # while the record (prog.score) carries the official full-train score
+            self.champ["official"] = prog.score
+            self.champ["official_fams"] = prog.families
         self.store.add_program(prog)
         self.champ["id"] = pid
         return prog
@@ -720,7 +730,7 @@ class FeatureSearch(Search):
     def context(self, gen, comparison):
         champ = self.champ
         cz = next((p for p in self.store.programs.values() if p.branch == "seed"), None)
-        progress = metrics.progress(champ["fams"], cz.families) if cz and champ["fams"] else None
+        progress = metrics.progress(champ.get("official_fams") or champ["fams"], cz.families) if cz and champ["fams"] else None
         lib_lines, existing, targets = [], [], []
         for f in self.lib():
             imp = f.importance or [None] * f.width
@@ -774,12 +784,13 @@ class FeatureSearch(Search):
         self.store.add_program(p)
         say(f"── generation 0: Code Zero scores {p.score:.3f} ({p.id}); the library starts empty")
         self.set_flow("library", "active", note="scoring Code Zero on validation")
-        empty_train, _ = self.fitter.score([], np.zeros(0), "train")
+        empty_train, _ = self.fitter.score([], np.zeros(0), "train")   # full split: the Code Zero check
         if abs(empty_train - p.score) > 1e-3:              # the empty policy must be Code Zero, exactly
             raise SystemExit(f"the empty feature policy scores {empty_train:.4f} but Code Zero scores {p.score:.4f}; "
                              "the feature engine starts from Code Zero only when they are the same policy")
+        fit_train, fit_fams = self.fitter.score([], np.zeros(0), self.fitter.fit_split)
         v0, vf0 = self.fitter.score([], np.zeros(0), "valid")
-        self.champ = {"id": p.id, "x": np.zeros(0), "train": p.score, "fams": p.families, "valid": v0, "vfams": vf0}
+        self.champ = {"id": p.id, "x": np.zeros(0), "train": fit_train, "fams": fit_fams, "valid": v0, "vfams": vf0}
         self.set_flow("library", "done", sub="empty", note="= Code Zero")
         self.set_flow("accept", "done", sub=f"champion {p.id}", note="Code Zero")
         self.store.log_generation({"generation": 0, "branches": ["seed"], "pool": [p.id], "best_id": p.id,
