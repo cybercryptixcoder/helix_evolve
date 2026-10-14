@@ -58,6 +58,7 @@ class FeatureSearch(Search):
         super().__init__(args, store, llm)
         self.fitter = Fitter(workers=args.fit_workers, timeout=args.fit_timeout,
                              fit_split=getattr(args, "fit_split", "train"))
+        self._fit_started = None
         self.features = {}            # id -> Feature (every feature ever tried)
         self.library = []             # ids of the active features, in order
         self.champ = None             # {"id", "x", "train", "fams", "valid", "vfams"}
@@ -408,6 +409,7 @@ class FeatureSearch(Search):
         fit_started = None
         if overlap:
             fit_started = time.time()
+            self._fit_started = fit_started
             threading.Thread(target=refit_worker, name="champion-refit", daemon=True).start()
         self.set_flow("fit", "active", done=0, note="checking features" + (" as they arrive" if overlap else ""))
         with ThreadPoolExecutor(max_workers=2) as both:
@@ -428,6 +430,7 @@ class FeatureSearch(Search):
             out = {b: f.result() for b, f in fut.items()}
         if not overlap:
             fit_started = time.time()
+            self._fit_started = fit_started
             refit_worker()
             for f in [f for f, _ in out.get("deep", [])] + out.get("wide", []):
                 try_one(f)
@@ -600,9 +603,13 @@ class FeatureSearch(Search):
         # off only next to another one; its solo trial had to rescue it on its own, so a feature that came
         # close is retried together with the kept set (both sets of weights refitted).
         n_combo = int(getattr(self.a, "combo", 0) or 0)
-        cap = int(getattr(self.a, "gen_eval_cap", 0) or 0)
-        spent = self.fitter.evals - evals0
-        if n_combo > 0 and (cap <= 0 or spent < cap):
+        soft = int(getattr(self.a, "gen_soft_seconds", 0) or 0)
+        over_soft = soft > 0 and self._fit_started and (time.time() - self._fit_started) > soft
+        if over_soft and (n_combo > 0 or int(getattr(self.a, "pairs", 0) or 0) > 0
+                         or int(getattr(self.a, "revisit", 0) or 0) > 0):
+            say(f"   skipping the optional acceptance extras: this generation is already "
+                f"{time.time() - self._fit_started:.0f}s old (soft budget {soft}s)")
+        if n_combo > 0 and not over_soft:
             near = [t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
                     and t["feature"].status not in ("invalid", "redundant")
                     and t["feature"].delta_valid > -margin]
@@ -631,8 +638,7 @@ class FeatureSearch(Search):
         # can pay off even when neither does on its own — the interaction the greedy combine can't see,
         # because it only combines features that already passed alone).
         n_pairs = int(getattr(self.a, "pairs", 0) or 0)
-        spent = self.fitter.evals - evals0
-        if n_pairs > 0 and (cap <= 0 or spent < cap):
+        if n_pairs > 0 and not over_soft:
             pool = sorted([t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
                            and t["feature"].status not in ("invalid", "redundant")],
                           key=lambda t: -t["feature"].delta_valid)
@@ -667,8 +673,7 @@ class FeatureSearch(Search):
         # ---- backlog retry: near-miss features from past generations, re-fitted against the current
         # champion. A feature that lost against an older champion can win against a newer one.
         n_revisit = int(getattr(self.a, "revisit", 0) or 0)
-        spent = self.fitter.evals - evals0
-        if n_revisit > 0 and (cap <= 0 or spent < cap):
+        if n_revisit > 0 and not over_soft:
             g = self.flow_generation or 0
             backlog = [f for f in self.features.values()
                        if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library
