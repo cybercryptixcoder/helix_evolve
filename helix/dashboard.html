@@ -135,6 +135,7 @@
       <button class="danger" id="killBtn" title="Stop immediately">Kill</button>
       <button id="resumeBtn" title="Continue this run for more generations">Resume</button>
       <button id="reportBtn" title="Score the best program on held-out instances">Held-out check</button>
+      <button id="transcriptBtn" title="Open the full readable transcript of this run: every agent thought, number and change">Transcript</button>
       <button id="publishBtn" title="Copy the trace into results/ in the repo">Publish</button>
       <button id="settingsBtn">Connect</button>
     </div>
@@ -771,6 +772,7 @@ $("stopBtn").onclick = () => act(() => api(`/api/runs/${current}/stop`, { method
 $("killBtn").onclick = () => { if (confirm("Kill the run now? Everything up to the last finished generation is kept.")) act(() => api(`/api/runs/${current}/stop`, { method: "POST", body: { force: true } }), "Kill"); };
 $("resumeBtn").onclick = () => { const more = prompt("How many more generations?", "10"); if (more) act(() => api(`/api/runs/${current}/resume`, { method: "POST", body: { more: +more } }), "Resume"); };
 $("reportBtn").onclick = () => { $("phaseLine").textContent = "Scoring on held-out instances…"; act(() => api(`/api/runs/${current}/report`, { method: "POST", body: {} }), "Held-out check"); };
+$("transcriptBtn").onclick = () => { if (current) window.open(`/api/runs/${encodeURIComponent(current)}/transcript`, "_blank"); };
 $("publishBtn").onclick = () => act(() => api(`/api/runs/${current}/publish`, { method: "POST", body: {} }), "Publish");
 $("newBtn").onclick = () => $("newDlg").showModal();
 $("settingsBtn").onclick = async () => { await loadSettings(); $("settingsDlg").showModal(); };
