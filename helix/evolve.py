@@ -623,6 +623,37 @@ class FeatureSearch(Search):
                     self.base_seconds = None
                     say(f"   second chance: {f.id} {f.name} works next to the kept features "
                         f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+        # ---- backlog retry: near-miss features from past generations, re-fitted against the current
+        # champion. A feature that lost against an older champion can win against a newer one.
+        n_revisit = int(getattr(self.a, "revisit", 0) or 0)
+        if n_revisit > 0:
+            g = self.flow_generation or 0
+            backlog = [f for f in self.features.values()
+                       if f.branch != "seed" and f.status in ("rejected", "redundant") and f.id not in self.library
+                       and f.delta_valid is not None and f.delta_valid > -margin and g not in (f.revisited_at or [])]
+            backlog.sort(key=lambda f: -(f.delta_valid or -1))
+            for f in backlog[:n_revisit]:
+                f.revisited_at = (f.revisited_at or []) + [g]
+                feats2 = self.lib() + [f]
+                x2 = np.concatenate([self.champ["x"], np.zeros(f.width)])
+                try:
+                    self.set_phase("fit", f"revisiting {f.id} {f.name} against the current champion")
+                    xr, sr, fr = self.fitter.optimise(feats2, x2, self.a.combo_evals, sigma=self.a.refit_sigma)
+                    vr, vfr = self.fitter.score(feats2, xr, "valid")
+                except FitError as exc:
+                    say(f"   revisit of {f.id} failed: {short(str(exc), 90)}")
+                    self.save_feature(f)
+                    continue
+                if sr >= self.champ["train"] and vr >= self.champ["valid"] + margin / 2:
+                    old_train, old_valid = self.champ["train"], self.champ["valid"]
+                    f.status = "active"
+                    accepted.append(f)
+                    self.library.append(f.id)
+                    self.champ.update(x=np.asarray(xr, dtype=float), train=sr, fams=fr, valid=vr, vfams=vfr)
+                    self.base_seconds = None
+                    say(f"   revisit: {f.id} {f.name} now works on top of the champion "
+                        f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+                self.save_feature(f)
         self.set_phase("fit", None)
         # importance on validation; retire non-seed features that hurt (checked when the library changed,
         # and every third generation)
