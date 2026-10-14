@@ -130,13 +130,18 @@ class FeatureSearch(Search):
 
     def deep(self, generation, context, notify=None):
         """Researcher -> ideas -> Coder writes each feature. Returns [(Feature, idea)].
-        `notify(f)` is called from the worker as each feature is written, so fitting can start early."""
+        `notify(f)` is called from the worker as each feature is written, so fitting can start early.
+        When the policy has not improved for a few generations the Researcher is asked for more ideas
+        (the cheap probe makes extra ideas nearly free) and is given a rotating attention lens."""
         self.set_phase("deep", "Researcher reading the packings")
         self.set_flow("researcher", "active", note="reading the packing comparison")
         system = roles.system_prompt("feature_researcher")
+        stuck = int(context.get("stuck") or 0)
+        n_ideas = self.a.hypotheses + (2 if stuck >= 2 else 0)
+        focus = roles.FOCUS_LENSES[generation % len(roles.FOCUS_LENSES)]
         msg = roles.feature_researcher_message(generation, context["champion"], context["library_lines"],
                                                context["room_lines"], context["packings"], context["log_lines"],
-                                               self.a.hypotheses, context.get("progress"), context.get("stuck", 0))
+                                               n_ideas, context.get("progress"), stuck, focus=focus)
         ideas = []
         for attempt in range(2):
             text = msg if attempt == 0 else msg + ("\n\nYour previous reply ran out of room before the JSON. Reply "
@@ -147,7 +152,7 @@ class FeatureSearch(Search):
                                       max_tokens=MAX_TOKENS["feature_researcher"],
                                       think_limit=THINK_LIMIT["feature_researcher"],
                                       tag={"generation": generation, "branch": "deep"})
-                ideas = roles.extract_feature_ideas(reply.text)[: self.a.hypotheses]
+                ideas = roles.extract_feature_ideas(reply.text)[:n_ideas]
             except Exception as exc:
                 say(f"   deep: Researcher call failed ({str(exc)[:120]})")
             if ideas:
@@ -185,8 +190,9 @@ class FeatureSearch(Search):
         return out
 
     def wide(self, generation, context, notify=None):
-        """Mutator: from the policy's code and score only, variants of its features and fresh ones."""
-        n = self.a.variants
+        """Mutator: from the policy's code and score only, variants of its features and fresh ones.
+        When the policy has stalled, one extra variant slot opens (more shots on goal)."""
+        n = self.a.variants + (1 if int(context.get("stuck") or 0) >= 2 else 0)
         fresh = min(self.a.fresh, n)
         targets = context["mutation_targets"]
         picks = [targets[(generation + i) % len(targets)] if targets else None for i in range(n - fresh)] + [None] * fresh
