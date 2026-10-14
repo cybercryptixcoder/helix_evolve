@@ -44,6 +44,7 @@ class Feature:
     importance: list | None = None      # per column: validation score lost when its weight is set to 0
     note: str = ""
     revisited_at: list = field(default_factory=list)   # generations a backlog retry was last run at
+    revisited_lib: list = field(default_factory=list)  # library (feature ids) each retry ran against: a verdict can only change when that set does
 
     @property
     def width(self):
