@@ -546,7 +546,7 @@ class FeatureSearch(Search):
             first = good[0]
             chosen, feats = [first], self.lib() + [first["feature"]]
             x, s, fams, v, vfams = first["x"], first["train"], first["fams"], first["valid"], first["vfams"]
-            for t in good[1:]:
+            for t in good[1:][: max(1, int(getattr(self.a, "max_combine", 99)) - 1)]:
                 f = t["feature"]
                 w = np.asarray(t["x"][-f.width:], dtype=float)
                 X = [np.concatenate([x, k * w]) for k in (1.0, 0.5)]
