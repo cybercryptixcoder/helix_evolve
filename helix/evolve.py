@@ -627,6 +627,43 @@ class FeatureSearch(Search):
                     self.base_seconds = None
                     say(f"   second chance: {f.id} {f.name} works next to the kept features "
                         f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+        # ---- pair trials: two candidates that each failed alone are tried together (a pair of features
+        # can pay off even when neither does on its own — the interaction the greedy combine can't see,
+        # because it only combines features that already passed alone).
+        n_pairs = int(getattr(self.a, "pairs", 0) or 0)
+        spent = self.fitter.evals - evals0
+        if n_pairs > 0 and (cap <= 0 or spent < cap):
+            pool = sorted([t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
+                           and t["feature"].status not in ("invalid", "redundant")],
+                          key=lambda t: -t["feature"].delta_valid)
+            top = pool[: 3]
+            tried_pairs = 0
+            for i in range(len(top)):
+                for j in range(i + 1, len(top)):
+                    if tried_pairs >= n_pairs:
+                        break
+                    f1, f2 = top[i]["feature"], top[j]["feature"]
+                    feats2 = self.lib() + [f1, f2]
+                    x0 = np.concatenate([self.champ["x"], np.zeros(f1.width), np.zeros(f2.width)])
+                    try:
+                        self.set_phase("fit", f"pair trial: {f1.id} + {f2.id}")
+                        xr, sr, fr = self.fitter.optimise(feats2, x0, self.a.combo_evals, sigma=self.a.refit_sigma)
+                        vr, vfr = self.fitter.score(feats2, xr, "valid")
+                    except FitError as exc:
+                        say(f"   pair trial {f1.id}+{f2.id} failed: {short(str(exc), 90)}")
+                        tried_pairs += 1
+                        continue
+                    tried_pairs += 1
+                    if sr >= self.champ["train"] and vr >= self.champ["valid"] + margin / 2:
+                        old_train, old_valid = self.champ["train"], self.champ["valid"]
+                        for f in (f1, f2):
+                            f.status = "active"
+                            accepted.append(f)
+                            self.library.append(f.id)
+                        self.champ.update(x=np.asarray(xr, dtype=float), train=sr, fams=fr, valid=vr, vfams=vfr)
+                        self.base_seconds = None
+                        say(f"   pair trial: {f1.id} + {f2.id} work together "
+                            f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
         # ---- backlog retry: near-miss features from past generations, re-fitted against the current
         # champion. A feature that lost against an older champion can win against a newer one.
         n_revisit = int(getattr(self.a, "revisit", 0) or 0)
