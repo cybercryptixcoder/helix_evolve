@@ -775,6 +775,9 @@ def parse_args(argv=None):
     fe.add_argument("--revisit", type=int, default=0,
                     help="per generation, retest up to N near-miss features from past generations against the "
                          "current champion (a feature that lost against an older champion can win against a newer one)")
+    fe.add_argument("--fit-items", type=int, default=None,
+                    help="search-set instance size (default 1000 = train-exact jobs). Search only: "
+                         "acceptance and records keep full-size instances")
     fe.add_argument("--fit-split", choices=["train", "train-fast"], default="train-fast",
                     help="where searches and refits run: train-fast (12 instances) makes generations about a "
                          "minute; train (18) is slower but scores exactly as the evaluator does")
@@ -792,6 +795,9 @@ def parse_args(argv=None):
     fe.add_argument("--fit-workers", type=int, default=max(1, os.cpu_count() or 2),
                     help="processes scoring policies in parallel (default: all cores — the fit phase is CPU-bound)")
     fe.add_argument("--fit-timeout", type=float, default=900, help="seconds before a batch of evaluations counts as hung")
+    args_pre = ap.parse_known_args(argv)[0]
+    if getattr(args_pre, "fit_items", None):
+        os.environ["HELIX_FIT_ITEMS"] = str(args_pre.fit_items)
     ap.add_argument("--fake-llm", action="store_true", help="offline test double instead of Luminal")
     ap.add_argument("--publish", action=argparse.BooleanOptionalAction, default=None,
                     help="keep results/<run>/ updated every generation (default: on for real runs, off with --fake-llm)")
