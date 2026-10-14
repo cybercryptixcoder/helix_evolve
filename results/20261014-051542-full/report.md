@@ -1,8 +1,8 @@
 # Run report: 20261014-051542-full
 
-- Engine: **features**, mode **full**, schedule parallel, 20 generations after Code Zero
+- Engine: **features**, mode **full**, schedule parallel, 25 generations after Code Zero
 - Models: deepseek-ai/DeepSeek-V4.1-Flash
-- LLM calls: 184 (486,627 tokens in, 72,149 out)
+- LLM calls: 238 (662,134 tokens in, 94,056 out)
 - Best train score: **-6.156** (Code Zero -9.181)
 
 ## Held-out check
@@ -41,8 +41,8 @@ Each feature is tried against the same refit without it; *validation gain* is th
 
 | Branch | Written | Invalid | Tried | Kept | Retired later | Best validation gain |
 |---|---|---|---|---|---|---|
-| deep | 80 | 0 | 29 | 9 | 0 | +0.952 |
-| wide | 80 | 0 | 23 | 1 | 0 | +0.067 |
+| deep | 106 | 0 | 30 | 9 | 0 | +0.952 |
+| wide | 103 | 0 | 24 | 1 | 0 | +0.067 |
 
 ## The final policy
 
@@ -50,20 +50,20 @@ A weighted sum of 10 features with 10 fitted weights (validation score -6.399). 
 
 | Feature | Name | Branch | Made in generation | Weights | Importance | What it measures |
 |---|---|---|---|---|---|---|
-| f0008 | small_job_slack_gain | deep | 1 | 1 | 0.097 | For each bin: before = min(bins[:,0],bins[:,1])/capacity[0]; after = min((bins-item)[:,0],(bins-item)[:,1])/capacity[0] (clip at 0); item_min = min(it |
-| f0024 | bimodal_small_stack_slack | deep | 3 | 1 | 0.082 | item_small = (max(item)/capacity[0] <= 0.2); after = clip(bins - item, 0, None)/capacity; return item_small * (1 - abs(after[:,0] - after[:,1])) * (1  |
-| f0031 | stranded_avoidance_ratio | deep | 4 | 1 | 0.063 | after = clip(bins - item, 0, None)/capacity; tight = minimum(after[:,0], after[:,1]); loose = maximum(after[:,0], after[:,1]); return -(loose - tight) |
-| f0032 | bimodal_big_then_small_reserve | deep | 4 | 1 | 0.132 | item_big = (min(item)/capacity[0] >= 0.3); after = clip(bins - item, 0, None)/capacity; return item_big * (1 - max(after[:,0], after[:,1])) * (1 - abs |
-| f0046 | tight_axis_second_fit | deep | 6 | 1 | 2.847 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; bin_t = min(bins[:,0],bins[:,1])/capacity |
-| f0053 | tight_axis_after_fit_count | deep | 7 | 1 | -0.019 | after = clip(bins - item, 0, None)/capacity[0]; item_t = min(item)/capacity[0]; tight = minimum(after[:,0], after[:,1]); frac = tight/(item_t + 1e-6); |
-| f0101 | large_axis_saturation_gap | deep | 13 | 1 | 2.884 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; room_t = minimum(after[:,0], after[:,1]); |
-| f0107 | lopsided_strand_penalty | wide | 14 | 1 | 0.097 | For jobs that are lopsided (one axis much bigger), penalise bins that leave the small axis stranded while the big axis stays roomy; scale by how stran |
-| f0112 | large_item_bin_axis_fit_ratio | deep | 14 | 1 | 0.093 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); before = bins |
-| f0119 | two_large_pair_priority_bimodal | deep | 15 | 1 | 0.218 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); room_t = mini |
+| f0008 | small_job_slack_gain | deep | 1 | 1 | 0.311 | For each bin: before = min(bins[:,0],bins[:,1])/capacity[0]; after = min((bins-item)[:,0],(bins-item)[:,1])/capacity[0] (clip at 0); item_min = min(it |
+| f0024 | bimodal_small_stack_slack | deep | 3 | 1 | 0.291 | item_small = (max(item)/capacity[0] <= 0.2); after = clip(bins - item, 0, None)/capacity; return item_small * (1 - abs(after[:,0] - after[:,1])) * (1  |
+| f0031 | stranded_avoidance_ratio | deep | 4 | 1 | 0.100 | after = clip(bins - item, 0, None)/capacity; tight = minimum(after[:,0], after[:,1]); loose = maximum(after[:,0], after[:,1]); return -(loose - tight) |
+| f0032 | bimodal_big_then_small_reserve | deep | 4 | 1 | 0.124 | item_big = (min(item)/capacity[0] >= 0.3); after = clip(bins - item, 0, None)/capacity; return item_big * (1 - max(after[:,0], after[:,1])) * (1 - abs |
+| f0046 | tight_axis_second_fit | deep | 6 | 1 | 3.608 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; bin_t = min(bins[:,0],bins[:,1])/capacity |
+| f0053 | tight_axis_after_fit_count | deep | 7 | 1 | 0.222 | after = clip(bins - item, 0, None)/capacity[0]; item_t = min(item)/capacity[0]; tight = minimum(after[:,0], after[:,1]); frac = tight/(item_t + 1e-6); |
+| f0101 | large_axis_saturation_gap | deep | 13 | 1 | 3.024 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; room_t = minimum(after[:,0], after[:,1]); |
+| f0107 | lopsided_strand_penalty | wide | 14 | 1 | 0.063 | For jobs that are lopsided (one axis much bigger), penalise bins that leave the small axis stranded while the big axis stays roomy; scale by how stran |
+| f0112 | large_item_bin_axis_fit_ratio | deep | 14 | 1 | 0.033 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); before = bins |
+| f0119 | two_large_pair_priority_bimodal | deep | 15 | 1 | 0.168 | after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); room_t = mini |
 
 ## Research log
 
-Verdicts: 57 refuted, 11 flat, 9 supported, 3 redundant
+Verdicts: 83 refuted, 11 flat, 9 supported, 3 redundant
 
 Supported hypotheses, largest gain first:
 

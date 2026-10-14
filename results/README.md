@@ -14,6 +14,6 @@ Progress to optimal: 0% = Code Zero, 100% = the optimal packing (`helix/bounds.p
 | [20261012-124038-full](20261012-124038-full/) | full | deepseek-ai/DeepSeek-V4.1-Flash | 10 | -9.181 | -6.185 | +2.996 | 84% | 34% | -5.971 | 95 | finished |
 | [20261012-134507-full](20261012-134507-full/) | full | deepseek-ai/DeepSeek-V4.1-Flash | 10 | -9.181 | -6.986 | +2.195 | 62% | 25% | -6.703 | 99 | finished |
 | [20261014-042737-full](20261014-042737-full/) | full | deepseek-ai/DeepSeek-V4.1-Flash | 10 | -9.181 | -7.034 | +2.147 | 60% | 25% | -6.686 | 92 | finished |
-| [20261014-051542-full](20261014-051542-full/) | full | deepseek-ai/DeepSeek-V4.1-Flash | 20 | -9.181 | -6.156 | +3.026 | 85% | 35% | -6.001 | 184 | finished |
+| [20261014-051542-full](20261014-051542-full/) | full | deepseek-ai/DeepSeek-V4.1-Flash | 25 | -9.181 | -6.156 | +3.026 | 85% | 35% | -6.001 | 238 | finished |
 
 In each folder: `report.md` (held-out check, where improvements came from, research log), `progress.png`, `best_program.py`, the full trace as JSONL, and every agent call in `llm_calls.jsonl.gz`.

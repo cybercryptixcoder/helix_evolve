@@ -1,16 +1,11 @@
-HELIX SNAPSHOT  run 20261014-051542-full  (07:43:28)
-State: finished | generation 20/20 | phase: - | elapsed 42.9 min
+HELIX SNAPSHOT  run 20261014-051542-full  (08:58:52)
+State: finished | generation 25/25 | phase: - | elapsed 29.3 min
 Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 4, hypotheses 4
-LLM so far: 184 calls (0 pro), 486,627 tokens in, 72,149 out
-Programs: 170 made, 62 valid, 0 repaired, 0 duplicates
+LLM so far: 238 calls (0 pro), 662,134 tokens in, 94,056 out
+Programs: 219 made, 64 valid, 0 repaired, 0 duplicates
 Best: p0121 score -6.156 (deep branch, generation 15), gain +3.026 over Code Zero -9.181
 
 == Generations (score = -mean excess %, higher is better)
-gen  9: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.476 [refuted 3, flat 1] | wide 4/4 valid, best new -6.545 [refuted 3, flat 1] | kept nothing | 295.2s
-gen 10: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.635 [refuted 4] | wide 4/4 valid, best new -6.452 [refuted 4] | kept nothing | 201.7s
-gen 11: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.642 [refuted 4] | wide 4/4 valid, best new -6.535 [refuted 3, flat 1] | kept nothing | 182.4s
-gen 12: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.465 [flat 4] | wide 4/4 valid, best new -6.688 [refuted 4] | kept nothing | 345.5s
-gen 13: best -6.279 (validation -6.742) | deep 4/4 valid, best new -6.279 [supported 1, refuted 3] | wide 4/4 valid, best new -6.481 [refuted 3, flat 1] | kept f0101 | 290.9s
 gen 14: best -6.212 (validation -6.631) | deep 4/4 valid, best new -6.097 [flat 2, refuted 1, supported 1] | wide 4/4 valid, best new -6.192 [refuted 2, supported 1, flat 1] | kept f0107, f0112 | 622.0s
 gen 15: best -5.986 (validation -6.508) | deep 4/4 valid, best new -5.986 [refuted 1, flat 1, supported 1] | wide 4/4 valid, best new -6.064 [flat 2, refuted 2] | kept f0119 | 970.2s
 gen 16: best -5.986 (validation -6.508) | deep 4/4 valid, best new -6.163 [refuted 4] | wide 4/4 valid, best new -5.871 [refuted 4] | kept nothing | 329.8s
@@ -18,43 +13,47 @@ gen 17: best -5.986 (validation -6.508) | deep 4/4 valid, best new -5.674 [refut
 gen 18: best -5.986 (validation -6.508) | deep 4/4 valid, best new -6.155 [refuted 4] | wide 4/4 valid, best new -6.110 [refuted 4] | kept nothing | 368.3s
 gen 19: best -5.986 (validation -6.508) | deep 4/4 valid, best new -6.156 [refuted 4] | wide 4/4 valid, best new -6.104 [refuted 4] | kept nothing | 277.4s
 gen 20: best -5.952 (validation -6.399) | deep 4/4 valid, best new -6.159 [refuted 4] | wide 4/4 valid, best new -6.104 [refuted 4] | kept nothing | 289.9s
+gen 21: best -5.952 (validation -6.399) | deep 4/4 valid, best new -6.099 [refuted 4] | wide 4/4 valid, best new -6.110 [refuted 4] | kept nothing | 339.0s
+gen 22: best -5.952 (validation -6.399) | deep 4/4 valid, best new -5.845 [refuted 4] | wide 4/4 valid, best new -6.099 [refuted 4] | kept nothing | 340.7s
+gen 23: best -5.952 (validation -6.399) | deep 6/6 valid, best new -6.140 [refuted 6] | wide 5/5 valid, best new -6.080 [refuted 5] | kept nothing | 344.1s
+gen 24: best -5.952 (validation -6.399) | deep 6/6 valid, best new -6.057 [refuted 6] | wide 5/5 valid, best new -6.116 [refuted 5] | kept nothing | 402.1s
+gen 25: best -5.952 (validation -6.399) | deep 6/6 valid, best new -6.178 [refuted 6] | wide 5/5 valid, best new -6.017 [refuted 5] | kept nothing | 332.8s
 
 == Current pool, best first
 p0162 -6.209 fit | uniform 4.5 correlated 3.6 anticorr 12.8 small 1.6 large 8.8 bimodal 5.9 | weights refitted; validation -6.399
 
-== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 9.33s)
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 20.85s)
 Reply: ```json
 {"hypotheses": [
-  {"name": "pair_complement_axis_balance",
-   "claim": "In large the optimum's dominant bin is 2LL x73 (two large jobs whose heavy axes are complementary, so the pair balances) while the champion reaches only 2LL x30 and instead builds LL+ML x56 / LM+ML x51. The champion cannot see whether the arriving large job's heavy axis is the OPPOSITE of the bin's remaining imbalance: it only sees residual room, not the sign of the imbalance. A bin already leaning CPU-heavy (little CPU left) should be strongly preferred for a memory-heavy large job, and vice versa.",
-   "feature": "after = clip(bins - item, 0, None)/capacity; item_imb = (item[0]-item[1])/capacity[0]; bin_imb = (bins[:,0]-bins[:,1])/capacity[0]; item_big = (min(item)/capacity[0] >= 0.3); # complementary when signs oppose: prefer bins whose imbalance opposes the item's heavy axis, scaled by how much room the item leaves on its light axis. return item_big * (-sign(item_imb) * bin_imb) * (1 - max(after[:,0], after[:,1]))",
-   "target": "large: 2LL count should rise from 30 toward 73, and LL+ML/LM+ML counts (56/51) should fall; bins used 413 -> toward 382.",
-   "builds_on": "h0073"},
-  {"name": "fourth_job_light_fit_anticorr",
-   "claim": "In anticorr the optimum's dominant bin is the 4-job LS+MS+SL+SM x75 (105 four-job bins) while the champion tops out at 3-job LS+MS+SL x82 (only 41 four-job bins). The champion's three-job bins still have room for a fourth small job but the policy never rewards keeping BOTH axes jointly open enough for a small complementary job; it rewards low tight-axis slack (f0046/f0101), which pushes it to close bins at 3 jobs.",
-   "feature": "after = clip(bins - item, 0, None)/capacity; item_l = max(item)/capacity[0]; item_smallish = (item_l <= 0.35); room_t = minimum(after[:,0], after[:,1]); room_l = maximum(after[:,0], after[:,1]); # reward bins where BOTH residual axes stay above a small-job threshold, i.e. still accept a 4th small job. return item_smallish * (minimum(room_t, room_l) - 0.05) * (1 - abs(after[:,0] - after[:,1]))",
-   "target": "anticorr: 4-job bins should rise from 41 toward 105, 3-job LS+MS+SL x82 should fall; bins used 325 -> toward 299.",
-   "builds_on": "h0074"},
-  {"name": "small_bin_fill_parity",
-   "claim": "In small the champion uses 110 bins (below the near-optimal 111) but leaves CPU 2%/mem 5% room with 0 stranded bins, while the optimum uses 111 bins with 14 stranded bins. The champion is slightly over-filling some bins and scattering; the optimum accepts a few stranded bins to pack others fuller. The champion cannot see whether the arriving small job exactly closes the bin's tight axis (making it a clean full bin) versus leaves a sliver that blocks a future small job.",
-   "feature": "after = clip(bins - item, 0, None)/capacity; item_small = (max(item)/capacity[0] <= 0.2); room_t = minimum(after[:,0], after[:,1]); room_l = maximum(after[:,0], after[:,1]); # prefer bins where the tight axis is nearly closed but the lo
+  {"name": "last_placement_axis_balance",
+   "claim": "In large the champion averages 2.42 jobs/bin with 228 two-job bins, while the optimum averages 2.62 with 236 three-job bins. The champion's top bins are LL+ML x56 / LM+ML x53: a large job plus a medium, i.e. the bin is closed (or nearly) after its second job because the second job only fits on one axis. The optimum's 2LL x73 shows the winning move is to pair a large job with another job that fills the *other* axis, leaving both axes low together. The policy scores each placement by the resulting room, but never asks whether this placement is the bin's *last* one — whether the residual after this job is below what any future job could use. A bin whose residual tight axis is already too small for the smallest plausible next job should be judged as a finished bin and its remaining loose axis is wasted, not 'room'.",
+   "feature": "after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); room_l = maximum(after[:,0],after[:,1]); item_t = min(item)/capacity[0]; # a bin is 'dead' when its tight residual can no longer take a job of the item's own tight size: dead = (room_t < item_t); # among dead bins, reward those whose loose axis is also small (nothing wasted); among live bins reward keeping both axes low. return dead * (1 - room_l) - (1 - dead) * room_l",
+   "target": "large: jobs/bin should rise from 2.42 toward 2.62 and the 2-job bin count (228) should fall toward 146; excess 8.34 -> lower.",
+   "builds_on": "h0097"},
+  {"name": "fourth_job_headroom_anticorr",
+   "claim": "In anticorr the champion has 270 three-job bins and only 42 four-job bins; the optimum has 193 three-job and 105 four-job, dominated by LS+MS+SL+SM. The champion stops at 3 jobs because after the third job the residual tight axis looks small, but in anticorr the fourth job is a small job on the *other* axis. The policy's existing features all measure residual room, never whether the residual profile matches the shape of a job that is still likely to arrive. A bin whose residual is small on one axis but still >= a small-job threshold on the other is exactly the bin that should receive a fourth (small, complementary) job.",
+   "feature": "after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); room_l = maximum(after[:,0],after[:,1]); # reward bins that after this placement still have one axis above the small-job band while the other is nearly full: a 'hook' for a complementary small job. return (room_l - room_t) * (room_l >= 0.2) * (room_t < 0.15)",
+   "target": "anticorr: 4-job bins should rise from 42 toward 105; excess 12.53 -> lower.",
+   "builds_on": "h0098"},
+  {"name": "bimodal_pair_density_gate",
+   "claim": "In bimodal the optimum's top bin is 2LL x44 while the champion only reaches 2LL x26 and instead makes 2LL x26 plus many LL+ML+SS / LL+LS+SL splits. The champion breaks up large-large pairs by inserting a small job into a bin that already hol
 
 == Latest verdicts
-h0073 gen 19 feature refuted n/a on p0121 (builds on h0053): In large the optimum's dominant bin is 2LL x73 (two large jobs with complementary heavy axes: one CPU-heavy, one memory-heavy) while the champion builds LL+ML x || change: after = clip(bins-item,0,None)/capacity; item_imb = (item[0]-item[1])/capacity[0]; bin_imb = (bins[:,0]-bins[:,1])/capac
-h0075 gen 19 feature refuted n/a on p0121 (builds on h0060): In uniform the optimum's top bin is LM+ML+MM x15 (three balanced mediums) and it reaches 6-7 job bins (10 and 3) while the champion's top bins are 3-job LM+LS+S || change: after = clip(bins-item,0,None)/capacity; item_t=min(item)/capacity[0]; item_l=max(item)/capacity[0]; item_m=(item_t>=0.2
-h0074 gen 19 feature refuted n/a on p0121 (builds on h0062): In anticorr the optimum's dominant bin is the 4-job LS+MS+SL+SM x75 (105 four-job bins) while the champion tops out at 3-job LS+MS+SL x82 (41 four-job bins). Th || change: after = clip(bins-item,0,None)/capacity; item_t=min(item)/capacity[0]; item_l=max(item)/capacity[0]; item_smallish=(item
-h0076 gen 19 feature refuted n/a on p0121 (builds on h0059): In bimodal the optimum's top bin is 2LL x44 while the champion only reaches 2LL x26 and scatters large jobs into LL+LS+SL x9. The champion's bimodal features (f || change: after = clip(bins-item,0,None)/capacity; item_t=min(item)/capacity[0]; item_big=(item_t>=0.3); b_t=minimum(bins[:,0],bin
-h0080 gen 20 feature refuted n/a on p0121 (builds on h0075): In uniform the optimum's top bin is LM+ML+MM x15 (three balanced mediums) and it reaches 6-7 job bins (10 and 3) while the champion's top bins are 3-job LM+LS+S || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_m = (i
-h0079 gen 20 feature refuted n/a on p0121 (builds on h0068): In small the champion uses 110 bins (below the near-optimal 111) but leaves CPU 2%/mem 5% room with 0 stranded bins, while the optimum uses 111 bins with 14 str || change: after = clip(bins - item, 0, None)/capacity; item_small = (max(item)/capacity[0] <= 0.2); room_t = minimum(after[:,0], a
-h0077 gen 20 feature refuted n/a on p0121 (builds on h0073): In large the optimum's dominant bin is 2LL x73 (two large jobs whose heavy axes are complementary, so the pair balances) while the champion reaches only 2LL x30 || change: after = clip(bins - item, 0, None)/capacity; item_imb = (item[0]-item[1])/capacity[0]; bin_imb = (bins[:,0]-bins[:,1])/c
-h0078 gen 20 feature refuted n/a on p0121 (builds on h0074): In anticorr the optimum's dominant bin is the 4-job LS+MS+SL+SM x75 (105 four-job bins) while the champion tops out at 3-job LS+MS+SL x82 (only 41 four-job bins || change: after = clip(bins - item, 0, None)/capacity; item_l = max(item)/capacity[0]; item_smallish = (item_l <= 0.35); room_t = 
+h0099 gen 24 feature refuted n/a on p0162 (builds on h0093): In bimodal the optimum's top bin is 2LL x44 while the champion reaches only 2LL x26 and scatters large jobs into LL+LS+SL x10. The champion places a large job i || change: after = clip(bins-item,0,None)/capacity; item_t = min(item)/capacity[0]; item_big = (item_t >= 0.3); room_t = minimum(af
+h0096 gen 24 feature refuted n/a on p0162 (builds on h0087): The champion's excess comes from opening a bin for a job that fits (tight-axis-wise) in an open bin. The empty bin is always a perfect fit for any item, so its  || change: after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); room_l = maximum(after[:,0],after[:,1]
+h0105 gen 25 feature refuted n/a on p0162 (builds on h0094): In correlated the optimum's top bin is 3MM x35 while the champion's is 3MM+SS x24 and 2LL+SS x22: the champion adds an SS job to a bin that is already balanced- || change: before = bins/capacity; after = clip(bins-item,0,None)/capacity; item_small = (max(item)/capacity[0] <= 0.2); b_t = mini
+h0102 gen 25 feature refuted n/a on p0162 (builds on h0098): In anticorr the champion has 270 three-job bins and only 42 four-job bins; the optimum has 193 three-job and 105 four-job, dominated by LS+MS+SL+SM. The champio || change: after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); room_l = maximum(after[:,0],after[:,1]
+h0101 gen 25 feature refuted n/a on p0162 (builds on h0097): In large the champion averages 2.42 jobs/bin with 228 two-job bins, while the optimum averages 2.62 with 236 three-job bins. The champion's top bins are LL+ML x || change: after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); room_l = maximum(after[:,0],after[:,1]
+h0104 gen 25 feature refuted n/a on p0162 (builds on h0091): In uniform the optimum's top bin is LM+ML+MM x15 and it reaches 6-7-job bins (10 and 3), while the champion tops out at 3-4 jobs (108 and 119) with top bins LS+ || change: after = clip(bins-item,0,None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_med = (ite
+h0103 gen 25 feature refuted n/a on p0162 (builds on h0099): In bimodal the optimum's top bin is 2LL x44 while the champion only reaches 2LL x26 and instead makes 2LL x26 plus many LL+ML+SS / LL+LS+SL splits. The champion || change: before = bins/capacity; item_l = max(item)/capacity[0]; item_small = (item_l <= 0.2); # bin already holds a large job (o
+h0106 gen 25 feature refuted n/a on p0162 (builds on h0095): Across large (10%/8% room), anticorr (11%/11%), uniform (4%/7%) the champion leaves far more room per bin than the optimum (0-3%), and the log's h0081/h0095 tri || change: after = clip(bins-item,0,None)/capacity; room_t = minimum(after[:,0],after[:,1]); item_t = min(item)/capacity[0]; item_l
 
 == Latest Mutator ideas
-p0161 invalid: f0147 small_job_imbalance_cancel: invalid
-p0167 invalid: f0154 small_job_second_fit_loose_axis: invalid
-p0168 invalid: f0155 lopsided_stranded_avoidance: invalid
-p0169 invalid: f0153 lopsided_axis_slack_gain: invalid
-p0170 invalid: f0156 complement_mirror_pairing: invalid
+p0215 -6.017: + f0202 loose_axis_after_fit_count_when_tight_sa: train -0.064, validation -0.120
+p0216 invalid: f0200 balanced_tight_slack_gain: invalid
+p0217 invalid: f0203 fresh_bin_axis_imbalance: invalid
+p0218 invalid: f0199 saturated_tight_loose_gap: invalid
+p0219 invalid: f0201 small_job_worst_axis_fill: invalid
 
 == Best program (p0121)
 # Helix feature policy | p0121, generation 15, 10 features
