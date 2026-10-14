@@ -742,6 +742,9 @@ def parse_args(argv=None):
     fe.add_argument("--combo", type=int, default=2,
                     help="near-miss features (validation just under the bar) given a second chance combined "
                          "with the kept set each generation (0 = off)")
+    fe.add_argument("--max-combine", type=int, default=4,
+                    help="most features the greedy combine tries to add in one generation (bounds the time an "
+                         "unusually rich generation spends on combination attempts)")
     fe.add_argument("--combo-evals", type=int, default=8,
                     help="evaluations each second-chance feature gets")
     fe.add_argument("--combine-refit", type=int, default=6,
