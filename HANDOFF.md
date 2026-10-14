@@ -411,7 +411,46 @@ Listed so they aren't repeated. Most were made by the AI assistant; Shreyas caug
 - **`multiprocessing` uses spawn.** Any script that uses `helix.fit.Fitter` needs an `if __name__ == "__main__":` guard.
 - **Offline tests:** `--fake-llm` exercises everything except the model, including broken and cut-off replies. Use small budgets (`--trial-evals 8 --trial-refit-evals 6 --champion-refit-evals 6 --refit-evals 6`) to keep them to a few minutes.
 - **Resume** reads the engine and its settings from the run's `config.json`. Old runs without an `engine` key resume as the program engine.
-- **The dashboard** only listens on 127.0.0.1, runs each run as its own process (closing it doesn't stop a run), and can show published runs from `results/`.
+- **The dashboard** only listens on 127.0.0.1, runs each run as its own process (closing it doesn't stop a run), and can show published runs from `results/`. If you edit `helix/ui.py`, restart the dashboard — handler code loads at process start; `helix/dashboard.html` is re-read per request.
 - **Stopping:** the dashboard's Stop, or a file called `STOP` in the run folder, finishes the current generation and exits. Kill stops at once; Resume continues from the last full generation.
 - **MongoDB** is optional (`MONGODB_URI`). It's mirrored in the background, so an unreachable database never slows a run.
 - **Tests and scratch work** belong outside the repo; `helix/runs/` is gitignored, but `results/` is not.
+
+---
+
+## 15. Update — 14 October 2026: the fast-loop overhaul (8-hour session)
+
+The feature engine was rebuilt for short, iterative runs and now climbs far faster from scratch than
+anything before it in this repo. Headline: a 10-generation run that used to take ~47 minutes reaches
+its endpoint in ~2-12 minutes, and the from-scratch records moved from −6.986 (run 5) to **−6.156
+official / −6.001 held-out test** (run `results/20261014-051542-full`, 10 features, ~2h wall including
+a 6-generation resume). See `results/20261014-051542-full/report.md` and the notes in the session's
+`~/helix-work/` folder.
+
+What changed, in one paragraph per mechanic:
+
+- **Probe-first trials.** Every candidate is first scored at six weights of both signs (±2.0, ±0.4,
+  ±0.1 scaled); candidates that lose everywhere are dropped for ~6 evaluations. (An audit proved the
+  initial coarse probe was rejecting real wins at small weights — the magnitudes now cover both ends.)
+- **Overlapped fitting.** The champion refit starts while the agents are still writing, and each
+  candidate is checked and tried the moment it is written.
+- **Fit-subset + doubled validation.** Searches run on `train-fast` (12 instances); acceptance is
+  judged on 48 validation instances (two seeds), halving the decision noise that used to kill real
+  gains at the 0.03 margin. Champions are still scored by the evaluator on the full train split.
+- **Second-chance combos** (near-misses retried next to the kept set), **combine-refit** (a small
+  refit before a near-joining feature is refused), **backlog revisits** (past near-misses re-fitted
+  against the newest champion, with rotation), and **pair trials** (two singly-failing candidates
+  tried together). Second chances alone contributed members to v6d3's final library (2 of 6).
+- **Retire guard.** Retirement never trades train away for more than a quarter of a small validation
+  gain; the old behaviour once made a champion worse (−7.39 → −7.50 official in v6c).
+- **Extraction hygiene.** Agent replies that put their `name:` line inside the code fence are cleaned
+  (and their name recovered). A stray bare annotation in a composed program used to break official
+  scoring silently — the fit path never noticed because `helix/fit.py` has
+  `from __future__ import annotations` while the evaluator does not.
+- **Prompts.** Researchers and Coders are asked for measurements that rank bins (comparatives rather
+  than distances-to-constants; thresholds only as the idea itself) and may return multi-column
+  features (adoption so far: zero — result filed as negative).
+
+Generation times: ~45–105 s early, growing to 5–16 min with 9–10 feature libraries (the open item;
+`--gen-soft-seconds` bounds the optional extras, `--max-combine` bounds combination attempts).
+
