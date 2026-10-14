@@ -137,6 +137,9 @@ class Fitter:
         self.timeout = timeout
         self.fit_split = fit_split          # "train" or "train-fast": the set searches and refits run on
         self.evals = 0
+        self.map_seconds = 0.0             # wall seconds spent inside pool batches (all of them, this Fitter's life)
+        self.map_tasks = 0                 # tasks (run_instance simulations) sent through the pool
+        self.map_calls = 0                 # batches
         self._pool = None
 
     # ------------------------------------------------------------ pool
@@ -151,11 +154,16 @@ class Fitter:
             self._pool = None
 
     def _map(self, tasks, timeout=None):
+        t0, n = time.time(), len(tasks)
         try:
             return self.pool().map_async(_task, tasks, chunksize=1).get(timeout or self.timeout)
         except mp.TimeoutError:
             self.close()                                   # a feature hung: start the workers afresh
             raise FitError(f"timed out after {timeout or self.timeout:.0f}s (a feature is too slow or hangs)")
+        finally:
+            self.map_seconds += time.time() - t0
+            self.map_tasks += n
+            self.map_calls += 1
 
     def sizes(self):
         if "train" not in _STATE:
