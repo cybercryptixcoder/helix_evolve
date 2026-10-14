@@ -34,7 +34,15 @@ from . import roles
 from .llm import LLM, FakeLLM, Settings
 from .mongo import Mirror
 from . import tune as tuner
-from .bounds import family_floor
+def problem_floor(split="train"):
+    """The problem's family floors ('room' hints for the Researcher). The problem side owns these:
+    HELIX_BOUNDS_MODULE names a module exposing family_floor(split); default is the packing bounds.
+    A problem module may return None when it has no floor model — the message then omits the section."""
+    try:
+        import importlib
+        return importlib.import_module(os.environ.get("HELIX_BOUNDS_MODULE", "helix.bounds")).family_floor(split)
+    except Exception:
+        return None
 from .population import Hypothesis, Program, Store, judge, read_records
 from .sandbox import REPO_ROOT, evaluate_code, evaluate_file
 
@@ -337,7 +345,7 @@ class Search:
         parent = self.store.programs.get(champ.parent_id) if champ.parent_id else None
         msg = roles.researcher_message(champ, info, shown, self.store.hypotheses, plan, generation, gains,
                                        lineage=self.lineage(champ), parent=parent if parent and parent.valid else None,
-                                       floor=family_floor("train"))
+                                       floor=problem_floor())
         jump = f", new by {info['jump']:+.3f}" if info["new"] and info["jump"] is not None else ""
         say(f"   deep: champion {champ.id} ({champ.score:.3f}{jump}); plan {plan['cause']} cause + {plan['improve']} improve")
         self.set_phase("deep", f"Researcher studying champion {champ.id}")
