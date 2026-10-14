@@ -703,6 +703,7 @@ class FeatureSearch(Search):
             # feature has already faced — a verdict can only change when the champion itself does.
             backlog.sort(key=lambda f: (len(f.revisited_at or []), -(f.delta_valid or -1)))
             picked = 0
+            skipped = 0
             lib_now = tuple(self.library)
             for f in backlog:
                 if picked >= n_revisit:
@@ -710,6 +711,7 @@ class FeatureSearch(Search):
                 if f.revisited_at and (g - f.revisited_at[-1]) < 2:
                     continue
                 if lib_now in [tuple(x) for x in (f.revisited_lib or [])]:
+                    skipped += 1          # provably zero: same feature vs the same champion set
                     continue
                 picked += 1
                 f.revisited_at = (f.revisited_at or []) + [g]
@@ -737,6 +739,9 @@ class FeatureSearch(Search):
                     say(f"   revisit {f.id} {f.name}: no gain "
                         f"(train {sr - self.champ['train']:+.3f}, valid {vr - self.champ['valid']:+.3f})")
                 self.save_feature(f)
+            if skipped:
+                say(f"   revisit picker: {skipped} candidate(s) skipped "
+                    f"(already faced this champion feature set)")
         self.set_phase("fit", None)
         # importance on validation; retire non-seed features that hurt (checked when the library changed,
         # and every third generation)
