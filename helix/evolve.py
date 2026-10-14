@@ -684,13 +684,19 @@ class FeatureSearch(Search):
                 x = np.concatenate([np.asarray(w) for f, w in zip(self.lib(), xs) if f not in hurt]) if keep else np.zeros(0)
                 s, fams = self.fitter.score(keep, x, "train")
                 v, vfams = self.fitter.score(keep, x, "valid")
-                if v >= self.champ["valid"] - 1e-9:
+                # Retire only when removing the hurt features is not a trade: validation must not drop and
+                # train must not be sacrificed either — a swap like (-0.39 train, +0.19 validation) makes
+                # the next generation build on a worse champion.
+                if v >= self.champ["valid"] - 1e-9 and s >= self.champ["train"] - 1e-4:
                     for f in hurt:
                         f.status = "retired"
                         retired.append(f.id)
                     self.library = [f.id for f in keep]
                     self.champ.update(x=x, train=s, fams=fams, valid=v, vfams=vfams)
                     self.base_seconds = None
+                elif v >= self.champ["valid"] - 1e-9:
+                    say(f"   would retire {', '.join(f.id for f in hurt)} (validation {v - self.champ['valid']:+.3f}) "
+                        f"but it costs train ({s - self.champ['train']:+.3f}); keeping them")
         except FitError as exc:
             say(f"   importance check failed: {exc}")
         for f, w in zip(self.lib(), split_vector(self.lib(), self.champ["x"])):
