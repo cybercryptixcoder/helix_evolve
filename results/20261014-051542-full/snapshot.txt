@@ -1,0 +1,192 @@
+HELIX SNAPSHOT  run 20261014-051542-full  (06:20:58)
+State: finished | generation 14/14 | phase: - | elapsed 63.7 min
+Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 4, hypotheses 4
+LLM so far: 129 calls (0 pro), 304,405 tokens in, 49,101 out
+Programs: 120 made, 50 valid, 0 repaired, 0 duplicates
+Best: p0112 score -6.212 (wide branch, generation 14), gain +2.969 over Code Zero -9.181
+
+== Generations (score = -mean excess %, higher is better)
+gen  3: best -8.377 (validation -8.547) | deep 4/4 valid, best new -8.421 [refuted 2, supported 1] | wide 4/4 valid, best new -8.904 [flat 3, refuted 1] | kept f0024 | 229.0s
+gen  4: best -7.043 (validation -7.438) | deep 4/4 valid, best new -7.219 [supported 2, refuted 1] | wide 4/4 valid, best new -8.377 [flat 2, refuted 2] | kept f0031, f0032 | 288.4s
+gen  5: best -7.043 (validation -7.438) | deep 4/4 valid, best new -6.900 [refuted 3, flat 1] | wide 4/4 valid, best new -6.946 [refuted 4] | kept nothing | 282.7s
+gen  6: best -6.589 (validation -6.985) | deep 4/4 valid, best new -6.589 [refuted 2, supported 1, flat 1] | wide 4/4 valid, best new -6.950 [refuted 3, flat 1] | kept f0046 | 340.7s
+gen  7: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.532 [refuted 3, supported 1] | wide 4/4 valid, best new -6.582 [refuted 4] | kept f0053 | 302.3s
+gen  8: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.634 [refuted 4] | wide 4/4 valid, best new -6.437 [flat 1, refuted 3] | kept nothing | 235.8s
+gen  9: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.476 [refuted 3, flat 1] | wide 4/4 valid, best new -6.545 [refuted 3, flat 1] | kept nothing | 295.2s
+gen 10: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.635 [refuted 4] | wide 4/4 valid, best new -6.452 [refuted 4] | kept nothing | 201.7s
+gen 11: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.642 [refuted 4] | wide 4/4 valid, best new -6.535 [refuted 3, flat 1] | kept nothing | 182.4s
+gen 12: best -6.532 (validation -6.889) | deep 4/4 valid, best new -6.465 [flat 4] | wide 4/4 valid, best new -6.688 [refuted 4] | kept nothing | 345.5s
+gen 13: best -6.279 (validation -6.742) | deep 4/4 valid, best new -6.279 [supported 1, refuted 3] | wide 4/4 valid, best new -6.481 [refuted 3, flat 1] | kept f0101 | 290.9s
+gen 14: best -6.212 (validation -6.631) | deep 4/4 valid, best new -6.097 [flat 2, refuted 1, supported 1] | wide 4/4 valid, best new -6.192 [refuted 2, supported 1, flat 1] | kept f0107, f0112 | 622.0s
+
+== Current pool, best first
+p0112 -6.212 wide | uniform 3.6 correlated 3.1 anticorr 12.7 small 1.6 large 11.2 bimodal 5.1 | added f0107 lopsided_strand_penalty, f0112 large_item_bin_axis_fit_ratio; validation -6.631
+
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 10.63s)
+Reply: ```json
+{"hypotheses": [
+  {"name": "pair_complementarity_two_big",
+   "claim": "In large the optimum's dominant bin is 2LL x73 (two large jobs, one CPU-heavy one memory-heavy) while the champion only reaches 2LL x19 and instead builds LM+ML x62 and LL+LM/LL+ML pairs. The champion's tight_axis_second_fit rewards filling the tight axis but has no term that prefers a candidate bin whose remaining slack on the axis the item does NOT consume is small — i.e. it never sees that placing an L job into a bin whose tight axis is already nearly full leaves a bin that only a complementary L job can finish. A measurement of the leftover vector's shape (how much of the non-consumed axis remains relative to the consumed axis) would let the optimiser prefer bins where the item's own imbalance cancels the bin's imbalance.",
+   "feature": "after = clip(bins - item, 0, None)/capacity; item_imb = (item[0]-item[1])/capacity[0]; bin_imb = (bins[:,0]-bins[:,1])/capacity[0]; room_t = minimum(after[:,0], after[:,1]); room_l = maximum(after[:,0], after[:,1]); # signed cancellation: item's imbalance opposes the bin's imbalance and leaves a balanced residual; scale by how full the bin is. return (1 - room_l) * (-(item_imb * bin_imb)) / (1 + room_t)",
+   "target": "large: 2LL bin count should rise from 19 toward 73, and average room left per bin should fall from CPU 12%/mem 10% toward 3%/0%.",
+   "builds_on": "h0049"},
+  {"name": "fourth_slot_feasibility_anticorr",
+   "claim": "In anticorr the optimum's dominant bin is the 4-job LS+MS+SL+SM x75 while the champion tops out at 3-job LS+MS+SL x74 and strands bins. The champion's features all score the post-placement residual but none asks whether, after this placement, the bin still has room for a *typical* complementary small job on both axes — so it fills bins with 3 jobs that then cannot accept a fourth. A feature that measures the minimum residual axis against a small-job scale, gated to small/medium items, would let the optimiser keep a fourth slot open.",
+   "feature": "after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_smallish = (item_l <= 0.35); room_t = minimum(after[:,0], after[:,1]); room_l = maximum(after[:,0], after[:,1]); # does the residual still admit a job of the item's own tight scale on BOTH axes? return item_smallish * (minimum(room_t, room_l) - item_t) / (item_t + 1e-6)",
+   "target": "anticorr: 4-job bins should rise from 39 toward 105, and the 3-job LS+MS+SL count should fall from 77.",
+   "builds_on": "h0034"},
+  {"name": "medium_stack_axis_balance",
+   "claim": "In correlated the optimum's top bin is 3MM x35 and 2LL+SS x31, while the champion builds 3MM+SS x29 and 2SS+LL+MM x20 — it stuffs small jobs into bins that should stay as pure medium stacks or pure LL+SS pairs. The champion's tight_axis_second_fit and stranded_avoidance_ratio both push toward filling the tight axis, so any small job that fits gets placed, breaking the clean stack. A
+
+== Latest verdicts
+h0049 gen 13 feature supported +0.147 on p0054 (builds on h0045): In large the champion averages 2.34 jobs/bin leaving CPU 13%/mem 11% room, while the optimum packs 2LL x73 and leaves 3%/0%. The champion pairs one CPU-heavy wi || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; room_t = mi
+h0051 gen 13 feature refuted n/a on p0054 (builds on h0043): In uniform the optimum's top bin is LM+ML+MM x15 and it reaches 6-7 job bins (10 and 3 of them), while the champion's top bins are 3-job LM+LS+SL x11 and it has || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_m = (i
+h0052 gen 13 feature refuted n/a on p0054 (builds on h0047): In bimodal the optimum's top bin is 2LL x44 while the champion only reaches 2LL x23 and instead spreads large jobs into LL+LS+SL x13 and LL+ML+SS x10. The champ || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = 
+h0050 gen 13 feature refuted n/a on p0054 (builds on h0042): In anticorr the optimum's dominant bin is a 4-job LS+MS+SL+SM x75; the champion tops out at 3-job LS+MS+SL x74 and strands 12 bins. The champion's stranded bins || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; room_t = mi
+h0054 gen 14 feature flat +0.017 on p0103 (builds on h0034): In anticorr the optimum's dominant bin is the 4-job LS+MS+SL+SM x75 while the champion tops out at 3-job LS+MS+SL x74 and strands bins. The champion's features  || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_smalli
+h0053 gen 14 feature refuted n/a on p0103 (builds on h0049): In large the optimum's dominant bin is 2LL x73 (two large jobs, one CPU-heavy one memory-heavy) while the champion only reaches 2LL x19 and instead builds LM+ML || change: after = clip(bins - item, 0, None)/capacity; item_imb = (item[0]-item[1])/capacity[0]; bin_imb = (bins[:,0]-bins[:,1])/c
+h0055 gen 14 feature flat +0.003 on p0103 (builds on h0044): In correlated the optimum's top bin is 3MM x35 and 2LL+SS x31, while the champion builds 3MM+SS x29 and 2SS+LL+MM x20 — it stuffs small jobs into bins that shou || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_small 
+h0056 gen 14 feature supported +0.045 on p0103 (builds on h0045): In large the champion averages 2.36 jobs/bin vs optimum 2.62 and leaves 12%/10% room, so it is opening bins it then cannot fill. Its large_axis_saturation_gap a || change: after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = 
+
+== Latest Mutator ideas
+p0112 -6.212: added f0107 lopsided_strand_penalty, f0112 large_item_bin_axis_fit_ratio; validation -6.631
+p0117 invalid: f0108 residual_shape_misalignment: invalid
+p0118 -6.192: + f0106 small_job_binding_axis_slot_waste: train +0.087, validation -0.038
+p0119 -6.224: + f0107 lopsided_strand_penalty: train +0.055, validation +0.067 (kept)
+p0120 -6.222: + f0105 small_job_tight_slack_gain_loose_room: train +0.000, validation +0.013
+
+== Best program (p0112)
+# Helix feature policy | p0112, generation 14, 9 features
+# priority() = sum over features of (weight x scale) . feature(item, bins, capacity); the weights were fitted
+# by an optimiser. With every weight at 0 all bins tie and the simulator picks the oldest bin that fits
+# (first fit), so the empty policy is Code Zero.
+import numpy as np
+import math
+
+
+
+# f0008 small_job_slack_gain (deep, 1 value): For each bin: before = min(bins[:,0],bins[:,1])/capacity[0]; after = min((bins-item)[:,0],(bins-item)[:,1])/capacity[0] (clip at 0); item_mi
+def _f0008(item, bins, capacity):
+    """Fraction of the job's tighter-axis demand that closes the bin's tighter-axis slack."""
+    cap = float(capacity[0])
+    before = np.minimum(bins[:, 0], bins[:, 1]) / cap
+    rem = bins - item
+    after = np.minimum(np.maximum(rem[:, 0], 0), np.maximum(rem[:, 1], 0)) / cap
+    item_min = min(item[0], item[1]) / cap
+    return (before - after) / (item_min + 1e-06)
+
+
+# f0024 bimodal_small_stack_slack (deep, 1 value): item_small = (max(item)/capacity[0] <= 0.2); after = clip(bins - item, 0, None)/capacity; return item_small * (1 - abs(after[:,0] - after[:,
+def _f0024(item, bins, capacity):
+    """For small jobs only: high when the placement leaves the bin balanced and nearly full."""
+    cap = np.asarray(capacity, dtype=float)
+    it = np.asarray(item, dtype=float)
+    b = np.asarray(bins, dtype=float)
+    item_small = 1.0 if np.max(it) / cap[0] <= 0.2 else 0.0
+    after = np.clip(b - it, 0.0, None) / cap
+    balance = 1.0 - np.abs(after[:, 0] - after[:, 1])
+    fullness = 1.0 - np.minimum(after[:, 0], after[:, 1])
+    return item_small * balance * fullness
+
+
+# f0031 stranded_avoidance_ratio (deep, 1 value): after = clip(bins - item, 0, None)/capacity; tight = minimum(after[:,0], after[:,1]); loose = maximum(after[:,0], after[:,1]); return -(loos
+def _f0031(item, bins, capacity):
+    """Penalise bins that would become stranded: one axis below 5% while the other stays above 25%."""
+    after = np.clip(bins - item, 0, None) / capacity
+    tight = np.minimum(after[:, 0], after[:, 1])
+    loose = np.maximum(after[:, 0], after[:, 1])
+    return -(loose - tight) * (tight < 0.05) * (loose > 0.25)
+
+
+# f0032 bimodal_big_then_small_reserve (deep, 1 value): item_big = (min(item)/capacity[0] >= 0.3); after = clip(bins - item, 0, None)/capacity; return item_big * (1 - max(after[:,0], after[:,1])) 
+def _f0032(item, bins, capacity):
+    """For big jobs, reward bins that after placement are both tight and balanced."""
+    item_big = min(item[0], item[1]) / capacity[0] >= 0.3
+    after = np.clip(bins - item, 0, None) / capacity
+    tight = 1.0 - np.maximum(after[:, 0], after[:, 1])
+    balanced = 1.0 - np.abs(after[:, 0] - after[:, 1])
+    return item_big * tight * balanced
+
+
+# f0046 tight_axis_second_fit (deep, 1 value): after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; bin_t = min(bins[:,0],bins[:,1]
+def _f0046(item, bins, capacity):
+    """Two-axis fit quality: min of tight/loose demand-to-slack ratios, scaled by post-placement tight slack."""
+    after = np.clip(bins - item, 0, None) / capacity
+    item_t = min(item) / capacity[0]
+    item_l = max(item) / capacity[0]
+    bin_t = np.minimum(bins[:, 0], bins[:, 1]) / capacity[0]
+    bin_l = np.maximum(bins[:, 0], bins[:, 1]) / capacity[0]
+    return np.minimum(item_t / (bin_t + 1e-06), item_l / (bin_l + 1e-06)) * (1 - np.minimum(after[:, 0], after[:, 1]))
+
+
+# f0053 tight_axis_after_fit_count (deep, 1 value): after = clip(bins - item, 0, None)/capacity[0]; item_t = min(item)/capacity[0]; tight = minimum(after[:,0], after[:,1]); frac = tight/(item_
+def _f0053(item, bins, capacity):
+    """Negative distance of tight-axis residual to an integer multiple of the job's tight dimension."""
+    after = np.clip(bins - item, 0, None) / capacity[0]
+    item_t = min(item) / capacity[0]
+    tight = np.minimum(after[:, 0], after[:, 1])
+    frac = tight / (item_t + 1e-06)
+    val = -np.abs(frac - np.round(frac)) / (1.0 + tight)
+    return np.where(item_t > 0, val, 0.0)
+
+
+# f0101 large_axis_saturation_gap (deep, 1 value): after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; room_t = minimum(after[:,0], af
+def _f0101(item, bins, capacity):
+    """Loose-axis room beyond a tight-sized job, only when the tight axis can no longer take one."""
+    after = np.clip(bins - item, 0, None) / capacity
+    item_t = min(item) / capacity[0]
+    room_t = np.minimum(after[:, 0], after[:, 1])
+    room_l = np.maximum(after[:, 0], after[:, 1])
+    return (room_l - item_t) * (room_t < item_t)
+
+
+# f0107 lopsided_strand_penalty (wide, 1 value): For jobs that are lopsided (one axis much bigger), penalise bins that leave the small axis stranded while the big axis stays roomy; scale by
+def _f0107(item, bins, capacity):
+    """For jobs that are lopsided (one axis much bigger), penalise bins that leave the small axis stranded while the big axis stays roomy; scale by how stranded."""
+    cap = np.asarray(capacity, dtype=float)
+    it = np.asarray(item, dtype=float)
+    b = np.asarray(bins, dtype=float)
+    item_t = np.minimum(it[0], it[1]) / cap[0]
+    item_l = np.maximum(it[0], it[1]) / cap[0]
+    lopsided = (item_l - item_t) / (item_l + 1e-06)
+    after = np.clip(b - it, 0.0, None) / cap
+    tight = np.minimum(after[:, 0], after[:, 1])
+    loose = np.maximum(after[:, 0], after[:, 1])
+    strand = np.clip(1.0 - tight / (item_t + 1e-06), 0.0, 1.0) * (tight < item_t)
+    roomy = np.clip((loose - item_l) / (item_l + 1e-06), 0.0, 1.0)
+    return -lopsided * strand * roomy
+
+
+# f0112 large_item_bin_axis_fit_ratio (deep, 1 value): after = clip(bins - item, 0, None)/capacity; item_t = min(item)/capacity[0]; item_l = max(item)/capacity[0]; item_big = (item_t >= 0.3); bef
+def _f0112(item, bins, capacity):
+    """For large items: ratio of item's large axis to bin's large-axis room, scaled by remaining tight-axis room."""
+    after = np.clip(bins - item, 0, None) / capacity
+    item_t = min(item) / capacity[0]
+    item_l = max(item) / capacity[0]
+    item_big = item_t >= 0.3
+    before = bins / capacity
+    bin_l = np.maximum(before[:, 0], before[:, 1])
+    ratio = np.clip(item_l / (bin_l + 1e-06), 0, 2)
+    return item_big * ratio * (1 - np.minimum(after[:, 0], after[:, 1]))
+
+_TERMS = [(_f0008, np.array([-0.6713766491359417])), (_f0024, np.array([4.405559270518047])), (_f0031, np.array([18.068572213234294])), (_f0032, np.array([0.5513681515659591])), (_f0046, np.array([8.87839759390958])), (_f0053, np.array([4.223347288454902])), (_f0101, np.array([-22.36737365624814])), (_f0107, np.array([29.600484195569067])), (_f0112, np.array([-1.5231352693285196]))]
+
+
+def priority(item, bins, capacity):
+    for a in (item, bins, capacity):
+        a.setflags(write=False)                    # features may read the inputs, never change them
+    k = len(bins)
+    total = np.zeros(k)
+    for f, w in _TERMS:
+        if not w.any():
+            continue
+        v = np.asarray(f(item, bins, capacity), dtype=float)
+        if v.ndim == 1:
+            v = v[:, None]
+        if v.shape[0] != k:
+            v = np.broadcast_to(v.reshape(1, -1)[:, :len(w)], (k, len(w)))
+        total += v @ w
+    if not np.isfinite(total).all():
+        total = np.nan_to_num(total, nan=0.0, posinf=1e3, neginf=-1e3)
+    # Bins that differ only by floating-point noise count as tied, so the oldest wins whatever the scale.
+    return np.round(total, 9)

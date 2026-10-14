@@ -1,0 +1,115 @@
+[
+  {
+    "label": "Evolved best (p0112, wide)",
+    "train_score": -6.2121,
+    "test_score": -6.1847,
+    "valid": true,
+    "test_families": {
+      "uniform": 4.8168,
+      "correlated": 3.4584,
+      "anticorr": 13.114,
+      "small": 1.8812,
+      "large": 11.0833,
+      "bimodal": 6.2721,
+      "lognormal": 3.7677,
+      "wide": 5.0843
+    }
+  },
+  {
+    "label": "Code Zero",
+    "train_score": -9.1812,
+    "test_score": -8.9093,
+    "valid": true,
+    "test_families": {
+      "uniform": 6.3831,
+      "correlated": 3.8574,
+      "anticorr": 18.8718,
+      "small": 3.4419,
+      "large": 14.5388,
+      "bimodal": 8.395,
+      "lognormal": 10.3104,
+      "wide": 5.4764
+    }
+  },
+  {
+    "label": "Baseline: alphaevolve_borg",
+    "train_score": -12.6519,
+    "test_score": -11.9662,
+    "valid": true,
+    "test_families": {
+      "uniform": 10.2837,
+      "correlated": 10.9085,
+      "anticorr": 18.7541,
+      "small": 2.8129,
+      "large": 18.0857,
+      "bimodal": 16.0718,
+      "lognormal": 9.1649,
+      "wide": 9.6477
+    }
+  },
+  {
+    "label": "Baseline: best_fit",
+    "train_score": -8.7745,
+    "test_score": -8.7719,
+    "valid": true,
+    "test_families": {
+      "uniform": 5.5956,
+      "correlated": 3.7267,
+      "anticorr": 19.2147,
+      "small": 3.7505,
+      "large": 14.7171,
+      "bimodal": 7.8103,
+      "lognormal": 10.1439,
+      "wide": 5.216
+    }
+  },
+  {
+    "label": "Baseline: dot_product",
+    "train_score": -8.3696,
+    "test_score": -7.9595,
+    "valid": true,
+    "test_families": {
+      "uniform": 5.8566,
+      "correlated": 3.5891,
+      "anticorr": 18.2959,
+      "small": 1.8753,
+      "large": 13.7417,
+      "bimodal": 7.9314,
+      "lognormal": 7.0402,
+      "wide": 5.3457
+    }
+  },
+  {
+    "label": "Baseline: tuned_params",
+    "train_score": -8.009,
+    "test_score": -7.3901,
+    "valid": true,
+    "test_families": {
+      "uniform": 5.4746,
+      "correlated": 3.8574,
+      "anticorr": 15.1807,
+      "small": 3.1244,
+      "large": 13.3864,
+      "bimodal": 6.9787,
+      "lognormal": 6.5548,
+      "wide": 4.5639
+    }
+  },
+  {
+    "label": "Reference: offline best-fit decreasing (sees every job in advance)",
+    "train_score": -5.6338,
+    "test_score": -4.9046,
+    "valid": true,
+    "test_families": {
+      "uniform": 2.3405,
+      "correlated": 1.7289,
+      "anticorr": 14.9666,
+      "small": 2.1868,
+      "large": 8.7773,
+      "bimodal": 4.1948,
+      "lognormal": 3.6074,
+      "wide": 1.4343
+    },
+    "reference": true
+  }
+]
