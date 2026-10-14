@@ -351,6 +351,21 @@ class FeatureSearch(Search):
             ref = {"x": xr, "train": sr, "valid": vr}
         t_refit = time.time() - t2
         t3 = time.time()
+        gate = getattr(self.a, "valid_gate", 0.0) or 0.0
+        if gate > 0:
+            # Cheap gate: score on a 12-instance subset of the same valid instances as the control,
+            # apples to apples; a candidate clearly behind (delta < -gate) skips the 48-instance
+            # scoring. Close calls still run the full valid, which stays the judge of acceptance.
+            vg, _ = self.fitter.score(feats, x, "valid-fast")
+            rvg, _ = self.fitter.score(feats, ref["x"], "valid-fast")
+            if (vg - rvg) < -gate:
+                f.delta_train = round(s - ref["train"], 4)
+                f.delta_valid = round(vg - rvg, 4)
+                f.gated = True
+                if os.environ.get("HELIX_TIMING"):
+                    say(f"   [tim] {f.id} probe {t_probe:.1f}s free {t_free:.1f}s refit {t_refit:.1f}s "
+                        f"valid-fast GATED {time.time() - t3:.1f}s total {time.time() - t0:.1f}s")
+                return {"feature": f, "x": x, "train": s, "fams": fams, "valid": vg, "vfams": None, "gated": True}
         v, vfams = self.fitter.score(feats, x, "valid")
         t_valid = time.time() - t3
         f.delta_train = round(s - ref["train"], 4)

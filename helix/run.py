@@ -781,6 +781,9 @@ def parse_args(argv=None):
     fe.add_argument("--fit-split", choices=["train", "train-fast"], default="train-fast",
                     help="where searches and refits run: train-fast (12 instances) makes generations about a "
                          "minute; train (18) is slower but scores exactly as the evaluator does")
+    fe.add_argument("--valid-gate", type=float, default=0.0,
+                    help="cheap valid gate: a trial clearly behind the control (delta < -N) on a 12-instance "
+                         "subset skips the full 48-instance valid scoring; 0 = off")
     fe.add_argument("--probe-margin", type=float, default=0.08,
                     help="a feature whose cheap probe loses to the champion by more than this is rejected "
                          "without the full weight search and paired refits")
