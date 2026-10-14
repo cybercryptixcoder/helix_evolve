@@ -1,11 +1,11 @@
 {
   "state": "finished",
-  "pid": 2380964,
+  "pid": 2410426,
   "mode": "full",
   "schedule": "parallel",
-  "generation": 20,
-  "generations": 20,
-  "started": 1791975513.2578418,
+  "generation": 25,
+  "generations": 25,
+  "started": 1791980851.456933,
   "error": null,
   "phase": "",
   "flow": {
@@ -16,30 +16,30 @@
     },
     "inspect": {
       "state": "done",
-      "note": "large +31, anticorr +26",
+      "note": "large +32, anticorr +27",
       "sub": "extra bins vs optimum"
     },
     "researcher": {
       "state": "done",
-      "note": "4 feature ideas"
+      "note": "6 feature ideas"
     },
     "coder": {
       "state": "done",
-      "done": 4,
-      "total": 4,
-      "note": "4 of 4 written"
+      "done": 6,
+      "total": 6,
+      "note": "6 of 6 written"
     },
     "mutator": {
       "state": "done",
-      "done": 4,
-      "total": 4,
-      "note": "4 of 4 written"
+      "done": 5,
+      "total": 5,
+      "note": "5 of 5 written"
     },
     "fit": {
       "state": "done",
-      "note": "59 evaluations",
-      "done": 8,
-      "sub": "8 of 8 tried"
+      "note": "107 evaluations",
+      "done": 11,
+      "sub": "11 of 11 tried"
     },
     "accept": {
       "state": "done",
@@ -47,12 +47,12 @@
       "sub": "champion p0162"
     }
   },
-  "flow_generation": 20,
-  "updated": 1791978089.632936,
+  "flow_generation": 25,
+  "updated": 1791982611.233406,
   "llm": {
-    "calls": 184,
-    "tokens_in": 486627,
-    "tokens_out": 72149,
+    "calls": 238,
+    "tokens_in": 662134,
+    "tokens_out": 94056,
     "pro_calls": 0,
     "in_flight": 0,
     "retrying": 0,
@@ -67,5 +67,5 @@
     "dropped": 0,
     "error": null
   },
-  "finished": 1791978089.632908
+  "finished": 1791982611.2333753
 }
