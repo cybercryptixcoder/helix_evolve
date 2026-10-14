@@ -9,11 +9,12 @@ a score). It cannot receive a Program, a Hypothesis or the research log.
 """
 import difflib
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
-PROMPTS = Path(__file__).resolve().parent / "prompts"
+PROMPTS = Path(os.environ.get("HELIX_PROMPTS_DIR") or str(Path(__file__).resolve().parent / "prompts"))
 LOG_SHOWN = 30          # how many recent hypotheses the Researcher sees
 
 
