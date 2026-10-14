@@ -29,6 +29,8 @@ evaluator, so runs of both engines are compared on the same score.
 from __future__ import annotations
 
 import json
+import queue
+import threading
 import time
 from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -121,8 +123,9 @@ class FeatureSearch(Search):
                 return None, f"retry failed: {exc}"
         return code, text
 
-    def deep(self, generation, context):
-        """Researcher -> ideas -> Coder writes each feature. Returns [(Feature, idea)]."""
+    def deep(self, generation, context, notify=None):
+        """Researcher -> ideas -> Coder writes each feature. Returns [(Feature, idea)].
+        `notify(f)` is called from the worker as each feature is written, so fitting can start early."""
         self.set_phase("deep", "Researcher reading the packings")
         self.set_flow("researcher", "active", note="reading the packing comparison")
         system = roles.system_prompt("feature_researcher")
@@ -167,13 +170,16 @@ class FeatureSearch(Search):
 
         out = []
         for job in as_completed([self.workers.submit(write, i) for i in ideas]):
-            out.append(job.result())
+            item = job.result()
+            out.append(item)
+            if notify is not None:
+                notify(item[0])
             self.set_flow("coder", done=len(out))
         self.set_flow("coder", "done", note=f"{sum(f.status != 'invalid' for f, _ in out)} of {len(out)} written")
         self.set_phase("deep", None)
         return out
 
-    def wide(self, generation, context):
+    def wide(self, generation, context, notify=None):
         """Mutator: from the policy's code and score only, variants of its features and fresh ones."""
         n = self.a.variants
         fresh = min(self.a.fresh, n)
@@ -199,7 +205,10 @@ class FeatureSearch(Search):
 
         out = []
         for job in as_completed([self.workers.submit(write, t) for t in picks]):
-            out.append(job.result())
+            f = job.result()
+            out.append(f)
+            if notify is not None:
+                notify(f)
             self.set_flow("mutator", done=len(out))
         self.set_flow("mutator", "done", note=f"{sum(f.status != 'invalid' for f in out)} of {len(out)} written")
         self.set_phase("wide", None)
@@ -246,9 +255,38 @@ class FeatureSearch(Search):
         f.status = "invalid"
         return False
 
+    def probe(self, f):
+        """Cheap first pass, before the expensive line search and paired refits.
+
+        Scores the new feature alone on top of the champion at a few strong weights of both signs. For a
+        single-column feature, sign is all that matters at generation 0 (the whole policy is w x feature,
+        so any w > 0 gives the same packing); otherwise the probe is an approximation, so it only rejects
+        features that lose by more than --probe-margin (anywhere in a wide magnitude range)."""
+        if f.width != 1 or not f.code:
+            return None
+        feats = self.lib() + [f]
+        x0 = np.concatenate([self.champ["x"], np.zeros(1)])
+        mags = (2.0, -2.0, 0.6, -0.6, 0.2, -0.2)
+        X = []
+        for m in mags:
+            x = x0.copy()
+            x[-1] = m
+            X.append(x)
+        try:
+            res = self.fitter.evaluate(feats, X, "train")
+        except FitError:
+            return None
+        best = None
+        for m, x, (s, fams) in zip(mags, X, res):
+            if s is not None and (best is None or s > best[0]):
+                best = (s, x, fams, m)
+        return best
+
     def trial(self, f):
         """Try one feature on top of the champion, on train, then score it on validation.
 
+        0. A cheap probe at a few strong weights; a feature that clearly loses everywhere is rejected
+           without the full search (the gain can't pay for the refits).
         1. Search only the feature's own weights, with the champion's fixed.
         2. Refit all the weights twice from that point, with the same budget, step size and random seed:
            once with the feature and once with it switched off (its values multiplied by 0). Features often
@@ -258,10 +296,20 @@ class FeatureSearch(Search):
         n = len(self.champ["x"])
         x0 = np.concatenate([self.champ["x"], np.zeros(f.width)])
         seed = int(f.id[1:])
+        base = (self.champ["train"], self.champ["fams"])
+        probe = self.probe(f)
+        if probe is not None:
+            if probe[0] < self.champ["train"] - self.a.probe_margin:
+                f.delta_train = round(probe[0] - self.champ["train"], 4)
+                f.delta_valid = None
+                return {"feature": f, "x": np.asarray(probe[1]), "train": probe[0], "fams": probe[2],
+                        "valid": None, "vfams": None, "early": True}
+            x0, base = np.asarray(probe[1]), (probe[0], probe[2])
         x, s, fams = self.fitter.optimise(feats, x0, self.a.trial_evals, sigma=self.a.trial_sigma,
-                                          base=(self.champ["train"], self.champ["fams"]), seed=seed,
+                                          base=base, seed=seed,
                                           free=list(range(n, n + f.width)))
-        ref = {"x": x0, "train": self.champ["train"], "valid": self.champ["valid"]}
+        ref = {"x": np.concatenate([self.champ["x"], np.zeros(f.width)]), "train": self.champ["train"],
+               "valid": self.champ["valid"]}
         if n and self.a.trial_refit_evals > 0:
             muted = self.lib() + [replace(f, scales=[0.0] * f.width)]
             start = x
@@ -306,41 +354,87 @@ class FeatureSearch(Search):
                           note=", ".join(f"{fam} +{g}" for fam, g in gaps[:2]) or "no comparison")
         context = self.context(gen, comparison)
 
-        # ---- agents (deep and wide at the same time)
+        # ---- agents (deep and wide at the same time), with fitting starting as soon as it can:
+        # the champion refit runs while the agents are still writing, and every candidate is checked
+        # and tried the moment it is written, so fitting hides behind the agents' thinking time.
         t_agents = time.time()
-        with ThreadPoolExecutor(max_workers=2) as both:
-            fut = {b: both.submit(getattr(self, b), gen, context) for b in branches}
-            out = {b: f.result() for b, f in fut.items()}
-        deep = out.get("deep", [])
-        wide = out.get("wide", [])
-        candidates = [f for f, _ in deep] + wide
-        ideas = {f.id: idea for f, idea in deep}
-        t_agents = time.time() - t_agents
-        for f in candidates:                    # written now, so the dashboard can show them while they're tried
-            self.save_feature(f)
-
-        # ---- fit: refit the champion's own weights, then check and try every candidate
-        t_fit = time.time()
-        evals0 = self.fitter.evals
+        inbox = queue.Queue()
+        refit_ev = threading.Event()
+        refit_res = {}
         prev = {**self.champ, "features": list(self.library)}
-        refit = self.refit_champion(gen)
-        self.set_flow("fit", "active", done=0, total=len(candidates), note="checking features")
+        evals0 = self.fitter.evals
         trials = []
-        for i, f in enumerate(candidates):
-            self.set_phase("fit", f"trying {f.id} {f.name} ({i + 1}/{len(candidates)})")
+        tried = {"n": 0}
+
+        def refit_worker():
+            try:
+                refit_res["r"] = self.refit_champion(gen)
+            except Exception as exc:
+                refit_res["error"] = f"{type(exc).__name__}: {exc}"
+            finally:
+                refit_ev.set()
+
+        def try_one(f):
+            refit_ev.wait()                     # the champion refit comes first, as before
+            tried["n"] += 1
+            self.set_phase("fit", f"trying {f.id} {f.name} ({tried['n']})")
             if f.status != "invalid" and self.check(f, gen):
                 try:
                     t = self.trial(f)
                     trials.append(t)
-                    say(f"   {f.id} {f.branch:4s} {f.name[:28]:28s} train {t['train'] - self.champ['train']:+.3f}"
-                        f"  valid {t['valid'] - self.champ['valid']:+.3f}")
+                    if t.get("early"):
+                        say(f"   {f.id} {f.branch:4s} {f.name[:28]:28s} rejected by the probe"
+                            f" ({t['train'] - self.champ['train']:+.3f})")
+                    else:
+                        say(f"   {f.id} {f.branch:4s} {f.name[:28]:28s} train {t['train'] - self.champ['train']:+.3f}"
+                            f"  valid {t['valid'] - self.champ['valid']:+.3f}")
                 except FitError as exc:
                     f.status, f.error = "invalid", str(exc)[:500]
             if f.status == "invalid":
                 say(f"   {f.id} {f.branch:4s} {f.name[:28]:28s} invalid: {short(f.error or '', 90)}")
             self.save_feature(f)
-            best = max((t["valid"] - self.champ["valid"] for t in trials), default=None)
-            self.set_flow("fit", done=i + 1, note=f"best valid {best:+.3f}" if best is not None else "nothing usable yet")
+            best = max((t["valid"] - self.champ["valid"] for t in trials if t.get("valid") is not None), default=None)
+            self.set_flow("fit", done=tried["n"], note=f"best valid {best:+.3f}" if best is not None else "nothing usable yet")
+
+        overlap = bool(self.a.overlap)
+        notify = (lambda f: inbox.put(("cand", f))) if overlap else None
+        branch_done_at = {}
+        fit_started = None
+        if overlap:
+            fit_started = time.time()
+            threading.Thread(target=refit_worker, name="champion-refit", daemon=True).start()
+        self.set_flow("fit", "active", done=0, note="checking features" + (" as they arrive" if overlap else ""))
+        with ThreadPoolExecutor(max_workers=2) as both:
+            fut = {b: both.submit(getattr(self, b), gen, context, notify) for b in branches}
+            for b in branches:
+                def _mark(_f, b=b):            # when the branch (its writes) finished
+                    branch_done_at[b] = time.time()
+                    inbox.put(("done", b))
+                fut[b].add_done_callback(_mark)
+            if overlap:
+                done = 0
+                while done < len(branches):
+                    kind, value = inbox.get()
+                    if kind == "done":
+                        done += 1
+                    else:
+                        try_one(value)
+            out = {b: f.result() for b, f in fut.items()}
+        if not overlap:
+            fit_started = time.time()
+            refit_worker()
+            for f in [f for f, _ in out.get("deep", [])] + out.get("wide", []):
+                try_one(f)
+        refit = refit_res.get("r")
+        if refit_res.get("error"):
+            say(f"   champion refit failed: {short(refit_res['error'], 120)}")
+        deep = out.get("deep", [])
+        wide = out.get("wide", [])
+        candidates = [f for f, _ in deep] + wide
+        ideas = {f.id: idea for f, idea in deep}
+        t_agents = max(branch_done_at.values()) - t_agents if branch_done_at else time.time() - t_agents
+
+        # ---- fit records (the fits above ran under the agents when overlapping)
         self.set_flow("fit", "done", sub=f"{len(trials)} of {len(candidates)} tried",
                       note=f"{self.fitter.evals - evals0} evaluations")
         self.set_phase("fit", None)
@@ -349,7 +443,7 @@ class FeatureSearch(Search):
         self.set_flow("accept", "active", note="combining")
         base_valid = self.champ["valid"]                 # what the trials were judged against
         accepted, retired = self.accept(trials)
-        t_fit = time.time() - t_fit
+        t_fit = time.time() - fit_started if fit_started else 0.0     # refit + trials + accept
 
         # ---- records
         champion_prog = self.record_champion(gen, prev, accepted)
@@ -368,7 +462,7 @@ class FeatureSearch(Search):
                   "best_id": self.champ["id"], "best_score": self.champ["train"], "valid_score": self.champ["valid"],
                   "seconds": round(time.time() - started, 1), "started_at": round(started, 1),
                   "finished_at": round(time.time(), 1), "llm": self.llm.summary(),
-                  "phase_seconds": {"agents": round(t_agents, 1), "fit": round(t_fit, 1)},
+                  "phase_seconds": {"agents": round(t_agents, 1), "fit": round(t_fit, 1), "overlap": overlap},
                   "accepted": [f.id for f in accepted], "retired": retired, "champion_refit": refit,
                   "fit": {"trials": len(trials), "evals": self.fitter.evals - evals0, "candidates": len(candidates),
                           "invalid": sum(f.status == "invalid" for f in candidates)},
@@ -428,14 +522,16 @@ class FeatureSearch(Search):
             return "redundant"
         if f.delta_valid is not None and f.delta_valid < -self.a.accept_margin:
             return "refuted"
+        if f.delta_valid is None and (f.delta_train or 0) < -self.a.accept_margin:
+            return "refuted"          # rejected by the cheap probe: worse than the champion at every weight tried
         return "flat"
 
     def accept(self, trials):
         """Combine the features that helped on validation (greedily, best first), refit them together, and
         retire features that hurt."""
         margin = self.a.accept_margin
-        good = sorted([t for t in trials if t["feature"].delta_valid > margin and t["feature"].delta_train > 0],
-                      key=lambda t: -t["feature"].delta_valid)
+        good = sorted([t for t in trials if t.get("valid") is not None and t["feature"].delta_valid > margin
+                       and (t["feature"].delta_train or 0) > 0], key=lambda t: -t["feature"].delta_valid)
         accepted = []
         if good:
             # Greedy, so the result is never worse than the best single feature: start from the best one, add
@@ -562,7 +658,7 @@ class FeatureSearch(Search):
         for f in candidates:
             t = by_feature.get(f.id)
             pid = self.store.new_id("p")
-            if t:
+            if t and t.get("valid") is not None:
                 feats = [self.features[i] for i in prev_ids(prev, self.library, f.id)] + [f]
                 code = compose(feats, split_vector(feats, t["x"]), title=f"trial of {f.id} {f.name}")
                 self.store.candidate_path(pid).write_text(code)
