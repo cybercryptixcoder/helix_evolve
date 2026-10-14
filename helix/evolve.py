@@ -580,6 +580,36 @@ class FeatureSearch(Search):
             self.library += [t["feature"].id for t in chosen]
             self.champ.update(x=np.asarray(x, dtype=float), train=s, fams=fams, valid=v, vfams=vfams)
             self.base_seconds = None
+        # ---- second chance: near-miss features, tried once more next to what was kept. A feature can pay
+        # off only next to another one; its solo trial had to rescue it on its own, so a feature that came
+        # close is retried together with the kept set (both sets of weights refitted).
+        n_combo = int(getattr(self.a, "combo", 0) or 0)
+        if n_combo > 0:
+            near = [t for t in trials if t.get("valid") is not None and t["feature"] not in accepted
+                    and t["feature"].status not in ("invalid", "redundant")
+                    and t["feature"].delta_valid > -margin]
+            near.sort(key=lambda t: -t["feature"].delta_valid)
+            for t in near[:n_combo]:
+                f = t["feature"]
+                feats2 = self.lib() + [f]
+                x2 = np.concatenate([self.champ["x"], np.full(f.width, 0.5)])
+                try:
+                    self.set_phase("fit", f"second chance: {f.id} next to the kept features")
+                    xr, sr, fr = self.fitter.optimise(feats2, x2, self.a.combo_evals, sigma=self.a.refit_sigma)
+                    vr, vfr = self.fitter.score(feats2, xr, "valid")
+                except FitError as exc:
+                    say(f"   second chance for {f.id} failed: {short(str(exc), 90)}")
+                    continue
+                if sr >= self.champ["train"] and vr >= self.champ["valid"] + margin / 2:
+                    old_train, old_valid = self.champ["train"], self.champ["valid"]
+                    f.status = "active"
+                    accepted.append(f)
+                    self.library.append(f.id)
+                    self.champ.update(x=np.asarray(xr, dtype=float), train=sr, fams=fr, valid=vr, vfams=vfr)
+                    self.base_seconds = None
+                    say(f"   second chance: {f.id} {f.name} works next to the kept features "
+                        f"(train {sr - old_train:+.3f}, valid {vr - old_valid:+.3f})")
+        self.set_phase("fit", None)
         # importance on validation; retire non-seed features that hurt (checked when the library changed,
         # and every third generation)
         retired = []
