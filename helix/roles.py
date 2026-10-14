@@ -201,13 +201,18 @@ _FENCE = re.compile(r"```([a-zA-Z0-9_+-]*)\s*\n(.*?)```", re.S)
 _FUNC_DEF = re.compile(r"^def\s+[A-Za-z_]\w*\s*\(", re.M)
 
 
-def extract_code(text, define="priority", flexible=False):
+FUNC_NAME = os.environ.get("HELIX_FUNC_NAME") or "priority"  # candidate entry point; problem-owned
+
+
+def extract_code(text, define=None, flexible=False):
     """The last fenced code block that defines `define()`; None if there isn't one.
+    `define` defaults to FUNC_NAME (the problem's candidate entry point; packing: priority).
     flexible=True (features): a block defining any function also counts. The feature loader
     renames the function anyway, and a Mutator told to vary `_f0015 (empty_bin_penalty_...)`
     sometimes keeps that name in its variant instead of writing `def feature(...)`.
     A stray metadata line (`name: x`, `_f0015_name: x`) that an agent leaves inside the block
     is stripped: stored at module level it is not executable code."""
+    define = define or FUNC_NAME
     blocks = [body for _, body in _FENCE.findall(text) if f"def {define}" in body]
     if blocks:
         return _strip_metadata(blocks[-1].strip()) + "\n"
