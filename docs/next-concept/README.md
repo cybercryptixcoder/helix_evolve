@@ -16,13 +16,9 @@ Helix is an LLM-based evolutionary system that improves programs, built by Shrey
 
 - **Code:** the [helix_evolve repository](https://github.com/cybercryptixcoder/helix_evolve).
 
-This document collects everything said about the project in one conversation: the ideas, the reasoning behind them, the diagrams, every version of the write-up, and the open questions. It leaves out the tech stack on purpose.
-
 ## Short description
 
 The system runs two search loops at once: one goes wide, making undirected variations, and the other goes deep, testing why things work. The next step is to see whether the ways an algorithm could be improved can be laid out as a space we can actually search, with LLM reasoning used to cut off the directions that can be shown not to help.
-
-This description was written to say what is interesting about the project, not to state a problem. For this project, Shreyas asked for the focus to be the interesting part rather than a problem statement.
 
 ## The current system: two loops around one shared evaluator
 
@@ -107,58 +103,14 @@ The plan is to test the search-space idea cheaply first, on problems with a clea
 
 - **Longer term:** more capable models on harder problems, where the setup has a real chance of making actual discoveries.
 
-## How the write-up evolved
-
-The write-up went through two editing passes before it was sent: a light clarity pass that kept Shreyas's wording, then a structural pass on structure and consistency. The original and the final text are below in full.
-
-### Original text (Shreyas's words)
+## In Shreyas's words
 
 This is an LLM-based evolutionary system I built with a close friend who's also academically inclined. It partly already works and can be demoed (we tried it on 2D bin packing), and we want to develop it further. Conventional setups have one agent that reasons about possible improvements and carries them out in a single loop. Ours runs two loops around one shared evaluator. The mutator loop goes wide: it keeps producing variations of the best programs with no particular direction, and it only ever sees code and scores, so the search doesn't narrow too early around one idea. The deep-dive loop goes deep: a researcher looks at which programs did well or badly and forms hypotheses about why, and each hypothesis is tested by writing a version of the program that changes only that one thing, or exaggerates one aspect, with the sole intent of probing whether that affects the score in any manner. Results from both loops go back through the evaluator, and the best go back into the pool. The mutator helps us get lucky; the deep-dive loop helps us cash in on that luck.
 
 The part we want to expand on is to treat discovering and improving solutions as a search space where the axes are formed by the ways in which a program can be modified given certain constraints. The search is done by coding different versions of the program at each step and running them through the evaluator. The LLM brainstorms the different approaches, but which ones actually work is decided by writing code for each and running it through the evaluator. The search keeps track of which approaches have been tried and how they did, so the model stops spending time on directions that already failed. The hard part is pruning. In a math solver, you can prove a branch can't contain a good solution and cut it safely, but here, a few bad scores don't prove a direction is useless. One way to do this is to add a proof specialist agent whose only task is to prove that a certain approach would result in a worse output. If successful at that, we can completely discard it. In the other case, where an approach hasn't worked well so far but we haven't been able to prove that it is useless, we would occasionally retry that approach with less importance than the approaches that are more favorable. We can test this on a range of verifiable problems using cheap models. With more capable models on harder problems, this kind of setup has a real chance of making actual discoveries, which is what makes it interesting.
 
-### First pass: clarity only
-
-Shreyas asked for small fixes to overly complicated sentences only, keeping the text as close to the original as possible, because it had already been edited heavily.
-
-- "It partly already works" became "It already partly works."
-
-- The long deep-dive sentence was split in two, and "with the sole intent of probing whether that affects the score in any manner" became "purely to probe whether it affects the score at all."
-
-- Two back-to-back sentences both said approaches are tested by coding them and running them through the evaluator. They were merged into one.
-
-- "So the model stops spending time on directions that already failed" became "doesn't keep spending time." The original contradicted the later point that weak approaches are occasionally retried.
-
-- "One way to do this is to add a proof specialist agent whose only task is…" became "One way to handle this is a proof specialist agent whose only job is to prove that a given approach would produce a worse result."
-
-- The retry sentence was simplified to: "If an approach hasn't worked well so far but we can't prove it's useless, we occasionally retry it, at a lower priority than more promising approaches."
-
-### Second pass: structure and consistency
-
-Shreyas asked whether the framing held together, whether anything contradicted itself, and for one consistent structure.
-
-- **One order:** what's done today and why it falls short, then what we do instead and how it works, then where it stands and how we'd test it.
-
-- **Said what's wrong with one loop.** The original said conventional setups use a single loop but not why that's a problem. "Where the search can narrow around one idea too early" was added, reusing Shreyas's own point from the mutator sentence.
-
-- **One word for one thing.** "Axes," "directions," "approaches" and "branches" all named the same thing. It became "approaches" throughout, with "branch" kept only in the math-solver comparison.
-
-- **Worse than what.** "Proves an approach would produce a worse result" became "can't beat what we already have."
-
-- **Status moved to the end.** The friend, the partial build and the bin-packing demo moved from the first paragraph to the last.
-
-- **Smaller rewordings:** the opening became "This is an LLM-based evolutionary system that improves programs," and the ledger sentence became "so it doesn't keep sinking time into approaches that haven't paid off."
-
-### Final text
-
-This is an LLM-based evolutionary system that improves programs. Conventional setups have one agent that reasons about possible improvements and carries them out in a single loop, where the search can narrow around one idea too early. Ours runs two loops around one shared evaluator. The mutator loop goes wide: it keeps producing variations of the best programs with no particular direction, and it only ever sees code and scores, so the search doesn't narrow too early around one idea. The deep-dive loop goes deep: a researcher looks at which programs did well or badly and forms hypotheses about why. Each hypothesis is tested by writing a version of the program that changes only that one thing, or exaggerates one aspect, purely to probe whether it affects the score at all. Results from both loops go back through the evaluator, and the best go back into the pool. The mutator helps us get lucky; the deep-dive loop helps us cash in on that luck.
-
-The part we want to expand on is treating the discovery and improvement of solutions as a search space made up of approaches: the different ways a program can be modified within certain constraints. The LLM brainstorms different approaches, but which ones actually work is decided by coding a version of the program for each and running it through the evaluator. The search keeps track of which approaches have been tried and how they did, so it doesn't keep sinking time into approaches that haven't paid off. The hard part is pruning. In a math solver, you can prove a branch can't contain a good solution and cut it safely, but here, a few bad scores don't prove an approach is useless. One way to handle this is a proof specialist agent whose only job is to prove that a given approach can't beat what we already have. If it succeeds, we can discard that approach completely. If an approach hasn't worked well so far but we can't prove it's useless, we occasionally retry it, at a lower priority than more promising approaches.
-
-I built this with a close friend who's also academically inclined. The system already partly works and can be demoed (we tried it on 2D bin packing), and the search-space part is what we want to develop next. We can test it on a range of verifiable problems using cheap models. With more capable models on harder problems, this kind of setup has a real chance of making actual discoveries, which is what makes it interesting.
-
 ## Open questions
 
-One gap in the framing was found during the structural pass and deliberately left for later, because something sent is better than nothing perfected.
+One gap in the framing is left open for now.
 
-- **How do the two loops and the search space fit together?** As written, they read as two separate systems. The approach tree could replace the two loops, sit above them and decide where they search, or use the deep-dive loop as the way each approach gets explored. One sentence in the write-up would connect them once this is decided.
+- **How do the two loops and the search space fit together?** As written, they read as two separate systems. The approach tree could replace the two loops, sit above them and decide where they search, or use the deep-dive loop as the way each approach gets explored. This is still to be decided.
