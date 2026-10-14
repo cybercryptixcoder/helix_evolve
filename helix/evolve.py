@@ -554,6 +554,15 @@ class FeatureSearch(Search):
                     tries = [(vt, vft, xt) for xt, (vt, vft) in zip(X, self.fitter.evaluate(feats + [f], X, "valid"))
                              if vt is not None]
                     vt, vft, xt = max(tries, key=lambda r: r[0]) if tries else (None, None, None)
+                    if (vt is None or vt <= v + margin / 2) and getattr(self.a, "combine_refit", 0) > 0:
+                        # close call: give the candidate's weights a small refit together with the kept set
+                        # (its solo weights were fitted against an older champion and can be badly scaled here)
+                        x0 = np.concatenate([np.asarray(x), np.asarray(w)])
+                        xo, so, fo = self.fitter.optimise(feats + [f], x0, self.a.combine_refit,
+                                                          sigma=self.a.refit_sigma)
+                        vo, vfo = self.fitter.score(feats + [f], xo, "valid")
+                        if vo is not None and (vt is None or vo > vt):
+                            vt, vft, xt = vo, vfo, xo
                     if vt is None or vt <= v + margin / 2:
                         continue
                     st, fst = self.fitter.score(feats + [f], xt, "train")
