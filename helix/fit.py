@@ -49,7 +49,9 @@ def _init():
                       "train-fast": [make_instance(f, 1, i, fit_items) for f in TRAIN_FAMILIES for i in (0, 1)],
                       "valid": [make_instance(f, seed, i, VALID_ITEMS)
                                 for seed in VALID_SEEDS for f in TRAIN_FAMILIES
-                                for i in range(VALID_PER_FAMILY)]}
+                                for i in range(VALID_PER_FAMILY)],
+                      "valid-fast": [make_instance(f, seed, 0, VALID_ITEMS)
+                                     for seed in VALID_SEEDS for f in TRAIN_FAMILIES]}
     _STATE["mods"] = {}
 
 
