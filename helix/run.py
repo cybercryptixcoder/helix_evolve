@@ -739,6 +739,11 @@ def parse_args(argv=None):
                     help="evaluations of each of a feature's two paired refits (with it, and with it switched off)")
     fe.add_argument("--champion-refit-evals", type=int, default=12,
                     help="evaluations refitting the champion's own weights each generation, before features are tried")
+    fe.add_argument("--combo", type=int, default=2,
+                    help="near-miss features (validation just under the bar) given a second chance combined "
+                         "with the kept set each generation (0 = off)")
+    fe.add_argument("--combo-evals", type=int, default=12,
+                    help="evaluations each second-chance feature gets")
     fe.add_argument("--probe-margin", type=float, default=0.08,
                     help="a feature whose cheap probe loses to the champion by more than this is rejected "
                          "without the full weight search and paired refits")
@@ -764,6 +769,7 @@ def parse_args(argv=None):
 # On --resume these come from the run's own config.json, so a run continues with the algorithm it started with.
 KEPT_ON_RESUME = ["engine", "inspect", "trial_evals", "trial_sigma", "trial_refit_evals", "refit_evals",
                   "champion_refit_evals", "refit_sigma", "accept_margin", "max_columns", "probe_margin", "overlap",
+                  "combo", "combo_evals",
                   "mode", "schedule", "top_x", "pool_size", "max_siblings", "variants", "fresh", "hypotheses", "n",
                   "epsilon", "jump", "stall", "judge_tune_evals", "repairs", "pro_every", "seed_program", "fake_llm",
                   "tune", "tune_evals", "tune_targets",
