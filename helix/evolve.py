@@ -29,6 +29,7 @@ evaluator, so runs of both engines are compared on the same score.
 from __future__ import annotations
 
 import json
+import os
 import queue
 import threading
 import time
@@ -286,13 +287,19 @@ class FeatureSearch(Search):
             x[-1] = m
             X.append(x)
         try:
-            res = self.fitter.evaluate(feats, X, "train")
+            res = self.fitter.evaluate(feats, X, self.fitter.fit_split)   # same split champ["train"] uses
         except FitError:
             return None
         best = None
+        deltas = []
         for m, x, (s, fams) in zip(mags, X, res):
-            if s is not None and (best is None or s > best[0]):
+            if s is None:
+                continue
+            deltas.append((m, round(s - self.champ["train"], 4)))
+            if best is None or s > best[0]:
                 best = (s, x, fams, m)
+        if os.environ.get("HELIX_TIMING") and deltas:
+            say(f"      [mag] {f.id} " + " ".join(f"{m:+.2g}:{d:+.3f}" for m, d in deltas))
         return best
 
     def trial(self, f):
@@ -310,19 +317,26 @@ class FeatureSearch(Search):
         x0 = np.concatenate([self.champ["x"], np.zeros(f.width)])
         seed = int(f.id[1:])
         base = (self.champ["train"], self.champ["fams"])
+        t0 = time.time()
         probe = self.probe(f)
+        t_probe = time.time() - t0
         if probe is not None:
             if probe[0] < self.champ["train"] - self.a.probe_margin:
                 f.delta_train = round(probe[0] - self.champ["train"], 4)
                 f.delta_valid = None
+                if os.environ.get("HELIX_TIMING"):
+                    say(f"   [tim] {f.id} probe {t_probe:.1f}s (rejected)")
                 return {"feature": f, "x": np.asarray(probe[1]), "train": probe[0], "fams": probe[2],
                         "valid": None, "vfams": None, "early": True}
             x0, base = np.asarray(probe[1]), (probe[0], probe[2])
+        t1 = time.time()
         x, s, fams = self.fitter.optimise(feats, x0, self.a.trial_evals, sigma=self.a.trial_sigma,
                                           base=base, seed=seed,
                                           free=list(range(n, n + f.width)))
+        t_free = time.time() - t1
         ref = {"x": np.concatenate([self.champ["x"], np.zeros(f.width)]), "train": self.champ["train"],
                "valid": self.champ["valid"]}
+        t2 = time.time()
         if n and self.a.trial_refit_evals > 0:
             muted = self.lib() + [replace(f, scales=[0.0] * f.width)]
             start = x
@@ -332,9 +346,15 @@ class FeatureSearch(Search):
                                              base=(self.champ["train"], self.champ["fams"]), seed=seed + 1)
             vr = self.champ["valid"] if np.array_equal(xr, start) else self.fitter.score(muted, xr, "valid")[0]
             ref = {"x": xr, "train": sr, "valid": vr}
+        t_refit = time.time() - t2
+        t3 = time.time()
         v, vfams = self.fitter.score(feats, x, "valid")
+        t_valid = time.time() - t3
         f.delta_train = round(s - ref["train"], 4)
         f.delta_valid = round(v - ref["valid"], 4)
+        if os.environ.get("HELIX_TIMING"):
+            say(f"   [tim] {f.id} probe {t_probe:.1f}s free {t_free:.1f}s refit {t_refit:.1f}s "
+                f"valid {t_valid:.1f}s total {time.time() - t0:.1f}s")
         return {"feature": f, "x": x, "train": s, "fams": fams, "valid": v, "vfams": vfams}
 
     # ================================================================ one generation
@@ -376,6 +396,7 @@ class FeatureSearch(Search):
         refit_res = {}
         prev = {**self.champ, "features": list(self.library)}
         evals0 = self.fitter.evals
+        maps0 = (self.fitter.map_calls, self.fitter.map_tasks, self.fitter.map_seconds)
         trials = []
         tried = {"n": 0}
 
@@ -459,6 +480,9 @@ class FeatureSearch(Search):
         base_valid = self.champ["valid"]                 # what the trials were judged against
         accepted, retired = self.accept(trials)
         t_fit = time.time() - fit_started if fit_started else 0.0     # refit + trials + accept
+        c0, m0, s0 = maps0
+        fitter_stats = {"batches": self.fitter.map_calls - c0, "tasks": self.fitter.map_tasks - m0,
+                        "seconds": round(self.fitter.map_seconds - s0, 1)}
 
         # ---- records
         champion_prog = self.record_champion(gen, prev, accepted)
@@ -489,6 +513,10 @@ class FeatureSearch(Search):
                                "train": self.champ["train"], "valid": self.champ["valid"], "fams": self.champ["fams"],
                                "vfams": self.champ["vfams"], "official": self.champ.get("official"),
                                "official_fams": self.champ.get("official_fams")}}
+        record["phase_seconds"]["fitter"] = fitter_stats
+        if os.environ.get("HELIX_TIMING"):
+            say(f"   [tim] pool {fitter_stats['batches']} batches, {fitter_stats['tasks']} sims, "
+                f"{fitter_stats['seconds']}s ({fitter_stats['seconds'] / max(1, fitter_stats['tasks']):.2f}s/sim)")
         for b in branches:
             mine = [t for t in trials if t["feature"].branch == b]
             fs = [f for f in candidates if f.branch == b]
