@@ -34,7 +34,7 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 ## 3. Test suite (generality, no flukes, no leaks)
 
 - **done**: Many verifiable problems: binpack2d, binpack1d, knapsack, set cover, TSP, online scheduling, graph colouring, job shop, CVRP (vehicle routing, added on request). Held-out families, hidden baselines, references never shown to agents. (`suite/`)
-- **doing**: Small generality runs on 2-3 other problems (TSP started).
+- **doing**: Small generality runs on 2-3 other problems. TSP: 97% from Code Zero in 5 generations; test tour gap ~14% against 25% for the hidden nearest-neighbour baseline.
 - **done**: Everything plugged in for Shreyas to run big suite runs himself.
 
 ## 4. Meta-evolution (code by me, runs by Shreyas)
@@ -43,7 +43,7 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - **done**: The evaluator runs the suite and measures the degree of improvement, speed, generations to improve, flatlining.
 - **done**: The outer loop reads the inner runs' traces.
 - **done**: An LLM supervisor that keeps it running, fixes crashes, hot-swaps.
-- **doing**: Make long meta runs robust: resume after any interruption (including a machine restart), preflight checks, fail loudly and early (the first 4-hour run died in its first second on a missing package).
+- **done**: Make long meta runs robust: resume after any interruption (including a machine restart), preflight checks, fail loudly and early (the first 4-hour run died in its first second on a missing package). See docs/META_V3.md, "Long runs that survive interruptions".
 
 ## 5. Dashboard
 
@@ -66,11 +66,12 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 ## 8. Thinking modes
 
 - **done**: Effort per role (none, low, medium, high, max), always-on or every Nth generation ("breakthrough"); a thinking model is not asked to write out its reasoning; output budgets grow with effort.
-- **doing**: Compare modes in runs (round 3: Researcher at low; round 4: none, with a max breakthrough at generation 5).
+- **doing**: Compare modes in runs. Round 3 (Researcher at low): 25.7% by generation 4. Round 4 (none, max breakthrough at generation 5): 16.6% after 5; the max generation first failed (reasoning ate the token budget; fixed), then kept nothing. Default is back to low.
 
 ## 9. Robustness of runs on Shreyas's machine
 
-- **doing**: Runs keep going or pick up where they left off after any interruption, including turning the PC off (resume automatically on restart); guards so a 4-hour run doesn't fail silently; keep a record of everything.
+- **done**: Runs pick up where they left off after any interruption, including turning the PC off (`scripts/install_keeper.sh`: the keeper starts at login and resumes them); a preflight and fail-fast guards so a 4-hour run doesn't fail silently; every state file atomic; the Mac kept awake during meta runs. Nothing can run while the computer is off.
+- **todo**: Shreyas: `git pull`, `scripts/install_keeper.sh` once, then `DRY=1 scripts/run_meta.sh` to check, then the real run.
 
 ## Log of requests
 
