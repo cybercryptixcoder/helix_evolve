@@ -140,3 +140,33 @@ weight ("inert at fitted weight" instead of "did not hold").
 Done this session: checkpoint/resume and the keeper; thinking modes; the fitter's feature-value cache with
 instance-affine workers (round 4's generation 1: 70 s against round 3's 388 s); a pipelined generation;
 bench/revive streams and a momentum ranking; CVRP (9 problems).
+
+## Round 4, the thinking-mode comparison, generality, robustness (October 17, afternoon)
+
+**Round 4** (binpack2d, 5 generations, Researcher and Navigator without hidden thinking, a max-effort breakthrough at
+generation 5): 3.5 → 3.5 → 2.5 → 16.6 → 16.6%. Generations took 70-307 s (round 3: 388-1234 s): the speed work
+holds. Quality is worse than round 3 (Researcher at low: 25.7% by generation 4), so the Researcher is back at low.
+The breakthrough generation first failed: at max effort the model spent 27.7k of its ~28k output tokens on hidden
+reasoning and the answer was cut off after 1k characters (no experiments that generation). Fixed in `helix3/llm.py`:
+the output budget grows with effort (max: +80k tokens), and a reply cut off by the limit is retried once with double
+room. Rerun, the max generation kept nothing.
+
+**The cloud container is reclaimed** about 10 minutes after the session goes idle, and every process with it
+(round 4 died after generation 4; the files survived and it resumed from its checkpoint). Unattended runs in the
+cloud need scheduled wake-ups; long runs belong on Shreyas's machine.
+
+**Generality.** TSP, 5 generations: 0 → 96.9 → 96.9 → 97.2 → 97.5 → 97.0% train (Code Zero is index order, a 515%
+gap); held-out test 97.2%, a tour gap of about 14% against 25% for the hidden nearest-neighbour baseline. CVRP is
+running (generation 1: 89.4%, gap 22.8% against the baseline's 33.6%).
+
+**The first 15-generation run with every fix** (binpack2d, Researcher at low, perturbation every 4th generation,
+streams): generation 1 reached 22.6% (valid 20.7%) in 105 s.
+
+**Robust long runs** (Shreyas's 4-hour meta run died in its first second on a missing scipy): scipy is gone from the
+run path; `run_meta.sh` has a preflight (dependencies, keys, a one-generation crash test), `DRY=1`, `RESUME=`, and
+keeps a Mac awake; the meta loop reuses finished inner runs, resumes unfinished ones, keeps a generation's
+candidates across a resume, counts only time spent, and fails fast if the starting strategy's runs all crash;
+`scripts/install_keeper.sh` starts the keeper at login. See docs/META_V3.md.
+
+**Also:** round-3 review fixes part 2 (see the commit), perturbation generations, the dashboard showing dead runs as
+live (fixed), aborted generations of resumed runs hidden, docs/REQUESTS.md (every request, with status).
