@@ -405,9 +405,33 @@ function metaEval(it) {
     ${[...Object.entries(r.problems), ...Object.entries(r.held_out).map(([k, v]) => [k + " (held out)", v])].map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmt(v.score)}</td><td>${pct(v.final)}</td><td>${pct(v.auc)}</td><td>${v.plateau != null ? "G" + fmt(v.plateau, 0) : "—"}</td><td>${v.crashes}</td></tr>`).join("")}</table>`;
 }
 
+function metaChart(it) {
+  const cs = (it.state.candidates || []).filter(c => c.result);
+  if (!cs.length) return "";
+  const W = 1000, H = 220, L = 44, R = 16, T = 14, B = 30;
+  const G = Math.max(1, ...cs.map(c => c.gen));
+  const sc = cs.map(c => c.result.score);
+  const lo = Math.floor(Math.min(...sc) / 5) * 5, hi = Math.ceil(Math.max(...sc, lo + 5) / 5) * 5;
+  const x = g => L + (W - L - R) * (g / G), y = v => T + (H - T - B) * (1 - (v - lo) / Math.max(1, hi - lo));
+  const byId = Object.fromEntries(cs.map(c => [c.id, c]));
+  let inc = cs.find(c => c.origin === "seed") || cs[0], line = [[0, inc.result.score]];
+  for (let g = 1; g <= G; g++) {
+    const sw = it.swaps.filter(w => w.type === "swap" && w.gen === g).pop();
+    if (sw && byId[sw.new]) inc = byId[sw.new];
+    line.push([g, inc.result.score]);
+  }
+  let h = `<g class="axis">`;
+  for (let v = lo; v <= hi; v += Math.max(1, Math.round((hi - lo) / 4))) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  for (let g = 0; g <= G; g++) h += `<text x="${x(g)}" y="${H - 8}" text-anchor="middle">${g === 0 ? "start" : "G" + g}</text>`;
+  h += `</g><polyline class="curve" points="${line.map(([g, v]) => `${x(g)},${y(v)}`).join(" ")}"/>`;
+  cs.forEach(c => { h += `<circle class="bead ${c.origin === "wide" ? "wide" : c.origin === "deep" ? "deep" : "combo"}" cx="${x(c.gen) + (c.origin === "wide" ? 7 : c.origin === "deep" ? -7 : 0)}" cy="${y(c.result.score)}" r="6"><title>${esc(c.id)} ${esc(c.name || "")}: ${fmt(c.result.score)}</title></circle>`; });
+  return `<section class="hero"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Strategy scores by outer generation">${h}</svg>
+    <div class="legend"><span><i style="background:var(--ink)"></i>incumbent</span><span><i style="background:var(--deep)"></i>from the Researcher</span><span><i style="background:var(--wide)"></i>from the Mutator</span></div></section>`;
+}
+
 function metaOuter(it) {
   const s = it.state, cs = s.candidates || [];
-  return `<h2>Outer run <span class="muted small">${esc(it.id)}</span></h2>
+  return `<h2>Outer run <span class="muted small">${esc(it.id)}</span></h2>${metaChart(it)}
     <p>Incumbent <b>${esc(s.incumbent)}</b> after ${s.gen} outer generations; ${it.swaps.filter(x => x.type === "swap").length} promotions (each swapped into the outer loop itself).</p>
     <table class="t"><tr><th>Strategy</th><th>Gen</th><th>From</th><th>What changed</th><th>Score</th><th>Verdict</th></tr>
     ${cs.map(c => `<tr><td><b>${esc(c.id)}</b> ${esc(c.name || "")}</td><td>${c.gen}</td><td><span class="dot ${c.origin === "deep" ? "deep" : c.origin === "wide" ? "wide" : ""}"></span>${esc(c.origin)}${c.parent ? " of " + esc(c.parent) : ""}</td>
