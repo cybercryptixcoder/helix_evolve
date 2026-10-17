@@ -1,0 +1,74 @@
+{
+ "problem": "coloring",
+ "label": "coloring-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 20.311447811447813,
+  "valid": 12.078877005347593,
+  "progress": 64.75,
+  "valid_progress": 78.92,
+  "library": [
+   "f002",
+   "f045"
+  ]
+ },
+ "test": {
+  "gap": 20.186628186628187,
+  "families": {
+   "sparse": 19.999999999999996,
+   "dense": 22.222222222222225,
+   "geometric": 3.896103896103894,
+   "planted": 33.333333333333336,
+   "medium": 21.481481481481485
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 64.75
+ },
+ "progress_curve": [
+  0.0,
+  59.45,
+  59.45,
+  59.45,
+  59.45,
+  64.75,
+  64.75,
+  64.75,
+  64.75,
+  64.75,
+  64.75
+ ],
+ "valid_curve": [
+  0.0,
+  76.49,
+  76.49,
+  76.49,
+  76.49,
+  78.92,
+  78.92,
+  78.92,
+  78.92,
+  78.92,
+  78.92
+ ],
+ "calls": 122,
+ "tokens_in": 344658,
+ "tokens_out": 271081,
+ "features_tried": 87,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "neighbour_saturation_pressure",
+   "origin": "wide"
+  },
+  {
+   "id": "f045",
+   "name": "target_class_two_hop_affinity",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792268501.6965928
+}
