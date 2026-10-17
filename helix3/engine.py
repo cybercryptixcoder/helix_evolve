@@ -595,7 +595,8 @@ class Engine:
         """Create brainstormed approaches, resolve titles to ids, drop unknown ids, fill gaps from the hooks."""
         led = self.ledger
         title_to_id = {n.title.lower(): n.id for n in led.nodes.values()}
-        for a in plan.get("new_approaches") or []:
+        cap = 8 if not led.nodes else self.s.c("navigator", "max_new_approaches", default=3)
+        for a in (plan.get("new_approaches") or [])[:cap]:
             if not isinstance(a, dict) or not a.get("title"):
                 continue
             t = str(a["title"])[:80]
@@ -624,6 +625,11 @@ class Engine:
                 and led.features[v].status not in ("invalid",)]
         if not vary and led.features:
             vary = [v for v in self.s.hooks.allocate(view)["mutate"]["vary"] if v in led.features]
+        k_par = self.s.c("mutator", "kept_parents", default=2)        # kept features are the proven veins
+        kept_rank = sorted([f for f in led.lib()], key=lambda f: -(f.importance or 0))
+        for f in kept_rank[:k_par]:
+            if f.id not in vary:
+                vary.insert(0, f.id)
         fresh = max(self.s.c("mutator", "fresh", default=1), slots - len(vary))
         plan["mutate"] = {"vary": vary[:max(0, slots - fresh)], "fresh": min(slots, fresh)}
         combos, dropped = [], []
@@ -685,7 +691,8 @@ class Engine:
                          + "\nCombinations are for features that are *not* kept: a kept feature is already in every trial.")
         groups = self.similar_groups()
         if groups:
-            parts.append("## Groups of tried features that rank candidates alike (|rho| >= 0.9): the same idea, re-expressed\n" + groups)
+            parts.append("## Groups of tried features that rank candidates alike (|rho| >= 0.9): the same idea, re-expressed\n" + groups
+                         + "\nProductive groups are veins to keep mining (sub-approaches, conditions); spent groups are not.")
         n_exp = self.s.c("researcher", "experiments", default=4)
         slots = self.s.c("mutator", "slots", default=4)
         parts.append(f"## Budget this generation\n- Researcher: {n_exp} experiments (assign up to {n_exp} approaches)\n"
@@ -760,6 +767,24 @@ class Engine:
             except Exception as exc:
                 f.error = str(exc)[:200]
             self.prepare(f, "coder")
+            if f.status == "duplicate" and self.s.c("coder", "retry_duplicates", default=True):
+                src = led.features.get(f.duplicate_of)
+                first = f.code
+                user2 = (user + f"\n\nYour first version ranks candidates exactly like `{src.name if src else f.duplicate_of}` "
+                         f"({f.duplicate_of}), already evaluated:\n```python\n{first.strip()}\n```\nWrite a version that "
+                         "measures the experiment's quantity in a way that orders candidates differently.")
+                try:
+                    rep2 = self.ask("coder", roles.system_prompt(self.s, "coder", self.p), user2, "coder",
+                                    meta={"step": "code-retry", "feature": f.id})
+                    code2 = extract_code(rep2.text) or ""
+                    if code2:
+                        self.trace.emit("feature_done", gen=self.gen, feature=f.record())
+                        f.code, f.status, f.duplicate_of, f.certificate, f.error = code2, "new", "", {}, ""
+                        self.ledger._fp.pop(f.id, None)
+                        self.ledger._vals.pop(f.id, None)
+                        self.prepare(f, "coder")
+                except Exception as exc:
+                    f.error = str(exc)[:200]
             if on_ready:
                 on_ready(f)
             return f
@@ -800,6 +825,14 @@ class Engine:
         if rel:
             k = self.s.c("ledger_lines", default=14)
             parts.append("## The ledger for these approaches (and your last generation)\n" + "\n".join(roles.feature_line(f) for f in rel[-k:]))
+        others = [f for f in led.features.values() if f not in rel and f.status not in ("new", "checking")]
+        if others:
+            def tag(f):
+                g = f.d_valid if f.d_valid is not None else f.best_probe
+                return f.status + (f" {roles.gain(g, 2)}" if g is not None else "") + \
+                    (f" ={f.duplicate_of}" if f.status == "duplicate" and f.duplicate_of else "")
+            parts.append("## Index of everything else tried so far (don't re-run these ideas)\n" +
+                         "; ".join(f"{f.id} {f.name} ({tag(f)})" for f in others[-80:]))
         missed = [f for f in led.features.values() if f.origin == "deep" and f.prediction.get("checked")
                   and not f.prediction.get("held") and f.gen >= self.gen - 2]
         if missed:
@@ -808,8 +841,10 @@ class Engine:
                 f"it went {f.prediction.get('before')} → {f.prediction.get('after')}" for f in missed[-8:]))
         groups = self.similar_groups()
         if groups:
-            parts.append("## Tried features that rank candidates alike (|rho| >= 0.9): one idea, re-expressed. Move to a "
-                         "different quantity rather than another form of these.\n" + groups)
+            parts.append("## Tried features that rank candidates alike (|rho| >= 0.9): one idea, re-expressed\n" + groups +
+                         "\nInside a PRODUCTIVE group, refine: condition it, combine it with another quantity, change its "
+                         "shape where the diagnostics say it fails. A spent group needs a different quantity. A near-copy of "
+                         "any member is discarded unevaluated.")
         finds = [f for f in led.features.values() if f.origin == "wide" and f.gen >= self.gen - 2
                  and f.status not in ("invalid", "duplicate", "inert") and f.best_probe is not None]
         finds.sort(key=lambda f: -(f.d_valid if f.d_valid is not None else f.best_probe))
@@ -886,8 +921,19 @@ class Engine:
             if len(g) >= min_size:
                 groups.append(g)
                 seen |= {h.id for h in g}
-        return "\n".join("- " + ", ".join(f"{h.id} {h.name}" for h in g[:8]) + (f" (+{len(g) - 8})" if len(g) > 8 else "")
-                         for g in groups)
+        def best(g):
+            vals = [h.d_valid if h.d_valid is not None else h.best_probe for h in g]
+            vals = [v for v in vals if v is not None]
+            return max(vals) if vals else None
+        out = []
+        for g in sorted(groups, key=lambda g: -(best(g) or -99)):
+            kept = [h for h in g if h.status in ("kept", "retired")]
+            b = best(g)
+            tag = (f"PRODUCTIVE: {len(kept)} kept, best gain {roles.gain(b)}" if kept or (b or 0) > self.margin
+                   else f"spent: best gain {roles.gain(b)}")
+            out.append("- " + ", ".join(f"{h.id} {h.name}" for h in g[:8]) + (f" (+{len(g) - 8})" if len(g) > 8 else "")
+                       + f" [{tag}]")
+        return "\n".join(out)
 
     def scoreboard(self):
         led = self.ledger
@@ -1031,12 +1077,24 @@ class Engine:
             after = self.diagnose(lib + [f], x_with, ids)[ids[0]].get(metric)
         except Exception:
             before = after = None
-        held = None
+        held, note = None, ""
         if isinstance(before, (int, float)) and isinstance(after, (int, float)):
             eps = 1e-9 + 0.002 * abs(before)
-            held = (after < before - eps) if direction.startswith("down") else (after > before + eps)
+            if abs(after - before) <= eps:              # the fitted weight leaves it unchanged: exaggerate it
+                w = f.best_w if f.best_w else self.spread
+                x_amp = np.concatenate([refit["x"], np.full(f.width, np.sign(w) * max(abs(w) * 4, self.spread))])
+                try:
+                    amp = self.diagnose(lib + [f], x_amp, ids)[ids[0]].get(metric)
+                except Exception:
+                    amp = None
+                if isinstance(amp, (int, float)) and abs(amp - before) > eps:
+                    after, note = amp, "checked at an exaggerated weight (the fitted weight left it unchanged)"
+                else:
+                    note = "inert at the fitted weight and at an exaggerated one: the metric didn't move, so not checked"
+            if not note.startswith("inert"):
+                held = (after < before - eps) if direction.startswith("down") else (after > before + eps)
         f.prediction = {"metric": metric, "family": fam, "direction": direction, "before": before, "after": after,
-                        "held": held, "checked": held is not None, "instance": ids[0]}
+                        "held": held, "checked": held is not None, "instance": ids[0], "why": note}
         self.trace.emit("prediction", gen=self.gen, feature=f.id, **f.prediction)
 
     def try_combinations(self, plan, refit):
@@ -1048,6 +1106,11 @@ class Engine:
             if fa.status in ("kept", "invalid", "duplicate", "inert", "span") or fb.status in ("kept", "invalid", "duplicate", "inert", "span"):
                 continue
             if fa.best_w is None or fb.best_w is None:
+                continue
+            ev = [f.d_valid if f.d_valid is not None else f.best_probe for f in (fa, fb)]
+            if any(v is None or v <= 0 for v in ev):          # round 3: no combination of non-gainers ever gained
+                self.trace.emit("combination", gen=self.gen, pair=[a, b], skipped=True,
+                                why="a member showed no gain on its own")
                 continue
             feats = led.lib() + [fa, fb]
             x0 = np.concatenate([refit["x"], np.full(fa.width, fa.best_w), np.full(fb.width, fb.best_w)])

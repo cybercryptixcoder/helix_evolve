@@ -237,7 +237,8 @@ class Ledger:
                 continue
             if any(f.status in ("kept", "retired") or (f.d_valid or -1) > margin for f in own):
                 n.state = "promising"
-            elif tried and all(f.certificate.get("type") in ("inert", "duplicate", "span") for f in tried):
+            elif tried and all(f.certificate.get("type") in ("inert", "duplicate", "span") for f in tried) and \
+                    (len(tried) >= 2 or any(f.certificate.get("type") != "duplicate" for f in tried)):
                 n.state = "pruned"
                 n.certificate = [{"feature": f.id, **f.certificate} for f in tried]
             elif tried:
