@@ -21,6 +21,23 @@ Make the system do what it was meant to do, tracing each gap to its cause (promp
 - **Prompts are split** into method (`strategy/prompts/<role>.md`) and domain addenda (`prompts/features/`, `meta/space/`), so the meta loop's winner can drive the outer loop too.
 - **Four Luminal keys** in a gitignored `.env`; the client pools them under both rate limits per key.
 
+### Round 1 (v3r1, 2D bin packing, 5 generations): 22.0% train, 22.4% test
+
+One jump in generation 2, then flat; behind v2's run 8 (27.5%). A subagent reviewed the trace against [TRACE_REVIEW.md](TRACE_REVIEW.md). What it found, and what was done:
+
+| Finding | Cause | Fix |
+|---|---|---|
+| **The champion was knife-edged.** Two near-duplicate kept features (ρ 0.968) with nearly cancelling weights; the policy's within-decision signal fell from 1.13 to 0.15, so a probe at ±0.1 was already two thirds of it. 17 of 23 rejected features did best at the smallest weight | Engine: absolute probe weights and CMA steps; duplicate threshold 0.98 let the twin in | Probe weights are now multiples (±1, ±0.3, ±0.1) of the champion's measured within-decision spread; CMA steps scale with the weights; duplicate threshold 0.95 |
+| Generation 5 got empty or cut-off streams (no finish reason) and treated them as answers | Client | Empty or unfinished streams are retried |
+| A valid feature was rejected for being named `_f` | Parser | A single function is renamed to `feature`; replies with no code get one more chance |
+| The Researcher re-expressed one idea (11 of 16 deep features transform the same leftover); its failed predictions were never shown to it | Prompt and information | It now sees its failed predictions (before → after) and groups of tried features that rank alike, and states a `lesson` per experiment |
+| Predictions were "checked" at weights where the policy was broken | Engine | Checked at the trial weights, or not at all when the feature wrecks the policy |
+| Every combination the Navigator asked for contained a kept feature and was silently dropped; the same prune request three times; the Prover could never succeed | Engine and information | Kept features are rejected from combinations and the Navigator is told; it sees prune history; the Prover runs only when a feature is close (ρ or R² ≥ 0.9) and span claims are verified numerically |
+| A duplicate's inherited gain marked its approach promising | Ledger | Duplicates don't count as evidence |
+| Time: Prover 152 s for nothing, sensitivity recomputed unchanged | Engine | Prover gated; sensitivity cached |
+
+Also from round 1, independently: the best two near-misses per generation now get a full trial ("weak but unproven" is retried, not dropped), and searches run on a 12-instance split (records still use all 18).
+
 ### Built
 
 - `helix3/`: engine, ledger and certificates, fitter, client, roles, strategy, digest, CLI; `tests/test_helix3.py`.
