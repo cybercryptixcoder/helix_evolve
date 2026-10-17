@@ -1,0 +1,134 @@
+HELIX SNAPSHOT  run 20261017-014858-full  (01:53:15)
+State: finished | generation 5/5 | phase: - | elapsed 4.2 min
+Config: mode full, schedule parallel, provider luminal, model deepseek-ai/DeepSeek-V4.1-Flash, top_x 4, variants 4, hypotheses 4
+LLM so far: 46 calls (0 pro), 81,173 tokens in, 16,179 out
+Programs: 44 made, 14 valid, 0 repaired, 0 duplicates
+Best: p0036 score -6.774 (deep branch, generation 5), gain +2.407 over Code Zero -9.181
+
+== Generations (score = -mean excess %, higher is better)
+gen  0: best -9.181 (validation -9.038)
+gen  1: best -9.271 (validation -9.038) | deep 4/4 valid, best new -9.621 [refuted 4] | wide 4/4 valid, best new -9.621 [refuted 4] | kept nothing | 13.3s
+gen  2: best -7.443 (validation -7.525) | deep 4/4 valid, best new -7.443 [refuted 3, supported 1] | wide 4/4 valid, best new -9.332 [refuted 4] | kept f0013 | 26.7s
+gen  3: best -7.443 (validation -7.525) | deep 4/4 valid, best new -7.524 [refuted 4] | wide 4/4 valid, best new -7.544 [refuted 4] | kept nothing | 20.8s
+gen  4: best -7.064 (validation -7.343) | deep 4/4 valid, best new -7.064 [supported 1, refuted 3] | wide 4/4 valid, best new -7.995 [refuted 4] | kept f0031 | 32.4s
+gen  5: best -6.647 (validation -7.003) | deep 4/4 valid, best new -6.800 [flat 1, supported 2] | wide 4/4 valid, best new -6.948 [refuted 1, flat 1] | kept f0040, f0037 | 151.6s
+
+== Current pool, best first
+p0036 -6.774 deep | uniform 4.0 correlated 3.3 anticorr 12.9 small 2.5 large 13.0 bimodal 4.9 | added f0040 big_with_big_room_penalty, f0037 bimodal_small_slot_for_large; validation -7.003
+
+== Latest Researcher call (deepseek-ai/DeepSeek-V4.1-Flash, 9.08s)
+Reply: ```json
+{"hypotheses": [
+  {"name": "big_with_big_room_penalty",
+   "claim": "In large the champion makes LL+LM x42, LL+ML x40, LL+MM x36 — every large job is paired with a different-class partner, leaving 12-14% in both resources — while the optimum makes 2LL x73 and LL+ML+MM. When a large job arrives, the policy prefers a bin whose residual is 'class-matched' (one resource already tight) rather than a bin where a second large job still fits in both resources. The decision that matters: among bins that fit, prefer the one that can still absorb another job of the same large class.",
+   "feature": "Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity (post-placement, clipped at 0). Return min(r[:,0], r[:,1]) - max(r[:,0], r[:,1]) restricted to the tight resource being large: i.e. return (r[:,0] - r[:,1]) * sign(item[0]-item[1]) * (min(r[:,0],r[:,1]) > 0.2). Empty bin: r=(1-need)~0.6 each, diff ~0 -> ~0. A bin that would keep >20% room in both resources scores positive (good); a bin that closes one resource scores ~0. Ranks bins by how much balanced large-room survives.",
+   "target": "large: 2LL bin count should rise (19 -> toward 70), bins used 433 -> toward 382, average room left per bin should drop from 14%/12% toward 3%/0%.",
+   "builds_on": "h0013"},
+  {"name": "anticorr_fourth_slot_room",
+   "claim": "In anticorr the champion makes 3-job bins (LS+MS+SL x68, LS+SL+SM x74) and only 37 four-job bins, while the optimum makes LS+MS+SL+SM x75 and 105 four-job bins. When a 3rd job lands, the policy does not check whether the bin would still admit a small opposite-class job; it just closes it. The decision: prefer the bin whose post-placement residual in BOTH resources stays above the small-job class (>=0.2 of capacity), so a 4th small job can still fit.",
+   "feature": "r = (bins - item)/capacity. Return min(r[:,0], r[:,1]) * (min(r[:,0], r[:,1]) > 0.2) - (1 - min(r[:,0], r[:,1])) * (min(r[:,0], r[:,1]) <= 0.2). I.e. +tight residual if the bin keeps >=20% in both resources (a 4th small job still fits), else -tight residual (closing). Empty bin: tight~0.6 -> +0.6. Nearly full bin: tight~0.02 -> -0.98. Ranks bins by whether they remain open to a 4th small job.",
+   "target": "anticorr: 4-job bin count should rise (37 -> toward 105), 3-job bins should fall, bins used 329 -> toward 299, room left 12%/12% -> toward 3%/3%.",
+   "builds_on": "h0016"},
+  {"name": "bimodal_small_slot_for_large",
+   "claim": "In bimodal the champion makes 2LL x13 vs optimum 2LL x44, and 3SS+LS+SL x10 vs optimum 4SS+LS+SL x13. When a large job arrives, the policy avoids bins that already hold a large job (2LL) and instead drops it into a bin with smalls, stranding the smalls' room. The decision: prefer a bin where the post-placement residual in the tight resource is either very small (bin closes cleanly, no smalls left behind) or very large (room for another large), and penalise the middle band where a large job has just been dropped into small-job space.",
+ 
+
+== Latest verdicts
+h0015 gen 4 feature supported +0.183 on p0010 (builds on h0011): In large the champion uses 432 bins with 2.31 jobs/bin and 12-14% room left in BOTH resources, while optimum reaches 2.62 jobs/bin with only 3%/0% room. The cha || change: r = (bins - item)/capacity. tight = min(r[:,0], r[:,1]); loose = max(r[:,0], r[:,1]). Return -(tight + loose)/2 for open
+h0016 gen 4 feature refuted n/a on p0010 (builds on h0006): In anticorr the champion makes LS+MS+SL x67 and LS+SL+SM x77 (3-job bins) but only 15 four-job bins, while optimum makes LS+MS+SL+SM x75. The champion's bins in || change: r = (bins - item)/capacity. need = item/capacity. For each bin return (r[:,0] - r[:,1]) * (need[0] - need[1]) — product 
+h0013 gen 4 feature refuted n/a on p0010 (builds on h0001): In bimodal the champion makes 2LL x15 vs optimum 2LL x44 and strands nothing while leaving 8%/5% room. When a large job arrives and no open bin has room for it, || change: Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity. Return min(r[:,0], r[:,1]) (post-placement tight 
+h0014 gen 4 feature refuted n/a on p0010 (builds on h0010): In small the champion and optimum both use 111 bins and 9.01 jobs/bin, but the champion makes 9SS x12 and 9SS+MS x11 while the optimum makes 8SS x13 and 13SS x5 || change: Active only when max(item)/capacity < 0.2. r = (bins - item)/capacity. Return -(r[:,0] + r[:,1]) for open bins (last row
+h0018 gen 5 feature flat -0.005 on p0027 (builds on h0006): In uniform the champion makes LM+LS+SL x7, LS+MM+SL+SS x9, ML+MM+MS x6 — one job per class — while the optimum makes LM+ML+MM x15, 2LL+SS x12, 2ML+MS x8. When a || change: r = (bins - item)/capacity. need = item/capacity. For each bin: ratio0 = r[:,0] / (need[0] + eps), ratio1 = r[:,1] / (ne
+h0019 gen 5 feature redundant +0.059 on p0027 (builds on h0016): In anticorr the champion makes 3-job bins (LS+MS+SL x68, LS+SL+SM x74) and only 37 four-job bins, while the optimum makes LS+MS+SL+SM x75 and 105 four-job bins. || change: r = (bins - item)/capacity. Return min(r[:,0], r[:,1]) * (min(r[:,0], r[:,1]) > 0.2) - (1 - min(r[:,0], r[:,1])) * (min(
+h0017 gen 5 feature supported +0.070 on p0027 (builds on h0012): In bimodal the champion makes 2LL x13 vs optimum 2LL x44, and 3SS+LS+SL x10 vs optimum 4SS+LS+SL x13. When a large job arrives, the policy avoids bins that alre || change: Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity. tight = min(r[:,0], r[:,1]). Return -tight * (tig
+h0020 gen 5 feature supported +0.161 on p0027 (builds on h0013): In large the champion makes LL+LM x42, LL+ML x40, LL+MM x36 — every large job is paired with a different-class partner, leaving 12-14% in both resources — while || change: Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity (post-placement, clipped at 0). Return min(r[:,0],
+
+== Latest Mutator ideas
+p0035 invalid: f0027 strand_mismatch_weighted: invalid
+p0041 invalid: f0035 residual_bottleneck_asymmetry: invalid
+p0042 -6.949: + f0036 closing_bin_penalty_seal_weighted: train +0.116, validation +0.126
+p0043 -6.968: + f0034 asymmetric_stranding_gate: train +0.096, validation +0.084
+p0044 -7.064: + f0033 asymmetric_binding_fill: train +0.000, validation -0.006
+
+== Best program (p0036)
+# Helix feature policy | p0036, generation 5, 4 features
+# priority() = sum over features of (weight x scale) . feature(item, bins, capacity); the weights were fitted
+# by an optimiser. With every weight at 0 all bins tie and the simulator picks the oldest bin that fits
+# (first fit), so the empty policy is Code Zero.
+import numpy as np
+import math
+
+
+
+# f0013 class_match_residual (deep, 1 value): r = (bins - item)/capacity (post-placement residual). Define item class per resource: big = item/capacity > 0.4. For each bin, let m = min(r
+def _f0013(item, bins, capacity):
+    """Negative penalty for bins that would become stranded (one residual <5%, other >25%) after placing item."""
+    cap = np.asarray(capacity, dtype=float)
+    it = np.asarray(item, dtype=float)
+    r = (bins - it) / cap
+    m = np.minimum(r[:, 0], r[:, 1])
+    M = np.maximum(r[:, 0], r[:, 1])
+    cond = (m < 0.05) & (M > 0.25)
+    return -(M - m) * cond
+
+
+# f0031 closing_bin_penalty (deep, 1 value): r = (bins - item)/capacity. tight = min(r[:,0], r[:,1]); loose = max(r[:,0], r[:,1]). Return -(tight + loose)/2 for open bins (last row excl
+def _f0031(item, bins, capacity):
+    """Negative mean post-placement residual (tight+loose)/2 per bin."""
+    r = (bins - item) / capacity
+    tight = np.minimum(r[:, 0], r[:, 1])
+    loose = np.maximum(r[:, 0], r[:, 1])
+    return -(tight + loose) / 2.0
+
+
+# f0040 big_with_big_room_penalty (deep, 1 value): Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity (post-placement, clipped at 0). Return min(r[:,0], r[:,1]) - max(r[:,0
+def _f0040(item, bins, capacity):
+    """Active for large jobs: signed residual difference when both resources keep >20% room."""
+    cap = np.asarray(capacity, dtype=float)
+    it = np.asarray(item, dtype=float)
+    r = np.clip((bins - it) / cap, 0.0, None)
+    r0 = r[:, 0]
+    r1 = r[:, 1]
+    mn = np.minimum(r0, r1)
+    diff = r0 - r1
+    s = np.sign(it[0] - it[1])
+    active = np.max(it) / cap.max() > 0.4
+    gate = (mn > 0.2).astype(float)
+    val = diff * s * gate
+    if not active:
+        val = np.zeros_like(val)
+    return val
+
+
+# f0037 bimodal_small_slot_for_large (deep, 1 value): Active only when max(item)/capacity > 0.4. r = (bins - item)/capacity. tight = min(r[:,0], r[:,1]). Return -tight * (tight > 0.2) + tight * 
+def _f0037(item, bins, capacity):
+    """Active for large items: reward tight post-placement residual that is very small (bin closes) or very large (room for another large), penalise the middle band."""
+    cap = np.asarray(capacity, dtype=float)
+    it = np.asarray(item, dtype=float)
+    r = (bins.astype(float) - it) / cap
+    tight = np.minimum(r[:, 0], r[:, 1])
+    active = np.max(it / cap) > 0.4
+    val = -tight * (tight > 0.2) + tight * (tight <= 0.2)
+    return (val * active).astype(float)
+
+_TERMS = [(_f0013, np.array([6.388764217367649])), (_f0031, np.array([2.8527911373843766])), (_f0040, np.array([4.001995366633523])), (_f0037, np.array([-2.6171835726256907]))]
+
+
+def priority(item, bins, capacity):
+    for a in (item, bins, capacity):
+        a.setflags(write=False)                    # features may read the inputs, never change them
+    k = len(bins)
+    total = np.zeros(k)
+    for f, w in _TERMS:
+        if not w.any():
+            continue
+        v = np.asarray(f(item, bins, capacity), dtype=float)
+        if v.ndim == 1:
+            v = v[:, None]
+        if v.shape[0] != k:
+            v = np.broadcast_to(v.reshape(1, -1)[:, :len(w)], (k, len(w)))
+        total += v @ w
+    if not np.isfinite(total).all():
+        total = np.nan_to_num(total, nan=0.0, posinf=1e3, neginf=-1e3)
+    # Bins that differ only by floating-point noise count as tied, so the oldest wins whatever the scale.
+    return np.round(total, 9)

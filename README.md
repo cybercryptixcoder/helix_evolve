@@ -76,8 +76,11 @@ The idea stayed the same; *what* the agents write changed once.
 | 5 | features | 10 | −6.986 | 25.1% | −6.703 (25.6%) | The first clean feature-engine run from Code Zero |
 | 6 | features (fast loop) | 10 | −7.034 | 24.6% | −6.686 (25.8%) | |
 | 7 | features (fast loop) | 25 | **−6.156** | **34.6%** | **−6.001 (33.7%)** | Best from scratch so far |
+| 8 | features (fast loop) | 5 | −6.774 | 27.5% | −6.645 (26.2%) | A short look at what the agents actually do; replay it with `results/20261017-014858-full/viewer.html` (download, open in a browser) |
 
 Every run's full trace (every agent call with its reasoning, every program, generation and feature) is in [`results/`](results/). Run 1 (the first hackathon runs) wasn't kept.
+
+Any feature-engine run can be replayed as an interactive page: `python -m viz.export results/<run>` (see [viz/](viz/README.md)).
 
 ## Read next
 
@@ -91,6 +94,8 @@ Every run's full trace (every agent call with its reasoning, every program, gene
 | [results/](results/) | Full traces of every run |
 | [docs/next-concept/](docs/next-concept/) | The next concept: treating improvement as a search space of approaches, pruned by LLM reasoning |
 | [docs/META_LOOP.md](docs/META_LOOP.md) | Plan for a meta loop that evolves Helix itself, scored by a multi-problem evaluator (not built yet) |
+| [viz/](viz/README.md) | The run viewer: replays a run as a factory floor, with every message, feature and champion readable |
+| [docs/WORKLOG.md](docs/WORKLOG.md) | What has been done since the handoff, what each step found, and what was decided |
 
 ## Quick start
 
