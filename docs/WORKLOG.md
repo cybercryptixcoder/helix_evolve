@@ -17,7 +17,7 @@ The viewer does too much: everything sits behind a click and it's hard to follow
 
 ### Open
 
-- Whether to rebuild the viewer as a guided, narrated step-through (one step at a time, the explanation visible without clicking) rather than a free-running factory floor. Not started; waiting for Shreyas.
+- ~~Whether to rebuild the viewer as a guided step-through.~~ Done, kept small on purpose: `viz/walk.py` writes `<run>/walkthrough.html` (32 steps for run 8). Each step shows the stations involved, a plain explanation, automatic intent checks and the result; raw prompts, replies and code are one click away. The factory-floor viewer stays as it was.
 
 ---
 
