@@ -52,7 +52,7 @@ class Outer:
         if getattr(args, "resume", None):
             saved = json.loads((Path(args.resume) / "args.json").read_text())
             for k, v in saved.items():                        # the original settings, unless overridden
-                if k not in ("resume", "outer_generations") or getattr(args, k, None) is None:
+                if k not in ("resume", "outer_generations", "hours") or getattr(args, k, None) is None:
                     setattr(args, k, v)
             args.out = args.resume
         self.dir = Path(args.out or ROOT / "meta_runs" / f"outer-{time.strftime('%Y%m%d-%H%M%S')}")
@@ -74,6 +74,8 @@ class Outer:
         self.problems = [p for p in args.problems.split(",") if p]
         self.held = [p for p in args.held_out.split(",") if p]
         self.lock = threading.Lock()
+        self.started = time.time()
+        self.deadline = None     # --hours: no new candidate evaluation or outer generation starts after this
 
     # ------------------------------------------------------------------ helpers
     def new_id(self):
@@ -125,10 +127,20 @@ class Outer:
         return {p: {k: round(statistics.mean(v), 2) for k, v in d.items() if v} for p, d in out.items()}
 
     # ------------------------------------------------------------------ run
+    def out_of_time(self):
+        return self.deadline is not None and time.time() >= self.deadline
+
+    def arm_clock(self):
+        h = getattr(self.a, "hours", None)
+        self.started = time.time()
+        self.deadline = self.started + h * 3600 if h else None
+
     def status(self, state="running"):
         import os
         (self.dir / "status.json").write_text(json.dumps({"state": state, "pid": os.getpid(), "gen": self.gen,
-                                                          "target": self.a.outer_generations, "t": time.time()}))
+                                                          "target": self.a.outer_generations, "t": time.time(),
+                                                          "started": self.started, "deadline": self.deadline,
+                                                          "hours": getattr(self.a, "hours", None)}))
 
     def resume(self):
         """Continue from state.json (saved after every outer generation): a generation in flight is redone."""
@@ -138,19 +150,24 @@ class Outer:
         self.inc, self.gen = d["incumbent"], d["gen"]
         self.n_c = max(int(c[1:]) for c in self.cands)
         self.n_n = max([int(n[1:]) for n in self.nodes] or [0])
+        self.arm_clock()
         self.trace.emit("resume", gen=self.gen)
         say(f"── resuming the meta loop after outer generation {self.gen}")
         self.status()
         for g in range(self.gen + 1, self.a.outer_generations + 1):
+            if self.out_of_time():
+                break
             self.gen = g
             self.generation()
             self.status()
         self.status("finished")
-        self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"])
+        self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"],
+                        reason="time" if self.out_of_time() else "generations")
 
     def run(self):
         if getattr(self.a, "resume", None):
             return self.resume()
+        self.arm_clock()
         self.status()
         start = Path(self.a.strategy).resolve()
         cid = self.new_id()
@@ -166,11 +183,15 @@ class Outer:
         self.cands[cid]["verdict"] = "incumbent"
         self.save()
         for g in range(1, self.a.outer_generations + 1):
+            if self.out_of_time():
+                say("── time budget used up: stopping before outer generation", g)
+                break
             self.gen = g
             self.generation()
             self.status()
         self.status("finished")
-        self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"])
+        self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"],
+                        reason="time" if self.out_of_time() else "generations")
         say(f"done: incumbent {self.inc}, score {self.cands[self.inc]['result']['score']}")
 
     def generation(self):
@@ -194,6 +215,9 @@ class Outer:
             seen.add(c["hash"])
             todo.append(cid)
         for cid in todo:
+            if self.out_of_time():
+                self.cands[cid]["verdict"] = "skipped (time)"
+                continue
             r = self.evaluate(cid)
             if r["crashes"] and self.supervise(cid, r):
                 self.evaluate(cid)
@@ -471,6 +495,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=None, help="fitter processes per inner run")
     ap.add_argument("--margin", type=float, default=1.0, help="minimum score gain to promote")
     ap.add_argument("--timeout", type=int, default=3600)
+    ap.add_argument("--hours", type=float, default=None,
+                    help="wall-clock budget: no new outer generation or candidate evaluation starts after it "
+                         "(the one in flight finishes, so allow up to ~1 extra hour)")
     ap.add_argument("--out", default=None)
     ap.add_argument("--fake-inner", action="store_true", help="inner runs without model calls (tests the outer loop)")
     ap.add_argument("--resume", default=None, help="continue an interrupted meta run from its folder")

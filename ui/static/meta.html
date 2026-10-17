@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Helix meta loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#edeff2;--card:#f8f9fb;--ink:#1b2433;--mute:#6b7689;--line:#d5dae2;--blue:#2b50d8;--amber:#d99a1e;--teal:#0f8f83;--plum:#b4306b;--dot:#9aa4b5;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Instrument Sans",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:baseline;justify-content:space-between}
+h1{font:400 40px/1.1 "Instrument Serif",Georgia,serif;margin:0;max-width:30ch}
+.state{display:inline-flex;gap:8px;align-items:center;color:var(--mute)}.dot{width:9px;height:9px;border-radius:50%;background:var(--dot)}
+.live .dot{background:var(--teal);animation:p 1.6s ease-in-out infinite}@keyframes p{50%{opacity:.25}}@media(prefers-reduced-motion:reduce){.live .dot{animation:none}}
+select,input,button{font:inherit;color:inherit}select,input{background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;margin-top:22px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+h2{font:400 22px/1.2 "Instrument Serif",Georgia,serif;margin:0 0 4px}.sub{color:var(--mute);margin:0 0 12px;font-size:13.5px}
+.stack>*+*{margin-top:20px}
+.big{font:400 56px/1 "Instrument Serif",Georgia,serif}.row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:6px}.legend b{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+svg{width:100%;height:auto;display:block}svg text{font:12px "Instrument Sans",sans-serif;fill:var(--mute)}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}.tile{padding:4px 9px;border-radius:6px;border:1px solid var(--line);font-size:13px;background:#fff}
+.tile.done{border-color:var(--teal);color:var(--teal)}.tile.run{border-color:var(--blue);color:var(--blue)}.tile.bad{border-color:var(--plum);color:var(--plum)}
+.pb{display:grid;grid-template-columns:96px 1fr 48px;gap:8px;align-items:center;font-size:13.5px;margin:6px 0}
+.pb .t{position:relative;height:8px;background:var(--line);border-radius:4px}.pb .t i{position:absolute;left:0;top:0;height:100%;border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-weight:400}th{color:var(--mute)}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.v-incumbent{color:var(--blue);font-weight:600}.v-better{color:var(--teal)}.v-worse,.v-duplicate{color:var(--mute)}
+label{display:grid;gap:3px;font-size:13px;color:var(--mute)}.f{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.f .w{grid-column:1/-1}
+button{border:0;border-radius:6px;padding:9px 14px;background:var(--blue);color:#fff;font-weight:600;cursor:pointer}button.stop{background:var(--plum)}button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+summary{cursor:pointer;font:400 22px "Instrument Serif",Georgia,serif}.msg{font-size:13px;color:var(--mute);margin-top:8px}
+.node rect{fill:#fff;stroke:#c3cad6;stroke-width:1.2}.node .t{font:600 13px "Instrument Sans",sans-serif;fill:var(--ink)}.node .s{font:11px "Instrument Sans",sans-serif;fill:var(--mute)}
+.node.on rect{fill:#e8edfc;stroke:var(--blue);stroke-width:2}.node.i.on rect{fill:#e0f2ef;stroke:var(--teal)}.badge circle{fill:var(--teal)}.badge text{fill:#fff;font:600 11px "Instrument Sans",sans-serif}
+.e{fill:none;stroke:#b8c0cd;stroke-width:1.6}.e.flow{stroke:var(--blue);stroke-dasharray:6 6;animation:dash 1s linear infinite}.e.flow.ei{stroke:var(--teal)}@keyframes dash{to{stroke-dashoffset:-12}}
+@media(prefers-reduced-motion:reduce){.e.flow{animation:none}}
+#flow .rt{font:600 13px "Instrument Sans",sans-serif;fill:var(--ink)}#flow .el{font:11.5px "Instrument Sans",sans-serif;fill:var(--mute)}
+</style></head><body><div class="wrap">
+<header><h1 id="head">Loading the meta run…</h1><div class="state" id="state"><span class="dot"></span><span id="st"></span><select id="pick" aria-label="Meta run"></select></div></header>
+<section class="card" style="margin-top:22px"><div class="row"><h2>Live flow</h2><span class="sub" id="now" style="margin:0;text-align:right"></span></div>
+<div style="overflow-x:auto"><svg id="flow" viewBox="0 0 1000 550" style="min-width:760px" role="img" aria-label="Flowchart of the outer loop and the inner loop"></svg></div>
+<div class="legend"><span><b style="background:var(--blue);border-radius:50%"></b>work moving in the outer loop</span><span><b style="background:var(--teal);border-radius:50%"></b>work moving in an inner run</span><span><b style="background:var(--amber);border-radius:50%"></b>a promotion</span><span>Highlighted boxes show where the newest events happened; the number is how many inner runs are in that stage.</span></div></section>
+<div class="grid"><div class="stack">
+ <section class="card"><h2>Strategy score by outer generation</h2><p class="sub">Each dot is a candidate strategy, scored on the search problems. The line is the strategy the loop currently runs on.</p><div id="chart"></div>
+  <div class="legend"><span><b style="background:var(--dot);border-radius:50%"></b>candidate</span><span><b style="background:var(--blue)"></b>incumbent</span><span><b style="background:var(--amber);transform:rotate(45deg)"></b>promoted</span><span><b style="background:var(--teal)"></b>incumbent on held-out problems</span></div></section>
+ <section class="card"><h2>Inner loop</h2><p class="sub" id="innersub"></p><div class="tiles" id="tiles"></div><div id="probs" style="margin-top:14px"></div></section>
+ <section class="card"><h2>Latest candidates</h2><div style="overflow-x:auto"><table id="tbl"></table></div></section>
+</div><aside class="stack">
+ <section class="card"><div class="row"><span class="sub" style="margin:0">Time used</span><span id="left" class="sub" style="margin:0"></span></div><div class="big" id="clock">–</div><div class="bar"><i id="tbar" style="width:0"></i></div><div class="sub" id="cnt"></div></section>
+ <section class="card"><details id="launch"><summary>Start a run</summary>
+  <div class="f"><label>Hours<input id="hours" type="number" step="0.5" min="0.1" value="4"></label><label>Outer generations (cap)<input id="og" type="number" value="99"></label>
+  <label>Inner generations<input id="ig" type="number" value="5"></label><label>Repeats<input id="rp" type="number" value="2"></label>
+  <label>Researcher candidates<input id="deep" type="number" value="2"></label><label>Mutator candidates<input id="wide" type="number" value="2"></label>
+  <label>Parallel inner runs<input id="par" type="number" value="4"></label><label>Held-out problems<input id="held" value="coloring"></label>
+  <label class="w">Search problems<input id="probsIn" value="binpack1d,knapsack,tsp,scheduling"></label>
+  <label class="w" style="display:flex;gap:8px;align-items:center"><input id="push" type="checkbox" checked style="width:auto">Commit and push the results when it finishes</label></div>
+  <div style="margin-top:12px;display:flex;gap:8px"><button id="go">Start run</button><button id="stop" class="stop" hidden>Stop run</button></div>
+  <p class="msg" id="msg">The Luminal key is read from .env on the machine running this page.</p></details></section>
+</aside></div></div>
+<script>
+const $=s=>document.querySelector(s),api=async(p,b)=>(await fetch(p,b?{method:"POST",body:JSON.stringify(b)}:{})).json(),f1=x=>x==null?"–":(+x).toFixed(1);
+let cur=null,data=null;
+const NS="http://www.w3.org/2000/svg",NW=124,NH=46;
+const NODES={oNav:[30,116,"Navigator","plans the generation"],oRes:[200,68,"Researcher","reads inner traces"],oCode:[350,68,"Coder","writes the edit"],oMut:[275,166,"Mutator","free variants"],oVal:[520,116,"Check","validate and repair"],oEval:[680,116,"Score","runs on problems"],oInc:[840,116,"Incumbent","best strategy"],
+ iNav:[30,356,"Navigator","picks approaches"],iRes:[200,308,"Researcher","tests ideas"],iCode:[350,308,"Coder","writes features"],iMut:[275,406,"Mutator","free variants"],iFit:[520,356,"Fit and probe","shared evaluator"],iKeep:[680,356,"Keep or retire","proofs, novelty"],iBest:[840,356,"Champion","best policy"]};
+const EDGES={"oNav-oRes":"M154,139 C177,139 177,91 200,91","oNav-oMut":"M154,139 C214,139 214,189 275,189","oRes-oCode":"M324,91 L350,91","oCode-oVal":"M474,91 C497,91 497,139 520,139","oMut-oVal":"M399,189 C460,189 497,139 520,139","oVal-oEval":"M644,139 L680,139","oEval-oInc":"M804,139 L840,139","oInc-oNav":"M902,116 C902,26 92,26 92,116",
+ "iNav-iRes":"M154,379 C177,379 177,331 200,331","iNav-iMut":"M154,379 C214,379 214,429 275,429","iRes-iCode":"M324,331 L350,331","iCode-iFit":"M474,331 C497,331 497,379 520,379","iMut-iFit":"M399,429 C460,429 497,379 520,379","iFit-iKeep":"M644,379 L680,379","iKeep-iBest":"M804,379 L840,379","iBest-iNav":"M902,402 C902,510 92,510 92,402",
+ run:"M742,162 L742,272 L92,272 L92,354",scores:"M902,354 L902,272 L790,272 L790,164"};
+const NEXT={};Object.keys(EDGES).filter(k=>k.includes("-")).forEach(k=>{const[a,b]=k.split("-");(NEXT[a]=NEXT[a]||[]).push(b)});
+const NOW={oNav:"The outer Navigator is planning",oRes:"The outer Researcher is reading inner-run traces",oCode:"The outer Coder is writing a strategy edit",oMut:"The outer Mutator is writing variants",oVal:"Checking and repairing candidate strategies",oInc:"A strategy was just promoted and hot-swapped in"};
+function buildFlow(){const T=(x,y,c,t,a)=>`<text x="${x}" y="${y}" class="${c}"${a?` text-anchor="${a}"`:""}>${t}</text>`;
+ let h=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="#9aa4b5"/></marker></defs>
+ <rect x="10" y="14" width="980" height="236" rx="12" fill="none" stroke="#d5dae2"/><rect x="10" y="290" width="980" height="250" rx="12" fill="none" stroke="#d5dae2"/>
+ ${T(24,240,"rt","Outer loop: evolves the strategy")}${T(24,530,"rt","Inner loop: one Helix run per problem, using the candidate strategy")}
+ ${T(497,36,"el","hot-swap: the winner becomes the outer loop’s own strategy","middle")}${T(417,266,"el","the candidate strategy goes in","middle")}${T(846,266,"el","scores come back","middle")}${T(497,498,"el","next generation","middle")}`;
+ for(const k in EDGES)h+=`<path id="e-${k}" class="e${k[0]=="i"?" ei":""}" d="${EDGES[k]}" marker-end="url(#ah)"/>`;
+ for(const k in NODES){const[x,y,t,sb]=NODES[k];h+=`<g class="node ${k[0]}" id="n-${k}"><rect x="${x}" y="${y}" width="${NW}" height="${NH}" rx="8"/>${T(x+10,y+19,"t",t)}<text x="${x+10}" y="${y+35}" class="s" id="s-${k}">${sb}</text><g class="badge" id="b-${k}" style="display:none"><circle cx="${x+NW-2}" cy="${y+2}" r="10"/><text x="${x+NW-2}" y="${y+6}" text-anchor="middle">0</text></g></g>`}
+ $("#flow").innerHTML=h+'<g id="pk"></g>'}
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;let packets=[],raf=0;
+function fire(id,color,delay=0){const el=document.getElementById("e-"+id);if(!el||reduce||document.hidden)return;packets.push({el,len:el.getTotalLength(),t0:performance.now()+delay,dur:1100,c:color,dot:null});if(!raf)raf=requestAnimationFrame(step)}
+function step(now){packets=packets.filter(p=>{const k=(now-p.t0)/p.dur;if(k<0)return true;if(k>=1){p.dot&&p.dot.remove();return false}
+ if(!p.dot){p.dot=document.createElementNS(NS,"circle");p.dot.setAttribute("r",5.5);p.dot.setAttribute("fill",p.c);p.dot.setAttribute("stroke","#fff");p.dot.setAttribute("stroke-width","1.5");$("#pk").appendChild(p.dot)}
+ const pt=p.el.getPointAtLength(p.len*k);p.dot.setAttribute("cx",pt.x);p.dot.setAttribute("cy",pt.y);return true});raf=packets.length?requestAnimationFrame(step):0}
+function go(n,dl){if(n=="oEval")return;if(n=="oInc"){fire("oEval-oInc","#d99a1e",dl);fire("oInc-oNav","#d99a1e",dl+900);return}
+ (NEXT[n]||[]).forEach(t=>fire(n+"-"+t,n[0]=="o"?"#2b50d8":"#0f8f83",dl))}
+const seen={run:null,o:null,i:null},lastEval={};
+function fresh(list,key){if(seen[key]==null){seen[key]=Math.max(0,...list.map(e=>e.t));return[]}const f=list.filter(e=>e.t>seen[key]);if(f.length)seen[key]=Math.max(...f.map(e=>e.t));return f.slice(-8)}
+const setSub=(k,t)=>{const el=$("#s-"+k);if(el&&el.textContent!=t)el.textContent=t};
+function flow(d){if(!d.flow)return;const fl=d.flow,run=d.running,a=d.args||{},ev=d.evals[0],C=d.candidates,inc=C.find(c=>c.id==d.incumbent);
+ if(seen.run!==d.run){seen.run=d.run;seen.o=seen.i=null;lastEval.c=lastEval.f=null}
+ const total=((a.problems||"").split(",").filter(Boolean).length+(a.held_out||"").split(",").filter(Boolean).length)*(a.repeats||1),done=ev?ev.runs.filter(r=>r.done).length:0;
+ const live=run&&ev&&!ev.finished;
+ setSub("oEval",live?`${ev.candidate} · ${done}/${total} runs`:"runs on problems");setSub("oInc",inc?`${inc.id} · score ${f1(inc.score)}`:"best strategy");
+ const on=new Set(run&&fl.outer.node?[fl.outer.node]:[]);Object.keys(fl.inner.counts).forEach(k=>on.add(k));
+ for(const k in NODES){const g=$("#n-"+k),c=k[0]=="i"?fl.inner.counts[k]||0:0;g.classList.toggle("on",on.has(k));const b=$("#b-"+k);b.style.display=c?"":"none";if(c)b.querySelector("text").textContent=c}
+ document.querySelectorAll("#flow .e").forEach(e=>e.classList.toggle("flow",[...on].some(n=>e.id.startsWith("e-"+n+"-"))||(live&&e.id=="e-run")));
+ const nIn=Object.values(fl.inner.counts).reduce((x,y)=>x+y,0);
+ $("#now").textContent=!run?(d.ended?"Run finished":"Not running"):(live?`Scoring ${ev.candidate}: ${done} of ${total} inner runs finished, ${nIn} running now`:(NOW[fl.outer.node]||"Starting up"))+` · outer generation ${d.gen}`;
+ fresh(fl.outer.events,"o").forEach((e,i)=>go(e.n,i*400));fresh(fl.inner.events,"i").forEach((e,i)=>go(e.n,i*250));
+ if(ev){if(lastEval.c!==ev.candidate){if(lastEval.c)fire("run","#2b50d8");lastEval.c=ev.candidate;lastEval.f=ev.finished}else if(ev.finished&&!lastEval.f){lastEval.f=true;fire("scores","#0f8f83")}}}
+buildFlow();
+
+const hm=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/3600)+"h "+String(Math.floor(s%3600/60)).padStart(2,"0")+"m"};
+function chart(d){const C=d.candidates.filter(c=>c.score!=null);if(!C.length)return'<p class="sub">The first scores appear after the starting strategy has been evaluated.</p>';
+ const W=760,H=300,L=40,R=14,T=12,B=30,G=Math.max(2,...C.map(c=>c.gen),d.gen||0),ys=C.map(c=>c.score).concat(C.map(c=>c.held).filter(x=>x!=null)),lo=Math.floor(Math.min(...ys)/5)*5-5,hi=Math.ceil(Math.max(...ys)/5)*5+5;
+ const X=g=>L+(W-L-R)*g/G,Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Strategy score by outer generation">`;
+ for(let v=lo;v<=hi;v+=5)s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#d5dae2"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
+ for(let g=0;g<=G;g++)s+=`<text x="${X(g)}" y="${H-8}" text-anchor="middle">${g}</text>`;
+ const prom={};d.swaps.filter(x=>x.kind=="swap").forEach(x=>prom[x.new]=1);prom[C[0].id]=1;
+ let path=[],ph=[];const byGen={};C.forEach(c=>{if(c.verdict=="incumbent"||prom[c.id]&&(c.verdict=="incumbent"||c.verdict=="replaced"))byGen[c.gen]=c});
+ const chain=C.filter(c=>prom[c.id]).sort((a,b)=>a.gen-b.gen);let last=null;
+ chain.forEach((c,i)=>{const nx=chain[i+1],x1=X(nx?nx.gen:G);path.push(`${i?"L":"M"}${X(c.gen)},${Y(c.score)} L${x1},${Y(c.score)}`);if(c.held!=null)ph.push(`${i?"L":"M"}${X(c.gen)},${Y(c.held)} L${x1},${Y(c.held)}`)});
+ s+=`<path d="${ph.join(" ")}" fill="none" stroke="#0f8f83" stroke-width="2" stroke-dasharray="5 4"/><path d="${path.join(" ")}" fill="none" stroke="#2b50d8" stroke-width="2.5"/>`;
+ const cnt={};C.forEach(c=>{const k=c.gen;cnt[k]=(cnt[k]||0)+1;const dx=(cnt[k]-3)*5;
+  s+=prom[c.id]&&c.gen>0?`<path d="M${X(c.gen)},${Y(c.score)-8} l7,8 l-7,8 l-7,-8z" fill="#d99a1e"><title>${c.id} ${c.name}: ${f1(c.score)}</title></path>`:`<circle cx="${X(c.gen)+dx}" cy="${Y(c.score)}" r="4.5" fill="#9aa4b5" fill-opacity=".75"><title>${c.id} ${c.name}: ${f1(c.score)} (${c.verdict||"…"})</title></circle>`});
+ return s+`<text x="${L}" y="10" style="fill:var(--ink)"></text></svg>`}
+function render(d){data=d;if(!d.run){$("#head").textContent="No meta run yet";$("#st").textContent="Start one from the panel on the right.";$("#launch").open=true;return}
+ const a=d.args||{},st=d.status||{},C=d.candidates,inc=C.find(c=>c.id==d.incumbent),seed=C[0],run=d.running;
+ $("#state").className="state"+(run?" live":"");$("#st").textContent=run?"Running":d.ended?(d.ended=="time"?"Finished: time budget used":"Finished: all generations done"):"Not running";
+ $("#head").textContent=inc&&seed?(inc.id==seed.id?`The starting strategy still leads at ${f1(inc.score)}`:`The incumbent strategy scores ${f1(inc.score)}, up ${f1(inc.score-seed.score)} from the start`):"Evaluating the starting strategy…";
+ $("#pick").innerHTML=d.runs.map(r=>`<option ${r==d.run?"selected":""}>${r}</option>`).join("");
+ const now=run?d.now:(st.t||d.now),el=now-(st.started||d.t0||now),tot=st.deadline?st.deadline-st.started:null;
+ $("#clock").textContent=hm(el);$("#left").textContent=tot?(run?hm(Math.max(0,st.deadline-now))+" left":"of "+hm(tot)):"";$("#tbar").style.width=tot?Math.min(100,100*el/tot)+"%":"0";
+ $("#cnt").textContent=`Outer generation ${d.gen} · ${C.length} strategies tried · ${d.swaps.filter(x=>x.kind=="swap").length} promotions · ${d.calls.toLocaleString()} model calls`;
+ $("#chart").innerHTML=chart(d);
+ const ev=d.evals[0],tot2=((a.problems||"").split(",").filter(Boolean).length+(a.held_out||"").split(",").filter(Boolean).length)*(a.repeats||1);
+ $("#innersub").textContent=ev?(ev.finished?`Last evaluation: ${ev.candidate}, all inner runs finished.`:`Evaluating ${ev.candidate}: ${ev.runs.filter(r=>r.done).length} of ${tot2} inner runs finished.`):"No inner runs yet.";
+ $("#tiles").innerHTML=ev?ev.runs.map(r=>`<span class="tile ${r.done?"done":r.crash?"bad":"run"}">${r.run}</span>`).join(""):"";
+ if(inc&&seed){
+  $("#probs").innerHTML=`<p class="sub" style="margin-bottom:4px">Incumbent (blue) against the starting strategy (grey), per problem. 0 is a hidden textbook rule; 100 is the reference.</p>`+Object.keys(inc.problems).map(p=>{const w=v=>Math.max(0,Math.min(100,v));return`<div class="pb"><span>${p}</span><span><span class="t" style="display:block;margin-bottom:3px"><i style="width:${w(inc.problems[p])}%;background:var(--blue)"></i></span><span class="t" style="display:block"><i style="width:${w(seed.problems[p]||0)}%;background:var(--dot)"></i></span></span><span>${f1(inc.problems[p])}</span></div>`}).join("")}
+ $("#tbl").innerHTML=`<tr><th>Id</th><th>Gen</th><th>Origin</th><th>Change</th><th class="n">Score</th><th class="n">Held out</th><th class="n">Δ</th><th>Verdict</th></tr>`+C.slice(-12).reverse().map(c=>`<tr><td>${c.id}</td><td>${c.gen}</td><td>${c.origin||""}</td><td>${c.name||""}</td><td class="n">${f1(c.score)}</td><td class="n">${f1(c.held)}</td><td class="n">${c.delta==null?"":(c.delta>0?"+":"")+c.delta}</td><td class="v-${(c.verdict||"").split(" ")[0]}">${c.verdict||"evaluating"}</td></tr>`).join("");
+ $("#stop").hidden=!run;$("#go").disabled=run;flow(d)}
+async function tick(){try{render(await api("/api/meta/live"+(cur?"?id="+cur:"")))}catch(e){$("#st").textContent="Dashboard server not reachable"}}
+$("#pick").onchange=e=>{cur=e.target.value;tick()};
+$("#go").onclick=async()=>{const v=i=>$(i).value;await api("/api/meta/launch",{hours:+v("#hours"),outer_generations:+v("#og"),inner_generations:+v("#ig"),repeats:+v("#rp"),deep:+v("#deep"),wide:+v("#wide"),parallel:+v("#par"),problems:v("#probsIn"),held_out:v("#held"),push:$("#push").checked});$("#msg").textContent="Started. The run appears here after its first scores.";cur=null;setTimeout(tick,4000)};
+$("#stop").onclick=async()=>{if(confirm("Stop this run? Results so far are still saved."))await api("/api/meta/stop",{id:data.run})};
+tick();setInterval(tick,5000);
+</script></body></html>

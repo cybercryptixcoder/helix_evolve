@@ -165,6 +165,153 @@ def suite():
     return out
 
 
+def _alive(pid):
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except (OSError, TypeError, ValueError):
+        return False
+
+
+def _meta_dirs():
+    ds = [d for r in META_ROOTS if r.exists() for d in r.glob("*") if (d / "status.json").exists() or (d / "state.json").exists()]
+    return sorted(ds, key=lambda d: d.stat().st_mtime, reverse=True)
+
+
+def _jload(p, default=None):
+    try:
+        return json.loads(Path(p).read_text())
+    except (OSError, ValueError):
+        return default
+
+
+_slim = {}
+_KEEP = ("type", "t", "role", "gen", "candidate", "new", "old", "gain", "reason")
+OUTER_EV = {"outer_start": "oNav", "plan": "oNav", "research": "oRes", "candidate": "oVal", "supervise": "oVal",
+            "evaluated": "oEval", "swap": "oInc", "unswap": "oInc"}
+OUTER_ROLE = {"outer-navigator": "oNav", "outer-researcher": "oRes", "outer-coder": "oCode", "outer-mutator": "oMut"}
+INNER_ROLE = {"navigator": "iNav", "researcher": "iRes", "coder": "iCode", "mutator": "iMut", "prover": "iKeep"}
+INNER_EV = {"run_start": "iNav", "gen_start": "iNav", "plan": "iNav", "research": "iRes", "accept": "iKeep",
+            "redundant": "iKeep", "retire": "iKeep", "revive": "iKeep", "prove": "iKeep", "gen_end": "iBest",
+            "run_end": "iBest", **{k: "iFit" for k in ("feature_done", "bench", "probe", "trial", "refit", "novelty",
+                                                       "prediction", "sensitivity", "diagnostics", "combination", "spread", "tree")}}
+
+
+def _tail(path, keep=400):
+    """Parse only the lines added since the last call and keep slim records (no prompts or replies)."""
+    path = Path(path)
+    st = _slim.setdefault(str(path), {"off": 0, "ev": [], "calls": 0, "swaps": [], "end": None, "t0": None})
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return st
+    if size < st["off"]:
+        st.update(off=0, ev=[], calls=0, swaps=[], end=None, t0=None)
+    if size > st["off"]:
+        with path.open("rb") as f:
+            f.seek(st["off"])
+            chunk = f.read()
+        nl = chunk.rfind(b"\n")
+        for line in (chunk[:nl + 1].splitlines() if nl >= 0 else []):
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            r = {k: e[k] for k in _KEEP if k in e}
+            st["t0"] = st["t0"] or r.get("t")
+            if r.get("type") == "call":
+                st["calls"] += 1
+            if r.get("type") in ("swap", "unswap"):
+                st["swaps"].append(r)
+            if r.get("type") == "outer_end":
+                st["end"] = r.get("reason") or "generations"
+            st["ev"].append(r)
+        st["ev"] = st["ev"][-keep:]
+        st["off"] += max(0, nl + 1)
+    return st
+
+
+def _node(e, roles, evs):
+    return roles.get(e.get("role")) if e.get("type") == "call" else evs.get(e.get("type"))
+
+
+def meta_live(rel=None):
+    """A compact, high-level picture of one meta run (the newest by default), for the live page."""
+    runs = _meta_dirs()
+    if not runs:
+        return {"runs": [], "run": None}
+    d = next((x for x in runs if x.name == rel), runs[0])
+    st, state, args = _jload(d / "status.json", {}), _jload(d / "state.json", {}), _jload(d / "args.json", {})
+    ev = _tail(d / "trace.jsonl")
+    running = st.get("state") == "running" and _alive(st.get("pid"))
+    cands = [{"id": c["id"], "gen": c.get("gen", 0), "name": c.get("name", ""), "origin": c.get("origin"),
+              "parent": c.get("parent"), "verdict": c.get("verdict"), "delta": c.get("delta"),
+              "score": (c.get("result") or {}).get("score"), "held": (c.get("result") or {}).get("held_out_score"),
+              "worst": (c.get("result") or {}).get("worst"), "noise": (c.get("result") or {}).get("noise"),
+              "problems": {p: v.get("score") for p, v in ((c.get("result") or {}).get("problems") or {}).items()},
+              "crashes": len((c.get("result") or {}).get("crashes") or [])} for c in state.get("candidates", [])]
+    evals = []                              # the inner level: every inner run seen so far, newest evaluation last
+    eds = sorted((d / "evals").glob("*"), key=lambda x: x.stat().st_mtime) if (d / "evals").exists() else []
+    for ed in eds:
+        runs_ = []
+        for rd in (sorted(ed.glob("*-r*")) if ed == eds[-1] else []):     # only the newest evaluation is read in detail
+            sm = _jload(rd / "summary.json")
+            it = _tail(rd / "trace.jsonl", 60)
+            last = next((e for e in reversed(it["ev"]) if _node(e, INNER_ROLE, INNER_EV)), None)
+            gen = next((e["gen"] for e in reversed(it["ev"]) if "gen" in e), None)
+            runs_.append({"run": rd.name, "done": sm is not None, "crash": (rd / "stdout.log").exists() and sm is None,
+                          "node": _node(last, INNER_ROLE, INNER_EV) if last else None, "gen": gen, "calls": it["calls"],
+                          "ev": [{"n": _node(e, INNER_ROLE, INNER_EV), "t": e["t"]} for e in it["ev"][-20:] if _node(e, INNER_ROLE, INNER_EV)]})
+        evals.append({"candidate": ed.name, "finished": (ed / "result.json").exists(), "runs": runs_})
+    now = time.time()
+    cur = evals[-1] if evals else None
+    live_ev = cur and not cur["finished"] and running
+    o_events = [{"n": _node(e, OUTER_ROLE, OUTER_EV), "t": e["t"]} for e in ev["ev"] if _node(e, OUTER_ROLE, OUTER_EV)][-25:]
+    i_events = sorted((x for r in (cur["runs"] if cur else []) if not r["done"] for x in r["ev"]), key=lambda x: x["t"])[-30:]
+    counts = {}
+    for r in (cur["runs"] if live_ev else []):
+        if not r["done"] and r["node"]:
+            counts[r["node"]] = counts.get(r["node"], 0) + 1
+    o_node = "oEval" if live_ev else (o_events[-1]["n"] if running and o_events else None)
+    calls = ev["calls"] + sum((c.get("result") or {}).get("calls") or 0 for c in state.get("candidates", [])) \
+        + sum(r["calls"] for r in (cur["runs"] if live_ev else []))
+    flow = {"outer": {"node": o_node, "events": o_events}, "inner": {"counts": counts, "events": i_events}}
+    return {"flow": flow, "runs": [x.name for x in runs[:12]], "run": d.name, "running": running, "now": now,
+            "status": st, "args": args, "incumbent": state.get("incumbent"), "gen": state.get("gen", st.get("gen", 0)),
+            "candidates": cands, "evals": [dict(x, runs=[{k: v for k, v in r.items() if k != "ev"} for r in x["runs"]]) for x in evals[-1:]], "calls": calls,
+            "swaps": [{"t": e["t"], "gen": e.get("gen"), "old": e.get("old"), "new": e.get("new"), "gain": e.get("gain"),
+                       "kind": e["type"]} for e in ev["swaps"]],
+            "ended": ev["end"], "t0": ev["t0"]}
+
+
+def meta_launch(body):
+    def num(k, lo, hi, d, cast=float):
+        try:
+            return str(cast(min(hi, max(lo, cast(body.get(k, d))))))
+        except (TypeError, ValueError):
+            return str(d)
+    pr = lambda k, d: ",".join(x for x in str(body.get(k, d)).split(",") if x.strip().isalnum())
+    env = dict(os.environ, HOURS=num("hours", 0.05, 48, 4), OUTER_GENS=num("outer_generations", 1, 500, 99, int),
+               INNER_GENS=num("inner_generations", 1, 30, 5, int), REPEATS=num("repeats", 1, 6, 2, int),
+               DEEP=num("deep", 0, 6, 2, int), WIDE=num("wide", 0, 6, 2, int), PARALLEL=num("parallel", 1, 32, 4, int),
+               PROBLEMS=pr("problems", "binpack1d,knapsack,tsp,scheduling"), HELD_OUT=pr("held_out", "coloring"),
+               PUSH="1" if body.get("push") else "0")
+    log = ROOT / "meta_runs" / "_launch.log"
+    log.parent.mkdir(exist_ok=True)
+    subprocess.Popen(["bash", str(ROOT / "scripts" / "run_meta.sh")], cwd=ROOT, env=env, stdout=open(log, "w"),
+                     stderr=subprocess.STDOUT, start_new_session=True)
+    return {"started": True}
+
+
+def meta_stop(rel):
+    d = next((x for x in _meta_dirs() if x.name == rel), None)
+    pid = _jload(d / "status.json", {}).get("pid") if d else None
+    if pid and _alive(pid):
+        os.kill(int(pid), 15)               # the launcher's exit hook still publishes what exists
+        return {"stopped": True}
+    return {"stopped": False}
+
+
 _suite_cache = {}
 
 
@@ -208,6 +355,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200 if c else 404, c or {"error": "no such call"})
             if u.path == "/api/meta":
                 return self._send(200, list_meta())
+            if u.path == "/api/meta/live":
+                return self._send(200, meta_live(q.get("id", [None])[0]))
+            if u.path == "/meta":
+                return self._send(200, (STATIC / "meta.html").read_bytes(), "text/html")
             if u.path == "/api/suite":
                 if "s" not in _suite_cache:
                     _suite_cache["s"] = suite()
@@ -226,6 +377,10 @@ class Handler(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(n) or b"{}")
         if u.path == "/api/launch":
             return self._send(200, launch(body))
+        if u.path == "/api/meta/launch":
+            return self._send(200, meta_launch(body))
+        if u.path == "/api/meta/stop":
+            return self._send(200, meta_stop(body.get("id", "")))
         return self._send(404, {"error": "unknown"})
 
 
