@@ -104,6 +104,8 @@ Four training families of 500 items: `weibull` (sizes from a Weibull distributio
         "nearly_empty_bins": "bins filled to less than 50% of capacity",
         "bins_with_one_item": "bins holding a single item",
     }
+    # hidden textbook baseline (never shown to agents): the bin left fullest (Best Fit)
+    baseline = [("import numpy as np\n\ndef feature(item, bins, capacity):\n    return -(bins - item) / capacity\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Room left after placing, as a fraction of capacity.\"\"\"\n    return (bins - item) / capacity\n",
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two columns: is it the new bin, and the item's size as a fraction of capacity.\"\"\"\n    v = np.zeros((len(bins), 2))\n    v[-1, 0] = 1.0\n    v[:, 1] = item / capacity\n    return v\n",
