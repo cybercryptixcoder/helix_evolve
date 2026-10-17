@@ -2412,9 +2412,9 @@ const steps=[...document.querySelectorAll('.step')],dias=[...document.querySelec
 const jump=document.getElementById('jump');
 function show(k){i=Math.max(0,Math.min(steps.length-1,k));steps.forEach((s,j)=>s.classList.toggle('on',j===i));
 dias.forEach((d,j)=>d.hidden=j!==i);document.getElementById('pos').textContent=`Step ${i+1} of ${steps.length}`;
-jump.value=steps[i].dataset.gen;history.replaceState(null,'','#'+(i+1));window.scrollTo(0,0)}
+jump.value=steps[i].dataset.gen;try{history.replaceState(null,'','#'+(i+1))}catch(e){}window.scrollTo(0,0)}
 document.getElementById('prev').onclick=()=>show(i-1);document.getElementById('next').onclick=()=>show(i+1);
 jump.onchange=()=>show(steps.findIndex(s=>s.dataset.gen===jump.value));
 document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowRight')show(i+1);if(e.key==='ArrowLeft')show(i-1)});
-show((parseInt(location.hash.slice(1))||1)-1);
+let h=1;try{h=parseInt(location.hash.slice(1))||1}catch(e){}show(h-1);
 </script></body></html>
