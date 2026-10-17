@@ -1,0 +1,81 @@
+{
+ "problem": "binpack1d",
+ "label": "binpack1d-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.3730031652023036,
+  "valid": 3.482365842234325,
+  "progress": 40.45,
+  "valid_progress": 33.75,
+  "library": [
+   "f003",
+   "f015",
+   "f047"
+  ]
+ },
+ "test": {
+  "gap": 5.699296353887189,
+  "families": {
+   "weibull": 3.272984351547666,
+   "uniform": 3.338416793753174,
+   "small": 0.8354218880534633,
+   "large": 5.348568479119961,
+   "bimodal": 18.359619449478704,
+   "scaled": 3.040767161370169
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 37.58
+ },
+ "progress_curve": [
+  0.0,
+  33.55,
+  37.64,
+  37.64,
+  37.64,
+  37.64,
+  40.45,
+  40.45,
+  40.45,
+  40.45,
+  40.45
+ ],
+ "valid_curve": [
+  0.0,
+  32.09,
+  38.19,
+  38.19,
+  38.19,
+  38.19,
+  33.75,
+  33.75,
+  33.75,
+  33.75,
+  33.75
+ ],
+ "calls": 117,
+ "tokens_in": 286285,
+ "tokens_out": 260200,
+ "features_tried": 86,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "post_leftover_sweet_spot",
+   "origin": "wide"
+  },
+  {
+   "id": "f015",
+   "name": "dead_residue_vs_usable_slot",
+   "origin": "deep"
+  },
+  {
+   "id": "f047",
+   "name": "smooth_zero_target_ramp",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792267145.7510974
+}
