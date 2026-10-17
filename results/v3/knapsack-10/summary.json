@@ -1,0 +1,86 @@
+{
+ "problem": "knapsack",
+ "label": "knapsack-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.0016058557286211896,
+  "valid": 0.0002515647326367665,
+  "progress": 99.99,
+  "valid_progress": 100.0,
+  "library": [
+   "f003",
+   "f018",
+   "f041",
+   "f058"
+  ]
+ },
+ "test": {
+  "gap": 0.006735849305224602,
+  "families": {
+   "uncorrelated": 0.016835253019823842,
+   "weakly_correlated": 0.008782329952135756,
+   "strongly_correlated": 0.0,
+   "inverse_strongly_correlated": 0.0,
+   "almost_strongly_correlated": 0.008061663554163415
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.95
+ },
+ "progress_curve": [
+  0.0,
+  98.24,
+  99.1,
+  99.1,
+  99.1,
+  99.54,
+  99.54,
+  99.99,
+  99.99,
+  99.99,
+  99.99
+ ],
+ "valid_curve": [
+  0.0,
+  98.14,
+  99.24,
+  99.24,
+  99.24,
+  99.68,
+  99.68,
+  100.0,
+  100.0,
+  100.0,
+  100.0
+ ],
+ "calls": 132,
+ "tokens_in": 340274,
+ "tokens_out": 232604,
+ "features_tried": 94,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "capacity_fill_fraction",
+   "origin": "wide"
+  },
+  {
+   "id": "f018",
+   "name": "density_tail_fill_blend",
+   "origin": "deep"
+  },
+  {
+   "id": "f041",
+   "name": "exact_residual_reachability_fill",
+   "origin": "deep"
+  },
+  {
+   "id": "f058",
+   "name": "value_weighted_residual_reachability",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792266731.8108222
+}
