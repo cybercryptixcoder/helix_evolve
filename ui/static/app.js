@@ -83,11 +83,36 @@ async function refreshRuns() {
 }
 
 /* ------------------------------------------------------------------ home */
+const PALETTE = ["#2B4BC5", "#D99A0F", "#1E8A5A", "#B23A48", "#6B4FB8", "#0E8A99", "#8A5A2B", "#4E5B66"];
+
+function compareChart(runs) {
+  const byProb = {};
+  runs.filter(r => r.curve && r.curve.length > 1).forEach(r => (byProb[r.problem] = byProb[r.problem] || []).push(r));
+  return Object.entries(byProb).filter(([, rs]) => rs.length > 1).map(([prob, rs]) => {
+    rs = rs.slice(0, 8);
+    const W = 1000, H = 230, L = 44, R = 150, T = 12, B = 28;
+    const N = Math.max(...rs.map(r => r.curve.length - 1), 1);
+    const top = Math.max(10, Math.ceil(Math.max(...rs.flatMap(r => r.curve)) / 10) * 10);
+    const x = i => L + (W - L - R) * (i / N), y = v => T + (H - T - B) * (1 - Math.max(0, v) / top);
+    let h = `<g class="axis">`;
+    for (let v = 0; v <= top; v += top > 40 ? 20 : 10) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
+    for (let i = 0; i <= N; i++) h += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${i === 0 ? "start" : "G" + i}</text>`;
+    h += `</g>`;
+    rs.forEach((r, k) => {
+      const c = PALETTE[k % PALETTE.length], last = r.curve[r.curve.length - 1];
+      h += `<polyline fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round" points="${r.curve.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>`;
+      h += `<text x="${x(r.curve.length - 1) + 8}" y="${y(last) + 4}" fill="${c}" style="font:600 13px var(--body)">${esc(r.label || "run")} ${fmt(last)}%</text>`;
+    });
+    return `<h2>${esc(rs[0].title || prob)}: runs compared</h2><section class="hero"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Progress of each run by generation">${h}</svg></section>`;
+  }).join("");
+}
+
 function renderHome() {
   const main = $("#main");
   const runs = state.runs;
   main.innerHTML = `<h1>Helix</h1>
     <p class="intro">An evolutionary search with two loops: a Researcher that goes deep and a Mutator that goes wide, steered by a Navigator over a map of approaches. Each run starts from Code Zero (0%) and climbs toward the problem's reference (100%).</p>
+    ${compareChart(runs)}
     <h2>Runs</h2>
     ${runs.length ? `<ul class="runrows">${runs.map(r => `<li><a href="#/run/${encodeURIComponent(r.id)}">
       <span><span class="rt">${r.state === "running" ? '<span class="live"></span>' : ""}${esc(runLabel(r))}</span><br>
