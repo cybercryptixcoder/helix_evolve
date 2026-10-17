@@ -74,6 +74,16 @@ def after_json(text, limit=900):
     return tail.strip()[:limit]
 
 
+def before_json(text, limit=1200):
+    """Prose before the JSON block (reasoning written out when thinking is off)."""
+    if not text:
+        return ""
+    i = text.find("```")
+    j = text.find("{")
+    cut = min(x for x in (i, j, len(text)) if x >= 0)
+    return text[:cut].replace("Reasoning:", "").strip()[:limit]
+
+
 def extract_name(text, default):
     m = re.search(r"name:\s*`?([A-Za-z_][A-Za-z0-9_]*)", (text or "").split("```")[-1])
     return m.group(1)[:48] if m else default
