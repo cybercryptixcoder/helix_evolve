@@ -696,7 +696,8 @@ class Engine:
         n_exp = self.s.c("researcher", "experiments", default=4)
         slots = self.s.c("mutator", "slots", default=4)
         parts.append(f"## Budget this generation\n- Researcher: {n_exp} experiments (assign up to {n_exp} approaches)\n"
-                     f"- Mutator: {slots} slots (parents to vary, plus at least {self.s.c('mutator', 'fresh', default=1)} fresh)\n"
+                     f"- Mutator: {slots} slots: {min(len(led.library), self.s.c('mutator', 'kept_parents', default=2))} go to kept "
+                     f"features automatically, at least {self.s.c('mutator', 'fresh', default=1)} fresh, you choose the rest\n"
                      f"- Combinations: up to {self.s.c('combine', 'max_pairs', default=2)} pairs")
         return "\n\n".join(parts)
 

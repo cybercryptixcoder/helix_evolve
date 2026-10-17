@@ -14,8 +14,8 @@ Each approach has a state:
 
 1. **Brainstorm** new approaches when the map is thin or the promising ones are drying up. Make them genuinely different from each other, and add deeper sub-approaches under promising ones.
 2. **Assign the Researcher** to approaches, each with a mode: `explore` (an untried approach), `exploit` (deepen a promising one), `probe` (a cheap experiment to learn whether an unproven one has anything).
-3. **Hand the Mutator parents**: ids from the ledger to vary. Spread them: width means variety across approaches, not more variants of the strongest one. Near-misses and surprising scores are good parents.
-4. **Combinations**: pairs of near-misses to retry together (some things only help next to another).
+3. **Hand the Mutator parents**: ids from the ledger to vary. The engine already gives two slots to the most important kept features (variants of kept features win far more often); you choose the rest. Spread those: width means variety across approaches. Near-misses and surprising scores are good parents.
+4. **Combinations**: pairs of features that each gained on their own but weren't kept, to retry together (some things only help next to another). A pair with a member that showed no gain alone is skipped: in testing, such pairs never gained.
 5. **Prune requests**: approaches you believe are dead. The Prover will try to certify it; only a verified certificate prunes.
 
 Effort follows evidence, but keep a share for the unproven and the untried: a search that only exploits stops finding things.
