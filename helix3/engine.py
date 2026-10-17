@@ -117,6 +117,8 @@ class Engine:
         self.champ = {}
         self.history = []
         self.margin = self.s.c("fit", "accept_margin", default=0.03)
+        self.spread, self.xscale = 1.0, 1.0
+        self._sens_key, self._sens = None, []
         self.S = getattr(problem, "search_split", "train")      # the instances searches and refits run on
         self.workers = ThreadPoolExecutor(12)
         self.status = {"phase": "starting"}
@@ -224,6 +226,22 @@ class Engine:
             idx = rng.choice(len(recorded), n_target, replace=False)
             recorded = [recorded[i] for i in sorted(idx)]
         self.ledger.set_states(recorded, self.p.n_candidates, seed=self.seed + self.gen)
+        # how strongly the champion separates candidates within a decision: probes and steps are relative to it
+        self.spread, self.xscale = 1.0, 1.0
+        if lib:
+            pr = self.priority(lib, self.x)
+            sds = []
+            for a in self.ledger.states[:300]:
+                try:
+                    v = np.asarray(pr(*a), dtype=float)
+                    if len(v) > 1:
+                        sds.append(float(np.std(v)))
+                except Exception:
+                    pass
+            if sds:
+                self.spread = max(1e-4, float(np.median(sds)))
+            self.xscale = max(0.02, float(np.median(np.abs(self.x)))) if len(self.x) else 1.0
+        self.trace.emit("spread", gen=self.gen, spread=self.spread, xscale=self.xscale)
 
     # ------------------------------------------------------------------ one feature: check, scale, certify
     def check(self, f):
@@ -282,6 +300,10 @@ class Engine:
         mults = self.s.c("fit", "sensitivity", default=[0, 0.5, 2, 4])
         if not lib:
             return []
+        key = (tuple(self.ledger.library), tuple(np.round(self.x, 6)))
+        if key == self._sens_key:
+            self.trace.emit("sensitivity", gen=self.gen, rows=self._sens, cached=True)
+            return self._sens
         xs, keys, i = [], [], 0
         for f in lib:
             for m in mults:
@@ -296,6 +318,7 @@ class Engine:
             rows.setdefault(fid, {})[m] = None if s is None else round(self.champ["search"] - s, 4)
         out = [{"feature": fid, "name": self.ledger.features[fid].name, "deltas": d} for fid, d in rows.items()]
         self.trace.emit("sensitivity", gen=self.gen, rows=out)
+        self._sens_key, self._sens = key, out
         return out
 
     # ------------------------------------------------------------------ the generation
@@ -408,6 +431,7 @@ class Engine:
         plan = self.normalise_plan(plan, view)
         plan["source"], plan["note"] = source, note or plan.get("thinking", "")
         self.trace.emit("plan", gen=self.gen, plan=plan)
+        self._last_plan = plan
         return plan
 
     def normalise_plan(self, plan, view):
@@ -445,8 +469,14 @@ class Engine:
             vary = [v for v in self.s.hooks.allocate(view)["mutate"]["vary"] if v in led.features]
         fresh = max(self.s.c("mutator", "fresh", default=1), slots - len(vary))
         plan["mutate"] = {"vary": vary[:max(0, slots - fresh)], "fresh": min(slots, fresh)}
-        plan["combine"] = [c for c in (plan.get("combine") or [])
-                           if isinstance(c, list) and len(c) == 2 and all(i in led.features for i in c)][:self.s.c("combine", "max_pairs", default=2)]
+        combos, dropped = [], []
+        for c in plan.get("combine") or []:
+            if not (isinstance(c, list) and len(c) == 2 and all(i in led.features for i in c)):
+                continue
+            bad = [i for i in c if led.features[i].status in ("kept", "invalid", "duplicate", "inert", "span")]
+            (dropped if bad else combos).append(c if not bad else {"pair": c, "why": f"{', '.join(bad)} already kept or not evaluable"})
+        plan["combine"] = combos[:self.s.c("combine", "max_pairs", default=2)]
+        plan["dropped"] = dropped
         plan["prune"] = [p for p in (plan.get("prune") or []) if p in led.nodes]
         return plan
 
@@ -473,7 +503,18 @@ class Engine:
         if recent:
             parts.append("## The ledger: the last two generations\n" + "\n".join(roles.feature_line(f) for f in recent[-24:]))
         if led.backlog:
-            parts.append("## Near-misses (backlog): " + ", ".join(f"{i} {led.features[i].name}" for i in led.backlog))
+            parts.append("## Near-misses (backlog, not kept, worth combining): " + ", ".join(f"{i} {led.features[i].name}" for i in led.backlog))
+        hist = [f"- {n.id} {n.title}: gen {x['gen']}: {x.get('result', '')}" for n in led.nodes.values() for x in n.notes
+                if x.get("prune_request")]
+        if hist:
+            parts.append("## Prune requests so far (don't repeat one that wasn't proven unless something changed)\n" + "\n".join(hist[-8:]))
+        prev = getattr(self, "_last_plan", None)
+        if prev and prev.get("dropped"):
+            parts.append("## Last plan's combinations that couldn't run\n" + "\n".join(f"- {d['pair']}: {d['why']}" for d in prev["dropped"])
+                         + "\nCombinations are for features that are *not* kept: a kept feature is already in every trial.")
+        groups = self.similar_groups()
+        if groups:
+            parts.append("## Groups of tried features that rank candidates alike (|rho| >= 0.9): the same idea, re-expressed\n" + groups)
         n_exp = self.s.c("researcher", "experiments", default=4)
         slots = self.s.c("mutator", "slots", default=4)
         parts.append(f"## Budget this generation\n- Researcher: {n_exp} experiments (assign up to {n_exp} approaches)\n"
@@ -529,7 +570,8 @@ class Engine:
             f = led.new_feature(name=str(e.get("name") or "experiment")[:48], origin="deep", gen=self.gen, node=aid,
                                 kind="probe" if str(e.get("kind", "")).startswith("probe") else "improve",
                                 idea={"hypothesis": e.get("hypothesis", ""), "feature": e.get("change") or e.get("feature", ""),
-                                      "prediction": pred, "builds_on": e.get("builds_on", "")})
+                                      "prediction": pred, "builds_on": e.get("builds_on", ""),
+                                      "lesson": e.get("lesson", "")})
             led.nodes[aid].features.append(f.id)
             feats.append(f)
         existing = "\n".join(f"- {g.name}: {roles.short(g.measures, 150)}" for g in led.lib()) or "(none yet)"
@@ -583,6 +625,16 @@ class Engine:
         if rel:
             k = self.s.c("ledger_lines", default=14)
             parts.append("## The ledger for these approaches (and your last generation)\n" + "\n".join(roles.feature_line(f) for f in rel[-k:]))
+        missed = [f for f in led.features.values() if f.origin == "deep" and f.prediction.get("checked")
+                  and not f.prediction.get("held") and f.gen >= self.gen - 2]
+        if missed:
+            parts.append("## Predictions that did not hold (what the mechanism you believed didn't explain)\n" + "\n".join(
+                f"- {f.id} {f.name}: predicted {f.prediction['metric']} {f.prediction['direction']} in {f.prediction['family']}; "
+                f"it went {f.prediction.get('before')} → {f.prediction.get('after')}" for f in missed[-8:]))
+        groups = self.similar_groups()
+        if groups:
+            parts.append("## Tried features that rank candidates alike (|rho| >= 0.9): one idea, re-expressed. Move to a "
+                         "different quantity rather than another form of these.\n" + groups)
         finds = [f for f in led.features.values() if f.origin == "wide" and f.gen >= self.gen - 2
                  and f.status not in ("invalid", "duplicate", "inert") and f.best_probe is not None]
         finds.sort(key=lambda f: -(f.d_valid if f.d_valid is not None else f.best_probe))
@@ -636,6 +688,27 @@ class Engine:
 
         return list(self.workers.map(write, slots))
 
+    def similar_groups(self, rho=0.9, min_size=3):
+        """Clusters of evaluated features whose fingerprints correlate at |rho| >= 0.9 (the same idea, re-expressed)."""
+        led = self.ledger
+        feats = [f for f in led.features.values() if f.status not in ("new", "invalid", "checking") and f.code]
+        if len(feats) < min_size or not led.states:
+            return ""
+        try:
+            fps = {f.id: led.fingerprint(f, self.p.n_candidates) for f in feats}
+        except Exception:
+            return ""
+        groups, seen = [], set()
+        for f in feats:
+            if f.id in seen:
+                continue
+            g = [h for h in feats if h.id not in seen and led.similarity(fps[f.id], fps[h.id]) >= rho]
+            if len(g) >= min_size:
+                groups.append(g)
+                seen |= {h.id for h in g}
+        return "\n".join("- " + ", ".join(f"{h.id} {h.name}" for h in g[:8]) + (f" (+{len(g) - 8})" if len(g) > 8 else "")
+                         for g in groups)
+
     def scoreboard(self):
         led = self.ledger
         k = self.s.c("mutator", "scoreboard", default=10)
@@ -654,6 +727,15 @@ class Engine:
     # ------------------------------------------------------------------ preparing new features
     def prepare(self, f, author):
         """Check a freshly written feature (one repair by its author), then certify it."""
+        if not f.code:
+            try:
+                rep_ = self.ask(author, roles.system_prompt(self.s, author, self.p),
+                                "Your previous reply had no usable code block. Reply with the complete feature in a single "
+                                "```python block defining `def feature(...)`, then nothing else.", author,
+                                meta={"step": "repair", "feature": f.id})
+                f.code = extract_code(rep_.text) or ""
+            except Exception as exc:
+                f.error = str(exc)[:200]
         if not f.code:
             f.status, f.verdict = "invalid", "invalid"
             f.error = f.error or "no code in the reply"
@@ -692,7 +774,7 @@ class Engine:
         x, s = self.x.copy(), self.champ["search"]
         if lib and budget:
             x, s = self.fit.optimise([f.code for f in lib], self.x, lambda z: self.unpack(lib, z), budget,
-                                     sigma=self.s.c("fit", "sigma", default=0.3), seed=self.gen, split=self.S)
+                                     sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale, seed=self.gen, split=self.S)
         v = self.evaluate(lib, [x], "valid")[0][0] if lib else base_valid
         out = {"x": x, "train": s, "valid": v}
         if lib and s < self.champ["search"] - 1e-9 and v is not None and v < base_valid - 1e-9:
@@ -705,7 +787,10 @@ class Engine:
         lib = self.ledger.lib()
         feats = lib + [f]
         base_x, base_train, base_valid = refit["x"], refit["train"], refit["valid"]
-        ws = self.s.c("fit", "probe_weights", default=[0.4, -0.4, 0.1, -0.1])
+        mults = self.s.c("fit", "probe_multiples", default=[1, -1, 0.3, -0.3, 0.1, -0.1])
+        if not lib:
+            mults = [m for m in mults if abs(m) == max(abs(x) for x in mults)]   # alone, only the sign matters
+        ws = [round(m * self.spread, 6) for m in mults]
         xs = [np.concatenate([base_x, np.full(f.width, w)]) for w in ws]
         res = self.evaluate(feats, xs, self.S)
         f.probe, best = [], None
@@ -734,7 +819,7 @@ class Engine:
         x1, _ = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z), 5, mask=mask,
                                   sigma=abs(f.best_w), split=self.S)
         x2, s2 = self.fit.optimise([g.code for g in feats], x1, lambda z: self.unpack(feats, z),
-                                   self.s.c("fit", "trial_evals", default=16), sigma=self.s.c("fit", "sigma", default=0.3),
+                                   self.s.c("fit", "trial_evals", default=16), sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale,
                                    seed=self.gen, split=self.S)
         v2 = self.evaluate(feats, [x2], "valid")[0][0]
         f.trial_x = [float(v) for v in x2]
@@ -751,6 +836,10 @@ class Engine:
         metric, fam, direction = pred.get("metric"), pred.get("family"), str(pred.get("direction", "")).lower()
         if not metric or f.best_w is None:
             f.prediction = {"metric": metric, "family": fam, "direction": direction, "checked": False}
+            return
+        if not f.trial_x and f.best_probe < -3 * self.s.c("fit", "probe_margin", default=0.08):
+            f.prediction = {"metric": metric, "family": fam, "direction": direction, "checked": False,
+                            "why": "not checked: the feature made the policy much worse at every weight tried"}
             return
         ids = [i for i in self.p.diagnostic_ids() if i.startswith(str(fam))] or self.p.diagnostic_ids()[:1]
         lib = self.ledger.lib()
@@ -781,7 +870,8 @@ class Engine:
             feats = led.lib() + [fa, fb]
             x0 = np.concatenate([refit["x"], np.full(fa.width, fa.best_w), np.full(fb.width, fb.best_w)])
             x, s = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z),
-                                     self.s.c("fit", "trial_evals", default=16), seed=self.gen + 7, split=self.S)
+                                     self.s.c("fit", "trial_evals", default=16), seed=self.gen + 7, split=self.S,
+                                     sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale)
             v = self.evaluate(feats, [x], "valid")[0][0]
             dt, dv = round(refit["train"] - s, 4), (round(refit["valid"] - v, 4) if v is not None else None)
             rec = {"pair": [a, b], "x": x.tolist(), "d_train": dt, "d_valid": dv}
@@ -809,7 +899,7 @@ class Engine:
             feats = cur_feats + group
             x0 = np.concatenate([x] + add)
             x1, s1 = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z), 12,
-                                       seed=self.gen + 3, split=self.S)
+                                       seed=self.gen + 3, split=self.S, sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale)
             v1 = self.evaluate(feats, [x1], "valid")[0][0]
             if v1 is not None and v1 < valid - self.margin / 2 and s1 < train:
                 cur_feats, x, train, valid = feats, x1, s1, v1
@@ -825,7 +915,8 @@ class Engine:
                 self.trace.emit("redundant", gen=self.gen, features=[g.id for g in group], train=s1, valid=v1)
         if accepted:
             xj, sj = self.fit.optimise([g.code for g in cur_feats], x, lambda z: self.unpack(cur_feats, z),
-                                       self.s.c("fit", "joint_refit_evals", default=32), seed=self.gen + 5, split=self.S)
+                                       self.s.c("fit", "joint_refit_evals", default=32), seed=self.gen + 5, split=self.S,
+                                       sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale)
             vj = self.evaluate(cur_feats, [xj], "valid")[0][0]
             if vj is not None and sj < train and vj < valid:
                 x, train, valid = xj, sj, vj
@@ -912,6 +1003,12 @@ class Engine:
             if not open_:
                 continue
             argued = []
+            close = [f for f in open_ if (f.certificate.get("rho") or 0) >= 0.9 or (f.certificate.get("lib_r2") or 0) >= 0.9]
+            if not close:
+                n.notes.append({"gen": self.gen, "prune_request": True, "result": "not attempted: no feature under it is "
+                                "close to a duplicate or to the kept features (nearest rho < 0.9, R^2 < 0.9)"})
+                self.trace.emit("prove", gen=self.gen, approach=nid, state=n.state, argued=[], skipped=True)
+                continue
             if self.s.c("prover", "enabled", default=True):
                 kept = "\n\n".join(f"### {g.id} {g.name} (kept)\n```python\n{g.code.strip()}\n```" for g in led.lib()) or "(none)"
                 body = "\n\n".join(f"### {f.id} {f.name}\nengine's nearest match: {f.certificate}\n```python\n{f.code.strip()}\n```"
@@ -927,6 +1024,10 @@ class Engine:
                         if f is None or f not in open_:
                             continue
                         argued.append(c)
+                        if c.get("type") == "span":
+                            r2 = led.span_r2_of(f, self.p.n_candidates)
+                            if r2 is not None and r2 >= led.span_r2:
+                                f.certificate = {"type": "span", "r2": round(r2, 5), "by": "prover"}
                         if c.get("type") == "duplicate" and c.get("of") in led.features:
                             g = led.features[c["of"]]
                             rho = led.similarity(led.fingerprint(f, self.p.n_candidates), led.fingerprint(g, self.p.n_candidates))
@@ -934,7 +1035,9 @@ class Engine:
                                 f.certificate = {"type": "duplicate", "of": g.id, "rho": round(rho, 4), "by": "prover"}
                 except Exception as exc:
                     say(f"   prover failed: {str(exc)[:120]}")
-            n.notes.append({"gen": self.gen, "prune_request": True, "argued": argued})
+            n.notes.append({"gen": self.gen, "prune_request": True, "argued": argued,
+                            "result": "pruned" if all(f.certificate.get("type") in ("inert", "duplicate", "span") for f in open_)
+                            else "not proven: stays at lower priority"})
             led.update_nodes(self.gen, self.margin)
             self.trace.emit("prove", gen=self.gen, approach=nid, state=n.state, argued=argued)
 

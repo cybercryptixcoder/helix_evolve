@@ -173,6 +173,7 @@ class Ledger:
         if best >= self.duplicate_rho:
             return {"type": "duplicate", "of": best_id, "rho": round(best, 4)}
         lib = [g for g in self.lib() if g.id != f.id]
+        r2 = None
         if lib:
             for g in lib:
                 self.fingerprint(g, n_candidates)
@@ -184,7 +185,26 @@ class Ledger:
                 r2 = 1 - float(((y - A @ coef) ** 2).sum()) / sst
                 if r2 >= self.span_r2:
                     return {"type": "span", "r2": round(r2, 5), "of": [g.id for g in lib]}
-        return {"nearest": best_id, "rho": round(best, 4)} if best_id else {}
+        out = {"nearest": best_id, "rho": round(best, 4)} if best_id else {}
+        if r2 is not None:
+            out["lib_r2"] = round(r2, 4)       # how much of it the kept features already explain
+        return out
+
+    def span_r2_of(self, f, n_candidates):
+        """R^2 of f regressed on the kept features within each decision (1 = it adds nothing)."""
+        self.fingerprint(f, n_candidates)
+        lib = [g for g in self.lib() if g.id != f.id]
+        if not lib:
+            return None
+        for g in lib:
+            self.fingerprint(g, n_candidates)
+        A = np.concatenate([self._vals[g.id] for g in lib], axis=1)
+        y = self._vals[f.id].sum(axis=1)
+        sst = float(y @ y)
+        if sst <= 1e-12:
+            return 1.0
+        coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+        return 1 - float(((y - A @ coef) ** 2).sum()) / sst
 
     def nearest(self, f, n_candidates, ids):
         fp = self.fingerprint(f, n_candidates)
@@ -203,14 +223,15 @@ class Ledger:
         for n in self.nodes.values():
             fs = [self.features[i] for i in n.features if i in self.features]
             tried = [f for f in fs if f.status not in ("new", "invalid")]
-            gains = [f.d_valid for f in tried if f.d_valid is not None]
-            n.best_gain = max(gains) if gains else (max((f.best_probe for f in tried if f.best_probe is not None),
+            own = [f for f in tried if f.status != "duplicate"]          # a duplicate's inherited result is not new evidence
+            gains = [f.d_valid for f in own if f.d_valid is not None]
+            n.best_gain = max(gains) if gains else (max((f.best_probe for f in own if f.best_probe is not None),
                                                         default=None))
             if fs:
                 n.last_gen = max(f.gen for f in fs)
             if n.state == "pruned":
                 continue
-            if any(f.status in ("kept", "retired") or (f.d_valid or -1) > margin for f in tried):
+            if any(f.status in ("kept", "retired") or (f.d_valid or -1) > margin for f in own):
                 n.state = "promising"
             elif tried and all(f.certificate.get("type") in ("inert", "duplicate", "span") for f in tried):
                 n.state = "pruned"
