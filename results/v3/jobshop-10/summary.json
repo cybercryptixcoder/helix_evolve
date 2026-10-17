@@ -1,0 +1,79 @@
+{
+ "problem": "jobshop",
+ "label": "jobshop-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 52.85032082138537,
+  "valid": 53.164396178040214
+ },
+ "champion": {
+  "train": 7.186370432505398,
+  "valid": 8.326630391119414,
+  "progress": 86.4,
+  "valid_progress": 84.34,
+  "library": [
+   "f004",
+   "f003",
+   "f061"
+  ]
+ },
+ "test": {
+  "gap": 10.44756608009288,
+  "families": {
+   "small": 9.725480233165372,
+   "medium": 15.565571623909753,
+   "skewed": 1.5151515151515138,
+   "large": 14.984060948144878
+  },
+  "code_zero": 42.99164195105186,
+  "progress": 75.7
+ },
+ "progress_curve": [
+  0.0,
+  85.91,
+  85.11,
+  84.67,
+  84.67,
+  84.67,
+  84.67,
+  84.67,
+  86.26,
+  86.4,
+  86.4
+ ],
+ "valid_curve": [
+  0.0,
+  85.36,
+  84.16,
+  84.91,
+  84.91,
+  84.91,
+  84.91,
+  84.91,
+  84.21,
+  84.34,
+  84.34
+ ],
+ "calls": 106,
+ "tokens_in": 307875,
+ "tokens_out": 224473,
+ "features_tried": 80,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "machine_idle_vs_job_tail_mix",
+   "origin": "wide"
+  },
+  {
+   "id": "f003",
+   "name": "candidate_idle_slack",
+   "origin": "wide"
+  },
+  {
+   "id": "f061",
+   "name": "hinge_idle_beyond_op",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792269003.3061469
+}
