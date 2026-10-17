@@ -1,0 +1,133 @@
+Helix v3 · Online 2D vector bin packing · 25 generations → runs/jobs/bp2d-25
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 9.181% train, 9.276% valid
+── generation 1: champion gap 9.181% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_evolve_run/.venv/lib/python3.11/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['tightest_fit_worst_leftover'] → gap 8.534% progress 7.4% (valid 4.9%) | 93s, 10 calls
+── generation 2: champion gap 8.534% (progress 7.4%), 1 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['stranding_guard_threshold'] → gap 7.070% progress 24.2% (valid 20.7%) | 342s, 22 calls
+── generation 3: champion gap 7.070% (progress 24.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 7.070% progress 24.2% (valid 20.7%) | 141s, 32 calls
+── generation 4: champion gap 7.070% (progress 24.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 6.893% vs 6.893%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['item_scaled_stranding_guard'] → gap 6.686% progress 28.6% (valid 24.6%) | 302s, 46 calls
+── generation 5: champion gap 6.686% (progress 28.6%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['item_axis_fit_intensity'] → gap 6.677% progress 28.7% (valid 24.7%) | 527s, 56 calls
+── generation 6: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 489s, 68 calls
+── generation 7: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 189s, 79 calls
+── generation 8: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 7.170% vs 6.573%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 229s, 91 calls
+── generation 9: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 412s, 103 calls
+── generation 10: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 504s, 116 calls
+── generation 11: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 261s, 130 calls
+── generation 12: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 7.498% vs 6.573%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 307s, 141 calls
+── generation 13: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.677% progress 28.7% (valid 24.7%) | 114s, 153 calls
+── generation 14: champion gap 6.677% (progress 28.7%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/ubuntu/helix_evolve_run/helix3/run.py", line 87, in <module>
+    main()
+  File "/home/ubuntu/helix_evolve_run/helix3/run.py", line 80, in main
+    eng.run(a.generations)
+  File "/home/ubuntu/helix_evolve_run/helix3/engine.py", line 362, in run
+    self.generation()
+  File "/home/ubuntu/helix_evolve_run/helix3/engine.py", line 459, in generation
+    deep, wide = fd.result(), fw.result()
+                 ^^^^^^^^^^^
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.11.16-linux-aarch64-gnu/lib/python3.11/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.11.16-linux-aarch64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/ubuntu/.local/share/uv/python/cpython-3.11.16-linux-aarch64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/helix_evolve_run/helix3/engine.py", line 724, in deep
+    msg = self.researcher_message(plan, diag, sens)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/helix_evolve_run/helix3/engine.py", line 829, in researcher_message
+    others = [f for f in led.features.values() if f not in rel and f.status not in ("new", "checking")]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/helix_evolve_run/helix3/engine.py", line 829, in <listcomp>
+    others = [f for f in led.features.values() if f not in rel and f.status not in ("new", "checking")]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: dictionary changed size during iteration
