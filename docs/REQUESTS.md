@@ -82,3 +82,4 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - 2026-10-17 10:32-10:34: near the session limit: make sure background work survives; start a run now.
 - 2026-10-17 14:18: a quick update on what's done, how it went, what's left.
 - 2026-10-17 14:25: keep this record and append every request to it; make local runs robust (continue or resume after a PC shutdown, guards so long runs don't fail silently, keep a record of everything).
+- 2026-10-17 14:49: which fonts the /meta dashboard uses (answered: Instrument Serif for headings and big numbers, Instrument Sans for text; both free on Google Fonts), for another project.
