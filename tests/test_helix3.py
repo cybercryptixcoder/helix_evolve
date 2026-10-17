@@ -96,3 +96,37 @@ def test_edits_apply(tmp_path):
     changed, errors = apply_edits(ROOT / "helix3" / "strategy", tmp_path / "c", parse_edits(text))
     assert not errors and set(changed) == {"config.json", "prompts/coder.md"}
     assert json.loads((tmp_path / "c" / "config.json").read_text())["researcher"]["experiments"] == 5
+
+
+def test_value_cache_never_changes_a_score():
+    """Feature values reused across simulations (hash chain of choices) give exactly the uncached result."""
+    import numpy as np
+    from helix3.policy import ValueCache, make_priority
+    from helix3.problem import REGISTRY, load_problem
+    rng = np.random.default_rng(0)
+    for name in REGISTRY:
+        p = load_problem(name)
+        codes = [c for c in p.example_features][:3]
+        if not codes:
+            continue
+        insts = p.instances(p.search_split)[:2]
+        cache = ValueCache(64)
+        for trial in range(4):
+            ws = [[float(rng.normal())] for _ in codes]
+            if trial % 2:                                   # a nearby policy: shares a prefix with the last one
+                ws = [[w[0] * (1 + 0.01 * rng.normal())] for w in last]
+            last = ws
+            for i, inst in enumerate(insts):
+                plain = p.run(inst, make_priority(codes, ws, p.n_candidates))["gap"]
+                cached = p.run(inst, make_priority(codes, ws, p.n_candidates, cache=cache, tag=("t", i)))["gap"]
+                assert plain == cached, (name, trial, i, plain, cached)
+        assert cache.hits > 0, name
+
+
+def test_feature_cannot_write_into_simulator_state():
+    import numpy as np
+    from helix3.policy import call_feature, compile_feature
+    fn = compile_feature("import numpy as np\ndef feature(item, bins, capacity):\n    bins[:] = 0\n    return bins[:, 0] * 1.0\n")
+    bins = np.array([[3, 4], [5, 6]])
+    v = call_feature(fn, (np.array([1, 1]), bins, np.array([10, 10])), 2)
+    assert bins.tolist() == [[3, 4], [5, 6]] and v.shape == (2, 1)
