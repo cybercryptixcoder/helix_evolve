@@ -55,3 +55,9 @@ The page is one file, in sections marked with comments: `STYLE`, `GEOMETRY`, `SC
 - **Add a machine** (a proof specialist, say): add it to `NODES`, add belts to `PATHS`, then in `buildSchedule()` add `work("yournode", t0, t1, label, ref)` for what it does and `env(id, "belt_key", t0, label, tone, ref)` for each message it sends or receives. `nodePanel()` decides what clicking it shows.
 - **Show a new kind of record:** add it to the trace in `viz/export.py` (`build_trace`), then read it from `T` in the page.
 - **Program-engine runs:** the records differ (programs and hypotheses instead of features; a pool instead of a library). `build_trace` would map hypotheses to cards and the pool to the library, and `buildSchedule` would route cause/improve tests through Coder to the evaluator.
+
+## Guided walkthrough (`viz/walk.py`)
+
+A simpler companion to the factory-floor viewer: one step per screen (Inspect, Researcher, Coders, Mutator, Fit, Accept for each generation, then the findings), with the explanation and the result visible without clicking, automatic checks against the design intent (repeated ideas, Mutator variants aimed at one feature, predictions never checked), and the exact prompts, replies and code one click away.
+
+    python -m viz.walk results/<run>     # writes <run>/walkthrough.html
