@@ -142,6 +142,8 @@ Four training families, 100-200 elements and 200-400 sets each, every element in
         "one_new_cost_pct": "% of the total cost spent on picks that covered exactly one new element",
         "late_cost_pct": "% of the total cost spent on the picks made after 90% of the elements were covered",
     }
+    # hidden textbook baseline (never shown to agents): the lowest cost per newly covered element
+    baseline = [("import numpy as np\n\ndef feature(costs, new_cover, sizes, covers, total):\n    return -costs / np.maximum(new_cover, 1e-9)\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(costs, new_cover, sizes, covers, total):\n    \"\"\"Minus the cost, relative to the most expensive candidate.\"\"\"\n    return -costs / max(1.0, float(costs.max()))\n",
         "import numpy as np\n\ndef feature(costs, new_cover, sizes, covers, total):\n    \"\"\"Share of the universe the candidate contains (two columns: full size, new elements).\"\"\"\n    return np.stack([sizes / total, new_cover / total], axis=1)\n",

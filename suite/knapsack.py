@@ -152,6 +152,8 @@ Four training families (Pisinger's classic generators), 100-200 items each, weig
         "mean_item_weight_pct": "average weight of a taken item, % of capacity",
         "shared_with_reference_pct": "% of the optimal solution's items that this solution also took",
     }
+    # hidden textbook baseline (never shown to agents): the best value per unit of weight
+    baseline = [("import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    return values / np.maximum(weights, 1e-9)\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value as a fraction of the largest candidate value.\"\"\"\n    return values / max(1.0, float(values.max()))\n",
         "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Minus the weight as a fraction of the remaining capacity.\"\"\"\n    return -weights / max(1.0, float(remaining))\n",
