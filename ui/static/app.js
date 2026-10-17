@@ -212,7 +212,7 @@ function renderStory(m) {
         ${plan.note ? `<div class="note">${md(plan.note)}</div>` : ""}
         <table class="t"><tr><th>Researcher works on</th><th>Mode</th><th>Why</th></tr>
         ${(plan.research || []).map(r => `<tr><td>${esc(r.approach)} ${esc(title(r.approach))}</td><td>${esc(r.mode)}</td><td class="muted">${esc(r.why)}</td></tr>`).join("")}</table>
-        <p class="small muted">Mutator: ${(plan.mutate && plan.mutate.vary || []).length ? "vary " + plan.mutate.vary.map(v => `<b>${esc((m.feats[v] || {}).name || v)}</b>`).join(", ") + ", plus " : ""}${(plan.mutate || {}).fresh || 0} fresh. ${(plan.combine || []).length ? "Retry together: " + plan.combine.map(p => p.join(" + ")).join("; ") + "." : ""} ${(plan.prune || []).length ? "Asked to prune: " + plan.prune.join(", ") + "." : ""}</p></div>
+        <p class="small muted">Mutator: ${(plan.mutate && plan.mutate.vary || []).length ? "vary " + plan.mutate.vary.map(v => `<b>${esc((m.feats[v] || {}).name || v)}</b>`).join(", ") + ", plus " : ""}${(plan.mutate || {}).fresh || 0} fresh. ${(plan.combine || []).length ? "Retry together: " + plan.combine.map(p => p.join(" + ")).join("; ") + "." : ""} ${(plan.prune || []).length ? "Asked to prune: " + plan.prune.join(", ") + "." : ""}${(plan.dropped || []).length ? " Combinations that couldn't run: " + plan.dropped.map(d => `${d.pair.join(" + ")} (${esc(d.why)})`).join("; ") + "." : ""}</p></div>
       <div class="step deep"><h3>Deep loop: the Researcher's experiments</h3>
         ${res.analysis ? `<div class="note deep">${md(res.analysis)}</div>` : ""}
         ${deep.map(f => expRow(m, f, title)).join("") || `<p class="muted">No experiments.</p>`}</div>
@@ -246,12 +246,13 @@ function expRow(m, f, title) {
   const [v, cls] = verdictOf(f);
   const p = f.prediction || {};
   const idea = f.idea || {};
-  const pred = p.metric ? `<div class="pred">Predicted <b>${esc(p.metric)}</b> ${esc(p.direction)} in ${esc(p.family)}: ${p.checked ? `${fmt(p.before, 2)} → ${fmt(p.after, 2)}, <span class="${p.held ? "ok" : "no"}">${p.held ? "held" : "did not hold"}</span>` : "not checked"}</div>` : "";
+  const pred = p.metric ? `<div class="pred">Predicted <b>${esc(p.metric)}</b> ${esc(p.direction)} in ${esc(p.family)}: ${p.checked ? `${fmt(p.before, 2)} → ${fmt(p.after, 2)}, <span class="${p.held ? "ok" : "no"}">${p.held ? "held" : "did not hold"}</span>` : esc(p.why || "not checked")}</div>` : "";
   const why = f.origin === "deep" ? (idea.hypothesis || "") : (f.kind === "variant" ? `Variant of ${esc((m.feats[f.parent] || {}).name || f.parent)}. ` : "Fresh. ") + (f.measures || "");
+  const lesson = f.origin === "deep" && idea.lesson ? `<div class="why"><b>Lesson it builds on:</b> ${md(idea.lesson)}</div>` : "";
   return `<div class="exp"><div class="title"><button data-f="${f.id}">${esc(f.name || f.id)}</button>${f.kind ? `<span class="kind">${esc(f.kind)}</span>` : ""}
       <span class="small muted"> · ${esc(f.node)} ${esc(title(f.node))}</span></div>
     <div class="why">${md(why)}${f.origin === "deep" && f.measures ? `<br><span class="small">Code computes: ${esc(f.measures)}</span>` : ""}</div>
-    ${pred ? `<div class="why">${pred}</div>` : ""}
+    ${lesson}${pred ? `<div class="why">${pred}</div>` : ""}
     <div class="res"><span class="verdict ${cls}">${esc(v)}</span>${gainOf(m, f)}</div></div>`;
 }
 
