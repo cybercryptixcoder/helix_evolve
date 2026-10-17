@@ -117,7 +117,7 @@ def dispatch(machine, proc, choose):
     return start
 
 
-def schedule_metrics(machine, proc, start, ref):
+def schedule_metrics(machine, proc, start, ref, lb):
     J, M = machine.shape
     end = start + proc
     cmax = float(end.max())
@@ -126,7 +126,6 @@ def schedule_metrics(machine, proc, start, ref):
     job_end = end.max(1)
     wait = job_end - proc.sum(1)
     last = int(np.argmax(job_end))
-    first_start = np.array([start[machine == m].min() for m in range(M)])
     return {
         "gap": round(100 * (cmax / ref - 1), 3),
         "makespan": int(cmax),
@@ -134,7 +133,7 @@ def schedule_metrics(machine, proc, start, ref):
         "bottleneck_idle_pct": round(100 * (1 - float(loads[b]) / cmax), 2),
         "mean_wait_pct": round(100 * float(wait.mean()) / cmax, 2),
         "last_job_wait_pct": round(100 * float(wait[last]) / cmax, 2),
-        "late_start_pct": round(100 * float(first_start.mean()) / cmax, 2),
+        "over_bound_pct": round(100 * (cmax / lb - 1), 2),
     }
 
 
@@ -177,8 +176,10 @@ Three training families, Taillard-style random shops: `small` (10 jobs x 5 machi
         "bottleneck_idle_pct": "% of the makespan the most loaded machine stands idle",
         "mean_wait_pct": "average time a job spends waiting (finish time - its total work), % of makespan",
         "last_job_wait_pct": "waiting time of the job that finishes last, % of makespan",
-        "late_start_pct": "average time before a machine starts its first operation, % of makespan",
+        "over_bound_pct": "makespan above the trivial lower bound max(machine load, job length), % (0 = provably optimal)",
     }
+    # hidden textbook baseline (never shown to agents): the job with the most work left
+    baseline = [("import numpy as np\n\ndef feature(proc_time, job_ready, job_work_left, job_ops_left, next_machine_work, machine_free, machine_work_left):\n    return job_work_left\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(proc_time, job_ready, job_work_left, job_ops_left, next_machine_work, machine_free, machine_work_left):\n"
         "    \"\"\"Remaining work of the job, relative to the machine's remaining work.\"\"\"\n"
@@ -225,14 +226,14 @@ Three training families, Taillard-style random shops: `small` (10 jobs x 5 machi
 
     def diagnose(self, instance, priority):
         start = dispatch(instance["machine"], instance["proc"], _chooser(priority))
-        return schedule_metrics(instance["machine"], instance["proc"], start, instance["ref"])
+        return schedule_metrics(instance["machine"], instance["proc"], start, instance["ref"], instance["lower_bound"])
 
     def reference_metrics(self, instance):
         r = self.refs().get(instance["id"])
         if not r:
             return {}
         start = np.asarray(r["start"], dtype=float)
-        return schedule_metrics(instance["machine"], instance["proc"], start, instance["ref"])
+        return schedule_metrics(instance["machine"], instance["proc"], start, instance["ref"], instance["lower_bound"])
 
 
 # ---------------------------------------------------------------------------------------------- references

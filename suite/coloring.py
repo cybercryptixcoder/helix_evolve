@@ -24,7 +24,7 @@ SPLIT_SEED = {"train": 7101, "valid": 8202, "test": 9303}
 SPLIT_BASE = {"train": 0, "valid": 100, "test": 200}
 PER_FAMILY = 3
 # family: (seed code, vertices, parameter)
-FAMILIES = {"sparse": (1, 120, 0.08), "dense": (2, 70, 0.5), "geometric": (3, 100, 0.2),
+FAMILIES = {"sparse": (1, 120, 0.08), "dense": (2, 70, 0.5), "geometric": (3, 120, 0.25),
             "planted": (4, 100, (6, 0.35)), "medium": (5, 120, 0.25)}
 TRAIN_FAMILIES = ["sparse", "dense", "geometric", "planted"]
 HELD_OUT = ["medium"]
@@ -87,23 +87,18 @@ def coloring_metrics(A, col, ref, order=None):
     k = int(col.max()) + 1
     sizes = np.bincount(col, minlength=k)
     deg = A.sum(1)
-    # Kempe-free check: vertices whose colour could be lowered (a free smaller colour exists now)
-    used = np.zeros((len(A), k), dtype=bool)
-    for c in range(k):
-        used[:, c] = (A & (col == c)[None, :]).any(1)
-    lowerable = int(sum(1 for v in range(len(A)) if col[v] > 0 and not used[v, :col[v]].all()))
     out = {
         "gap": round(100 * (k / ref - 1), 3),
         "colors": k,
         "largest_class_pct": round(100 * float(sizes.max()) / len(A), 2),
         "smallest_class": int(sizes.min()),
         "singleton_classes": int((sizes == 1).sum()),
-        "lowerable_vertices": lowerable,
     }
     if order is not None:
         order = np.asarray(order)
         first_top = int(np.flatnonzero(col[order] == k - 1)[0])
         out["last_color_at_pct"] = round(100 * first_top / len(A), 1)
+        out["colors_at_half"] = int(col[order[:len(A) // 2]].max()) + 1
         out["deg_rank_corr"] = round(float(np.corrcoef(deg[order], -np.arange(len(A)))[0, 1]), 3) if deg.std() > 0 else 0.0
     return out
 
@@ -131,7 +126,7 @@ The colouring is built one vertex at a time. At each step the policy picks which
 
 One **decision** = choosing the next vertex. The **candidates** are all uncoloured vertices, in index order. Vertices are numbered at random, so the index carries no information. When one vertex is left it is taken automatically.
 
-Four training families: `sparse` (random graphs, 120 vertices, each pair joined with probability 0.08), `dense` (random, 70 vertices, probability 0.5), `geometric` (100 random points in the unit square, joined when closer than 0.2) and `planted` (100 vertices secretly split into 6 groups; pairs in different groups are joined with probability 0.35, pairs in the same group never, so 6 colours suffice). The test split adds a family that training never shows. The **gap** of an instance is colours used / the fewest colours known for that graph - 1, in % (for `planted`, the known 6 or fewer). Colour counts are small integers, so one colour more or less moves an instance's gap by roughly 10-25%."""
+Four training families: `sparse` (random graphs, 120 vertices, each pair joined with probability 0.08), `dense` (random, 70 vertices, probability 0.5), `geometric` (120 random points in the unit square, joined when closer than 0.25) and `planted` (100 vertices secretly split into 6 groups; pairs in different groups are joined with probability 0.35, pairs in the same group never, so 6 colours suffice). The test split adds a family that training never shows. The **gap** of an instance is colours used / the fewest colours known for that graph - 1, in % (for `planted`, the known 6 or fewer). Colour counts are small integers, so one colour more or less moves an instance's gap by roughly 10-25%."""
     signature_doc = """- `neighbor_colors`: shape (k, c), int: for each candidate (uncoloured vertex, index order) and each colour used so far, how many of its neighbours already have that colour. c = number of colours used so far (c = 0 at the first decision: the array has shape (k, 0)). The colour a candidate would get is the first column that is 0 in its row, or c (a new colour) if none is.
 - `adjacency`: shape (k, k), bool: which candidates are adjacent to each other (the graph restricted to the uncoloured vertices; symmetric, False on the diagonal).
 - `degree`: shape (k,), int: each candidate's degree in the whole graph (coloured + uncoloured neighbours).
@@ -143,10 +138,13 @@ Four training families: `sparse` (random graphs, 120 vertices, each pair joined 
         "largest_class_pct": "% of vertices in the largest colour class",
         "smallest_class": "size of the smallest colour class",
         "singleton_classes": "colour classes with a single vertex",
-        "lowerable_vertices": "vertices that could now take a smaller colour (their earlier choice became suboptimal)",
         "last_color_at_pct": "how far into the order (%) the highest colour was first opened",
+        "colors_at_half": "colours in use when half of the vertices are coloured",
         "deg_rank_corr": "correlation between a vertex's degree and how early it was coloured (+1 = high degree first)",
     }
+    # hidden textbook baseline (never shown to agents): most distinct neighbour colours, then degree
+    baseline = [("import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    return (neighbor_colors > 0).sum(1).astype(float)\n", 1.0),
+                ("import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    return adjacency.sum(1) / 1000.0\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n"
         "    \"\"\"Degree in the whole graph.\"\"\"\n"

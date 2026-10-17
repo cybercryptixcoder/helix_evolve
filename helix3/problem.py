@@ -33,6 +33,9 @@ class Problem:
     signature_doc = ""
     metric_notes: dict = {}
     example_features: list = []
+    # a hidden textbook rule [(feature code, weight)], used only by the meta-evaluator to measure progress beyond
+    # the obvious; never shown to any agent
+    baseline: list = []
     # how many instances of each split the engine uses (problems may override)
     fit_split = "train"
     search_split = "train"      # the split searches, probes and refits run on (a problem may name a smaller one)

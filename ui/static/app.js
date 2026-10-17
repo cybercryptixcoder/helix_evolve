@@ -402,8 +402,9 @@ async function renderMeta() {
 function metaEval(it) {
   const r = it.result;
   return `<h2>Evaluation <span class="muted small">${esc(it.id)}</span></h2><p>Score <b>${fmt(r.score)}</b> over ${Object.keys(r.problems).length} problems (${r.generations} generations × ${r.repeats} repeats), held-out ${r.held_out_score == null ? "—" : fmt(r.held_out_score)}; ${r.calls} model calls, ${r.minutes} min.</p>
-    <table class="t"><tr><th>Problem</th><th>Score</th><th>Final test progress</th><th>Area under the curve</th><th>90% by</th><th>Crashes</th></tr>
-    ${[...Object.entries(r.problems), ...Object.entries(r.held_out).map(([k, v]) => [k + " (held out)", v])].map(([k, v]) => `<tr><td>${esc(k)}</td><td>${fmt(v.score)}</td><td>${pct(v.final)}</td><td>${pct(v.auc)}</td><td>${v.plateau != null ? "G" + fmt(v.plateau, 0) : "—"}</td><td>${v.crashes}</td></tr>`).join("")}</table>`;
+    <table class="t"><tr><th>Problem</th><th>Score</th><th>Final, beyond baseline</th><th>Speed (area under the curve), beyond baseline</th><th>Final progress from Code Zero</th><th>90% by</th><th>Crashes</th></tr>
+    ${[...Object.entries(r.problems), ...Object.entries(r.held_out).map(([k, v]) => [k + " (held out)", v])].map(([k, v]) => `<tr><td>${esc(k)}</td><td><b>${fmt(v.score)}</b></td><td>${fmt(v.final_beyond)}</td><td>${fmt(v.auc_beyond)}</td><td>${pct(v.final)}</td><td>${v.plateau != null ? "G" + fmt(v.plateau, 0) : "—"}</td><td>${v.crashes}</td></tr>`).join("")}</table>
+    <p class="small muted">"Beyond baseline": 0 = a hidden textbook rule for the problem, 100 = the reference. Progress from Code Zero saturates on problems where doing nothing is catastrophic, so the meta loop is scored beyond the baseline.</p>`;
 }
 
 function metaChart(it) {
