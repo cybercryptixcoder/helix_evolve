@@ -202,3 +202,7 @@ dialog input, dialog select { border: 1px solid var(--rule); border-radius: 8px;
   .problem { grid-template-columns: 1fr; }
   .runrows li a { grid-template-columns: 1fr 80px; } .runrows svg { display: none; }
 }
+
+/* the hidden textbook rule, for the human only */
+.baseline line { stroke: var(--ink-3); stroke-width: 1.4; stroke-dasharray: 2 5; stroke-linecap: round; }
+.baseline text { fill: var(--ink-3); font: 500 12px var(--body); }

@@ -93,6 +93,7 @@ def list_runs():
                         "curve": [g.get("progress") or 0 for g in gens], "calls": last.get("calls"),
                         "state": "running" if running else ("finished" if st.get("state") == "finished" else "stopped"),
                         "phase": st.get("phase") if running else None, "kept": len(last.get("library") or []),
+                        "baseline": baseline_info(start.get("problem") or d.parent.name),
                         "results": "results/" in _rel(d)})
             del hist
     out.sort(key=lambda r: -(r["started"] or 0))
@@ -133,6 +134,8 @@ def run_detail(rel):
     except OSError:
         champion = ""
     st["state"] = _run_state(d, st)
+    start = next((e for e in ev if e.get("type") == "run_start"), {})
+    st["baseline"] = baseline_info(start.get("problem") or d.parent.name)
     st["resumable"] = st["state"] == "stopped" and (d / "checkpoint.json").exists()
     return {"id": rel, "events": slim, "status": st, "champion": champion}
 
@@ -195,6 +198,58 @@ def suite():
         except Exception as exc:  # noqa: BLE001
             out.append({"name": name, "error": str(exc)[:200]})
     return out
+
+
+BASELINE_NAMES = {"binpack2d": "Best Fit", "binpack1d": "Best Fit", "tsp": "nearest neighbour",
+                  "knapsack": "greedy by value per weight", "setcover": "greedy by cost per new element",
+                  "scheduling": "least-loaded machine", "coloring": "DSatur", "jobshop": "most work remaining",
+                  "cvrp": "nearest customer that fits"}
+_baselines = {}
+
+
+def baseline_info(problem):
+    """Where the problem's hidden textbook rule lands, in the runs' own unit (train progress from Code Zero).
+    Shown to the human only; the agents never see it."""
+    if problem in _baselines:
+        return _baselines[problem]
+    cache = ROOT / "runs" / ".baselines.json"
+    disk = _jload(cache, {}) or {}
+    try:
+        from helix3.policy import code_hash, make_priority
+        from helix3.problem import load_problem
+        p = load_problem(problem)
+        if not p.baseline:
+            _baselines[problem] = None
+            return None
+        key = code_hash(repr(p.baseline) + problem)
+        if disk.get(problem, {}).get("key") == key:
+            _baselines[problem] = disk[problem]
+            return disk[problem]
+        import inspect
+        takes = "split" in inspect.signature(p.floor).parameters
+
+        def fams(pr):
+            out = {}
+            for inst in p.instances("train"):
+                out.setdefault(inst["family"], []).append(p.run(inst, pr)["gap"])
+            return {f: sum(v) / len(v) for f, v in out.items()}
+        zero = fams(make_priority([], [], p.n_candidates))
+        base = fams(make_priority([c for c, _ in p.baseline], [[w] for _, w in p.baseline], p.n_candidates))
+        fl = {f: (p.floor(f, "train") if takes else p.floor(f)) for f in zero}
+        w0 = sum(zero[f] - fl[f] for f in zero) / len(zero)
+        w = sum(base[f] - fl[f] for f in base) / len(base)
+        info = {"key": key, "name": BASELINE_NAMES.get(problem, "textbook rule"),
+                "progress": round(100 * (1 - w / w0), 2) if w0 > 0 else None}
+    except Exception as exc:  # noqa: BLE001
+        return {"name": BASELINE_NAMES.get(problem, "textbook rule"), "progress": None, "error": str(exc)[:200]}
+    _baselines[problem] = info
+    disk[problem] = info
+    try:
+        cache.parent.mkdir(exist_ok=True)
+        cache.write_text(json.dumps(disk))
+    except OSError:
+        pass
+    return info
 
 
 def _alive(pid):
