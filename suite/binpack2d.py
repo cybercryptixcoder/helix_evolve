@@ -77,6 +77,7 @@ Six training families of 1,000 jobs: `uniform` (CPU and memory independent, 1-50
         "room_mem_pct": "average memory left per bin, % of capacity",
     }
     search_split = "search"     # the first two train instances of each family: searches run on 12, records on all 18
+    probe_split = "probe"       # the first train instance of each family: the probe's quick first pass
     # hidden textbook baseline (never shown to agents): the bin left fullest (Best Fit)
     baseline = [("import numpy as np\n\ndef feature(item, bins, capacity):\n    return -((bins - item) / capacity).sum(axis=1)\n", 1.0)]
     example_features = [
@@ -97,6 +98,9 @@ Six training families of 1,000 jobs: `uniform` (CPU and memory independent, 1-50
             ev = self._ev
             if split in ("train", "test"):
                 self._cache[split] = ev.load_split(split)
+            elif split == "probe":
+                tr = self.instances("train")
+                self._cache[split] = [[x for x in tr if x["family"] == f][0] for f in self.families]
             elif split == "search":
                 tr = self.instances("train")
                 self._cache[split] = [i for f in self.families for i in [x for x in tr if x["family"] == f][:2]]

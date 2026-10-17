@@ -120,6 +120,7 @@ class Engine:
         self.spread, self.xscale = 1.0, 1.0
         self._sens_key, self._sens = None, []
         self.S = getattr(problem, "search_split", "train")      # the instances searches and refits run on
+        self.P = getattr(problem, "probe_split", None) or self.S  # the probe's quick first pass (can be smaller)
         self.workers = ThreadPoolExecutor(12)
         self.status = {"phase": "starting"}
         self._cert_lock = threading.Lock()
@@ -777,6 +778,7 @@ class Engine:
                                      sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale, seed=self.gen, split=self.S)
         v = self.evaluate(lib, [x], "valid")[0][0] if lib else base_valid
         out = {"x": x, "train": s, "valid": v}
+        out["probe"] = s if self.P == self.S else self.evaluate(lib, [x], self.P)[0][0]
         if lib and s < self.champ["search"] - 1e-9 and v is not None and v < base_valid - 1e-9:
             out["improved"] = True
         self.trace.emit("refit", gen=self.gen, train=s, valid=v, improved=bool(out.get("improved")))
@@ -792,7 +794,8 @@ class Engine:
             mults = [m for m in mults if abs(m) == max(abs(x) for x in mults)]   # alone, only the sign matters
         ws = [round(m * self.spread, 6) for m in mults]
         xs = [np.concatenate([base_x, np.full(f.width, w)]) for w in ws]
-        res = self.evaluate(feats, xs, self.S)
+        res = self.evaluate(feats, xs, self.P)
+        base_train = refit["probe"]
         f.probe, best = [], None
         for w, (s, _, err) in zip(ws, res):
             if s is None:
@@ -1003,10 +1006,10 @@ class Engine:
             if not open_:
                 continue
             argued = []
-            close = [f for f in open_ if (f.certificate.get("rho") or 0) >= 0.9 or (f.certificate.get("lib_r2") or 0) >= 0.9]
+            close = [f for f in open_ if (f.certificate.get("rho") or 0) >= 0.93 or (f.certificate.get("lib_r2") or 0) >= 0.98]
             if not close:
                 n.notes.append({"gen": self.gen, "prune_request": True, "result": "not attempted: no feature under it is "
-                                "close to a duplicate or to the kept features (nearest rho < 0.9, R^2 < 0.9)"})
+                                "close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"})
                 self.trace.emit("prove", gen=self.gen, approach=nid, state=n.state, argued=[], skipped=True)
                 continue
             if self.s.c("prover", "enabled", default=True):

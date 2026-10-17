@@ -28,7 +28,7 @@
   },
   "prover": {
     "enabled": true,
-    "effort": "low",
+    "effort": "none",
     "temperature": 0.3,
     "max_tokens": 3000
   },
