@@ -72,9 +72,33 @@ def compile_feature(code, func="feature"):
     return fn
 
 
-def call_feature(fn, args, k):
-    """Run a feature on one decision; returns a (k, c) float array or raises FeatureError."""
-    v = np.asarray(fn(*[a.copy() if hasattr(a, "copy") else a for a in args]), dtype=float)
+def _readonly(args):
+    """Read-only views of the array arguments: no copy, and a feature can't change the simulator's state."""
+    out = []
+    for a in args:
+        if isinstance(a, np.ndarray):
+            a = a.view()
+            a.flags.writeable = False
+        out.append(a)
+    return out
+
+
+def call_feature(fn, args, k, ro=None):
+    """Run a feature on one decision; returns a (k, c) float array (always its own memory) or raises FeatureError.
+
+    Arrays are passed as read-only views. A feature that writes into its inputs gets private copies instead
+    (detected once, then remembered on the function)."""
+    if getattr(fn, "_helix_copy", False):
+        raw = fn(*[a.copy() if hasattr(a, "copy") else a for a in args])
+    else:
+        try:
+            raw = fn(*(ro if ro is not None else _readonly(args)))
+        except ValueError as e:
+            if "read-only" not in str(e):
+                raise
+            fn._helix_copy = True
+            raw = fn(*[a.copy() if hasattr(a, "copy") else a for a in args])
+    v = np.array(raw, dtype=float)
     if v.ndim == 0:
         v = np.full((k, 1), float(v))
     elif v.ndim == 1:
@@ -86,26 +110,84 @@ def call_feature(fn, args, k):
             raise FeatureError(f"returned shape {v.shape} for {k} candidates; the first axis must be the candidates")
     else:
         raise FeatureError(f"returned a {v.ndim}-d array; return shape (k,) or (k, c)")
-    if not np.all(np.isfinite(v)):
+    if not np.isfinite(v).all():
         v = np.nan_to_num(v, nan=0.0, posinf=1e3, neginf=-1e3)
     return v
 
 
-def make_priority(feature_codes, weights, n_candidates):
-    """priority(*args) for a list of feature codes and per-feature column weight arrays (already scaled)."""
+def _sketch(args):
+    """A cheap fingerprint of a decision's arguments (shapes, scalars, a strided sample of each array)."""
+    parts = []
+    for a in args:
+        if isinstance(a, np.ndarray):
+            flat = a.reshape(-1)
+            parts.append((a.shape, flat[:: max(1, flat.size // 24)].tobytes()))
+        else:
+            parts.append(a if isinstance(a, (int, float, str)) else repr(a))
+    return hash(tuple(parts))
+
+
+class ValueCache:
+    """Feature values per (feature, decision state), shared by every simulation in one worker process.
+
+    The state key is a hash chain: the instance, then every choice made so far. Policies that made the same
+    choices are in the same state (the simulator is deterministic and takes the argmax), so a weight vector
+    near the champion's reuses the champion's feature values until its trajectory diverges. A sketch of the
+    arguments is mixed in as a guard. Bounded by bytes; the oldest half is dropped when full."""
+
+    def __init__(self, max_mb=256):
+        self.max_bytes = int(max_mb * 2 ** 20)
+        self.d, self.bytes, self.hits, self.misses = {}, 0, 0, 0
+
+    def get(self, key):
+        v = self.d.get(key)
+        if v is None:
+            self.misses += 1
+        else:
+            self.hits += 1
+        return v
+
+    def put(self, key, v):
+        self.d[key] = v
+        self.bytes += v.nbytes + 120
+        if self.bytes > self.max_bytes:
+            drop = list(self.d)[: len(self.d) // 2]
+            for k2 in drop:
+                self.bytes -= self.d.pop(k2).nbytes + 120
+
+    def clear(self):
+        self.d.clear()
+        self.bytes = 0
+
+
+def make_priority(feature_codes, weights, n_candidates, cache=None, tag=None):
+    """priority(*args) for a list of feature codes and per-feature column weight arrays (already scaled).
+
+    With a ValueCache and a tag naming the instance, feature values are reused across simulations."""
     fns = [compile_feature(c) for c in feature_codes]
     ws = [np.asarray(w, dtype=float) for w in weights]
+    active = [(fn, w, hash(c)) for fn, w, c in zip(fns, ws, feature_codes) if w.any()]
+    chain = [hash(tag)]
 
     def priority(*args):
         k = n_candidates(args)
         total = np.zeros(k)
-        for fn, w in zip(fns, ws):
-            if not w.any():
-                continue
-            v = call_feature(fn, args, k)
+        ro = None
+        sk = hash((chain[0], k, _sketch(args))) if cache is not None else None
+        for fn, w, fk in active:
+            v = cache.get((fk, sk)) if cache is not None else None
+            if v is None:
+                if ro is None:
+                    ro = _readonly(args)
+                v = call_feature(fn, args, k, ro)
+                if cache is not None:
+                    cache.put((fk, sk), v)
             c = min(v.shape[1], len(w))
             total += v[:, :c] @ w[:c]
-        return np.round(total, 9)
+        total = np.round(total, 9)
+        if cache is not None:
+            chain[0] = hash((sk, int(np.argmax(total))))
+        return total
 
     return priority
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import queue
 import os
 import random
 import shutil
@@ -412,36 +413,65 @@ class Engine:
         self.trace.emit("diagnostics", gen=g, champion=diag, reference=self.ref_diag)
         sens = self.sensitivity()
 
+        # the champion's weights are refitted from the start (it needs no plan), overlapping the Navigator
+        refit, refit_done = {}, threading.Event()
+
+        def do_refit():
+            try:
+                refit.update(self.refit_champion())
+            except Exception as exc:              # fall back to the champion as it stands
+                say(f"   refit failed: {str(exc)[:160]}")
+                refit.update({"x": self.x.copy(), "train": self.champ["search"], "valid": self.champ["valid"],
+                              "probe": self.champ.get("probe", self.champ["search"])})
+            finally:
+                refit_done.set()
+        threading.Thread(target=do_refit, daemon=True).start()
+
         self.phase("navigate", "Navigator planning")
         plan = self.navigate(diag, sens)
 
-        # deep and wide at the same time; the champion's weights are refitted meanwhile
-        self.phase("agents", "Researcher, Coders and Mutator writing")
-        refit = {}
-        rt = threading.Thread(target=lambda: refit.update(self.refit_champion()), daemon=True)
-        rt.start()
-        with ThreadPoolExecutor(2) as ex:
-            fd = ex.submit(self.deep, plan, diag, sens)
-            fw = ex.submit(self.wide, plan)
-            deep, wide = fd.result(), fw.result()
-        rt.join()
-        t_agents = time.time() - t0
+        # deep and wide write at the same time; each feature enters the fit lane as soon as it is certified,
+        # so the Mutator's features are probed and trialled while the Researcher is still thinking
+        self.phase("agents", "Researcher, Coders and Mutator writing; fitting each feature as it arrives")
+        lane, probed = queue.Queue(), []
 
-        self.phase("fit", f"trying {len(deep) + len(wide)} features")
+        def fit_lane():
+            refit_done.wait()
+            while True:
+                f = lane.get()
+                if f is None:
+                    return
+                try:
+                    if f.status in ("invalid", "duplicate", "inert", "span"):
+                        continue
+                    self.probe_feature(f, refit)
+                    probed.append(f)
+                    if f.status == "probed":
+                        self.trial_feature(f, refit)
+                except Exception as exc:          # a fitting error must not lose the generation
+                    f.status, f.verdict, f.error = "invalid", "invalid", f"fitting failed: {exc}"[:200]
+        lt = threading.Thread(target=fit_lane, daemon=True)
+        lt.start()
+        with ThreadPoolExecutor(2) as ex:
+            fd = ex.submit(self.deep, plan, diag, sens, lane.put)
+            fw = ex.submit(self.wide, plan, lane.put)
+            deep, wide = fd.result(), fw.result()
+        t_agents = time.time() - t0
+        lane.put(None)
+        lt.join()
+        refit_done.wait()
+
+        self.phase("fit", "near-miss trials and prediction checks")
         new = deep + wide
         trials = []
         live = [f for f in new if f.status not in ("invalid", "duplicate", "inert", "span")]
-        for f in live:
-            self.probe_feature(f, refit)
-        # survivors of the probe get a trial; so do the best near-misses (weak is not proven useless)
-        margin = self.s.c("fit", "probe_margin", default=0.08)
+        # the best near-misses get a trial too (weak in the probe is not proven useless)
         near = sorted([f for f in live if f.status == "rejected" and f.best_probe is not None
                        and f.best_probe > -self.s.c("fit", "near_miss_floor", default=0.3)], key=lambda f: -f.best_probe)
         second = {f.id for f in near[:self.s.c("fit", "near_miss_trials", default=2)]}
         for f in live:
-            if f.status == "probed" or f.id in second:
-                if f.id in second:
-                    f.verdict = "near-miss, trialled anyway"
+            if f.id in second and f.d_valid is None:
+                f.verdict = "near-miss, trialled anyway"
                 self.trial_feature(f, refit)
             if f.origin == "deep":
                 self.check_prediction(f, refit)
@@ -449,7 +479,6 @@ class Engine:
                 trials.append(f)
         for f in new:
             self.trace.emit("feature_done", gen=g, feature=f.record())
-        del margin
         combos = self.try_combinations(plan, refit)
 
         self.phase("accept", "combining the winners")
@@ -609,7 +638,7 @@ class Engine:
         return "\n".join(out)
 
     # ------------------------------------------------------------------ deep loop
-    def deep(self, plan, diag, sens):
+    def deep(self, plan, diag, sens, on_ready=None):
         led = self.ledger
         msg = self.researcher_message(plan, diag, sens)
         exps = []
@@ -658,6 +687,8 @@ class Engine:
             except Exception as exc:
                 f.error = str(exc)[:200]
             self.prepare(f, "coder")
+            if on_ready:
+                on_ready(f)
             return f
 
         return list(self.workers.map(write, feats))
@@ -717,7 +748,7 @@ class Engine:
         return "\n\n".join(parts)
 
     # ------------------------------------------------------------------ wide loop
-    def wide(self, plan):
+    def wide(self, plan, on_ready=None):
         led = self.ledger
         champ_code = compose(self.p, led.lib(), f"champion, gap {self.champ['train']:.3f}%")
         board = self.scoreboard()
@@ -755,6 +786,8 @@ class Engine:
                              "discarded. Write something that orders candidates differently.")
                     continue
                 break
+            if on_ready:
+                on_ready(f)
             return f
 
         return list(self.workers.map(write, slots))
