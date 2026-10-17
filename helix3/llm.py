@@ -184,7 +184,7 @@ class LLM:
                         reasoning.append(d.get("reasoning_content") or "")
         except (socket.timeout, ConnectionError, OSError, ValueError) as e:
             raise LLMError(f"stream broke: {e}", retryable=True)
-        if not seen:
+        if not seen or not ("".join(content).strip() or "".join(reasoning).strip()):
             raise LLMError("empty answer", retryable=True)
         det = usage.get("completion_tokens_details") or {}
         return Reply("".join(content), "".join(reasoning), usage.get("prompt_tokens", 0),

@@ -126,6 +126,10 @@ def extract_code(text, func="feature"):
     for b in blocks:
         if f"def {func}" in b:
             return b.strip() + "\n"
+    for b in blocks:                                       # one function under another name: rename it
+        names = re.findall(r"^def ([A-Za-z_][A-Za-z0-9_]*)\(", b, re.M)
+        if len(names) == 1:
+            return re.sub(rf"\b{names[0]}\(", f"{func}(", b.strip(), count=1) + "\n"
     if f"def {func}" in (text or ""):                      # unfenced reply
         start = text.index("import") if "import" in text else text.index(f"def {func}")
         return text[start:].split("\n```")[0].strip() + "\n"
