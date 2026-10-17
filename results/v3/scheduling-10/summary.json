@@ -1,0 +1,91 @@
+{
+ "problem": "scheduling",
+ "label": "scheduling-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 7.02487075692882,
+  "valid": 9.816731803417815,
+  "progress": 99.3,
+  "valid_progress": 99.05,
+  "library": [
+   "f011",
+   "f003",
+   "f036",
+   "f090",
+   "f100"
+  ]
+ },
+ "test": {
+  "gap": 7.35352940213163,
+  "families": {
+   "uniform": 2.947657239093308,
+   "exponential": 5.049644012702344,
+   "bimodal": 16.331618755661705,
+   "lognormal": 5.085197601069165
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 99.18
+ },
+ "progress_curve": [
+  0.0,
+  98.96,
+  99.12,
+  99.12,
+  98.98,
+  98.98,
+  98.98,
+  98.98,
+  98.98,
+  99.0,
+  99.3
+ ],
+ "valid_curve": [
+  0.0,
+  98.79,
+  98.82,
+  98.82,
+  98.87,
+  98.87,
+  98.87,
+  98.87,
+  98.87,
+  98.88,
+  99.05
+ ],
+ "calls": 141,
+ "tokens_in": 361921,
+ "tokens_out": 306534,
+ "features_tried": 103,
+ "kept": [
+  {
+   "id": "f011",
+   "name": "size_gated_spread_vs_fill",
+   "origin": "deep"
+  },
+  {
+   "id": "f003",
+   "name": "centered_load_over_mean_plus_job",
+   "origin": "wide"
+  },
+  {
+   "id": "f036",
+   "name": "relative_second_max_hinge",
+   "origin": "deep"
+  },
+  {
+   "id": "f090",
+   "name": "tiny_fill_to_current_mean_not_projected",
+   "origin": "deep"
+  },
+  {
+   "id": "f100",
+   "name": "reserve_expected_big_load_per_machine",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792267767.5335488
+}
