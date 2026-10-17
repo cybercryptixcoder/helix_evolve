@@ -9,6 +9,7 @@ import shutil
 from pathlib import Path
 
 ROLES = ("researcher", "mutator", "coder", "navigator", "prover")
+AGENT_SLOTS = 8          # Researcher experiments + Mutator slots per generation: rebalance them, don't grow them
 CAPS = {("researcher", "experiments"): 6, ("mutator", "slots"): 6, ("fit", "trial_evals"): 48,
         ("fit", "champion_refit_evals"): 48, ("fit", "joint_refit_evals"): 48, ("combine", "max_pairs"): 3}
 EDITABLE = re.compile(r"^(config\.json|hooks\.py|prompts/[a-z_]+\.md|prompts/features/[a-z_]+\.md)$")
@@ -95,6 +96,14 @@ def validate(folder):
         if isinstance(v, (int, float)) and v > cap:
             cfg[sec][key] = cap
             notes.append(f"{sec}.{key} capped at {cap}")
+    r, m = (cfg.get("researcher") or {}), (cfg.get("mutator") or {})
+    if isinstance(r.get("experiments"), int) and isinstance(m.get("slots"), int) and r["experiments"] + m["slots"] > AGENT_SLOTS:
+        over = r["experiments"] + m["slots"] - AGENT_SLOTS
+        cut_m = min(over, max(0, m["slots"] - 1))
+        m["slots"] -= cut_m
+        r["experiments"] = max(1, r["experiments"] - (over - cut_m))
+        m["fresh"] = min(m.get("fresh", 1), m["slots"])
+        notes.append(f"experiments + slots capped at {AGENT_SLOTS} (now {r['experiments']} + {m['slots']})")
     if notes:
         (folder / "config.json").write_text(json.dumps(cfg, indent=2))
     for role in ROLES:

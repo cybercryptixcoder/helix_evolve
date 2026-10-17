@@ -13,7 +13,7 @@ Helix is an LLM-driven evolutionary search that improves decision policies on ve
 
 **Rules.**
 - No knowledge of any particular problem: no heuristics, formulas or hints for packing, routing or anything else. Strategies that only work because they leak a known solution fail on the held-out problems, and the rule is checked.
-- Budgets are capped by the evaluator: at most 6 Researcher experiments and 6 Mutator slots per generation, fit evaluation budgets at most 48. Spending more is not the way to win.
+- The budget is fixed: Researcher experiments + Mutator slots per generation add up to at most 8 (you may move slots between the loops, not add them), and fit evaluation budgets are at most 48. A strategy wins by searching better, not by spending more.
 - A strategy that crashes the inner engine scores 0 on that run.
 
 **Diagnostics** (per problem, the incumbent's mean, for predictions): `final`, `auc`, `plateau` (generation reaching 90% of the final gain), `flat_tail`, `duplicates`, `invalid`, `probe_rejected`, `kept_deep`, `kept_wide`, `predictions_held`, `calls`.

@@ -8,3 +8,6 @@ __pycache__/
 
 # Helix v3 run folders (copy the ones worth keeping to results/)
 /runs/
+
+# meta loop runs (copy the ones worth keeping to results/meta/)
+/meta_runs/

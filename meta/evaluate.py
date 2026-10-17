@@ -35,12 +35,14 @@ from helix3 import digest  # noqa: E402
 W_FINAL, W_AUC = 0.6, 0.4
 
 
-def run_one(strategy, problem, gens, seed, out, timeout, workers):
+def run_one(strategy, problem, gens, seed, out, timeout, workers, fake=False):
     t = time.time()
     cmd = [sys.executable, "-m", "helix3.run", problem, "-g", str(gens), "--strategy", str(strategy),
            "--seed", str(seed), "--out", str(out), "--label", f"meta-{problem}-r{seed}"]
     if workers:
         cmd += ["--workers", str(workers)]
+    if fake:
+        cmd += ["--fake"]
     out.mkdir(parents=True, exist_ok=True)
     rec = {"problem": problem, "seed": seed, "dir": str(out)}
     try:
@@ -68,7 +70,7 @@ def run_one(strategy, problem, gens, seed, out, timeout, workers):
 
 
 def evaluate(strategy, problems, held_out=(), gens=5, repeats=2, parallel=4, out=None, timeout=3600, workers=None,
-             seeds=None):
+             seeds=None, fake=False):
     strategy = Path(strategy).resolve()
     out = Path(out or ROOT / "meta_runs" / f"eval-{time.strftime('%Y%m%d-%H%M%S')}")
     out.mkdir(parents=True, exist_ok=True)
@@ -76,7 +78,7 @@ def evaluate(strategy, problems, held_out=(), gens=5, repeats=2, parallel=4, out
     jobs = [(p, s) for p in list(problems) + list(held_out) for s in seeds]
     t = time.time()
     with ThreadPoolExecutor(parallel) as ex:
-        runs = list(ex.map(lambda j: run_one(strategy, j[0], gens, j[1], out / f"{j[0]}-r{j[1]}", timeout, workers), jobs))
+        runs = list(ex.map(lambda j: run_one(strategy, j[0], gens, j[1], out / f"{j[0]}-r{j[1]}", timeout, workers, fake), jobs))
 
     def block(names):
         res = {}
@@ -131,9 +133,10 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=None, help="fitter processes per inner run")
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--fake", action="store_true", help="inner runs without model calls (a crash test)")
     a = ap.parse_args(argv)
     r = evaluate(a.strategy, [p for p in a.problems.split(",") if p], [p for p in a.held_out.split(",") if p],
-                 a.generations, a.repeats, a.parallel, a.out, a.timeout, a.workers)
+                 a.generations, a.repeats, a.parallel, a.out, a.timeout, a.workers, fake=a.fake)
     print(report(r))
 
 

@@ -68,9 +68,9 @@ class Trace:
         self._n = 0
         self.f = open(path, "a")
 
-    def emit(self, kind, **data):
+    def emit(self, _type, **data):
         with self._lock:
-            rec = {"t": round(time.time(), 3), "type": kind, **data}
+            rec = {"t": round(time.time(), 3), "type": _type, **data}
             self.f.write(json.dumps(rec, default=_jsonable) + "\n")
             self.f.flush()
             return rec
