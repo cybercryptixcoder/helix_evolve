@@ -35,6 +35,7 @@ class Problem:
     example_features: list = []
     # how many instances of each split the engine uses (problems may override)
     fit_split = "train"
+    search_split = "train"      # the split searches, probes and refits run on (a problem may name a smaller one)
     candidates_arg = 1          # which argument of the signature holds the candidates (for writing programs)
 
     # ------------------------------------------------------------ must implement

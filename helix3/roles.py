@@ -29,10 +29,12 @@ priority(candidate) = w1 * feature1 + w2 * feature2 + ...; the highest priority 
 Per instance, the **gap** is how far the solution is above a reference (lower is better). The score is the mean gap over families. **Progress** is the share of the way from Code Zero (0%) to the best reachable (100%)."""
 
 
-def system_prompt(strategy, role, problem):
+def system_prompt(strategy, role, problem, space="features"):
+    """method (strategy/prompts/<role>.md) + domain addendum (strategy/prompts/<space>/<role>.md) + the problem."""
     contract = CONTRACT.format(signature=problem.signature, signature_doc=problem.signature_doc)
-    return (f"{strategy.prompts[role].strip()}\n\n# The problem: {problem.title}\n\n{problem.description.strip()}\n\n"
-            f"{contract}")
+    addendum = strategy.addenda.get(space, {}).get(role, "").strip()
+    return (f"{strategy.prompts[role].strip()}\n\n{addendum}\n\n# The problem: {problem.title}\n\n"
+            f"{problem.description.strip()}\n\n{contract}")
 
 
 def extract_json(text):

@@ -76,6 +76,7 @@ Six training families of 1,000 jobs: `uniform` (CPU and memory independent, 1-50
         "room_cpu_pct": "average CPU left per bin, % of capacity",
         "room_mem_pct": "average memory left per bin, % of capacity",
     }
+    search_split = "search"     # the first two train instances of each family: searches run on 12, records on all 18
     example_features = [
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Best fit: minus the room left after placing.\"\"\"\n    r = (bins - item) / capacity\n    return -r.sum(axis=1)\n",
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Is it the new bin?\"\"\"\n    v = np.zeros(len(bins))\n    v[-1] = 1.0\n    return v\n",
@@ -94,6 +95,9 @@ Six training families of 1,000 jobs: `uniform` (CPU and memory independent, 1-50
             ev = self._ev
             if split in ("train", "test"):
                 self._cache[split] = ev.load_split(split)
+            elif split == "search":
+                tr = self.instances("train")
+                self._cache[split] = [i for f in self.families for i in [x for x in tr if x["family"] == f][:2]]
             elif split == "valid":
                 self._cache[split] = [ev.make_instance(f, s, i, 1000) for s in VALID_SEEDS
                                       for f in self.families for i in range(VALID_PER_FAMILY)]

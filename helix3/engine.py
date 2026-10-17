@@ -44,6 +44,9 @@ class Strategy:
         self.path = Path(path or DEFAULT_STRATEGY)
         self.config = json.loads((self.path / "config.json").read_text())
         self.prompts = {p.stem: p.read_text() for p in (self.path / "prompts").glob("*.md")}
+        # domain addenda: prompts/<space>/<role>.md (what a candidate is at this level)
+        self.addenda = {d.name: {p.stem: p.read_text() for p in d.glob("*.md")}
+                        for d in (self.path / "prompts").iterdir() if d.is_dir()}
         spec = importlib.util.spec_from_file_location(f"strategy_hooks_{abs(hash(str(self.path)))}", self.path / "hooks.py")
         self.hooks = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.hooks)
@@ -114,6 +117,7 @@ class Engine:
         self.champ = {}
         self.history = []
         self.margin = self.s.c("fit", "accept_margin", default=0.03)
+        self.S = getattr(problem, "search_split", "train")      # the instances searches and refits run on
         self.workers = ThreadPoolExecutor(12)
         self.status = {"phase": "starting"}
         self._cert_lock = threading.Lock()
@@ -176,7 +180,8 @@ class Engine:
         self.cz = {"train": res[0][1], "valid": res[1][1]}
         self.cz_gap = {"train": res[0][0], "valid": res[1][0]}
         self.champ = {"train": res[0][0], "valid": res[1][0], "families": res[0][1], "valid_families": res[1][1],
-                      "progress": 0.0, "valid_progress": 0.0}
+                      "progress": 0.0, "valid_progress": 0.0,
+                      "search": res[0][0] if self.S == "train" else self.fit.evaluate([], [[]], self.S)[0][0]}
         self.ref_diag = {}
         for iid in self.p.diagnostic_ids():
             try:
@@ -285,10 +290,10 @@ class Engine:
                 xs.append(x)
                 keys.append((f.id, m))
             i += f.width
-        res = self.evaluate(lib, xs, "train")
+        res = self.evaluate(lib, xs, self.S)
         rows = {}
         for (fid, m), (s, _, _) in zip(keys, res):
-            rows.setdefault(fid, {})[m] = None if s is None else round(self.champ["train"] - s, 4)
+            rows.setdefault(fid, {})[m] = None if s is None else round(self.champ["search"] - s, 4)
         out = [{"feature": fid, "name": self.ledger.features[fid].name, "deltas": d} for fid, d in rows.items()]
         self.trace.emit("sensitivity", gen=self.gen, rows=out)
         return out
@@ -352,6 +357,10 @@ class Engine:
         self.prove(plan)
         rec = self._gen_record(g, accepted, plan, time.time() - t0, t_agents=t_agents, new=new)
         self.history.append(rec)
+        changed = {f.id for f in new} | set(self.ledger.library) | set(accepted)
+        for f in self.ledger.features.values():
+            if f.id in changed or f.status == "retired" and f.retired_gen == g:
+                self.trace.emit("feature_done", gen=g, feature=f.record(), final=True)
         self.trace.emit("tree", gen=g, nodes=[n.record() for n in self.ledger.nodes.values()])
         self.trace.emit("gen_end", **rec)
         self.save()
@@ -490,7 +499,7 @@ class Engine:
                                msg if attempt == 0 else msg + "\n\nYour previous reply had no usable JSON. Reply with the "
                                "```json block first.", "researcher", meta={"step": "research"})
                 data = roles.extract_json(rep.text) or {}
-                exps = [e for e in data.get("experiments", []) if isinstance(e, dict) and e.get("feature")]
+                exps = [e for e in data.get("experiments", []) if isinstance(e, dict) and (e.get("change") or e.get("feature"))]
                 self.trace.emit("research", gen=self.gen, experiments=exps, analysis=roles.after_json(rep.text))
                 if exps:
                     break
@@ -509,7 +518,7 @@ class Engine:
             pred = e.get("prediction") if isinstance(e.get("prediction"), dict) else {}
             f = led.new_feature(name=str(e.get("name") or "experiment")[:48], origin="deep", gen=self.gen, node=aid,
                                 kind="probe" if str(e.get("kind", "")).startswith("probe") else "improve",
-                                idea={"hypothesis": e.get("hypothesis", ""), "feature": e.get("feature", ""),
+                                idea={"hypothesis": e.get("hypothesis", ""), "feature": e.get("change") or e.get("feature", ""),
                                       "prediction": pred, "builds_on": e.get("builds_on", "")})
             led.nodes[aid].features.append(f.id)
             feats.append(f)
@@ -670,13 +679,13 @@ class Engine:
         lib = self.ledger.lib()
         budget = self.s.c("fit", "champion_refit_evals", default=24)
         base_valid = self.champ["valid"]
-        x, s = self.x.copy(), self.champ["train"]
+        x, s = self.x.copy(), self.champ["search"]
         if lib and budget:
             x, s = self.fit.optimise([f.code for f in lib], self.x, lambda z: self.unpack(lib, z), budget,
-                                     sigma=self.s.c("fit", "sigma", default=0.3), seed=self.gen)
+                                     sigma=self.s.c("fit", "sigma", default=0.3), seed=self.gen, split=self.S)
         v = self.evaluate(lib, [x], "valid")[0][0] if lib else base_valid
         out = {"x": x, "train": s, "valid": v}
-        if lib and s < self.champ["train"] - 1e-9 and v is not None and v < base_valid - 1e-9:
+        if lib and s < self.champ["search"] - 1e-9 and v is not None and v < base_valid - 1e-9:
             out["improved"] = True
         self.trace.emit("refit", gen=self.gen, train=s, valid=v, improved=bool(out.get("improved")))
         return out
@@ -688,7 +697,7 @@ class Engine:
         base_x, base_train, base_valid = refit["x"], refit["train"], refit["valid"]
         ws = self.s.c("fit", "probe_weights", default=[0.4, -0.4, 0.1, -0.1])
         xs = [np.concatenate([base_x, np.full(f.width, w)]) for w in ws]
-        res = self.evaluate(feats, xs, "train")
+        res = self.evaluate(feats, xs, self.S)
         f.probe, best = [], None
         for w, (s, _, err) in zip(ws, res):
             if s is None:
@@ -707,10 +716,10 @@ class Engine:
         mask = np.zeros(len(x0), bool)
         mask[-f.width:] = True
         x1, _ = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z), 5, mask=mask,
-                                  sigma=abs(f.best_w))
+                                  sigma=abs(f.best_w), split=self.S)
         x2, s2 = self.fit.optimise([g.code for g in feats], x1, lambda z: self.unpack(feats, z),
                                    self.s.c("fit", "trial_evals", default=16), sigma=self.s.c("fit", "sigma", default=0.3),
-                                   seed=self.gen)
+                                   seed=self.gen, split=self.S)
         v2 = self.evaluate(feats, [x2], "valid")[0][0]
         f.trial_x = [float(v) for v in x2]
         f.d_train = round(base_train - s2, 4)
@@ -756,7 +765,7 @@ class Engine:
             feats = led.lib() + [fa, fb]
             x0 = np.concatenate([refit["x"], np.full(fa.width, fa.best_w), np.full(fb.width, fb.best_w)])
             x, s = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z),
-                                     self.s.c("fit", "trial_evals", default=16), seed=self.gen + 7)
+                                     self.s.c("fit", "trial_evals", default=16), seed=self.gen + 7, split=self.S)
             v = self.evaluate(feats, [x], "valid")[0][0]
             dt, dv = round(refit["train"] - s, 4), (round(refit["valid"] - v, 4) if v is not None else None)
             rec = {"pair": [a, b], "x": x.tolist(), "d_train": dt, "d_valid": dv}
@@ -784,7 +793,7 @@ class Engine:
             feats = cur_feats + group
             x0 = np.concatenate([x] + add)
             x1, s1 = self.fit.optimise([g.code for g in feats], x0, lambda z: self.unpack(feats, z), 12,
-                                       seed=self.gen + 3)
+                                       seed=self.gen + 3, split=self.S)
             v1 = self.evaluate(feats, [x1], "valid")[0][0]
             if v1 is not None and v1 < valid - self.margin / 2 and s1 < train:
                 cur_feats, x, train, valid = feats, x1, s1, v1
@@ -800,14 +809,14 @@ class Engine:
                 self.trace.emit("redundant", gen=self.gen, features=[g.id for g in group], train=s1, valid=v1)
         if accepted:
             xj, sj = self.fit.optimise([g.code for g in cur_feats], x, lambda z: self.unpack(cur_feats, z),
-                                       self.s.c("fit", "joint_refit_evals", default=32), seed=self.gen + 5)
+                                       self.s.c("fit", "joint_refit_evals", default=32), seed=self.gen + 5, split=self.S)
             vj = self.evaluate(cur_feats, [xj], "valid")[0][0]
             if vj is not None and sj < train and vj < valid:
                 x, train, valid = xj, sj, vj
         elif refit.get("improved"):
             pass
         else:
-            x, train, valid = self.x, self.champ["train"], self.champ["valid"]
+            x, train, valid = self.x, self.champ["search"], self.champ["valid"]
         # retire features the policy is better without (on validation)
         retired = []
         if len(cur_feats) > 1:
@@ -830,7 +839,7 @@ class Engine:
                 start = sum(h.width for h in cur_feats[:idx])
                 x = np.concatenate([x[:start], x[start + g.width:]])
                 cur_feats = keep
-                train = self.evaluate(cur_feats, [x], "train")[0][0]
+                train = self.evaluate(cur_feats, [x], self.S)[0][0]
                 valid = worst[0]
                 g.status, g.retired_gen = "retired", self.gen
                 retired.append(g.id)
@@ -850,7 +859,8 @@ class Engine:
         fams_v = self.evaluate(cur_feats, [x], "valid")[0]
         self.x = x
         self.champ = {"train": fams_t[0], "valid": fams_v[0], "families": fams_t[1], "valid_families": fams_v[1],
-                      "progress": self.progress(fams_t[1], "train"), "valid_progress": self.progress(fams_v[1], "valid")}
+                      "progress": self.progress(fams_t[1], "train"), "valid_progress": self.progress(fams_v[1], "valid"),
+                      "search": fams_t[0] if self.S == "train" else self.evaluate(cur_feats, [x], self.S)[0][0]}
         return accepted
 
     def update_backlog(self, new):
