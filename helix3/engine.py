@@ -338,16 +338,26 @@ class Engine:
         self.phase("fit", f"trying {len(deep) + len(wide)} features")
         new = deep + wide
         trials = []
-        for f in new:
-            if f.status in ("invalid", "duplicate", "inert", "span"):
-                self.trace.emit("feature_done", gen=g, feature=f.record())
-                continue
-            self.try_feature(f, refit)
+        live = [f for f in new if f.status not in ("invalid", "duplicate", "inert", "span")]
+        for f in live:
+            self.probe_feature(f, refit)
+        # survivors of the probe get a trial; so do the best near-misses (weak is not proven useless)
+        margin = self.s.c("fit", "probe_margin", default=0.08)
+        near = sorted([f for f in live if f.status == "rejected" and f.best_probe is not None
+                       and f.best_probe > -self.s.c("fit", "near_miss_floor", default=0.3)], key=lambda f: -f.best_probe)
+        second = {f.id for f in near[:self.s.c("fit", "near_miss_trials", default=2)]}
+        for f in live:
+            if f.status == "probed" or f.id in second:
+                if f.id in second:
+                    f.verdict = "near-miss, trialled anyway"
+                self.trial_feature(f, refit)
             if f.origin == "deep":
                 self.check_prediction(f, refit)
             if f.d_valid is not None:
                 trials.append(f)
+        for f in new:
             self.trace.emit("feature_done", gen=g, feature=f.record())
+        del margin
         combos = self.try_combinations(plan, refit)
 
         self.phase("accept", "combining the winners")
@@ -690,8 +700,8 @@ class Engine:
         self.trace.emit("refit", gen=self.gen, train=s, valid=v, improved=bool(out.get("improved")))
         return out
 
-    def try_feature(self, f, refit):
-        """Probe alone on top of the (refitted) champion, then a with-vs-without trial for survivors."""
+    def probe_feature(self, f, refit):
+        """The cheap first pass: the feature alone on top of the (refitted) champion, at a few weights."""
         lib = self.ledger.lib()
         feats = lib + [f]
         base_x, base_train, base_valid = refit["x"], refit["train"], refit["valid"]
@@ -711,7 +721,13 @@ class Engine:
         self.trace.emit("probe", gen=self.gen, feature=f.id, probe=f.probe)
         if f.best_probe < -self.s.c("fit", "probe_margin", default=0.08):
             f.status, f.verdict = "rejected", "rejected by the probe"
-            return
+        else:
+            f.status = "probed"
+
+    def trial_feature(self, f, refit):
+        """With vs without: refit everything with the feature, credit it with the difference (train and valid)."""
+        feats = self.ledger.lib() + [f]
+        base_x, base_train, base_valid = refit["x"], refit["train"], refit["valid"]
         x0 = np.concatenate([base_x, np.full(f.width, f.best_w)])
         mask = np.zeros(len(x0), bool)
         mask[-f.width:] = True
