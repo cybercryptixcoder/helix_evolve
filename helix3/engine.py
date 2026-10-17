@@ -427,6 +427,7 @@ class Engine:
                 refit_done.set()
         threading.Thread(target=do_refit, daemon=True).start()
 
+        self.revive_streams()
         self.phase("navigate", "Navigator planning")
         plan = self.navigate(diag, sens)
 
@@ -485,6 +486,7 @@ class Engine:
         accepted = self.accept(trials, combos, refit)
         self.update_backlog(new)
         self.ledger.update_nodes(g, self.margin)
+        self.update_streams(new)
         self.prove(plan)
         rec = self._gen_record(g, accepted, plan, time.time() - t0, t_agents=t_agents, new=new)
         self.history.append(rec)
@@ -498,6 +500,63 @@ class Engine:
         say(f"   kept {[self.ledger.features[a].name for a in accepted] or 'nothing'} → gap {self.champ['train']:.3f}% "
             f"progress {self.champ['progress']:.1f}% (valid {self.champ['valid_progress']:.1f}%) | "
             f"{time.time() - t0:.0f}s, {self.llm.calls} calls")
+
+    # ------------------------------------------------------------------ streams
+    def update_streams(self, new):
+        """After a generation: each approach that ran experiments either gained (streak resets) or didn't.
+        An approach that fails `bench_after` generations in a row is benched: off the Navigator's map, but not
+        dead (only a certificate prunes). See revive_streams."""
+        led, g = self.ledger, self.gen
+        after = self.s.c("streams", "bench_after", default=3)
+        ran = {}
+        for f in new:
+            if f.node in led.nodes and f.status not in ("invalid", "new"):
+                gain = f.d_valid if f.d_valid is not None else f.best_probe
+                ran.setdefault(f.node, []).append((f.status == "kept", gain))
+        for nid, rs in ran.items():
+            n = led.nodes[nid]
+            best = max((x for _, x in rs if x is not None), default=None)
+            n.gains.append([g, best])
+            if any(k for k, _ in rs) or (best is not None and best > self.margin and any(x == best for _, x in rs)
+                                         and any(f.node == nid and f.status == "kept" for f in new)):
+                n.streak = 0
+            elif any(k for k, _ in rs):
+                n.streak = 0
+            else:
+                n.streak += 1
+            if n.state not in ("pruned", "benched") and n.streak >= after:
+                n.state, n.benched_gen = "benched", g
+                self.trace.emit("bench", gen=g, approach=nid, streak=n.streak)
+
+    def revive_streams(self):
+        """Before planning: each benched approach comes back with a probability that grows while it rests."""
+        p0 = self.s.c("streams", "revive_p", default=0.2)
+        for n in self.ledger.nodes.values():
+            if n.state != "benched":
+                continue
+            rest = self.gen - (n.benched_gen or self.gen)
+            if self.rng.random() < min(0.6, p0 * (1 + rest / 4)):
+                n.state, n.revived_gen = "unproven", self.gen
+                n.streak = max(0, self.s.c("streams", "bench_after", default=3) - 1)   # one more miss benches it again
+                self.trace.emit("revive", gen=self.gen, approach=n.id, rested=rest)
+
+    def stream_lines(self):
+        """Approaches ranked by how fast they have been improving the champion (recent gains weigh more)."""
+        led, rows = self.ledger, []
+        for n in led.nodes.values():
+            if n.state in ("pruned", "benched") or not n.gains:
+                continue
+            score = sum((x or 0) * 0.7 ** (self.gen - gg) for gg, x in n.gains if x is not None and x > 0)
+            kept = [f for f in (led.features.get(i) for i in n.features) if f and f.status == "kept"]
+            rows.append((score, n, kept))
+        rows.sort(key=lambda r: -r[0])
+        out = []
+        for score, n, kept in rows[:4]:
+            if score <= 0:
+                break
+            path = " → ".join(f"{f.id} {f.name} (gen {f.gen}, +{(f.d_valid or 0):.2f})" for f in kept[-3:]) or "no kept feature yet"
+            out.append(f"- {n.id} {n.title}: momentum {score:.2f}; {path}")
+        return "\n".join(out)
 
     # ------------------------------------------------------------------ navigator
     def view(self):
@@ -552,7 +611,7 @@ class Engine:
                 continue
             a = str(r.get("approach", ""))
             aid = a if a in led.nodes else title_to_id.get(a.lower().removeprefix("new:").strip(), "")
-            if aid and led.nodes[aid].state == "pruned":
+            if aid and led.nodes[aid].state in ("pruned", "benched"):
                 continue
             research.append({"approach": aid or "new", "mode": r.get("mode", "explore"), "why": str(r.get("why", ""))[:200]})
         n_exp = self.s.c("researcher", "experiments", default=4)
@@ -586,11 +645,25 @@ class Engine:
         parts.append("## Where the room is (champion gap by family, % above reference; floor = best reachable)\n" +
                      self.room_lines())
         if led.nodes:
-            rows = []
+            rows, benched = [], []
             for n in view["nodes"]:
+                node = led.nodes[n["id"]]
+                if n["state"] == "benched":
+                    benched.append(f"{n['id']} {n['title']}")
+                    continue
+                tag = " (revived from the bench this generation: one more try, from a different angle)" \
+                    if node.revived_gen == self.gen else ""
                 rows.append(f"- {n['id']} [{n['state']}] {n['title']}: {roles.short(n['description'], 120)} "
-                            f"(tries {n['tries']}, best gain {roles.gain(n['best_gain'])}, last gen {n['last_gen'] or '-'})")
+                            f"(tries {n['tries']}, best gain {roles.gain(n['best_gain'])}, last gen {n['last_gen'] or '-'}){tag}")
             parts.append("## The approach tree\n" + "\n".join(rows))
+            if benched:
+                parts.append("## Benched (no gain " + str(self.s.c("streams", "bench_after", default=3)) +
+                             " generations in a row; resting, each returns at random later): " + "; ".join(benched))
+            mom = self.stream_lines()
+            if mom:
+                parts.append("## Direction of fastest improvement (approaches ranked by recent gains; the arrow is "
+                             "the chain of kept steps)\n" + mom + "\nPush the leader further along its chain (the next "
+                             "step in the same direction, or a bolder one), and keep a share on the rest.")
         else:
             parts.append("## The approach tree\nEmpty: this is the first generation. Brainstorm the initial approaches "
                          "(5-8, genuinely different from each other), from the problem and the diagnostics below.")

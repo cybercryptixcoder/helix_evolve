@@ -76,6 +76,10 @@ class Node:
     last_gen: int | None = None
     notes: list = field(default_factory=list)
     certificate: list = field(default_factory=list)
+    streak: int = 0                 # generations in a row with experiments here and no gain
+    gains: list = field(default_factory=list)    # [[gen, best gain that generation], ...]
+    benched_gen: int | None = None
+    revived_gen: int | None = None
 
     def record(self):
         return asdict(self)
@@ -229,7 +233,7 @@ class Ledger:
                                                         default=None))
             if fs:
                 n.last_gen = max(f.gen for f in fs)
-            if n.state == "pruned":
+            if n.state in ("pruned", "benched"):
                 continue
             if any(f.status in ("kept", "retired") or (f.d_valid or -1) > margin for f in own):
                 n.state = "promising"

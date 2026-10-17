@@ -19,6 +19,7 @@ python -m suite.check --all
 | `scheduling` | assign an arriving job | machines | lower bound |
 | `coloring` | pick the next vertex to colour | uncoloured vertices | best known |
 | `jobshop` | pick the next operation to dispatch | ready operations | best-known schedule |
+| `cvrp` | pick the vehicle's next stop | unvisited customers that fit + back to the depot | best-known routes |
 
 ## Rules for a problem (what keeps comparisons honest)
 

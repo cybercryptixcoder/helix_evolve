@@ -117,6 +117,7 @@ REGISTRY = {
     "coloring": "suite.coloring:GraphColoring",
     "setcover": "suite.setcover:SetCover",
     "jobshop": "suite.jobshop:JobShop",
+    "cvrp": "suite.cvrp:CVRP",
 }
 
 
