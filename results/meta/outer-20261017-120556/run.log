@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/shreyasmac/Downloads/Helix/helix_evolve/meta/outer.py", line 36, in <module>
+    from helix3.engine import Strategy, Trace  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/shreyasmac/Downloads/Helix/helix_evolve/helix3/engine.py", line 30, in <module>
+    from .ledger import Feature, Ledger
+  File "/Users/shreyasmac/Downloads/Helix/helix_evolve/helix3/ledger.py", line 20, in <module>
+    from scipy.stats import rankdata
+ModuleNotFoundError: No module named 'scipy'
