@@ -833,6 +833,7 @@ class Engine:
             f = led.new_feature(origin="wide", gen=self.gen, kind="variant" if pf else "fresh", parent=parent or "")
             if pf and pf.node:
                 f.node = pf.node
+                led.nodes[f.node].features.append(f.id)      # the variant counts as a try of its parent's approach
             user = (f"## The current policy (gap {self.champ['train']:.3f}%, lower is better)\n\n```python\n{champ_code}\n```\n\n"
                     f"## Scoreboard: features already evaluated\n{board or '(nothing yet)'}\n\n")
             if pf:
@@ -854,6 +855,8 @@ class Engine:
                     self.trace.emit("feature_done", gen=self.gen, feature=f.record())
                     old = f
                     f = led.new_feature(origin="wide", gen=self.gen, kind=old.kind, parent=old.parent, node=old.node)
+                    if f.node in led.nodes:
+                        led.nodes[f.node].features.append(f.id)
                     user += (f"\n\nYour first answer, `{old.name}`, ranks candidates exactly like `{src.name if src else old.duplicate_of}` "
                              "already on the scoreboard (same ordering, up to sign or a monotone transform), so it was "
                              "discarded. Write something that orders candidates differently.")
