@@ -1001,6 +1001,9 @@ class Engine:
         if lib and budget:
             x, s = self.fit.optimise([f.code for f in lib], self.x, lambda z: self.unpack(lib, z), budget,
                                      sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale, seed=self.gen, split=self.S)
+        pc = self.cfg.get("perturb") or {}
+        if lib and pc.get("every") and self.gen and self.gen % int(pc["every"]) == 0:
+            x, s = self.perturb_weights(lib, x, s, pc)
         v = self.evaluate(lib, [x], "valid")[0][0] if lib else base_valid
         out = {"x": x, "train": s, "valid": v}
         out["probe"] = s if self.P == self.S else self.evaluate(lib, [x], self.P)[0][0]
@@ -1008,6 +1011,31 @@ class Engine:
             out["improved"] = True
         self.trace.emit("refit", gen=self.gen, train=s, valid=v, improved=bool(out.get("improved")))
         return out
+
+    def perturb_weights(self, lib, x, s, pc):
+        """A perturbation generation: restart the weight fit from a few randomly kicked starting points (the
+        argmax makes the weight landscape non-convex: the champion's weights can sit in a local optimum).
+        A restart replaces the champion's weights only if it is better on the search split and on validation."""
+        rng = np.random.default_rng(1000 + self.gen)
+        s0 = s
+        base_v = self.evaluate(lib, [x], "valid")[0][0]
+        tries = []
+        for r in range(int(pc.get("restarts", 3))):
+            kick = rng.normal(0, float(pc.get("kick", 0.8)), len(x)) * max(self.xscale, 1e-6)
+            xr, sr = self.fit.optimise([f.code for f in lib], x + kick, lambda z: self.unpack(lib, z),
+                                       int(pc.get("evals", 16)), sigma=self.s.c("fit", "sigma", default=0.3) * self.xscale,
+                                       seed=self.gen * 31 + r, split=self.S)
+            tries.append((sr, r, xr))
+        best = min(tries, key=lambda t: t[0])
+        adopted = False
+        if best[0] < s - 1e-9:
+            vr = self.evaluate(lib, [best[2]], "valid")[0][0]
+            if vr is not None and base_v is not None and vr < base_v - 1e-9:
+                x, s, adopted = best[2], best[0], True
+        self.trace.emit("perturb", gen=self.gen, kind="weight restarts", restarts=[round(t[0], 4) for t in tries],
+                        before=s0, adopted=adopted, search=s)
+        say(f"   perturbation: {len(tries)} restarts, best {best[0]:.3f}% vs {s0:.3f}%" + (" (adopted)" if adopted else ""))
+        return x, s
 
     def probe_feature(self, f, refit):
         """The cheap first pass: the feature alone on top of the (refitted) champion, at a few weights."""
