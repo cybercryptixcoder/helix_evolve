@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import random
 import shutil
 import threading
@@ -66,6 +67,9 @@ class Trace:
         self.path = path
         self._lock = threading.Lock()
         self._n = 0
+        if Path(path).exists():                 # resuming: keep numbering calls where the trace left off
+            with open(path) as fh:
+                self._n = sum(1 for line in fh if '"type": "call"' in line)
         self.f = open(path, "a")
 
     def emit(self, _type, **data):
@@ -100,8 +104,9 @@ class Engine:
         self.cfg = self.s.config
         self.dir = Path(run_dir)
         self.dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(self.s.path, self.dir / "strategy", dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns("__pycache__"))
+        if Path(self.s.path).resolve() != (self.dir / "strategy").resolve():
+            shutil.copytree(self.s.path, self.dir / "strategy", dirs_exist_ok=True,
+                            ignore=shutil.ignore_patterns("__pycache__"))
         self.trace = Trace(self.dir / "trace.jsonl")
         self.llm = llm
         self.llm.on_call = self._on_call
@@ -135,19 +140,36 @@ class Engine:
         if f is not None:
             f.calls.append(cid)
 
-    def ask(self, role, system, user, cfg_key, meta=None):
+    def effort(self, cfg_key):
+        """The thinking level for a role this generation: its configured level, or the breakthrough level on
+        every Nth generation for the roles listed under config.breakthrough."""
         c = self.cfg.get(cfg_key, {})
-        self._meta.m = meta or {}
+        b = self.cfg.get("breakthrough") or {}
+        if b.get("every") and self.gen and self.gen % int(b["every"]) == 0 and cfg_key in b.get("roles", []):
+            return b.get("effort", "max")
+        return c.get("effort", "none")
+
+    def ask(self, role, system, user, cfg_key, meta=None, json_reply=False):
+        """One model call. A reply that is a JSON plan is asked for differently depending on thinking:
+        with thinking on, the model already reasons before answering, so it answers JSON first with a short
+        summary after; with thinking off, it is asked to write its reasoning before the JSON (its chain of thought)."""
+        c = self.cfg.get(cfg_key, {})
+        effort = self.effort(cfg_key)
+        if json_reply and effort == "none":
+            user += ("\n\n(No hidden thinking for this reply.) Think first: write your reasoning in at most 200 words "
+                     "under a line `Reasoning:`, then the ```json block, then nothing else.")
+        max_tokens = c.get("max_tokens", 4000) * (2 if effort in ("high", "xhigh", "max", "ultra") else 1)
+        self._meta.m = {**(meta or {}), "effort": effort}
         try:
             return self.llm.chat(role, system, user, temperature=c.get("temperature", 0.6),
-                                 max_tokens=c.get("max_tokens", 4000), effort=c.get("effort", "none"),
-                                 meta={"role_key": cfg_key})
+                                 max_tokens=max_tokens, effort=effort, meta={"role_key": cfg_key})
         finally:
             self._meta.m = {}
 
     def phase(self, name, note=""):
         self.status = {"phase": name, "note": note, "gen": self.gen, "t": time.time()}
-        (self.dir / "status.json").write_text(json.dumps({**self.status, "state": "running", "label": self.label}))
+        (self.dir / "status.json").write_text(json.dumps({**self.status, "state": "running", "label": self.label,
+                                                          "pid": os.getpid(), "target": getattr(self, "target", None)}))
         say(f"   [{name}] {note}")
 
     # ------------------------------------------------------------------ policy helpers
@@ -323,14 +345,60 @@ class Engine:
         return out
 
     # ------------------------------------------------------------------ the generation
-    def run(self, generations):
-        self.start()
+    def run(self, generations, resume=False):
+        """Run to `generations`. With resume=True, continue from the last checkpoint (written after every
+        generation, atomically), so a run killed by an interruption loses at most the generation in flight."""
+        self.target = generations
+        if resume and self.restore():
+            say(f"── resuming after generation {self.gen} (of {generations})")
+            self.trace.emit("resume", gen=self.gen, target=generations)
+        else:
+            self.start()
+            self.checkpoint()
         try:
-            for g in range(1, generations + 1):
+            for g in range(self.gen + 1, generations + 1):
                 self.gen = g
                 self.generation()
+                self.checkpoint()
         finally:
             self.finish()
+
+    # ------------------------------------------------------------------ checkpoints
+    def checkpoint(self):
+        led = self.ledger
+        data = {"gen": self.gen, "target": getattr(self, "target", None), "problem": self.p.name, "label": self.label,
+                "seed": self.seed, "x": [float(v) for v in self.x], "champ": self.champ, "cz": self.cz,
+                "cz_gap": self.cz_gap, "history": self.history,
+                "features": [f.record() for f in led.features.values()], "nodes": [n.record() for n in led.nodes.values()],
+                "library": led.library, "backlog": led.backlog, "n_f": led._n_f, "n_n": led._n_n,
+                "llm": {"calls": self.llm.calls, "tokens_in": self.llm.tokens_in, "tokens_out": self.llm.tokens_out},
+                "last_plan": getattr(self, "_last_plan", None), "saved": time.time()}
+        tmp = self.dir / "checkpoint.json.tmp"
+        tmp.write_text(json.dumps(data, default=_jsonable))
+        tmp.replace(self.dir / "checkpoint.json")
+
+    def restore(self):
+        p = self.dir / "checkpoint.json"
+        if not p.exists():
+            return False
+        from .ledger import Node
+        d = json.loads(p.read_text())
+        led = self.ledger
+        led.features = {r["id"]: Feature(**r) for r in d["features"]}
+        led.nodes = {r["id"]: Node(**r) for r in d["nodes"]}
+        led.library, led.backlog, led._n_f, led._n_n = d["library"], d["backlog"], d["n_f"], d["n_n"]
+        self.gen, self.x = d["gen"], np.asarray(d["x"], dtype=float)
+        self.champ, self.cz, self.cz_gap, self.history = d["champ"], d["cz"], d["cz_gap"], d["history"]
+        self._last_plan = d.get("last_plan")
+        for k, v in (d.get("llm") or {}).items():
+            setattr(self.llm, k, v)
+        self.ref_diag = {}
+        for iid in self.p.diagnostic_ids():
+            try:
+                self.ref_diag[iid] = self.p.reference_metrics(self.p.instance("train", iid))
+            except Exception:
+                self.ref_diag[iid] = {}
+        return True
 
     def generation(self):
         g, t0 = self.gen, time.time()
@@ -421,9 +489,9 @@ class Engine:
             msg = self.navigator_message(view, diag, sens)
             try:
                 rep = self.ask("navigator", roles.system_prompt(self.s, "navigator", self.p), msg, "navigator",
-                               meta={"step": "navigate"})
+                               meta={"step": "navigate"}, json_reply=True)
                 plan = roles.extract_json(rep.text)
-                note = roles.after_json(rep.text)
+                note = roles.after_json(rep.text) or roles.before_json(rep.text)
                 source = "navigator"
             except Exception as exc:
                 say(f"   navigator failed: {str(exc)[:160]}")
@@ -549,10 +617,12 @@ class Engine:
             try:
                 rep = self.ask("researcher", roles.system_prompt(self.s, "researcher", self.p),
                                msg if attempt == 0 else msg + "\n\nYour previous reply had no usable JSON. Reply with the "
-                               "```json block first.", "researcher", meta={"step": "research"})
+                               "```json block first.", "researcher", meta={"step": "research"}, json_reply=True)
                 data = roles.extract_json(rep.text) or {}
                 exps = [e for e in data.get("experiments", []) if isinstance(e, dict) and (e.get("change") or e.get("feature"))]
-                self.trace.emit("research", gen=self.gen, experiments=exps, analysis=roles.after_json(rep.text))
+                self.trace.emit("research", gen=self.gen, experiments=exps,
+                                analysis=roles.after_json(rep.text) or roles.before_json(rep.text),
+                                effort=self.effort("researcher"))
                 if exps:
                     break
             except Exception as exc:

@@ -65,5 +65,14 @@
     "near_miss": 0.3,
     "max_pairs": 2
   },
-  "ledger_lines": 14
+  "ledger_lines": 14,
+  "breakthrough": {
+    "every": 5,
+    "effort": "max",
+    "roles": [
+      "navigator",
+      "researcher"
+    ],
+    "about": "every Nth generation these roles think at this level, hoping for a breakthrough"
+  }
 }

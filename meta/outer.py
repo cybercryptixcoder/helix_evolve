@@ -49,8 +49,16 @@ def say(*a):
 class Outer:
     def __init__(self, args, llm=None):
         self.a = args
+        if getattr(args, "resume", None):
+            saved = json.loads((Path(args.resume) / "args.json").read_text())
+            for k, v in saved.items():                        # the original settings, unless overridden
+                if k not in ("resume", "outer_generations") or getattr(args, k, None) is None:
+                    setattr(args, k, v)
+            args.out = args.resume
         self.dir = Path(args.out or ROOT / "meta_runs" / f"outer-{time.strftime('%Y%m%d-%H%M%S')}")
         (self.dir / "candidates").mkdir(parents=True, exist_ok=True)
+        if not getattr(args, "resume", None):
+            (self.dir / "args.json").write_text(json.dumps({k: v for k, v in vars(args).items() if k != "resume"}))
         self.trace = Trace(self.dir / "trace.jsonl")
         self.llm = llm or LLM()
         self.llm.on_call = lambda rec: self.trace.emit("call", id=self.trace.call_id(), gen=self.gen, **rec)
@@ -117,7 +125,33 @@ class Outer:
         return {p: {k: round(statistics.mean(v), 2) for k, v in d.items() if v} for p, d in out.items()}
 
     # ------------------------------------------------------------------ run
+    def status(self, state="running"):
+        import os
+        (self.dir / "status.json").write_text(json.dumps({"state": state, "pid": os.getpid(), "gen": self.gen,
+                                                          "target": self.a.outer_generations, "t": time.time()}))
+
+    def resume(self):
+        """Continue from state.json (saved after every outer generation): a generation in flight is redone."""
+        d = json.loads((self.dir / "state.json").read_text())
+        self.cands = {c["id"]: c for c in d["candidates"]}
+        self.nodes = {n["id"]: Node(**n) for n in d.get("nodes", [])}
+        self.inc, self.gen = d["incumbent"], d["gen"]
+        self.n_c = max(int(c[1:]) for c in self.cands)
+        self.n_n = max([int(n[1:]) for n in self.nodes] or [0])
+        self.trace.emit("resume", gen=self.gen)
+        say(f"── resuming the meta loop after outer generation {self.gen}")
+        self.status()
+        for g in range(self.gen + 1, self.a.outer_generations + 1):
+            self.gen = g
+            self.generation()
+            self.status()
+        self.status("finished")
+        self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"])
+
     def run(self):
+        if getattr(self.a, "resume", None):
+            return self.resume()
+        self.status()
         start = Path(self.a.strategy).resolve()
         cid = self.new_id()
         cdir = self.dir / "candidates" / cid
@@ -134,6 +168,8 @@ class Outer:
         for g in range(1, self.a.outer_generations + 1):
             self.gen = g
             self.generation()
+            self.status()
+        self.status("finished")
         self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"])
         say(f"done: incumbent {self.inc}, score {self.cands[self.inc]['result']['score']}")
 
@@ -437,6 +473,7 @@ def main(argv=None):
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--out", default=None)
     ap.add_argument("--fake-inner", action="store_true", help="inner runs without model calls (tests the outer loop)")
+    ap.add_argument("--resume", default=None, help="continue an interrupted meta run from its folder")
     a = ap.parse_args(argv)
     Outer(a).run()
 

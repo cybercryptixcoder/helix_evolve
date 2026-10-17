@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import random
 import re
 import time
@@ -49,7 +50,7 @@ def fake_answer(problem):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("problem")
+    ap.add_argument("problem", nargs="?", default=None)
     ap.add_argument("--generations", "-g", type=int, default=5)
     ap.add_argument("--label", default="")
     ap.add_argument("--strategy", default=None, help="a strategy folder (default helix3/strategy)")
@@ -57,7 +58,19 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--fake", action="store_true", help="no model calls: a crash test")
     ap.add_argument("--out", default=None, help="run folder (default runs/<problem>/<timestamp>)")
+    ap.add_argument("--resume", default=None, help="continue an interrupted run from its folder (its checkpoint)")
     a = ap.parse_args(argv)
+    if a.resume:
+        ck = json.loads((Path(a.resume) / "checkpoint.json").read_text())
+        problem = load_problem(ck["problem"])
+        out = Path(a.resume)
+        gens = a.generations if "-g" in (argv or sys.argv) or "--generations" in (argv or sys.argv) else (ck.get("target") or a.generations)
+        llm = FakeLLM(fake_answer(problem)) if a.fake else LLM()
+        eng = Engine(problem, out, llm, Strategy(out / "strategy"), workers=a.workers, seed=ck.get("seed", 0),
+                     label=ck.get("label", ""))
+        print(f"Helix v3 · {problem.title} · resuming {out} to {gens} generations")
+        eng.run(gens, resume=True)
+        return
     problem = load_problem(a.problem)
     stamp = time.strftime("%Y%m%d-%H%M%S") + (f"-{a.label}" if a.label else "")
     out = Path(a.out) if a.out else ROOT / "runs" / problem.name / stamp
