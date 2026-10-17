@@ -340,6 +340,9 @@ def meta_stop(rel):
     pid = _jload(d / "status.json", {}).get("pid") if d else None
     if pid and _alive(pid):
         os.kill(int(pid), 15)               # the launcher's exit hook still publishes what exists
+        st = _jload(d / "status.json", {})
+        st["state"] = "stopped"             # stopped on purpose: the keeper must not resume it
+        (d / "status.json").write_text(json.dumps(st))
         return {"stopped": True}
     return {"stopped": False}
 
