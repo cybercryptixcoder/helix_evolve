@@ -357,10 +357,25 @@ class Engine:
             self.start()
             self.checkpoint()
         try:
-            for g in range(self.gen + 1, generations + 1):
+            g = self.gen + 1
+            fails = 0
+            while g <= generations:
                 self.gen = g
-                self.generation()
+                try:
+                    self.generation()
+                except Exception as exc:          # a crash in one generation must not end the run
+                    fails += 1
+                    tb = traceback.format_exc()
+                    say(f"!! generation {g} crashed ({type(exc).__name__}: {str(exc)[:160]}); "
+                        + ("restoring the last checkpoint and retrying" if fails <= 2 else "giving up after 3 tries"))
+                    self.trace.emit("crash", gen=g, error=tb[-3000:], attempt=fails)
+                    if fails > 2 or not self.restore():
+                        raise
+                    self.trace.emit("resume", gen=self.gen, target=generations)
+                    continue
+                fails = 0
                 self.checkpoint()
+                g += 1
         finally:
             self.finish()
 
@@ -370,7 +385,7 @@ class Engine:
         data = {"gen": self.gen, "target": getattr(self, "target", None), "problem": self.p.name, "label": self.label,
                 "seed": self.seed, "x": [float(v) for v in self.x], "champ": self.champ, "cz": self.cz,
                 "cz_gap": self.cz_gap, "history": self.history,
-                "features": [f.record() for f in led.features.values()], "nodes": [n.record() for n in led.nodes.values()],
+                "features": [f.record() for f in list(led.features.values())], "nodes": [n.record() for n in led.nodes.values()],
                 "library": led.library, "backlog": led.backlog, "n_f": led._n_f, "n_n": led._n_n,
                 "llm": {"calls": self.llm.calls, "tokens_in": self.llm.tokens_in, "tokens_out": self.llm.tokens_out},
                 "last_plan": getattr(self, "_last_plan", None), "saved": time.time()}
@@ -491,7 +506,7 @@ class Engine:
         rec = self._gen_record(g, accepted, plan, time.time() - t0, t_agents=t_agents, new=new)
         self.history.append(rec)
         changed = {f.id for f in new} | set(self.ledger.library) | set(accepted)
-        for f in self.ledger.features.values():
+        for f in list(self.ledger.features.values()):
             if f.id in changed or f.status == "retired" and f.retired_gen == g:
                 self.trace.emit("feature_done", gen=g, feature=f.record(), final=True)
         self.trace.emit("tree", gen=g, nodes=[n.record() for n in self.ledger.nodes.values()])
@@ -566,7 +581,7 @@ class Engine:
             nodes.append({"id": n.id, "title": n.title, "description": n.description, "state": n.state,
                           "tries": len(tried), "best_gain": n.best_gain, "last_gen": n.last_gen, "parent": n.parent})
         feats = [{"id": f.id, "node": f.node, "origin": f.origin, "status": f.status, "best_probe": f.best_probe,
-                  "d_valid": f.d_valid, "gen": f.gen, "name": f.name} for f in self.ledger.features.values()]
+                  "d_valid": f.d_valid, "gen": f.gen, "name": f.name} for f in list(self.ledger.features.values())]
         return {"gen": self.gen, "nodes": nodes, "features": feats, "library": list(self.ledger.library),
                 "backlog": list(self.ledger.backlog), "config": self.cfg}
 
@@ -676,7 +691,7 @@ class Engine:
         parts.append("## Champion diagnostics vs the reference\n" + self.p.describe_diagnostics(diag, self.ref_diag))
         if sens:
             parts.append("## Sensitivity probes (gap reduction on train; + = better)\n" + self.sens_lines(sens))
-        recent = [f for f in led.features.values() if f.gen >= self.gen - 2]
+        recent = [f for f in list(led.features.values()) if f.gen >= self.gen - 2]
         if recent:
             parts.append("## The ledger: the last two generations\n" + "\n".join(roles.feature_line(f) for f in recent[-24:]))
         if led.backlog:
@@ -821,12 +836,12 @@ class Engine:
             else:
                 a_lines.append(f"- a new approach of your choice → mode `{r['mode']}` ({r['why']})")
         parts.append("## Your assignments from the Navigator (one experiment each, at least)\n" + "\n".join(a_lines))
-        rel = [f for f in led.features.values() if f.node in assigned]
-        rel += [f for f in led.features.values() if f.origin == "deep" and f.gen == self.gen - 1 and f not in rel]
+        rel = [f for f in list(led.features.values()) if f.node in assigned]
+        rel += [f for f in list(led.features.values()) if f.origin == "deep" and f.gen == self.gen - 1 and f not in rel]
         if rel:
             k = self.s.c("ledger_lines", default=14)
             parts.append("## The ledger for these approaches (and your last generation)\n" + "\n".join(roles.feature_line(f) for f in rel[-k:]))
-        others = [f for f in led.features.values() if f not in rel and f.status not in ("new", "checking")]
+        others = [f for f in list(led.features.values()) if f not in rel and f.status not in ("new", "checking")]
         if others:
             def tag(f):
                 g = f.d_valid if f.d_valid is not None else f.best_probe
@@ -834,7 +849,7 @@ class Engine:
                     (f" ={f.duplicate_of}" if f.status == "duplicate" and f.duplicate_of else "")
             parts.append("## Index of everything else tried so far (don't re-run these ideas)\n" +
                          "; ".join(f"{f.id} {f.name} ({tag(f)})" for f in others[-80:]))
-        missed = [f for f in led.features.values() if f.origin == "deep" and f.prediction.get("checked")
+        missed = [f for f in list(led.features.values()) if f.origin == "deep" and f.prediction.get("checked")
                   and not f.prediction.get("held") and f.gen >= self.gen - 2]
         if missed:
             parts.append("## Predictions that did not hold (what the mechanism you believed didn't explain)\n" + "\n".join(
@@ -846,7 +861,7 @@ class Engine:
                          "\nInside a PRODUCTIVE group, refine: condition it, combine it with another quantity, change its "
                          "shape where the diagnostics say it fails. A spent group needs a different quantity. A near-copy of "
                          "any member is discarded unevaluated.")
-        finds = [f for f in led.features.values() if f.origin == "wide" and f.gen >= self.gen - 2
+        finds = [f for f in list(led.features.values()) if f.origin == "wide" and f.gen >= self.gen - 2
                  and f.status not in ("invalid", "duplicate", "inert") and f.best_probe is not None]
         finds.sort(key=lambda f: -(f.d_valid if f.d_valid is not None else f.best_probe))
         if finds:
@@ -907,7 +922,7 @@ class Engine:
     def similar_groups(self, rho=0.9, min_size=3):
         """Clusters of evaluated features whose fingerprints correlate at |rho| >= 0.9 (the same idea, re-expressed)."""
         led = self.ledger
-        feats = [f for f in led.features.values() if f.status not in ("new", "invalid", "checking") and f.code]
+        feats = [f for f in list(led.features.values()) if f.status not in ("new", "invalid", "checking") and f.code]
         if len(feats) < min_size or not led.states:
             return ""
         try:
@@ -939,7 +954,7 @@ class Engine:
     def scoreboard(self):
         led = self.ledger
         k = self.s.c("mutator", "scoreboard", default=10)
-        done = [f for f in led.features.values() if f.status not in ("new", "invalid") and f.code]
+        done = [f for f in list(led.features.values()) if f.status not in ("new", "invalid") and f.code]
         kept = [f for f in done if f.status == "kept"]
         rest = sorted([f for f in done if f.status != "kept"],
                       key=lambda f: -(f.d_valid if f.d_valid is not None else (f.best_probe if f.best_probe is not None else -9)))
@@ -1247,7 +1262,7 @@ class Engine:
     def update_backlog(self, new):
         led = self.ledger
         near = self.s.c("combine", "near_miss", default=0.3)
-        pool = [f for f in led.features.values() if f.status in ("tried", "rejected") and f.best_probe is not None
+        pool = [f for f in list(led.features.values()) if f.status in ("tried", "rejected") and f.best_probe is not None
                 and f.best_probe > -near and f.verdict != "redundant"]
         pool.sort(key=lambda f: -(f.d_valid if f.d_valid is not None else f.best_probe))
         led.backlog = [f.id for f in pool[:6]]
@@ -1352,7 +1367,7 @@ class Engine:
                        "progress_curve": [h["progress"] for h in self.history],
                        "valid_curve": [h.get("valid_progress") for h in self.history],
                        "calls": self.llm.calls, "tokens_in": self.llm.tokens_in, "tokens_out": self.llm.tokens_out,
-                       "features_tried": sum(f.origin in ("deep", "wide") for f in self.ledger.features.values()),
+                       "features_tried": sum(f.origin in ("deep", "wide") for f in list(self.ledger.features.values())),
                        "kept": [{"id": f.id, "name": f.name, "origin": f.origin} for f in self.ledger.lib()],
                        "finished": time.time()}
             (self.dir / "summary.json").write_text(json.dumps(summary, indent=1, default=_jsonable))
