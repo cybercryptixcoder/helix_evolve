@@ -4,6 +4,33 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 17, 2026 (night): Helix v3, the problem suite, the meta loop, the dashboard
+
+### What was asked
+
+Make the system do what it was meant to do, tracing each gap to its cause (prompt, structure or something else); rebuild from the ground up if needed, keeping the structure (a Mutator going wide, a Researcher going deep). Then: a test suite of verifiable problems so the engine is shown to work beyond bin packing; a meta loop that evolves the evolutionary loop with the same kind of loop, swapping the winner into the outer loop; a clean dashboard with sensible units. Run small numbers of generations, read the traces (with subagents), fix, repeat. Commit and push everything in Shreyas's name.
+
+### Decisions
+
+- **A new package, `helix3/`, next to `helix/`** (v2 stays runnable for comparisons). Same two loops; everything around them rebuilt. Why each piece exists: [V3_DESIGN.md](V3_DESIGN.md), section 1 traces each v2 gap to its cause.
+- **The approach tree sits above both loops** (the open question in the concept doc): the Navigator decides where they search; the deep loop is how a branch gets explored; the Mutator stays blind to hypotheses but gets parents chosen across the tree.
+- **"Exaggerate one aspect" returns as probes that never compete**: mechanical sensitivity probes on every kept feature, and Researcher experiments of kind `probe`, judged by whether their prediction held.
+- **Only a checked certificate prunes** (inert, duplicate, span). The Prover agent may propose one; the engine verifies it.
+- **Problem-agnostic engine**: every problem is a priority problem (`helix3/problem.py`); bin packing is now one adapter on the read-only evaluator, with identical scores.
+- **Units**: gap % (lower is better) and progress % (0 = Code Zero, 100 = reference); gains shown in progress points. No negative scores in the dashboard.
+- **Prompts are split** into method (`strategy/prompts/<role>.md`) and domain addenda (`prompts/features/`, `meta/space/`), so the meta loop's winner can drive the outer loop too.
+- **Four Luminal keys** in a gitignored `.env`; the client pools them under both rate limits per key.
+
+### Built
+
+- `helix3/`: engine, ledger and certificates, fitter, client, roles, strategy, digest, CLI; `tests/test_helix3.py`.
+- `suite/`: the interface docs, `check.py`, `binpack2d.py`; seven more problems in progress.
+- `meta/`: `evaluate.py` (meta-evaluator), `outer.py` (the outer loop), `strategies.py`, `space/` (outer-level addenda). Docs: [META_V3.md](META_V3.md).
+- `ui/`: the new dashboard (`python -m ui`).
+- [TRACE_REVIEW.md](TRACE_REVIEW.md): the checklist each run is reviewed against.
+
+---
+
 ## October 17, 2026 (later): a plain walk through run 8
 
 ### What was asked
