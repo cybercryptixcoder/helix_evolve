@@ -88,23 +88,55 @@ def beyond(gap, families, problem, split):
     return max(-100.0, min(100.0, 100 * (1 - w / w0)))
 
 
-def run_one(strategy, problem, gens, seed, out, timeout, workers, fake=False):
-    t = time.time()
-    cmd = [sys.executable, "-m", "helix3.run", problem, "-g", str(gens), "--strategy", str(strategy),
-           "--seed", str(seed), "--out", str(out), "--label", f"meta-{problem}-r{seed}"]
-    if workers:
-        cmd += ["--workers", str(workers)]
-    if fake:
-        cmd += ["--fake"]
-    out.mkdir(parents=True, exist_ok=True)
-    rec = {"problem": problem, "seed": seed, "dir": str(out)}
+def _alive(pid):
     try:
-        p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=timeout)
-        (out / "stdout.log").write_text(p.stdout[-20000:] + "\n--- stderr ---\n" + p.stderr[-20000:])
-        if p.returncode != 0 or not (out / "summary.json").exists():
-            rec["crash"] = (p.stderr or p.stdout)[-3000:]
-    except subprocess.TimeoutExpired:
-        rec["crash"] = f"timed out after {timeout}s"
+        os.kill(int(pid), 0)
+        return True
+    except (OSError, TypeError, ValueError):
+        return False
+
+
+def run_one(strategy, problem, gens, seed, out, timeout, workers, fake=False):
+    """One inner run in its own folder. Interruption-safe: a finished run with the same strategy is reused
+    (record.json), an unfinished one is resumed from its checkpoint, and one still running (left over from an
+    interrupted meta process) is waited for rather than started twice."""
+    t = time.time()
+    out.mkdir(parents=True, exist_ok=True)
+    from meta.strategies import digest_hash
+    shash = digest_hash(strategy)
+    cached = _jread(out / "record.json")
+    if cached and cached.get("strategy_hash") == shash and cached.get("generations") == gens and "crash" not in cached:
+        return cached                                            # finished before an interruption: reuse it
+    st = _jread(out / "status.json") or {}
+    while st.get("state") == "running" and _alive(st.get("pid")):
+        time.sleep(20)                                           # an orphan of the interrupted meta process
+        st = _jread(out / "status.json") or {}
+    ck = _jread(out / "checkpoint.json")
+    same = ck is not None and (out / "strategy").exists() and digest_hash(out / "strategy") == shash
+    if same and (out / "summary.json").exists() and ck.get("gen", 0) >= gens:
+        cmd = None                                               # finished; only the record was missing
+    elif same:
+        cmd = [sys.executable, "-m", "helix3.run", "--resume", str(out), "-g", str(gens)] + \
+            (["--workers", str(workers)] if workers else []) + (["--fake"] if fake else [])
+    else:
+        for f in ("checkpoint.json", "summary.json", "trace.jsonl", "history.json", "status.json"):
+            (out / f).unlink(missing_ok=True)                    # a different strategy used this folder: start clean
+        cmd = [sys.executable, "-m", "helix3.run", problem, "-g", str(gens), "--strategy", str(strategy),
+               "--seed", str(seed), "--out", str(out), "--label", f"meta-{problem}-r{seed}"]
+        if workers:
+            cmd += ["--workers", str(workers)]
+        if fake:
+            cmd += ["--fake"]
+    rec = {"problem": problem, "seed": seed, "dir": str(out), "strategy_hash": shash, "generations": gens}
+    if cmd:
+        try:
+            p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=timeout)
+            with open(out / "stdout.log", "a") as fh:
+                fh.write(p.stdout[-20000:] + "\n--- stderr ---\n" + p.stderr[-20000:])
+            if p.returncode != 0 or not (out / "summary.json").exists():
+                rec["crash"] = (p.stderr or p.stdout)[-3000:]
+        except subprocess.TimeoutExpired:
+            rec["crash"] = f"timed out after {timeout}s"
     rec["minutes"] = round((time.time() - t) / 60, 2)
     ev = digest.load(out)
     if ev:
@@ -134,7 +166,17 @@ def run_one(strategy, problem, gens, seed, out, timeout, workers, fake=False):
         (out / "digest.txt").write_text(digest.text(ev, 80))
     if "crash" in rec:
         rec["score"] = 0.0
+    tmp = out / "record.json.tmp"
+    tmp.write_text(json.dumps(rec, default=str))
+    tmp.replace(out / "record.json")
     return rec
+
+
+def _jread(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return None
 
 
 def evaluate(strategy, problems, held_out=(), gens=5, repeats=2, parallel=4, out=None, timeout=3600, workers=None,

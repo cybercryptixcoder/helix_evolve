@@ -55,6 +55,8 @@ class Outer:
                 if k not in ("resume", "outer_generations", "hours") or getattr(args, k, None) is None:
                     setattr(args, k, v)
             args.out = args.resume
+        if getattr(args, "outer_generations", None) is None:
+            args.outer_generations = 10
         self.dir = Path(args.out or ROOT / "meta_runs" / f"outer-{time.strftime('%Y%m%d-%H%M%S')}")
         (self.dir / "candidates").mkdir(parents=True, exist_ok=True)
         if not getattr(args, "resume", None):
@@ -74,7 +76,7 @@ class Outer:
         self.problems = [p for p in args.problems.split(",") if p]
         self.held = [p for p in args.held_out.split(",") if p]
         self.lock = threading.Lock()
-        self.started = time.time()
+        self.started, self.used0 = time.time(), 0.0
         self.deadline = None     # --hours: no new candidate evaluation or outer generation starts after this
 
     # ------------------------------------------------------------------ helpers
@@ -130,10 +132,11 @@ class Outer:
     def out_of_time(self):
         return self.deadline is not None and time.time() >= self.deadline
 
-    def arm_clock(self):
+    def arm_clock(self, used=0.0):
+        """The --hours budget counts time actually spent: a resumed run gets what was left, not a fresh budget."""
         h = getattr(self.a, "hours", None)
-        self.started = time.time()
-        self.deadline = self.started + h * 3600 if h else None
+        self.started, self.used0 = time.time(), float(used or 0.0)
+        self.deadline = self.started + h * 3600 - self.used0 if h else None
 
     def status(self, state="running"):
         import os
@@ -150,15 +153,23 @@ class Outer:
         self.inc, self.gen = d["incumbent"], d["gen"]
         self.n_c = max(int(c[1:]) for c in self.cands)
         self.n_n = max([int(n[1:]) for n in self.nodes] or [0])
-        self.arm_clock()
-        self.trace.emit("resume", gen=self.gen)
-        say(f"── resuming the meta loop after outer generation {self.gen}")
+        self.arm_clock(d.get("used", 0.0))
+        pending = d.get("pending") if (d.get("pending") or {}).get("gen") == self.gen + 1 else None
+        self.trace.emit("resume", gen=self.gen, pending=pending)
+        say(f"── resuming the meta loop after outer generation {self.gen}" +
+            (f" (generation {self.gen + 1}'s {len(pending['todo'])} candidates were already written: evaluating them)"
+             if pending else ""))
         self.status()
+        if self.inc not in self.cands or not self.cands[self.inc].get("result"):
+            self.evaluate(self.inc)                              # interrupted during the starting strategy's evaluation
+            self.cands[self.inc]["verdict"] = "incumbent"
+            self.save()
         for g in range(self.gen + 1, self.a.outer_generations + 1):
             if self.out_of_time():
                 break
             self.gen = g
-            self.generation()
+            self.generation(pending)
+            pending = None
             self.status()
         self.status("finished")
         self.trace.emit("outer_end", incumbent=self.inc, score=self.cands[self.inc]["result"]["score"],
@@ -178,10 +189,21 @@ class Outer:
                            "hash": S.digest_hash(cdir), "parent": None}
         self.trace.emit("outer_start", problems=self.problems, held_out=self.held, args=vars(self.a))
         say(f"── outer generation 0: evaluating the starting strategy")
-        self.evaluate(cid)
         self.inc = cid
+        self.save()                                              # resumable from here on
+        r = self.evaluate(cid)
         self.cands[cid]["verdict"] = "incumbent"
         self.save()
+        jobs = (len(self.problems) + len(self.held)) * self.a.repeats
+        if r["crashes"] and len(r["crashes"]) >= jobs:
+            why = r["crashes"][0] if isinstance(r["crashes"][0], str) else json.dumps(r["crashes"][0], default=str)
+            say("!! every inner run of the starting strategy crashed: stopping now instead of burning the budget.\n"
+                f"   first crash: {why[:1500]}")
+            self.trace.emit("outer_end", incumbent=cid, score=None, reason="every inner run crashed")
+            self.status("failed")
+            raise SystemExit(2)
+        if r["crashes"]:
+            say(f"!! {len(r['crashes'])} of {jobs} inner runs crashed on the starting strategy: see evals/{cid}/*/stdout.log")
         for g in range(1, self.a.outer_generations + 1):
             if self.out_of_time():
                 say("── time budget used up: stopping before outer generation", g)
@@ -194,26 +216,30 @@ class Outer:
                         reason="time" if self.out_of_time() else "generations")
         say(f"done: incumbent {self.inc}, score {self.cands[self.inc]['result']['score']}")
 
-    def generation(self):
+    def generation(self, pending=None):
         inc = self.cands[self.inc]
         say(f"── outer generation {self.gen}: incumbent {self.inc} score {inc['result']['score']:.2f}")
-        plan = self.navigate()
-        new = []
-        with ThreadPoolExecutor(2) as ex:
-            fd = ex.submit(self.deep, plan)
-            fw = ex.submit(self.wide, plan)
-            new = fd.result() + fw.result()
-        seen = {c["hash"] for c in self.cands.values() if c.get("result")}
-        todo = []
-        for cid in new:
-            c = self.cands[cid]
-            if c.get("invalid"):
-                continue
-            if c["hash"] in seen:
-                c["verdict"] = "duplicate"
-                continue
-            seen.add(c["hash"])
-            todo.append(cid)
+        if pending:
+            todo = [c for c in pending["todo"] if c in self.cands]
+        else:
+            plan = self.navigate()
+            new = []
+            with ThreadPoolExecutor(2) as ex:
+                fd = ex.submit(self.deep, plan)
+                fw = ex.submit(self.wide, plan)
+                new = fd.result() + fw.result()
+            seen = {c["hash"] for c in self.cands.values() if c.get("result")}
+            todo = []
+            for cid in new:
+                c = self.cands[cid]
+                if c.get("invalid"):
+                    continue
+                if c["hash"] in seen:
+                    c["verdict"] = "duplicate"
+                    continue
+                seen.add(c["hash"])
+                todo.append(cid)
+            self.save(pending={"gen": self.gen, "todo": todo})   # an interruption from here keeps these candidates
         for cid in todo:
             if self.out_of_time():
                 self.cands[cid]["verdict"] = "skipped (time)"
@@ -474,11 +500,14 @@ class Outer:
             elif deltas:
                 n.state = "unproven"
 
-    def save(self):
-        data = {"incumbent": self.inc, "gen": self.gen,
+    def save(self, pending=None):
+        data = {"incumbent": self.inc, "gen": self.gen if pending is None else self.gen - 1, "pending": pending,
+                "used": round(self.used0 + time.time() - self.started, 1),
                 "candidates": [{k: v for k, v in c.items()} for c in self.cands.values()],
                 "nodes": [n.record() for n in self.nodes.values()]}
-        (self.dir / "state.json").write_text(json.dumps(data, indent=1, default=str))
+        tmp = self.dir / "state.json.tmp"
+        tmp.write_text(json.dumps(data, indent=1, default=str))
+        tmp.replace(self.dir / "state.json")                     # atomic: an interruption never leaves half a file
 
 
 def main(argv=None):
@@ -488,7 +517,7 @@ def main(argv=None):
     ap.add_argument("--held-out", default="coloring")
     ap.add_argument("--inner-generations", type=int, default=5)
     ap.add_argument("--repeats", type=int, default=2)
-    ap.add_argument("--outer-generations", type=int, default=10)
+    ap.add_argument("--outer-generations", type=int, default=None, help="default 10 (a resumed run keeps its own)")
     ap.add_argument("--deep", type=int, default=2, help="Researcher candidates per outer generation")
     ap.add_argument("--wide", type=int, default=2, help="Mutator candidates per outer generation")
     ap.add_argument("--parallel", type=int, default=4, help="inner runs at the same time")
