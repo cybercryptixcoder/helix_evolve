@@ -26,6 +26,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 EFFORTS = ("none", "low", "medium", "high", "xhigh", "ultra", "max")
 SURGE, BUCKET, REFILL = 6, 45.0, 0.85
+# room for hidden reasoning on top of the answer's own max_tokens: a thinking model spends its budget on the
+# reasoning first, so a fixed budget cuts the answer off at high effort (round 4: 27.7k reasoning tokens, answer cut)
+THINK_ROOM = {"none": 0, "low": 12000, "medium": 20000, "high": 40000, "xhigh": 56000, "max": 80000, "ultra": 80000}
+CAP = 393216
 
 
 def load_env():
@@ -128,17 +132,23 @@ class LLM:
     # ---------------------------------------------------------------- one call
     def chat(self, role, system, user, temperature=0.7, max_tokens=4000, effort="none", meta=None, tries=5):
         effort = effort if effort in EFFORTS else "none"
-        budget = max_tokens + (16000 if effort != "none" else 0)
+        budget = max_tokens + THINK_ROOM.get(effort, 16000)
         payload = {"model": self.model, "stream": True, "stream_options": {"include_usage": True},
                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-                   "temperature": temperature, "max_tokens": min(393216, budget), "reasoning_effort": effort}
-        t0, last = time.time(), None
+                   "temperature": temperature, "max_tokens": min(CAP, budget), "reasoning_effort": effort}
+        t0, last, grown = time.time(), None, False
         for attempt in range(tries):
             k = self._acquire()
             penalty = 0.0
             try:
                 rep = self._stream(k.key, payload)
                 rep.seconds = round(time.time() - t0, 2)
+                if rep.finish == "length" and not grown and payload["max_tokens"] < CAP:
+                    # cut off by the token limit (usually the hidden reasoning ate it): once more, with double room
+                    self._record(role, system, user, rep, temperature, effort, meta, "cut off by max_tokens; retrying with double")
+                    payload = {**payload, "max_tokens": min(CAP, payload["max_tokens"] * 2)}
+                    grown = True
+                    continue
                 self._record(role, system, user, rep, temperature, effort, meta, None)
                 return rep
             except LLMError as exc:
