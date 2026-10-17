@@ -1,0 +1,97 @@
+{
+ "problem": "tsp",
+ "label": "tsp-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 10.396943413036821,
+  "valid": 11.25740114784987,
+  "progress": 97.98,
+  "valid_progress": 97.8,
+  "library": [
+   "f001",
+   "f004",
+   "f014",
+   "f025",
+   "f042",
+   "f049"
+  ]
+ },
+ "test": {
+  "gap": 11.830827332448207,
+  "families": {
+   "uniform": 11.374015501570556,
+   "clustered": 18.954025185619958,
+   "grid": 6.536257163013293,
+   "mixed": 10.459011479589016
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.75
+ },
+ "progress_curve": [
+  0.0,
+  97.43,
+  97.67,
+  97.84,
+  97.84,
+  97.94,
+  97.98,
+  97.98,
+  97.98,
+  97.98,
+  97.98
+ ],
+ "valid_curve": [
+  0.0,
+  97.59,
+  97.69,
+  97.71,
+  97.71,
+  97.74,
+  97.8,
+  97.8,
+  97.8,
+  97.8,
+  97.8
+ ],
+ "calls": 123,
+ "tokens_in": 354059,
+ "tokens_out": 251319,
+ "features_tried": 90,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "current_minus_centroid_distance",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "distance_ratio_to_start",
+   "origin": "wide"
+  },
+  {
+   "id": "f014",
+   "name": "progress_blended_inverse_distance",
+   "origin": "wide"
+  },
+  {
+   "id": "f025",
+   "name": "exact_tail_gate",
+   "origin": "deep"
+  },
+  {
+   "id": "f042",
+   "name": "exact_tail_k5_to_7",
+   "origin": "deep"
+  },
+  {
+   "id": "f049",
+   "name": "held_karp_tail_k8_to_10",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792269756.6952095
+}
