@@ -111,3 +111,32 @@ These are observations to bring into the design conversation, not choices made:
 - **Commits** are authored as Shreyas Naik with his GitHub no-reply address, matching the repo's history, with no AI attribution (HANDOFF §11).
 - **Which engine to look at:** the default (feature engine), because it's what runs today. The program engine is still there (`--engine programs`) and closer to the original "exaggerate one aspect" concept; the viewer doesn't read its runs yet.
 - **The key** stays in `helix/.env` (gitignored); the probe script and screenshots stayed outside the repo.
+
+## Round 3 review (v3r3, binpack2d, October 17)
+
+Progress 0 → 7.9 → 17.8 → 21.0 → 25.7% in 4 generations (generation 5 lost to a shell time limit; later runs are
+detached and resumable). Generation time 388 → 561 → 729 → 1234 s.
+
+What the review found (subagent, from the trace):
+- **The probe predicts the trial perfectly:** probe > 0 gained in 6 of 6 trials, probe ≤ 0 in 0 of 10. Near-miss
+  trials (6) and combinations (3) gained nothing; about 1,100 s of CPU went to them.
+- **The duplicate threshold is too tight:** the biggest wins sat at ρ 0.934 and 0.938; 11 of 14 duplicates fell
+  between 0.95 and 0.98. Three approaches were pruned on one duplicate each.
+- **Bug:** `wide()` gives a variant its parent's node but doesn't add it to the node's feature list, so the tree
+  under-counts tries and gains (a02 looked dead; its variant was the best near-miss).
+- **Steering away from the winning vein:** variants of kept parents won 2 of 2, other parents 0 of 7; the
+  "similar groups" text pushes the Researcher out of the productive family.
+- **Researcher memory:** repeats across generations (f044 = f028); a prediction checked at a weight where the
+  feature does nothing is recorded as refuted.
+- 14 of 21 wide features are named `wide_fXXX` (`extract_name` only reads text after the last code fence).
+- Overfitting grows: the train–valid gap went 1.7 → 4.1 → 4.8 points.
+
+To do (next session): probe_margin 0 and near_miss_trials 0; combinations only for pairs with d_valid > 0;
+sensitivity [0]; duplicate_rho 0.98 and no pruning on duplicates alone; fix `wide()` node bookkeeping;
+extract_name before the fence; 2+ vary slots for kept features by importance; the groups text says refine inside
+productive groups; a one-line index of every tried feature for the Researcher; check predictions at an amplified
+weight ("inert at fitted weight" instead of "did not hold").
+
+Done this session: checkpoint/resume and the keeper; thinking modes; the fitter's feature-value cache with
+instance-affine workers (round 4's generation 1: 70 s against round 3's 388 s); a pipelined generation;
+bench/revive streams and a momentum ranking; CVRP (9 problems).
