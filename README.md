@@ -4,6 +4,16 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
+> **Helix v3 (October 17, 2026)** rebuilds the engine around the same two loops, adding a Navigator over a map of approaches, checked predictions, probes that don't compete, novelty fingerprints and proof-by-certificate pruning. It runs on eight verifiable problems, and a meta loop evolves how Helix searches.
+>
+> ```bash
+> python -m helix3.run binpack2d -g 5        # one run (any of: binpack2d binpack1d tsp knapsack scheduling coloring setcover jobshop)
+> python -m ui                               # the dashboard
+> python -m meta.outer --help                # the meta loop
+> ```
+>
+> Start with [helix3/README.md](helix3/README.md), [docs/V3_DESIGN.md](docs/V3_DESIGN.md) (why each part exists) and [docs/META_V3.md](docs/META_V3.md). The rest of this page describes the original system (v1/v2), which still runs.
+
 ---
 
 ## The vision
