@@ -170,3 +170,40 @@ candidates across a resume, counts only time spent, and fails fast if the starti
 
 **Also:** round-3 review fixes part 2 (see the commit), perturbation generations, the dashboard showing dead runs as
 live (fixed), aborted generations of resumed runs hidden, docs/REQUESTS.md (every request, with status).
+
+## The cloud batch and the 2D bin-packing plateau (October 17, evening)
+
+Shreyas's cloud agent ran `scripts/run_jobs.sh` (all pushed to `results/v3/`). Held-out test progress against each
+problem's hidden textbook rule (shown to the human only):
+
+| Problem | Generations | Test | Textbook rule |
+|---|---|---|---|
+| knapsack | 10 | 99.95% (train and valid 100%: optimal) | 98.2% (value per weight) |
+| scheduling | 10 | 99.2% | 98.2% (least-loaded machine) |
+| setcover | 10 | 98.5% | 93.3% (cost per new element) |
+| tsp | 10 | 97.8% | 95.9% (nearest neighbour) |
+| cvrp | 10 | 92.6% | 84.4% (nearest customer that fits) |
+| jobshop | 10 | 75.7% | 66.3% (most work remaining) |
+| coloring | 10 | 64.8% | 61.1% (DSatur) |
+| binpack1d | 10 | 37.6% | 19.3% (Best Fit) |
+| binpack2d | 13 (crashed at 14) | 28.8% | 3.1% (Best Fit) |
+
+Every problem beats its textbook rule on unseen instances with no problem-specific changes. 2D bin packing
+plateaued: 28.6% at generation 4, flat through 13 (best ever: 34.6%).
+
+**The crash** (generation 14): the Researcher's feature index iterated the ledger while the Mutator added to it.
+Fixed (snapshots), and a crashed generation now restores the last checkpoint and is retried.
+
+**The plateau** (subagent review of generations 5-13): 79 features, 1 kept.
+1. The probe gate had gone blind: 0 of 12 probe-passing features gained in their trial; it ran on 6 instances
+   at coarse weights, and the gated, conditional features that built the 34.6% run died there.
+2. Stale results leaked back in: duplicates inherited gains measured against older champions, giving the
+   Navigator fake momentum and the Mutator a frozen "+0.666 (redundant)" on its scoreboard every generation.
+3. Exploration collapsed: the approaches holding the kept features were benched; the Mutator's two forced
+   kept-parent slots produced 15 variants of one feature (7 duplicates); the Navigator opened 22 one-shot approaches.
+
+Fixes (commit "Plateau fixes from the bp2d-25 review"): probe on the full search split with finer weights and two
+near-miss trials; no inherited scores, near-copies of features judged under an older champion are re-tested,
+duplicates aren't stream evidence, old redundant results leave the scoreboard; approaches holding a kept feature are
+never benched, revived approaches get two tries, one forced kept-parent slot; agents are told features may be
+conditional. Round 5 (binpack2d, 12 generations) tests them.
