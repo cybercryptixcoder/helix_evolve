@@ -99,9 +99,22 @@ def list_runs():
     return out
 
 
+def _drop_aborted(ev):
+    """A resumed run re-does the generation that was in flight: drop that attempt's events (its model calls stay,
+    marked aborted, since they were real spend), so features and plans aren't shown twice."""
+    out = []
+    for e in ev:
+        if e.get("type") == "resume":
+            g = e.get("gen", 0)
+            out = [x if not (x.get("type") == "call" and (x.get("gen") or 0) > g) else {**x, "aborted": True}
+                   for x in out if x.get("type") == "call" or (x.get("gen") or 0) <= g or "gen" not in x]
+        out.append(e)
+    return out
+
+
 def run_detail(rel):
     d = _safe(rel)
-    ev = _events(d)
+    ev = _drop_aborted(_events(d))
     slim = []
     for e in ev:
         if e["type"] == "call":
