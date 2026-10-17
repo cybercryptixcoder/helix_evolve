@@ -1,0 +1,1474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix run viewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!--
+  Helix run viewer. One self-contained page: the trace of a run is embedded below (TRACE), or dropped onto
+  the page as a JSON file made by `python -m viz.export <run> --json trace.json`.
+
+  How the page is organised (search for these headings to find your way around):
+    STYLE            colours, type, layout
+    GEOMETRY         where every machine and belt sits on the floor (edit here to move things)
+    SCHEDULE         turns the trace into a timeline of parcels, cards and machine work
+    FLOOR            draws the machines and moves things for a given moment
+    INSPECTOR        the right-hand panel: what a call, feature, machine or generation did
+    TABS             parts (every feature), champions (code and score), notes
+    TRANSPORT        play, pause, speed, timeline, keyboard
+  viz/README.md has the trace format and how to add a new machine or a new kind of parcel.
+-->
+<style>
+/* ============================================================ STYLE */
+:root {
+  color-scheme: light;
+  --floor: #E2E5E7;
+  --floor-mark: #D2D7DB;
+  --panel: #F8F9F9;
+  --paper: #FFFFFF;
+  --ink: #1E2930;
+  --ink-2: #53626D;
+  --ink-3: #85939C;
+  --line: #B8C0C6;
+  --belt: #8C979F;
+  --deep: #1F5FB4;
+  --deep-soft: #DDE7F6;
+  --wide: #D9651C;
+  --wide-soft: #FBE7D7;
+  --fit: #2D7A4E;
+  --fit-soft: #DBEEE2;
+  --lib: #5B418F;
+  --lib-soft: #E9E2F4;
+  --hazard: #F1BF2A;
+  --bad: #B33A3A;
+  --bad-soft: #F6E0E0;
+  --flat: #7B868E;
+  --font: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sign: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--floor); color: var(--ink); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; }
+a { color: var(--deep); }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 34vw); grid-template-rows: auto minmax(0, 1fr) auto; height: 100vh; }
+
+
+/* header */
+.top { grid-column: 1 / -1; display: flex; align-items: flex-end; gap: 28px; padding: 14px 22px 0; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+.brand { padding-bottom: 12px; min-width: 0; }
+.brand h1 { font: 700 26px/1 var(--sign); margin: 0; letter-spacing: 0.01em; }
+.brand p { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; }
+.tabs { display: flex; gap: 2px; margin-left: auto; align-self: flex-end; }
+.tabs button { border: 0; background: none; padding: 9px 14px 11px; font: 600 15px/1 var(--sign); color: var(--ink-2); border-bottom: 3px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.board { display: flex; gap: 22px; padding-bottom: 12px; }
+.board div { display: flex; flex-direction: column; }
+.board b { font: 600 22px/1.1 var(--sign); font-variant-numeric: tabular-nums; }
+.board span { font-size: 12.5px; color: var(--ink-2); }
+
+/* stage */
+.stage { grid-column: 1; position: relative; overflow: hidden; min-height: 420px; }
+.view { position: absolute; inset: 0; overflow: auto; }
+.view[hidden] { display: none; }
+#floor { width: 100%; height: 100%; display: block; }
+.dropzone { position: absolute; inset: 24px; border: 2px dashed var(--belt); border-radius: 10px; display: grid; place-items: center; text-align: center; color: var(--ink-2); background: rgba(255,255,255,0.4); }
+.dropzone h2 { font: 600 24px var(--sign); color: var(--ink); margin: 0 0 6px; }
+.dropzone.over { background: var(--deep-soft); border-color: var(--deep); }
+.dropzone[hidden] { display: none; }
+
+/* floor drawing */
+.stencil { font: 700 210px/1 var(--sign); fill: var(--floor-mark); }
+.stencil-sub { font: 600 22px var(--sign); fill: var(--floor-mark); }
+.belt { fill: none; stroke: var(--belt); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.belt.minor { stroke-dasharray: 4 5; stroke-width: 1.6; }
+.belt-label { font: 500 11.5px var(--font); fill: var(--ink-3); }
+.node rect.body { fill: var(--paper); stroke: var(--ink); stroke-width: 1.4; }
+.node rect.cap { stroke: none; }
+.node .title { font: 700 16px var(--sign); fill: var(--paper); }
+.node .sub { font: 400 12px var(--font); fill: var(--ink-2); }
+.node .stat { font: 600 12.5px var(--sign); fill: var(--ink); font-variant-numeric: tabular-nums; }
+.node .lamp { fill: #C9CFD3; stroke: rgba(0,0,0,0.25); }
+.node.busy .lamp { fill: var(--hazard); }
+.node .bar { fill: currentColor; opacity: 0.22; }
+.node { cursor: pointer; }
+.node:hover rect.body { stroke-width: 2.2; }
+.node.sel rect.body { stroke-width: 3; }
+.deep { color: var(--deep); } .wide { color: var(--wide); } .fit { color: var(--fit); } .lib { color: var(--lib); } .seed { color: var(--ink-2); } .scrapc { color: var(--bad); }
+.node .cap { fill: currentColor; }
+.bay rect { fill: var(--panel); stroke: var(--line); }
+.bay.busy rect.bayfill { fill: currentColor; opacity: 0.18; }
+.bay text { font: 500 9.5px var(--font); fill: var(--ink-2); }
+.bay.busy text { fill: var(--ink); }
+.tray { fill: none; stroke: var(--line); stroke-dasharray: 3 3; }
+.hazard-label { font: 700 12px var(--sign); fill: var(--ink); letter-spacing: 0.04em; }
+.gate-note { font: 500 11px var(--font); fill: var(--ink-2); }
+.parcel { cursor: pointer; }
+.parcel .env { fill: var(--paper); stroke: currentColor; stroke-width: 1.5; }
+.parcel .fold { fill: none; stroke: currentColor; stroke-width: 1.1; }
+.parcel .plabel, .card .clabel { font: 600 11px var(--font); fill: var(--ink); paint-order: stroke; stroke: var(--floor); stroke-width: 3.5px; stroke-linejoin: round; }
+.parcel.sel .env, .card.sel .glyph { stroke-width: 3; }
+.card { cursor: pointer; }
+.card .glyph { fill: currentColor; stroke: rgba(0,0,0,0.45); stroke-width: 1; }
+.card .glines { stroke: rgba(255,255,255,0.85); stroke-width: 1.4; }
+.card .chip rect { fill: var(--paper); stroke: currentColor; stroke-width: 1.4; }
+.card .chip text { font: 600 10.5px var(--font); fill: var(--ink); }
+.badge circle { stroke: var(--paper); stroke-width: 1.5; }
+.badge text { font: 700 9.5px var(--font); fill: var(--paper); text-anchor: middle; dominant-baseline: central; }
+.b-kept circle { fill: var(--fit); } .b-bad circle { fill: var(--bad); } .b-flat circle { fill: var(--flat); } .b-good circle { fill: var(--fit); } .b-red circle { fill: var(--lib); }
+
+/* inspector */
+.inspector { grid-column: 2; grid-row: 2 / 4; overflow: auto; background: var(--panel); border-left: 1px solid var(--line); max-height: calc(100vh - 0px); }
+.insp { padding: 18px 22px 40px; }
+.insp .kicker { font: 600 13px var(--sign); color: var(--ink-2); margin: 0 0 2px; }
+.insp h2 { font: 700 23px/1.15 var(--sign); margin: 0 0 6px; overflow-wrap: anywhere; }
+.insp h3 { font: 600 17px var(--sign); margin: 22px 0 6px; }
+.insp .meta { color: var(--ink-2); font-size: 13.5px; margin: 0 0 10px; }
+.insp .back { border: 0; background: none; color: var(--ink-2); padding: 0; margin: 0 0 10px; font-size: 13.5px; }
+.note { background: var(--paper); border-left: 4px solid var(--lib); padding: 10px 14px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+.note .who { font: 600 12.5px var(--sign); color: var(--lib); margin: 0 0 3px; }
+.note p { margin: 0 0 8px; } .note p:last-child { margin: 0; }
+.note.auto { border-left-color: var(--ink-3); } .note.auto .who { color: var(--ink-2); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; font-size: 14px; margin: 8px 0; }
+.facts dt { color: var(--ink-2); } .facts dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; margin: 10px 0 6px; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--paper); padding: 6px 12px; font-size: 13.5px; color: var(--ink-2); border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.raw-toggle { font-size: 13px; color: var(--ink-2); margin-left: 10px; }
+.scrollbox { max-height: max(320px, calc(100vh - 420px)); overflow: auto; border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; }
+@media (max-width: 1050px) { .scrollbox { max-height: 70vh; } }
+.md { font-size: 14px; overflow-wrap: anywhere; }
+.md h4 { font: 600 15.5px var(--sign); margin: 14px 0 4px; }
+.md h4.hit { background: var(--hazard); padding: 0 4px; border-radius: 3px; }
+.md p { margin: 0 0 8px; }
+.md ul { margin: 0 0 8px; padding-left: 18px; }
+.md code { font: 12.5px var(--mono); background: #ECEFF1; padding: 0 3px; border-radius: 3px; }
+pre { font: 12.5px/1.55 var(--mono); background: #1F272D; color: #E7ECEF; padding: 11px 13px; border-radius: 6px; overflow: auto; margin: 6px 0 12px; white-space: pre; tab-size: 4; }
+pre.raw { white-space: pre-wrap; background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.tk-kw { color: #8FC1FF; } .tk-str { color: #F5C98A; } .tk-com { color: #8D9BA5; font-style: italic; } .tk-num { color: #B7E2A7; } .tk-fn { color: #F3A1C9; }
+.diff .add { background: rgba(108, 196, 133, 0.22); display: block; } .diff .del { background: rgba(230, 105, 105, 0.22); display: block; color: #F0B9B9; }
+.pill { display: inline-block; font: 600 12px/1.6 var(--sign); padding: 0 8px; border-radius: 10px; background: #E6EAED; color: var(--ink); white-space: nowrap; }
+.v-kept { background: var(--fit); color: #fff; } .v-probe-rejected, .v-refuted, .v-invalid { background: var(--bad-soft); color: var(--bad); }
+.v-flat { background: #E6EAED; color: var(--ink-2); } .v-redundant { background: var(--lib-soft); color: var(--lib); }
+.v-retired { background: var(--lib); color: #fff; }
+.list { list-style: none; padding: 0; margin: 6px 0; }
+.list li { border-top: 1px solid #E1E5E8; padding: 7px 0; }
+.list li button.link { border: 0; background: none; padding: 0; text-align: left; color: var(--ink); font-weight: 600; }
+.list li button.link:hover { color: var(--deep); text-decoration: underline; }
+.small { font-size: 13px; color: var(--ink-2); }
+table.t { border-collapse: collapse; font-size: 13.5px; width: 100%; margin: 6px 0 12px; font-variant-numeric: tabular-nums; }
+table.t th { text-align: left; font: 600 13px var(--sign); color: var(--ink-2); border-bottom: 1px solid var(--line); padding: 4px 6px 4px 0; }
+table.t td { border-bottom: 1px solid #E5E9EC; padding: 4px 6px 4px 0; vertical-align: top; }
+table.t tr.click { cursor: pointer; } table.t tr.click:hover td { background: #EEF1F3; }
+.probe { display: block; margin: 6px 0 4px; }
+
+/* transport */
+.transport { grid-column: 1; background: var(--panel); border-top: 1px solid var(--line); padding: 10px 22px 12px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tbtn { border: 1px solid var(--line); background: var(--paper); border-radius: 7px; height: 34px; min-width: 38px; padding: 0 10px; font-weight: 600; }
+.tbtn.play { background: var(--ink); color: var(--paper); border-color: var(--ink); min-width: 74px; }
+.speed { height: 34px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); padding: 0 6px; }
+.gens { display: flex; gap: 4px; margin-left: 6px; }
+.gens button { border: 1px solid var(--line); background: var(--paper); border-radius: 6px; height: 30px; padding: 0 9px; font: 600 13.5px var(--sign); }
+.gens button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.caption { margin-left: auto; color: var(--ink); font-size: 14px; min-height: 21px; text-align: right; flex: 1 1 240px; }
+.track { position: relative; height: 40px; margin-top: 10px; cursor: pointer; touch-action: none; }
+.track .lane { position: absolute; left: 0; right: 0; top: 14px; height: 12px; background: #E3E7EA; border-radius: 6px; }
+.track .gseg { position: absolute; top: 14px; height: 12px; border-left: 2px solid var(--panel); }
+.track .gseg span { position: absolute; top: -14px; left: 4px; font: 600 11px var(--sign); color: var(--ink-2); white-space: nowrap; }
+.track .tick { position: absolute; width: 2px; height: 6px; border-radius: 1px; }
+.track .tick.deep { background: var(--deep); top: 28px; } .track .tick.wide { background: var(--wide); top: 34px; }
+.track .kept { position: absolute; top: 15px; width: 10px; height: 10px; margin-left: -5px; background: var(--fit); transform: rotate(45deg); border: 1.5px solid var(--panel); }
+.track .head { position: absolute; top: 6px; width: 3px; height: 28px; margin-left: -1px; background: var(--ink); border-radius: 2px; }
+.track .done { position: absolute; left: 0; top: 14px; height: 12px; background: rgba(30, 41, 48, 0.16); border-radius: 6px 0 0 6px; }
+
+/* parts and champions tabs */
+.sheet { padding: 22px 26px 60px; max-width: 1180px; }
+.sheet h2 { font: 700 26px var(--sign); margin: 0 0 4px; }
+.sheet > p { color: var(--ink-2); margin: 0 0 18px; max-width: 72ch; }
+.genrow { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.genrow .g { font: 700 30px/1 var(--sign); }
+.genrow .g small { display: block; font: 500 12.5px var(--font); color: var(--ink-2); margin-top: 6px; }
+.lanehead { font: 600 13px var(--sign); margin-bottom: 6px; }
+.parts { display: flex; flex-wrap: wrap; gap: 8px; }
+.part { width: 210px; text-align: left; border: 1px solid var(--line); border-left: 5px solid currentColor; background: var(--paper); border-radius: 5px; padding: 7px 9px; }
+.part:hover { border-color: var(--ink); border-left-color: currentColor; }
+.part b { display: block; font: 600 13.5px var(--font); color: var(--ink); overflow-wrap: anywhere; }
+.part span.why { display: block; font-size: 12.5px; color: var(--ink-2); margin: 2px 0 5px; line-height: 1.35; }
+.part .num { display: block; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.chart { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 18px; }
+.champ { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 0 0 14px; }
+.champ h3 { font: 700 19px var(--sign); margin: 0 0 4px; }
+.notes-body { max-width: 74ch; }
+.notes-body h3 { font: 700 20px var(--sign); margin: 26px 0 6px; }
+.finding { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--hazard); border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 10px 0; }
+.finding b { font: 600 16px var(--sign); display: block; margin-bottom: 3px; }
+
+@media (max-width: 1050px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; height: auto; }
+  .stage { height: 72vh; }
+  #floor { min-width: 900px; height: auto; }
+  .inspector { grid-column: 1; grid-row: auto; max-height: none; border-left: 0; border-top: 1px solid var(--line); }
+  .transport { grid-row: 3; }
+  .genrow { grid-template-columns: 1fr; }
+  .board { gap: 14px; flex-wrap: wrap; }
+  .track .gseg span { font-size: 0; }
+  .track .gseg span::after { content: attr(data-short); font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Helix run viewer</h1>
+      <p id="runline">Drop a trace file to begin</p>
+    </div>
+    <div class="board" id="board" aria-live="polite"></div>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button role="tab" aria-selected="true" data-view="floorview">Floor</button>
+      <button role="tab" aria-selected="false" data-view="partsview">Parts</button>
+      <button role="tab" aria-selected="false" data-view="champview">Champions</button>
+      <button role="tab" aria-selected="false" data-view="notesview">Notes</button>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage">
+    <section class="view" id="floorview" aria-label="Factory floor">
+      <svg id="floor" viewBox="0 0 1190 790" role="img" aria-label="The two loops of the run, with messages and features moving between the agents"></svg>
+    </section>
+    <section class="view" id="partsview" hidden></section>
+    <section class="view" id="champview" hidden></section>
+    <section class="view" id="notesview" hidden></section>
+    <div class="dropzone" id="dropzone" hidden>
+      <div>
+        <h2>Drop a run trace here</h2>
+        <p>Make one with <code>python -m viz.export helix/runs/&lt;run&gt; --json trace.json</code>,<br>or build this page with the trace inside: <code>python -m viz.export helix/runs/&lt;run&gt;</code>.</p>
+        <p><label class="tbtn" style="display:inline-flex;align-items:center">Choose a file<input type="file" id="filepick" accept=".json,application/json" hidden></label></p>
+      </div>
+    </div>
+  </main>
+
+  <aside class="inspector" id="inspector" aria-label="Details"></aside>
+
+  <footer class="transport">
+    <div class="row">
+      <button class="tbtn" id="prev" title="Previous step (left arrow)" aria-label="Previous step">◀︎</button>
+      <button class="tbtn play" id="play" title="Play or pause (space)">Play</button>
+      <button class="tbtn" id="next" title="Next step (right arrow)" aria-label="Next step">▶︎</button>
+      <select class="speed" id="speed" aria-label="Speed">
+        <option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option>
+      </select>
+      <div class="gens" id="gens" aria-label="Jump to a generation"></div>
+      <div class="caption" id="caption"></div>
+    </div>
+    <div class="track" id="track" role="slider" aria-label="Timeline" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+  </footer>
+</div>
+
+<script id="helix-trace">
+const EMBEDDED_TRACE = /*__HELIX_TRACE__*/null;
+</script>
+<script>
+"use strict";
+/* ============================================================ small helpers */
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = (sel, el = document) => el.querySelector(sel);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (v, d = 3) => v == null || isNaN(v) ? "—" : (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+const sgn = (v, d = 3) => v == null || isNaN(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(d);
+const pct = v => v == null ? "—" : v.toFixed(1) + "%";
+const ease = p => p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v; else if (k === "html") e.innerHTML = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+function sv(tag, attrs = {}, ...kids) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null) continue;
+    if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+}
+const short = (s, n) => (s || "").length > n ? s.slice(0, n - 1) + "…" : (s || "");
+const ROLE = { researcher: "Researcher", coder: "Coder", mutator: "Mutator", summary: "Summary" };
+const VERDICT = { kept: "kept", "probe-rejected": "rejected by the probe", refuted: "refuted", flat: "flat", redundant: "redundant", invalid: "invalid", retired: "retired" };
+
+/* ============================================================ GEOMETRY */
+// Everything on the floor is placed here, in the SVG's 1190 x 790 coordinate space.
+const NODES = {
+  codezero:   { x: 540, y: 14,  w: 160, h: 38,  title: "Code Zero",        sub: "",                                     tone: "seed" },
+  library:    { x: 420, y: 74,  w: 400, h: 110, title: "Library",          sub: "",                                     tone: "lib" },
+  log:        { x: 28,  y: 367, w: 152, h: 86,  title: "Research log",     sub: "every idea and its verdict",           tone: "deep" },
+  inspect:    { x: 230, y: 232, w: 200, h: 76,  title: "Inspect",          sub: "packings vs near-optimal", tone: "deep" },
+  researcher: { x: 220, y: 367, w: 220, h: 86,  title: "Researcher",       sub: "proposes feature ideas", tone: "deep" },
+  coder:      { x: 200, y: 530, w: 260, h: 100, title: "Coder",            sub: "writes each idea as feature()",        tone: "deep", bays: true },
+  accept:     { x: 515, y: 430, w: 210, h: 80,  title: "Accept",           sub: "combine the winners, retire losers",   tone: "fit" },
+  fit:        { x: 440, y: 645, w: 360, h: 112, title: "Fit and evaluate", sub: "weights fitted; each feature tried with vs without", tone: "fit" },
+  mutator:    { x: 900, y: 365, w: 262, h: 110, title: "Mutator",          sub: "variants and fresh features",          tone: "wide", bays: true },
+  scrap:      { x: 925, y: 700, w: 150, h: 60,  title: "Rejected",         sub: "",                                     tone: "scrapc" },
+};
+const PATHS = {
+  cz_lib: "M620 52 V74",
+  lib_inspect: "M420 128 H330 V232",
+  inspect_res: "M330 308 V367",
+  log_res: "M180 410 H220",
+  lib_res: "M500 184 V410 H440",
+  res_coder: "M330 453 V530",
+  coder_fit: "M330 630 V700 H440",
+  lib_mut: "M820 128 H1031 V365",
+  mut_fit: "M1031 475 V674 H800",
+  fit_accept: "M620 645 V510",
+  accept_lib: "M620 430 V184",
+  accept_log: "M515 492 H104 V453",
+  fit_scrap: "M800 734 H925",
+  accept_scrap: "M725 470 H842 V734 H925",
+  lib_scrap: "M820 168 H842 V734 H925",
+  fit_coder: "M440 742 H296 V630",
+  fit_mut: "M800 692 H1064 V475",
+};
+const BELT_LABELS = [
+  ["lib_inspect", 338, 160, "champion"],
+  ["inspect_res", 338, 342, "packings"],
+  ["lib_res", 508, 300, "policy and weights"],
+  ["res_coder", 338, 496, "ideas"],
+  ["coder_fit", 338, 668, "features"],
+  ["lib_mut", 900, 118, "code and a score only"],
+  ["mut_fit", 1040, 560, "features"],
+  ["fit_accept", 628, 580, "winners"],
+  ["accept_lib", 628, 280, "new champion"],
+  ["accept_log", 190, 486, "verdicts"],
+];
+const TRAY = { x: 458, y: 702, step: 22, max: 11 };        // cards waiting in Fit
+const HEAD = { x: 742, y: 686 };                            // the card under test
+const QUEUE = { x: 536, y: 486, step: 22 };                 // winners waiting at Accept
+const DOCK = { x: 434, y: 112, w: 92, h: 19, cols: 4, gx: 4, gy: 4 };   // features kept in the library
+const PILE = { x: 942, y: 744 };                            // rejected cards
+
+/* ============================================================ state */
+let T = null;            // the trace
+let IX = null;           // indexes into it
+let S = null;            // the schedule
+let now = 0, playing = false, speed = 1, lastFrame = null;
+let selected = null;     // {type, id, ...}
+const els = { envs: new Map(), cards: new Map(), nodes: {}, bays: {} };
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============================================================ loading */
+function load(trace) {
+  if (!trace || !String(trace.format || "").startsWith("helix-trace/")) {
+    alert("That file isn't a Helix trace (it has no helix-trace format tag).");
+    return;
+  }
+  T = trace;
+  IX = buildIndex(T);
+  S = buildSchedule();
+  $("#dropzone").hidden = true;
+  drawFloor();
+  buildTrack();
+  buildGenButtons();
+  renderParts();
+  renderChampions();
+  renderNotes();
+  const c = T.run.config || {};
+  $("#runline").textContent = `Run ${T.run.id}: ${T.generations.length - 1} generations of the ${c.engine || "feature"} engine, ${c.flash_model || "model unknown"}`;
+  document.title = `Helix run ${T.run.id}`;
+  now = 0; selected = null;
+  seek(S.gens[1] ? S.gens[1].t0 - 0.01 : 0);
+  showInspector();
+  if (!reduceMotion) { setTimeout(() => setPlaying(true), 600); }
+}
+
+function buildIndex(t) {
+  const calls = new Map(t.calls.map(c => [c.id, c]));
+  const feats = new Map(t.features.map(f => [f.id, f]));
+  const ideas = new Map(t.ideas.filter(i => i.feature).map(i => [i.feature, i]));
+  const gens = new Map(t.generations.map(g => [g.gen, g]));
+  const callsOf = new Map();
+  for (const c of t.calls) { if (c.feature) { if (!callsOf.has(c.feature)) callsOf.set(c.feature, []); callsOf.get(c.feature).push(c); } }
+  return { calls, feats, ideas, gens, callsOf };
+}
+const noteFor = (kind, id) => (T.notes && T.notes[kind] && T.notes[kind][id]) || null;
+const isAuto = id => (T.notes && T.notes.auto || []).includes(id);
+
+/* ============================================================ SCHEDULE */
+// The animation runs on its own clock. Real durations still set the order and the relative lengths:
+// a call that took 7 s works visibly longer than one that took 2 s, but nobody waits 7 s.
+const D = { travel: 1.05, inspect: 0.9, refit: 0.8, accept: 1.3, start: 0.8, gap: 0.7, out: 0.75 };
+const workTime = real => clamp(0.55 + 0.3 * (real || 1), 0.7, 4.2);
+const realFit = f => f && f.timing ? (f.timing.total ?? f.timing.probe ?? null) : null;
+const testTime = f => clamp(0.45 + 0.2 * (realFit(f) || (f.verdict === "probe-rejected" ? 1.2 : 8)), 0.55, 3.2);
+
+function buildSchedule() {
+  const sch = { envs: [], cards: new Map(), works: [], gens: [], scores: [], beats: new Set(), end: 0 };
+  const env = (id, path, t0, label, tone, ref, dur = D.travel) => {
+    sch.envs.push({ id, path, t0, t1: t0 + dur, label, tone, ref });
+    sch.beats.add(+t0.toFixed(3));
+    return t0 + dur;
+  };
+  const work = (node, t0, t1, label, ref, bay = null) => { sch.works.push({ node, t0, t1, label, ref, bay }); sch.beats.add(+t0.toFixed(3)); };
+  const card = f => {
+    if (!sch.cards.has(f.id)) sch.cards.set(f.id, { f, tone: f.branch === "deep" ? "deep" : "wide", segs: [], stamps: [] });
+    return sch.cards.get(f.id);
+  };
+  const seg = (f, type, t0, t1, path = null) => card(f).segs.push({ type, t0, t1, path });
+
+  let t = 0;
+  const g0 = IX.gens.get(0);
+  sch.gens.push({ gen: 0, t0: 0, t1: 2.2 });
+  if (g0) {
+    env("cz", "cz_lib", 0.2, "Code Zero", "seed", { type: "champion", id: g0.champion });
+    sch.scores.push({ t: 1.25, gen: 0, champion: g0.champion });
+  }
+  t = 2.2;
+  const docked = new Map();                       // fid -> dock segment (to close it on retirement)
+
+  for (const g of T.generations.filter(g => g.gen > 0)) {
+    const t0 = t;
+    sch.beats.add(+t0.toFixed(3));
+    const gc = T.calls.filter(c => c.gen === g.gen);
+    const feats = T.features.filter(f => f.gen === g.gen);
+    const arrive = new Map();                      // fid -> time its card reaches Fit
+    let latest = t0 + D.start;
+
+    // ---- deep loop: Inspect, then the Researcher's prompt arrives from three places at once
+    const tIns = env(`ins${g.gen}`, "lib_inspect", t0 + 0.15, "champion", "lib", { type: "library", gen: g.gen });
+    work("inspect", tIns, tIns + D.inspect, "Inspect is packing the diagnostic instances", { type: "inspect", gen: g.gen });
+    const res = gc.filter(c => c.role === "researcher").sort((a, b) => (a.start || 0) - (b.start || 0));
+    let tR = tIns + D.inspect;
+    if (res.length) {
+      const first = res[0];
+      env(`rp${g.gen}a`, "inspect_res", tR, "packings", "deep", { type: "call", id: first.id, section: "What the packings look like" });
+      env(`rp${g.gen}b`, "lib_res", tR, "policy", "lib", { type: "call", id: first.id, section: "The policy" });
+      const arr = env(`rp${g.gen}c`, "log_res", tR, "log", "deep", { type: "call", id: first.id, section: "Research log" });
+      let tc = arr;
+      for (const c of res) {
+        const d = workTime(c.seconds);
+        work("researcher", tc, tc + d, c.kind === "retry" ? "Researcher, asked again for JSON only" : "Researcher is reading and proposing", { type: "call", id: c.id });
+        tc += d;
+      }
+      tR = tc;
+    }
+    // ideas -> Coder -> Fit
+    const deepFeats = feats.filter(f => f.branch === "deep");
+    deepFeats.forEach((f, i) => {
+      const idea = IX.ideas.get(f.id);
+      const arr = env(`idea${f.id}`, "res_coder", tR + i * 0.09, short(f.name, 22), "deep", { type: "idea", id: f.id });
+      let tc = arr;
+      const writes = (IX.callsOf.get(f.id) || []).filter(c => c.kind !== "repair");
+      for (const c of writes) {
+        const d = workTime(c.seconds);
+        work("coder", tc, tc + d, `Coder is writing ${f.name}`, { type: "call", id: c.id }, f.id);
+        tc += d;
+      }
+      seg(f, "travel", tc, tc + D.travel, "coder_fit");
+      arrive.set(f.id, tc + D.travel);
+      void idea;
+    });
+
+    // ---- wide loop, at the same time: one prompt per Mutator call, through the air gap
+    const wideFeats = feats.filter(f => f.branch === "wide");
+    wideFeats.forEach((f, i) => {
+      const writes = (IX.callsOf.get(f.id) || []).filter(c => c.kind !== "repair");
+      const first = writes[0];
+      const arr = env(`mp${f.id}`, "lib_mut", t0 + 0.25 + i * 0.16, i === 0 ? "code + score" : "", "wide",
+        first ? { type: "call", id: first.id } : { type: "feature", id: f.id }, D.travel * 1.25);
+      let tc = arr;
+      for (const c of writes) {
+        const d = workTime(c.seconds);
+        work("mutator", tc, tc + d, `Mutator is writing ${f.note && f.note.startsWith("variant") ? "a variant" : "a fresh feature"}`, { type: "call", id: c.id }, f.id);
+        tc += d;
+      }
+      seg(f, "travel", tc, tc + D.travel * 1.2, "mut_fit");
+      arrive.set(f.id, tc + D.travel * 1.2);
+    });
+
+    // ---- Fit: refit the champion first, then try each card, one at a time, in the order the run did
+    let fitFree = t0 + D.start + 0.4;
+    if ((g.before && IX.gens.get(g.gen - 1) && (IX.gens.get(g.gen - 1).library || []).length)) {
+      work("fit", fitFree, fitFree + D.refit, "Fit is refitting the champion's own weights", { type: "refit", gen: g.gen });
+      fitFree += D.refit;
+    }
+    const order = fitOrder(g, feats, arrive);
+    for (const f of order) {
+      const a = arrive.get(f.id) ?? fitFree;
+      seg(f, "tray", a, Math.max(a, fitFree));
+      let t1 = Math.max(a, fitFree);
+      const repairs = (IX.callsOf.get(f.id) || []).filter(c => c.kind === "repair");
+      for (const c of repairs) {                  // the error goes back to the author, a fixed version comes back
+        const back = f.branch === "deep" ? ["fit_coder", "coder_fit", "coder"] : ["fit_mut", "mut_fit", "mutator"];
+        const tb = env(`rep${c.id}`, back[0], t1, "error", "bad", { type: "call", id: c.id });
+        seg(f, "away", t1, tb + workTime(c.seconds) + D.travel);
+        work(back[2], tb, tb + workTime(c.seconds), `repairing ${f.name}`, { type: "call", id: c.id }, f.id);
+        t1 = tb + workTime(c.seconds) + D.travel;
+      }
+      const d = testTime(f);
+      seg(f, "test", t1, t1 + d);
+      work("fit", t1, t1 + d, `Fit is trying ${f.name}`, { type: "feature", id: f.id });
+      const c = card(f);
+      const winner = f.delta_valid != null && f.delta_valid > (T.run.config.accept_margin ?? 0.03) && f.verdict !== "invalid";
+      c.stamps.push({ t: t1 + d * 0.7, kind: fitBadge(f) });
+      if (winner) seg(f, "travel", t1 + d, t1 + d + D.out, "fit_accept"), seg(f, "queue", t1 + d + D.out, Infinity);
+      else seg(f, "travel", t1 + d, t1 + d + D.out, "fit_scrap"), seg(f, "scrap", t1 + d + D.out, Infinity);
+      fitFree = t1 + d;
+    }
+    for (const f of feats) if (!arrive.has(f.id) && !order.includes(f)) {     // never reached Fit (rare)
+      seg(f, "scrap", fitFree, Infinity);
+    }
+    latest = Math.max(latest, fitFree, ...[...arrive.values()]);
+
+    // ---- Accept: winners join the library (or are found redundant), losers already went to scrap
+    const tA = latest + 0.2;
+    work("accept", tA, tA + D.accept, "Accept is combining the winners and refitting", { type: "accept", gen: g.gen });
+    const tA1 = tA + D.accept;
+    for (const f of feats) {
+      const c = sch.cards.get(f.id);
+      if (!c) continue;
+      const q = c.segs.find(s => s.type === "queue");
+      if (!q) continue;
+      q.t1 = tA1;
+      if (f.verdict === "kept") {
+        c.stamps.push({ t: tA1 - 0.25, kind: "kept" });
+        seg(f, "travel", tA1, tA1 + D.travel, "accept_lib");
+        const dock = { type: "dock", t0: tA1 + D.travel, t1: Infinity, path: null };
+        c.segs.push(dock); docked.set(f.id, dock);
+      } else {
+        c.stamps.push({ t: tA1 - 0.25, kind: f.verdict === "redundant" ? "redundant" : "flat" });
+        seg(f, "travel", tA1, tA1 + D.out, "accept_scrap");
+        seg(f, "scrap", tA1 + D.out, Infinity);
+      }
+    }
+    for (const fid of g.retired || []) {           // retired from the library
+      const dock = docked.get(fid);
+      const f = IX.feats.get(fid);
+      if (dock && f) {
+        dock.t1 = tA1;
+        const c = sch.cards.get(fid);
+        c.stamps.push({ t: tA1 - 0.2, kind: "retired" });
+        seg(f, "travel", tA1, tA1 + D.out * 1.4, "lib_scrap");
+        seg(f, "scrap", tA1 + D.out * 1.4, Infinity);
+      }
+    }
+    if (deepFeats.length) env(`log${g.gen}`, "accept_log", tA1, "verdicts", "deep", { type: "log", gen: g.gen + 1 });
+    sch.scores.push({ t: tA1 + D.travel, gen: g.gen, champion: g.champion });
+    const tEnd = tA1 + D.travel + 0.15;
+    sch.gens.push({ gen: g.gen, t0, t1: tEnd });
+    t = tEnd + D.gap;
+  }
+  sch.end = t;
+  sch.envs.forEach(e => { e.len = null; });
+  sch.beats = [...sch.beats].sort((a, b) => a - b);
+  return sch;
+}
+
+function fitOrder(g, feats, arrive) {
+  // The run's own order, from its console lines ("   f0013 deep class_match_residual ..."); else by arrival.
+  const seen = [];
+  for (const line of g.console || []) {
+    const m = line.match(/^\s*(f\d+)\s+(deep|wide)\s/);
+    if (m && !seen.includes(m[1])) seen.push(m[1]);
+  }
+  const byId = new Map(feats.map(f => [f.id, f]));
+  const ordered = seen.map(id => byId.get(id)).filter(Boolean);
+  const rest = feats.filter(f => !seen.includes(f.id)).sort((a, b) => (arrive.get(a.id) ?? 0) - (arrive.get(b.id) ?? 0));
+  return ordered.concat(rest);
+}
+function fitBadge(f) {
+  if (f.verdict === "invalid") return "invalid";
+  if (f.verdict === "probe-rejected") return "probe";
+  const m = T.run.config.accept_margin ?? 0.03;
+  if (f.delta_valid != null && f.delta_valid > m) return "good";
+  if (f.delta_valid != null && f.delta_valid < -m) return "refuted";
+  return "flat";
+}
+const BADGE = {
+  kept: ["b-kept", "✓", "kept"], good: ["b-good", "+", "passed on validation"], probe: ["b-bad", "✕", "rejected by the probe"],
+  refuted: ["b-bad", "−", "refuted"], invalid: ["b-bad", "!", "invalid"], flat: ["b-flat", "~", "no clear gain"],
+  redundant: ["b-flat", "=", "redundant"], retired: ["b-red", "↓", "retired"],
+};
+
+/* ============================================================ FLOOR */
+let pathEls = {};
+function drawFloor() {
+  const svg = $("#floor");
+  svg.innerHTML = "";
+  els.envs.clear(); els.cards.clear(); els.nodes = {}; els.bays = {}; pathEls = {};
+  // painted floor markings: the generation number, the air gap
+  svg.append(sv("text", { id: "stencil", class: "stencil", x: 24, y: 214 }, ""));
+  svg.append(sv("text", { id: "stencil-sub", class: "stencil-sub", x: 30, y: 240 }, ""));
+  const defs = sv("defs");
+  defs.append(sv("pattern", { id: "haz", width: 16, height: 16, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" },
+    sv("rect", { width: 16, height: 16, fill: "var(--hazard)" }), sv("rect", { width: 8, height: 16, fill: "#2A2F33" })));
+  defs.append(sv("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" },
+    sv("path", { d: "M0 1 L9 5 L0 9 z", fill: "var(--belt)" })));
+  svg.append(defs);
+  // air gap: a hazard band between the wide loop and everything the research knows
+  svg.append(sv("rect", { x: 858, y: 62, width: 18, height: 40, fill: "url(#haz)" }));
+  svg.append(sv("rect", { x: 858, y: 152, width: 18, height: 488, fill: "url(#haz)" }));
+  svg.append(sv("text", { class: "hazard-label", transform: "translate(892 420) rotate(90)" }, "air gap"));
+  svg.append(sv("text", { class: "gate-note", x: 884, y: 160 }, "the Mutator never sees"));
+  svg.append(sv("text", { class: "gate-note", x: 884, y: 174 }, "the packings, the ideas"));
+  svg.append(sv("text", { class: "gate-note", x: 884, y: 188 }, "or the research log"));
+  // belts
+  const minor = new Set(["fit_scrap", "accept_scrap", "lib_scrap", "fit_coder", "fit_mut", "accept_log", "cz_lib"]);
+  const gBelts = sv("g");
+  const used = new Set([...S.envs.map(e => e.path), ...[...S.cards.values()].flatMap(c => c.segs.map(s2 => s2.path))]);
+  for (const [k, d] of Object.entries(PATHS)) {
+    if (minor.has(k) && !used.has(k)) continue;
+    const p = sv("path", { d, class: "belt" + (minor.has(k) ? " minor" : ""), "marker-end": minor.has(k) ? null : "url(#arrow)" });
+    gBelts.append(p);
+    pathEls[k] = p;
+  }
+  svg.append(gBelts);
+  for (const [, x, y, txt] of BELT_LABELS) svg.append(sv("text", { class: "belt-label", x, y }, txt));
+  // machines
+  const maxBays = { coder: 4, mutator: 4 };
+  for (const w of S.works) if (w.bay) maxBays[w.node] = Math.max(maxBays[w.node] || 0, concurrent(w.node, w.t0) + 1);
+  for (const [k, n] of Object.entries(NODES)) svg.append(drawNode(k, n, Math.min(6, maxBays[k] || 0)));
+  // legend, bottom left
+  const lg = sv("g", { transform: "translate(24 662)" });
+  const lgRow = (y, node, text) => { lg.append(node, sv("text", { x: 26, y: y + 4, class: "belt-label", style: "fill:var(--ink-2);font-size:12px" }, text)); };
+  lgRow(0, sv("rect", { x: 4, y: -11, width: 16, height: 22, rx: 2.5, fill: "var(--deep)" }), "a feature from the deep loop");
+  lgRow(30, sv("rect", { x: 4, y: 19, width: 16, height: 22, rx: 2.5, fill: "var(--wide)" }), "a feature from the wide loop");
+  lgRow(60, sv("g", { transform: "translate(12 60)" }, sv("rect", { x: -11, y: -7.5, width: 22, height: 15, rx: 2, fill: "var(--paper)", stroke: "var(--ink-2)", "stroke-width": 1.4 }), sv("path", { d: "M-11 -7 L0 1 L11 -7", fill: "none", stroke: "var(--ink-2)" })), "a message; click it to read it");
+  lgRow(90, sv("g", {}), "");
+  lg.append(sv("text", { x: 0, y: 94, class: "belt-label", style: "fill:var(--ink-2);font-size:12px" }, "✓ kept   + passed validation   ✕ rejected   ~ flat   = redundant"));
+  svg.append(lg);
+  // the waiting areas inside Fit and Accept
+  svg.append(sv("rect", { class: "tray", x: TRAY.x - 4, y: TRAY.y - 14, width: TRAY.step * TRAY.max + 4, height: 36, rx: 4 }));
+  svg.append(sv("rect", { class: "tray", x: HEAD.x - 28, y: HEAD.y - 24, width: 56, height: 58, rx: 4 }));
+  svg.append(sv("text", { class: "sub", x: HEAD.x, y: HEAD.y + 46, "text-anchor": "middle", style: "font:500 10.5px var(--font);fill:var(--ink-2)" }, "under test"));
+  // parcels and cards
+  const gMove = sv("g", { id: "moving" });
+  for (const e of S.envs) {
+    const g = sv("g", { class: `parcel ${e.tone === "bad" ? "scrapc" : e.tone}`, visibility: "hidden", onclick: ev => { ev.stopPropagation(); select(e.ref); } },
+      sv("title", {}, e.label || "message"),
+      sv("rect", { class: "env", x: -11, y: -7.5, width: 22, height: 15, rx: 2 }),
+      sv("path", { class: "fold", d: "M-11 -7 L0 1 L11 -7" }),
+      e.label ? sv("text", { class: "plabel", x: 15, y: 4 }, e.label) : null);
+    gMove.append(g);
+    els.envs.set(e.id, g);
+  }
+  for (const [fid, c] of S.cards) {
+    const f = c.f;
+    const g = sv("g", { class: `card ${c.tone}`, visibility: "hidden", onclick: ev => { ev.stopPropagation(); select({ type: "feature", id: fid }); } },
+      sv("title", {}, `${f.id} ${f.name}`),
+      sv("g", { class: "glyphg" },
+        sv("rect", { class: "glyph", x: -8, y: -11, width: 16, height: 22, rx: 2.5 }),
+        sv("path", { class: "glines", d: "M-4 -5 H4 M-4 -1 H2 M-4 3 H4" })),
+      sv("g", { class: "chip", visibility: "hidden" },
+        sv("rect", { x: 0, y: 0, width: DOCK.w, height: DOCK.h, rx: 9.5 }),
+        sv("circle", { cx: 9, cy: DOCK.h / 2, r: 3.6, fill: "currentColor" }),
+        sv("text", { x: 17, y: 13.4 }, short(f.name, 13))),
+      sv("g", { class: "badge", visibility: "hidden", transform: "translate(8 -11)" }, sv("circle", { r: 7 }), sv("text", {}, "")),
+      sv("text", { class: "clabel", x: 13, y: -14, visibility: "hidden" }, short(f.name, 26)));
+    gMove.append(g);
+    els.cards.set(fid, g);
+  }
+  svg.append(gMove);
+  svg.onclick = () => {};
+  render(now);
+}
+
+function concurrent(node, t) {
+  return S.works.filter(w => w.node === node && w.bay && w.t0 < t && w.t1 > t).length;
+}
+
+function drawNode(key, n, bays) {
+  const g = sv("g", { class: `node ${n.tone}`, onclick: () => select({ type: "node", node: key }) });
+  g.append(sv("title", {}, n.title));
+  g.append(sv("rect", { class: "body", x: n.x, y: n.y, width: n.w, height: n.h, rx: 6 }));
+  const capH = key === "codezero" ? n.h : 24;
+  g.append(sv("rect", { class: "cap", x: n.x + 0.7, y: n.y + 0.7, width: n.w - 1.4, height: capH - 0.7, rx: 5.3 }));
+  if (capH < n.h) g.append(sv("rect", { class: "cap", x: n.x + 0.7, y: n.y + capH - 6, width: n.w - 1.4, height: 6 }));
+  g.append(sv("text", { class: "title", x: key === "codezero" ? n.x + n.w / 2 : n.x + 10, y: n.y + (key === "codezero" ? 24 : 17.5), "text-anchor": key === "codezero" ? "middle" : "start" }, n.title));
+  if (key !== "codezero") g.append(sv("circle", { class: "lamp", cx: n.x + n.w - 13, cy: n.y + 12, r: 5 }));
+  const stat = sv("text", { class: "stat", x: n.x + n.w - 26, y: n.y + 17, "text-anchor": "end", fill: "#fff", style: "fill:#fff" }, "");
+  if (key !== "codezero") g.append(stat);
+  const sub = sv("text", { class: "sub", x: n.x + 10, y: n.y + 40 }, n.sub);
+  g.append(sub);
+  const bar = sv("rect", { class: "bar", x: n.x + 1, y: n.y + n.h - 5, width: 0, height: 4 });
+  g.append(bar);
+  els.nodes[key] = { g, stat, sub, bar, n };
+  if (n.bays && bays) {
+    els.bays[key] = [];
+    const bw = (n.w - 20 - (bays - 1) * 5) / bays;
+    for (let i = 0; i < bays; i++) {
+      const x = n.x + 10 + i * (bw + 5), y = n.y + 52;
+      const b = sv("g", { class: "bay" },
+        sv("rect", { x, y, width: bw, height: 36, rx: 3 }),
+        sv("rect", { class: "bayfill", x, y, width: 0, height: 36, rx: 3, fill: "none" }),
+        sv("text", { x: x + 4, y: y + 22 }, ""));
+      g.append(b);
+      els.bays[key].push({ g: b, fill: b.children[1], text: b.children[2], x, w: bw });
+    }
+  }
+  return g;
+}
+
+function pointOn(key, p) {
+  const path = pathEls[key];
+  if (!path) return { x: 0, y: 0 };
+  const L = path.__len ?? (path.__len = path.getTotalLength());
+  const pt = path.getPointAtLength(clamp(p, 0, 1) * L);
+  return { x: pt.x, y: pt.y };
+}
+
+function cardState(c, t) {
+  for (const s of c.segs) if (t >= s.t0 && t < s.t1) return s;
+  return null;
+}
+
+function render(t) {
+  if (!S) return;
+  // generation stencil and scoreboard
+  const gNow = S.gens.filter(g => g.t0 <= t + 1e-6).pop() || S.gens[0];
+  $("#stencil").textContent = gNow ? gNow.gen : "";
+  $("#stencil-sub").textContent = gNow ? (gNow.gen === 0 ? "generation 0, Code Zero" : "generation") : "";
+  updateBoard(t, gNow);
+  // parcels
+  for (const e of S.envs) {
+    const g = els.envs.get(e.id);
+    if (t >= e.t0 && t < e.t1) {
+      const pt = pointOn(e.path, ease((t - e.t0) / (e.t1 - e.t0)));
+      g.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+      g.setAttribute("visibility", "visible");
+    } else g.setAttribute("visibility", "hidden");
+    g.classList.toggle("sel", isSel(e.ref));
+  }
+  // cards: where each one is at this moment
+  const tray = [], queue = [], dock = [], pile = [];
+  const states = new Map();
+  for (const [fid, c] of S.cards) {
+    const s = cardState(c, t);
+    states.set(fid, s);
+    if (!s) continue;
+    if (s.type === "tray") tray.push([s.t0, fid]);
+    if (s.type === "queue") queue.push([s.t0, fid]);
+    if (s.type === "dock") dock.push([s.t0, fid]);
+    if (s.type === "scrap") pile.push([s.t0, fid]);
+  }
+  const slot = arr => new Map(arr.sort((a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : 1)).map(([, fid], i) => [fid, i]));
+  const trayI = slot(tray), queueI = slot(queue), dockI = slot(dock), pileI = slot(pile);
+  for (const [fid, c] of S.cards) {
+    const g = els.cards.get(fid);
+    const s = states.get(fid);
+    if (!s || s.type === "away") { g.setAttribute("visibility", "hidden"); continue; }
+    let x = 0, y = 0, chip = false, label = false, show = true;
+    if (s.type === "travel") { const pt = pointOn(s.path, ease((t - s.t0) / (s.t1 - s.t0))); x = pt.x; y = pt.y; label = !/scrap/.test(s.path); }
+    else if (s.type === "tray") { const i = Math.min(trayI.get(fid), TRAY.max - 1); x = TRAY.x + 8 + i * TRAY.step; y = TRAY.y + 4; }
+    else if (s.type === "test") { x = HEAD.x; y = HEAD.y; label = true; }
+    else if (s.type === "queue") { const i = queueI.get(fid); x = QUEUE.x + i * QUEUE.step; y = QUEUE.y + 6; }
+    else if (s.type === "dock") {
+      const i = dockI.get(fid);
+      if (i >= DOCK.cols * 3) show = false;          // the library shows 12 chips; the panel lists them all
+      x = DOCK.x + (i % DOCK.cols) * (DOCK.w + DOCK.gx); y = DOCK.y + Math.floor(i / DOCK.cols) * (DOCK.h + DOCK.gy); chip = true;
+    } else if (s.type === "scrap") {
+      const i = pileI.get(fid), n = pile.length;
+      if (i < n - 4) show = false;
+      const k = i - Math.max(0, n - 4);
+      x = PILE.x + k * 9; y = PILE.y - k * 2;
+    }
+    if (!show) { g.setAttribute("visibility", "hidden"); continue; }
+    g.setAttribute("visibility", "visible");
+    g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+    g.querySelector(".glyphg").setAttribute("visibility", chip ? "hidden" : "visible");
+    g.querySelector(".chip").setAttribute("visibility", chip ? "visible" : "hidden");
+    g.querySelector(".clabel").setAttribute("visibility", label && !chip ? "visible" : "hidden");
+    const st = c.stamps.filter(s2 => s2.t <= t).pop();
+    const badge = g.querySelector(".badge");
+    if (st && !chip) {
+      const [cls, sym, word] = BADGE[st.kind] || BADGE.flat;
+      badge.setAttribute("class", "badge " + cls);
+      badge.querySelector("text").textContent = sym;
+      badge.setAttribute("visibility", "visible");
+      if (s.type === "test" || (s.type === "travel")) g.querySelector(".clabel").textContent = `${short(c.f.name, 22)}: ${word}`;
+    } else {
+      badge.setAttribute("visibility", "hidden");
+      g.querySelector(".clabel").textContent = short(c.f.name, 26);
+    }
+    g.classList.toggle("sel", isSel({ type: "feature", id: fid }));
+  }
+  // machines: busy lamps, progress, bays
+  const active = S.works.filter(w => t >= w.t0 && t < w.t1);
+  for (const [key, ne] of Object.entries(els.nodes)) {
+    const mine = active.filter(w => w.node === key);
+    ne.g.classList.toggle("busy", mine.length > 0);
+    ne.g.classList.toggle("sel", selected && selected.type === "node" && selected.node === key);
+    if (mine.length && !NODES[key].bays) {
+      const w = mine[0];
+      ne.bar.setAttribute("width", ((ne.n.w - 2) * clamp((t - w.t0) / (w.t1 - w.t0), 0, 1)).toFixed(1));
+    } else ne.bar.setAttribute("width", 0);
+  }
+  for (const key of ["coder", "mutator"]) {
+    const bays = els.bays[key] || [];
+    const mine = active.filter(w => w.node === key).sort((a, b) => a.t0 - b.t0 || (a.bay < b.bay ? -1 : 1));
+    bays.forEach((b, i) => {
+      const w = mine[i];
+      b.g.classList.toggle("busy", !!w);
+      b.fill.setAttribute("fill", w ? "currentColor" : "none");
+      b.fill.setAttribute("width", w ? (b.w * clamp((t - w.t0) / (w.t1 - w.t0), 0, 1)).toFixed(1) : 0);
+      const f = w && IX.feats.get(w.bay);
+      b.text.textContent = f ? short(f.name || f.id, Math.max(6, Math.floor(b.w / 5.6))) : "";
+    });
+  }
+  nodeStats(t, gNow, pile.length, dock.length);
+  $("#caption").textContent = caption(t, active, gNow);
+  updateTrack(t);
+}
+
+function nodeStats(t, gNow, nScrap, nDock) {
+  const sc = currentScore(t);
+  const ch = sc && T.champions[sc.champion];
+  els.nodes.library.stat.textContent = ch ? `${ch.id}  ${num(ch.score)}` : "";
+  els.nodes.library.sub.textContent = nDock ? "" : "empty: every bin scores 0, so this is Code Zero (first fit)";
+  els.nodes.scrap.stat.textContent = nScrap ? String(nScrap) : "";
+  const g = gNow && IX.gens.get(gNow.gen);
+  const cz = T.run.code_zero;
+  els.nodes.codezero.sub.textContent = "";
+  const per = node => S.works.filter(w => w.node === node && w.t0 <= t && gNow && w.t0 >= gNow.t0);
+  const total = node => S.works.filter(w => w.node === node && gNow && w.t0 >= gNow.t0 && w.t0 < gNow.t1);
+  for (const k of ["coder", "mutator"]) {
+    const a = per(k).length, b = total(k).length;
+    els.nodes[k].stat.textContent = b ? `${a}/${b}` : "";
+  }
+  const fitN = per("fit").filter(w => w.ref.type === "feature").length, fitT = total("fit").filter(w => w.ref.type === "feature").length;
+  els.nodes.fit.stat.textContent = fitT ? `${fitN}/${fitT}` : "";
+  els.nodes.accept.stat.textContent = g && g.gen > 0 && t >= (S.gens.find(x => x.gen === g.gen) || {}).t1 - 1.3 ? (g.accepted.length ? `kept ${g.accepted.length}` : "kept 0") : "";
+  void cz;
+}
+
+function caption(t, active, gNow) {
+  if (!gNow) return "";
+  if (gNow.gen === 0) return "Generation 0: Code Zero goes into the library. Nothing is added; every bin scores 0, so jobs go into the oldest bin that fits.";
+  const order = ["researcher", "inspect", "coder", "mutator", "fit", "accept"];
+  const parts = [];
+  for (const node of order) {
+    const ws = active.filter(w => w.node === node);
+    if (!ws.length) continue;
+    if (ws.length > 1) parts.push(`${NODES[node].title} is writing ${ws.length} features`);
+    else {
+      const w = ws[0];
+      const c = w.ref.type === "call" ? IX.calls.get(w.ref.id) : null;
+      parts.push(w.label + (c ? ` (real ${c.seconds.toFixed(1)} s)` : w.ref.type === "feature" && realFit(IX.feats.get(w.ref.id)) ? ` (real ${realFit(IX.feats.get(w.ref.id)).toFixed(1)} s)` : ""));
+    }
+  }
+  if (!parts.length) {
+    const g = IX.gens.get(gNow.gen);
+    if (t >= gNow.t1 - 1.2 && g) return g.accepted.length ? `Generation ${g.gen}: kept ${g.accepted.map(id => IX.feats.get(id)?.name || id).join(", ")}; champion now ${num(g.official)}` : `Generation ${g.gen}: nothing kept; the champion stays at ${num(g.official)}`;
+    const moving = S.envs.filter(e => t >= e.t0 && t < e.t1);
+    const belts = [...S.cards.values()].map(c => cardState(c, t)).filter(s2 => s2 && s2.type === "travel").map(s2 => s2.path);
+    const say = { coder_fit: "features on their way to Fit", mut_fit: "features on their way to Fit", fit_accept: "winners going to Accept",
+      accept_lib: "kept features going into the library", fit_scrap: "rejected features going to the scrap pile",
+      accept_scrap: "features that added nothing going to the scrap pile", lib_scrap: "a retired feature leaving the library" };
+    const bits = [...new Set(belts.map(b => say[b]).filter(Boolean))];
+    if (bits.length) return `Generation ${gNow.gen}: ` + bits.join("; ");
+    if (moving.length) return `Generation ${gNow.gen}: messages on their way`;
+    return `Generation ${gNow.gen}`;
+  }
+  return `Generation ${gNow.gen}: ` + parts.join("; ");
+}
+
+function currentScore(t) { return S.scores.filter(s => s.t <= t).pop() || null; }
+
+function updateBoard(t, gNow) {
+  const sc = currentScore(t);
+  const ch = sc && T.champions[sc.champion];
+  const cz = T.run.code_zero;
+  const callsSoFar = S.works.filter(w => w.ref.type === "call" && w.t0 <= t).length;
+  const tried = [...S.cards.values()].filter(c => c.segs.length && c.segs[0].t0 <= t).length;
+  const kept = [...S.cards.values()].filter(c => c.segs.some(s => s.type === "dock" && s.t0 <= t)).length;
+  const html = [
+    ["Champion score", ch ? num(ch.score) : "—"],
+    ["Progress to optimal", ch ? pct(ch.progress) : "—"],
+    ["Generation", gNow ? `${gNow.gen} of ${T.generations.length - 1}` : "—"],
+    ["Agent calls", String(callsSoFar)],
+    ["Features kept", `${kept} of ${tried}`],
+  ].map(([k, v]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join("");
+  const board = $("#board");
+  if (board.__html !== html) { board.innerHTML = html; board.__html = html; }
+  void cz;
+}
+
+/* ============================================================ selection */
+function isSel(ref) {
+  if (!selected || !ref) return false;
+  if (selected.type !== ref.type) return false;
+  return selected.id === ref.id && (selected.gen === ref.gen);
+}
+function select(ref) {
+  selected = ref;
+  showInspector();
+  render(now);
+}
+
+/* ============================================================ INSPECTOR */
+function put(w, ...kids) { w.append(...kids.flat().filter(k => k != null && k !== false)); return w; }
+function genAt(t) { const g = S.gens.filter(g => g.t0 <= t + 1e-6).pop(); return g ? g.gen : 0; }
+
+function showInspector() {
+  const box = $("#inspector");
+  box.innerHTML = "";
+  const wrap = el("div", { class: "insp" });
+  box.append(wrap);
+  box.scrollTop = 0;
+  const ref = selected;
+  if (selected) wrap.append(el("button", { class: "back", onclick: () => select(null) }, "← Back to this generation"));
+  if (!ref) return genPanel(wrap, genAt(now));
+  if (ref.type === "call") return callPanel(wrap, IX.calls.get(ref.id), ref.section);
+  if (ref.type === "feature") return featurePanel(wrap, IX.feats.get(ref.id));
+  if (ref.type === "idea") return ideaPanel(wrap, IX.feats.get(ref.id));
+  if (ref.type === "champion") return championPanel(wrap, ref.id);
+  if (ref.type === "node") return nodePanel(wrap, ref.node, genAt(now));
+  if (ref.type === "inspect") return nodePanel(wrap, "inspect", ref.gen);
+  if (ref.type === "library") return nodePanel(wrap, "library", ref.gen);
+  if (ref.type === "log") return nodePanel(wrap, "log", ref.gen);
+  if (ref.type === "accept") return nodePanel(wrap, "accept", ref.gen);
+  if (ref.type === "refit") return nodePanel(wrap, "fit", ref.gen);
+  genPanel(wrap, genAt(now));
+}
+
+function notePara(text, auto) {
+  const d = el("div", { class: "note" + (auto ? " auto" : "") });
+  d.append(el("p", { class: "who" }, auto ? "Model summary (unreviewed)" : (T.notes.author ? `What happened, read by ${T.notes.author}` : "What happened")));
+  for (const para of String(text).split(/\n\s*\n/)) d.append(el("p", { html: inlineMd(para) }));
+  return d;
+}
+
+function facts(pairs) {
+  const dl = el("dl", { class: "facts" });
+  for (const [k, v] of pairs) { if (v == null || v === "") continue; dl.append(el("dt", {}, k), el("dd", { html: v })); }
+  return dl;
+}
+
+function genPanel(w, gen) {
+  const g = IX.gens.get(gen);
+  if (!g) return;
+  put(w, el("p", { class: "kicker" }, "Generation"), el("h2", {}, gen === 0 ? "Generation 0: Code Zero" : `Generation ${gen}`));
+  const n = noteFor("generations", String(gen));
+  if (n) put(w, notePara(n));
+  if (gen === 0) {
+    put(w, facts([["Score", num(T.run.code_zero && T.run.code_zero.score)], ["Library", "empty"]]));
+    if (T.notes.run) put(w, el("h3", {}, "The run in brief"), notePara(T.notes.run));
+    return;
+  }
+  const feats = T.features.filter(f => f.gen === gen);
+  const calls = T.calls.filter(c => c.gen === gen);
+  const before = g.before || {};
+  put(w, facts([
+    ["Champion", `${esc(before.id || "—")} ${num(before.official)} → <b>${esc(g.champion)} ${num(g.official)}</b>`],
+    ["Progress", `${pct((T.champions[before.id] || {}).progress)} → <b>${pct((T.champions[g.champion] || {}).progress)}</b>`],
+    ["Agent calls", `${calls.length} (${calls.filter(c => c.role === "researcher").length} Researcher, ${calls.filter(c => c.role === "coder").length} Coder, ${calls.filter(c => c.role === "mutator").length} Mutator)`],
+    ["Features", `${feats.length} tried, ${feats.filter(f => f.verdict === "kept").length} kept`],
+    ["Real time", g.seconds != null ? `${g.seconds.toFixed(1)} s (agents ${g.phase_seconds?.agents ?? "?"} s, fitting ${g.phase_seconds?.fit ?? "?"} s)` : null],
+  ]));
+  put(w, el("h3", {}, "Features this generation"));
+  put(w, featureList(feats));
+  if ((g.console || []).length) {
+    put(w, el("h3", {}, "The run's own log for this generation"));
+    put(w, el("pre", { class: "raw" }, g.console.join("\n")));
+  }
+}
+
+function featureList(feats) {
+  const ul = el("ul", { class: "list" });
+  for (const f of feats) {
+    const idea = IX.ideas.get(f.id);
+    ul.append(el("li", {},
+      el("span", { class: `pill v-${f.verdict}` }, VERDICT[f.verdict] || f.verdict), " ",
+      el("button", { class: "link", onclick: () => select({ type: "feature", id: f.id }) }, `${f.name}`),
+      el("span", { class: "small" }, ` ${f.id}, ${f.branch === "deep" ? "Researcher's idea" : (f.note || "Mutator")}${f.delta_valid != null ? `, validation ${sgn(f.delta_valid)}` : f.delta_train != null ? `, best probe ${sgn(f.delta_train)}` : ""}`),
+      idea ? el("div", { class: "small" }, short(idea.claim, 170)) : null));
+  }
+  if (!feats.length) ul.append(el("li", { class: "small" }, "None."));
+  return ul;
+}
+
+function callPanel(w, c, section) {
+  if (!c) return;
+  const f = c.feature && IX.feats.get(c.feature);
+  put(w, el("p", { class: "kicker" }, `Agent call ${c.id}, generation ${c.gen}`));
+  put(w, el("h2", {}, `${ROLE[c.role] || c.role}${f ? `: ${f.name}` : ""}${c.kind !== "first" ? ` (${c.kind})` : ""}`));
+  const n = noteFor("calls", c.id) || (f && c.kind === "first" ? noteFor("features", f.id) : null);
+  if (n) put(w, notePara(n, isAuto(c.id)));
+  put(w, facts([
+    ["Took", `${c.seconds.toFixed(2)} s`], ["Tokens", `${c.tokens_in ?? "?"} in, ${c.tokens_out ?? "?"} out`],
+    ["Settings", `temperature ${c.temperature}, max_tokens ${c.max_tokens}`], ["Ended", esc(c.finish || (c.error ? "error" : "?"))],
+    ["Feature", f ? `<a href="#" data-f="${esc(f.id)}">${esc(f.id)} ${esc(f.name)}</a>` : null],
+    ["Error", c.error ? esc(c.error) : null],
+  ]));
+  w.querySelectorAll("a[data-f]").forEach(a => a.onclick = e => { e.preventDefault(); select({ type: "feature", id: a.dataset.f }); });
+  const tabs = [["sent", "What it was sent"], ["reply", "What it replied"], ["thinking", "Hidden reasoning"], ["system", "System prompt"]];
+  let mode = section ? "sent" : "reply", raw = false;
+  const seg = el("div", { class: "seg", role: "group", "aria-label": "Show" });
+  const body = el("div", { class: "scrollbox" });
+  const rawBox = el("label", { class: "raw-toggle" }, el("input", { type: "checkbox", onchange: e => { raw = e.target.checked; draw(); } }), " exact text");
+  for (const [k, label] of tabs) {
+    const b = el("button", { "aria-pressed": String(k === mode) }, label);
+    b.onclick = () => { mode = k; [...seg.children].forEach(x => x.setAttribute("aria-pressed", String(x === b))); draw(); };
+    seg.append(b);
+  }
+  put(w, seg, rawBox, body);
+  function draw() {
+    body.innerHTML = "";
+    let text;
+    if (mode === "sent") text = c.user;
+    else if (mode === "reply") text = c.reply ?? `(no reply: ${c.error || "nothing came back"})`;
+    else if (mode === "system") text = T.prompts[c.system] || "";
+    else text = c.reasoning || "";
+    if (mode === "thinking" && !text) {
+      body.append(el("p", { class: "small" }, "None. This run sent reasoning_effort: none, which switches the model's hidden thinking off, so what you see under “What it replied” is all the reasoning there is."));
+      return;
+    }
+    body.append(raw ? el("pre", { class: "raw" }, text) : md(text, mode === "sent" ? section : null));
+    if (mode === "sent" && section && !raw) {
+      const hit = body.querySelector("h4.hit");
+      if (hit) setTimeout(() => { body.scrollTop = hit.offsetTop - body.offsetTop - 6; }, 30);
+    }
+  }
+  draw();
+}
+
+function probeChart(f) {
+  if (!f.probe || !f.probe.length) return null;
+  const pts = [...f.probe].sort((a, b) => a.w - b.w);
+  const W = 300, H = 92, pad = 26;
+  const vals = pts.map(p => p.delta);
+  const lo = Math.min(-0.5, ...vals.map(v => Math.max(v, -3))), hi = Math.max(0.5, ...vals);
+  const y = v => pad / 2 + (H - pad) * (1 - (clamp(v, lo, hi) - lo) / (hi - lo));
+  const bw = (W - 40) / pts.length;
+  const svg = sv("svg", { class: "probe", viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Probe results by weight" });
+  svg.append(sv("line", { x1: 30, x2: W, y1: y(0), y2: y(0), stroke: "var(--ink-3)", "stroke-width": 1 }));
+  svg.append(sv("text", { x: 0, y: y(0) + 4, style: "font:500 10px var(--font);fill:var(--ink-2)" }, "0"));
+  pts.forEach((p, i) => {
+    const x = 36 + i * bw, y0 = y(0), y1 = y(p.delta);
+    const good = p.delta > 0;
+    svg.append(sv("rect", { x, y: Math.min(y0, y1), width: bw - 10, height: Math.max(1.5, Math.abs(y1 - y0)), fill: good ? "var(--fit)" : "var(--bad)", opacity: 0.85 }));
+    svg.append(sv("text", { x: x + (bw - 10) / 2, y: H - 2, "text-anchor": "middle", style: "font:500 10px var(--font);fill:var(--ink-2)" }, `w ${p.w > 0 ? "+" : "−"}${Math.abs(p.w)}`));
+    svg.append(sv("text", { x: x + (bw - 10) / 2, y: (good ? y1 - 3 : Math.max(y1, y0) + 11), "text-anchor": "middle", style: "font:600 10px var(--font);fill:var(--ink)" }, (p.delta < -3 ? "≪ " : "") + sgn(p.delta, 2)));
+  });
+  return svg;
+}
+
+function featurePanel(w, f) {
+  if (!f) return;
+  const idea = IX.ideas.get(f.id);
+  put(w, el("p", { class: "kicker" }, `Feature ${f.id}, generation ${f.gen}, ${f.branch === "deep" ? "deep loop (Researcher → Coder)" : "wide loop (Mutator)"}`));
+  put(w, el("h2", {}, f.name), el("span", { class: `pill v-${f.verdict}` }, VERDICT[f.verdict] || f.verdict),
+    f.retired_at != null ? el("span", {}, " ", el("span", { class: "pill v-retired" }, `retired in generation ${f.retired_at}`)) : null);
+  const n = noteFor("features", f.id);
+  if (n) put(w, notePara(n, isAuto(f.id)));
+  if (idea) {
+    put(w, el("h3", {}, "The Researcher's idea"));
+    put(w, facts([["Saw", esc(idea.claim)], ["Measure", esc(idea.measure)], ["Expected", esc(idea.target)], ["Builds on", esc(idea.builds_on || "")]]));
+  } else {
+    put(w, el("h3", {}, "What the Mutator was asked"));
+    put(w, el("p", {}, f.note === "fresh" ? "A fresh feature: a measurement none of the policy's features captures." : `A ${f.note || "variant"}, keeping what it measures but changing how.`),
+      f.description ? el("p", { class: "small" }, `Its docstring: ${f.description}`) : null);
+  }
+  put(w, el("h3", {}, "How Fit judged it"));
+  const t = f.timing || {};
+  put(w, facts([
+    ["Probe", f.probe ? "the feature alone on top of the champion, at four weights" : null],
+    ["Train change", f.delta_train != null ? `${sgn(f.delta_train)} ${f.delta_valid == null ? "(the best probe; the full trial never ran)" : "(with the feature vs the same refit without it)"}` : "—"],
+    ["Validation change", f.delta_valid != null ? `${sgn(f.delta_valid)} (needs more than +${T.run.config.accept_margin ?? 0.03} to be considered)` : "not measured"],
+    ["Fit time", t.total ? `${t.total.toFixed(1)} s (probe ${t.probe ?? "?"} s, own weights ${t.free ?? "?"} s, paired refits ${t.refit ?? "?"} s, validation ${t.valid ?? "?"} s)` : t.probe ? `${t.probe} s, probe only` : null],
+    ["Fitted weights", f.weights && f.verdict === "kept" ? f.weights.map(x => sgn(x, 3)).join(", ") : null],
+    ["Error", f.error ? esc(f.error) : null],
+  ]));
+  const pc = probeChart(f);
+  if (pc) { put(w, pc, el("p", { class: "small" }, `Score change against the champion at each probe weight (fit split). A feature that loses by more than ${T.run.config.probe_margin ?? 0.08} at every weight is rejected here, before the expensive trial.`)); }
+  put(w, el("h3", {}, "Code"));
+  put(w, codeBlock(f.code || "(no code)"));
+  const calls = (f.calls || []).map(id => IX.calls.get(id)).filter(Boolean);
+  if (calls.length) {
+    put(w, el("h3", {}, "Agent calls behind it"));
+    const ul = el("ul", { class: "list" });
+    for (const c of calls) ul.append(el("li", {}, el("button", { class: "link", onclick: () => select({ type: "call", id: c.id }) }, `${ROLE[c.role]} ${c.id}${c.kind !== "first" ? ` (${c.kind})` : ""}`), el("span", { class: "small" }, ` ${c.seconds.toFixed(1)} s, ${c.tokens_out ?? "?"} tokens out`)));
+    put(w, ul);
+  }
+}
+
+function ideaPanel(w, f) {
+  if (!f) return;
+  const idea = IX.ideas.get(f.id);
+  put(w, el("p", { class: "kicker" }, `Idea from the Researcher, generation ${f.gen}`), el("h2", {}, f.name));
+  if (idea) put(w, facts([["Saw", esc(idea.claim)], ["Measure", esc(idea.measure)], ["Expected", esc(idea.target)]]));
+  put(w, el("p", {}, "This is what the Coder received, together with the list of existing features. ",
+    el("button", { class: "link", style: "border:0;background:none;padding:0;color:var(--deep);font-weight:600", onclick: () => select({ type: "feature", id: f.id }) }, "See the feature it became")));
+  const c = (f.calls || []).map(id => IX.calls.get(id)).find(c => c && c.role === "coder");
+  if (c) { put(w, el("h3", {}, "The Coder's message, exactly")); put(w, md(c.user)); }
+}
+
+function championPanel(w, id) {
+  const ch = T.champions[id];
+  if (!ch) return;
+  put(w, el("p", { class: "kicker" }, `Champion, generation ${ch.gen}`), el("h2", {}, `${ch.id}: ${num(ch.score)}`));
+  put(w, facts([["Progress", pct(ch.progress)], ["Note", esc(ch.note || "")], ["Features", (ch.features || []).map(fid => esc(`${fid} ${IX.feats.get(fid)?.name || ""}`)).join("<br>") || "none"]]));
+  put(w, el("h3", {}, "Its code"), codeBlock(ch.code || ""));
+}
+
+function researchLog(gen) {
+  const c = T.calls.find(c => c.gen === gen && c.role === "researcher");
+  if (!c) return null;
+  const m = c.user.match(/## Research log[^\n]*\n([\s\S]*?)(?=\n## |\s*$)/);
+  return m ? m[1].trim() : null;
+}
+
+function nodePanel(w, key, gen) {
+  const g = IX.gens.get(gen);
+  const n = NODES[key];
+  put(w, el("p", { class: "kicker" }, `${gen === 0 ? "Generation 0" : `Generation ${gen}`}`), el("h2", {}, n.title));
+  const nn = noteFor("nodes", key);
+  if (nn) put(w, notePara(nn));
+  const calls = T.calls.filter(c => c.gen === gen && c.role === key);
+  if (key === "researcher" || key === "coder" || key === "mutator") {
+    const about = { researcher: "Reads the packing comparison, the policy's features with their weights and importance, where the room is per family, and the research log. Replies with feature ideas as JSON, then a short analysis.",
+      coder: "Gets one idea and the list of existing features, and writes exactly that measurement as feature(item, bins, capacity).",
+      mutator: "Gets only the current policy's code and its score (the air gap), and writes one feature: a variant of a named feature or a fresh one." }[key];
+    put(w, el("p", {}, about));
+    const ul = el("ul", { class: "list" });
+    for (const c of calls) {
+      const f = c.feature && IX.feats.get(c.feature);
+      ul.append(el("li", {}, el("button", { class: "link", onclick: () => select({ type: "call", id: c.id }) }, f ? f.name : `${ROLE[c.role]} call`),
+        el("span", { class: "small" }, ` ${c.id}, ${c.seconds.toFixed(1)} s${c.kind !== "first" ? `, ${c.kind}` : ""}${f ? `, ${VERDICT[f.verdict] || f.verdict}` : ""}`)));
+    }
+    if (!calls.length) ul.append(el("li", { class: "small" }, "No calls in this generation."));
+    put(w, ul);
+    return;
+  }
+  if (key === "inspect" || key === "library") {
+    const prev = IX.gens.get(Math.max(0, gen - 1));
+    if (key === "library") {
+      const chId = (gen > 0 ? (prev || {}).champion : g && g.champion);
+      const lib = (gen > 0 ? (prev || {}).library : []) || [];
+      put(w, el("p", {}, gen > 0 ? `What generation ${gen} started from: the champion and its features.` : "Empty: Code Zero."));
+      if (lib.length) {
+        const tb = el("table", { class: "t" }, el("tr", {}, el("th", {}, "Feature"), el("th", {}, "From"), el("th", {}, "Weight"), el("th", {}, "Importance")));
+        for (const x of lib) tb.append(el("tr", { class: "click", onclick: () => select({ type: "feature", id: x.id }) }, el("td", {}, `${x.id} ${x.name}`), el("td", {}, x.branch), el("td", {}, (x.weights || []).map(v => sgn(v, 2)).join(", ")), el("td", {}, (x.importance || []).map(v => sgn(v, 3)).join(", ") || "—")));
+        put(w, tb, el("p", { class: "small" }, "Importance: how much the validation score drops when the feature is switched off."));
+      }
+      if (chId) { put(w, el("h3", {}, `Champion ${chId}`)); championPanel(w, chId); }
+      return;
+    }
+    put(w, el("p", {}, "For one training instance per family, the champion's packing next to a near-optimal packing of the same jobs. This is what the Researcher reads; the Mutator never sees it."));
+    if (g && g.packings) {
+      const tb = el("table", { class: "t" }, el("tr", {}, el("th", {}, "Family"), el("th", {}, "Bins"), el("th", {}, "Jobs per bin"), el("th", {}, "Stranded")));
+      const rows = Object.entries(g.packings).sort((a, b) => (b[1].champion.bins - (b[1].optimum || {}).bins) - (a[1].champion.bins - (a[1].optimum || {}).bins));
+      for (const [fam, c] of rows) tb.append(el("tr", {}, el("td", {}, fam), el("td", {}, `${c.champion.bins} vs ${c.optimum ? c.optimum.bins : "?"}`), el("td", {}, `${c.champion.mean_jobs} vs ${c.optimum ? c.optimum.mean_jobs : "?"}`), el("td", {}, `${c.champion.stranded} vs ${c.optimum ? c.optimum.stranded : "?"}`)));
+      put(w, tb, el("p", { class: "small" }, "Champion vs near-optimal. Stranded: one resource almost full while the other has a lot left."));
+    }
+    if (g && g.packings_text) { put(w, el("h3", {}, "As the Researcher reads it")); put(w, el("pre", { class: "raw" }, g.packings_text)); }
+    return;
+  }
+  if (key === "log") {
+    const text = researchLog(gen);
+    put(w, el("p", {}, `The research log as the Researcher saw it at the start of generation ${gen}: the last 20 ideas with their verdicts, and the Mutator's features that were kept or retired. This is the deep loop's memory; nothing else carries over between generations.`));
+    put(w, text ? md(text) : el("p", { class: "small" }, gen <= 1 ? "Empty at generation 1." : "No Researcher call in this generation."));
+    return;
+  }
+  if (key === "fit") {
+    put(w, el("p", {}, "The shared evaluator. Each feature is first probed alone on top of the champion at four weights; survivors get their own weight searched, then all the weights refitted twice, with and without the feature. The feature is credited only with the difference, on train and on validation instances the fitting never sees."));
+    if (g && g.champion_refit) put(w, facts([["Champion refit", `train ${num(g.champion_refit.train)}${g.champion_refit.kept ? ", kept" : ", not kept"}`]]));
+    const feats = T.features.filter(f => f.gen === gen);
+    const tb = el("table", { class: "t" }, el("tr", {}, el("th", {}, "Feature"), el("th", {}, "Loop"), el("th", {}, "Train"), el("th", {}, "Validation"), el("th", {}, "Verdict")));
+    for (const f of fitOrder(g || {}, feats, new Map())) tb.append(el("tr", { class: "click", onclick: () => select({ type: "feature", id: f.id }) }, el("td", {}, f.name), el("td", {}, f.branch), el("td", {}, sgn(f.delta_train)), el("td", {}, sgn(f.delta_valid)), el("td", {}, VERDICT[f.verdict] || f.verdict)));
+    put(w, tb);
+    return;
+  }
+  if (key === "accept") {
+    const feats = T.features.filter(f => f.gen === gen);
+    put(w, el("p", {}, "Features that gained more than the margin on validation are combined greedily, best first; each joins only if validation improves again. Then all the weights are refitted together, and features whose removal would help are retired."));
+    if (g) put(w, facts([["Kept", g.accepted.map(id => esc(`${id} ${IX.feats.get(id)?.name || ""}`)).join("<br>") || "nothing"], ["Retired", g.retired.join(", ") || "none"],
+      ["Redundant", feats.filter(f => f.verdict === "redundant").map(f => esc(f.name)).join("<br>") || "none"], ["Champion", `${esc(g.champion)} ${num(g.official)}`]]));
+    const lines = (g && g.console || []).filter(l => /combined|second chance|joint refit|retire|kept |champion /.test(l));
+    if (lines.length) put(w, el("pre", { class: "raw" }, lines.join("\n")));
+    return;
+  }
+  if (key === "codezero") { championPanel(w, T.run.code_zero && T.run.code_zero.id); return; }
+  if (key === "scrap") {
+    const feats = T.features.filter(f => f.gen <= gen && f.verdict !== "kept");
+    put(w, el("p", {}, `Everything rejected up to generation ${gen}.`), featureList(feats));
+  }
+}
+
+/* ---------- text rendering */
+function inlineMd(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[\s(“"])\*([^*\n]+?)\*(?=[\s).,;:!?”"]|$)/g, "$1<i>$2</i>");
+}
+function md(text, highlight) {
+  const box = el("div", { class: "md" });
+  const re = /```([\w+-]*)[ \t]*\n([\s\S]*?)```/g;
+  let last = 0, m;
+  const prose = chunk => {
+    const lines = chunk.split("\n");
+    let para = [], list = null;
+    const flush = () => { if (para.length) box.append(el("p", { html: inlineMd(para.join(" ")) })); para = []; };
+    for (const ln of lines) {
+      const hm = ln.match(/^#{1,6}\s+(.*)/);
+      if (hm) {
+        flush(); list = null;
+        const h4 = el("h4", { html: inlineMd(hm[1]) });
+        if (highlight && hm[1].toLowerCase().includes(highlight.toLowerCase())) h4.classList.add("hit");
+        box.append(h4);
+      } else if (/^\s*[-*]\s+/.test(ln)) {
+        flush(); if (!list) { list = el("ul"); box.append(list); }
+        list.append(el("li", { html: inlineMd(ln.replace(/^\s*[-*]\s+/, "")) }));
+      } else if (!ln.trim()) { flush(); list = null; }
+      else if (list && /^\s{2,}/.test(ln)) { list.lastChild.innerHTML += "<br>" + inlineMd(ln.trim()); }
+      else { list = null; para.push(ln); }
+    }
+    flush();
+  };
+  while ((m = re.exec(text))) { prose(text.slice(last, m.index)); box.append(codeBlock(m[2], m[1])); last = re.lastIndex; }
+  prose(text.slice(last));
+  return box;
+}
+const PY_KW = new Set("False None True and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield".split(" "));
+function highlightPy(src) {
+  const re = /(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*')|(\b\d+(?:\.\d+)?(?:e[-+]?\d+)?\b)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index));
+    if (m[1]) out += `<span class="tk-com">${esc(m[1])}</span>`;
+    else if (m[2]) out += `<span class="tk-str">${esc(m[2])}</span>`;
+    else if (m[3]) out += `<span class="tk-num">${esc(m[3])}</span>`;
+    else if (m[4]) out += PY_KW.has(m[4]) ? `<span class="tk-kw">${m[4]}</span>` : `<span class="tk-fn">${esc(m[4])}</span>`;
+    else out += PY_KW.has(m[5]) ? `<span class="tk-kw">${m[5]}</span>` : esc(m[5]);
+    last = re.lastIndex;
+  }
+  return out + esc(src.slice(last));
+}
+function codeBlock(code, lang = "python") {
+  const pre = el("pre");
+  if (!lang || lang === "python" || lang === "py") pre.innerHTML = highlightPy(code);
+  else pre.textContent = code;
+  return pre;
+}
+function diffLines(a, b) {
+  const A = a.split("\n"), B = b.split("\n"), n = A.length, m = B.length;
+  const L = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while (i < n && j < m) { if (A[i] === B[j]) { out.push([" ", A[i]]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) out.push(["-", A[i++]]); else out.push(["+", B[j++]]); }
+  while (i < n) out.push(["-", A[i++]]); while (j < m) out.push(["+", B[j++]]);
+  return out;
+}
+function diffBlock(a, b) {
+  const pre = el("pre", { class: "diff" });
+  pre.innerHTML = diffLines(a, b).map(([k, s]) => k === "+" ? `<span class="add">+ ${highlightPy(s)}</span>` : k === "-" ? `<span class="del">- ${esc(s)}</span>` : `  ${highlightPy(s)}`).join("\n");
+  return pre;
+}
+
+/* ============================================================ TABS */
+function renderParts() {
+  const v = $("#partsview");
+  v.innerHTML = "";
+  const sh = el("div", { class: "sheet" });
+  sh.append(el("h2", {}, "Every feature the run tried"),
+    el("p", {}, "One row per generation. Blue: the deep loop (an idea from the Researcher, written by the Coder). Orange: the wide loop (the Mutator, which only sees the policy's code and score). The line under each name is what it set out to do."));
+  for (const g of T.generations.filter(g => g.gen > 0)) {
+    const feats = T.features.filter(f => f.gen === g.gen);
+    const row = el("div", { class: "genrow" });
+    row.append(el("div", { class: "g" }, String(g.gen), el("small", {}, `${num(g.before?.official)} → ${num(g.official)}`, el("br"), `${g.accepted.length} kept`)));
+    for (const br of ["deep", "wide"]) {
+      const lane = el("div", {});
+      lane.append(el("div", { class: `lanehead ${br}` }, br === "deep" ? "Deep loop" : "Wide loop"));
+      const box = el("div", { class: "parts" });
+      for (const f of feats.filter(f => f.branch === br)) {
+        const idea = IX.ideas.get(f.id);
+        const why = idea ? idea.claim : (f.note === "fresh" ? "fresh: " : `${f.note || ""}: `) + (f.description || "");
+        box.append(el("button", { class: `part ${br}`, onclick: () => select({ type: "feature", id: f.id }) },
+          el("b", {}, f.name), el("span", { class: "why" }, short(why, 120)),
+          el("span", { class: `pill v-${f.verdict}` }, VERDICT[f.verdict] || f.verdict),
+          el("span", { class: "num" }, f.delta_valid != null ? `validation ${sgn(f.delta_valid)}` : f.delta_train != null ? `probe ${sgn(f.delta_train)}` : "")));
+      }
+      lane.append(box);
+      row.append(lane);
+    }
+    sh.append(row);
+  }
+  v.append(sh);
+}
+
+function renderChampions() {
+  const v = $("#champview");
+  v.innerHTML = "";
+  const sh = el("div", { class: "sheet" });
+  sh.append(el("h2", {}, "Champions"), el("p", {}, "The best policy after each generation, scored by the unchanged evaluator on the full training split, and how its code changed. A feature-engine champion is a weighted sum of features, written out as an ordinary priority() program."));
+  // chart: progress by generation
+  const gens = T.generations;
+  const W = 760, H = 220, L = 46, R = 56, Tp = 22, B = 30;
+  const prog = gens.map(g => (T.champions[g.champion] || {}).progress ?? 0);
+  const ymax = Math.max(10, Math.ceil(Math.max(...prog) / 10) * 10);
+  const x = i => L + (W - L - R) * (gens.length > 1 ? i / (gens.length - 1) : 0), y = p => Tp + (H - Tp - B) * (1 - p / ymax);
+  const svg = sv("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Progress to optimal by generation" });
+  for (let p = 0; p <= ymax; p += 10) { svg.append(sv("line", { x1: L, x2: W - R, y1: y(p), y2: y(p), stroke: "#E3E7EA" }), sv("text", { x: L - 8, y: y(p) + 4, "text-anchor": "end", style: "font:500 11px var(--font);fill:var(--ink-2)" }, `${p}%`)); }
+  let d = "";
+  gens.forEach((g, i) => { d += (i ? ` H${x(i)} V${y(prog[i])}` : `M${x(i)} ${y(prog[i])}`); });
+  svg.append(sv("path", { d, fill: "none", stroke: "var(--lib)", "stroke-width": 2.4 }));
+  gens.forEach((g, i) => {
+    const kept = (g.accepted || []).map(id => IX.feats.get(id)).filter(Boolean);
+    const col = kept.length ? (kept.some(f => f.branch === "deep") ? (kept.some(f => f.branch === "wide") ? "var(--lib)" : "var(--deep)") : "var(--wide)") : "var(--ink-3)";
+    svg.append(sv("circle", { cx: x(i), cy: y(prog[i]), r: kept.length ? 5.5 : 3.5, fill: col, stroke: "#fff", "stroke-width": 1.5 }));
+    svg.append(sv("text", { x: x(i), y: H - 10, "text-anchor": "middle", style: "font:600 11.5px var(--sign);fill:var(--ink-2)" }, `G${g.gen}`));
+    if (kept.length) svg.append(sv("text", { x: x(i) + 7, y: y(prog[i]) - 8, style: "font:600 11px var(--font);fill:var(--ink)" }, pct(prog[i])));
+  });
+  sh.append(el("div", { class: "chart" }, el("div", { class: "lanehead" }, "Progress to the optimal packing (0% is Code Zero)"), svg,
+    el("p", { class: "small" }, "A blue dot marks a generation whose new features came from the deep loop, orange from the wide loop; grey means nothing was kept.")));
+  const seen = [];
+  for (const g of gens) if (!seen.includes(g.champion)) seen.push(g.champion);
+  let prevCode = null;
+  for (const id of seen) {
+    const ch = T.champions[id];
+    if (!ch) continue;
+    const box = el("div", { class: "champ" });
+    box.append(el("h3", {}, `${ch.id}, generation ${ch.gen}: ${num(ch.score)}, ${pct(ch.progress)}`), el("p", { class: "small" }, ch.note || ""));
+    box.append(prevCode == null ? codeBlock(ch.code || "") : diffBlock(prevCode, ch.code || ""));
+    prevCode = ch.code || "";
+    sh.append(box);
+  }
+  v.append(sh);
+}
+
+function renderNotes() {
+  const v = $("#notesview");
+  v.innerHTML = "";
+  const sh = el("div", { class: "sheet notes-body" });
+  const N = T.notes || {};
+  sh.append(el("h2", {}, "Notes on this run"));
+  if (!N.run && !N.findings) { sh.append(el("p", {}, "No notes were written for this run. Add a notes.json next to the run, or export with --summarize for a short model summary of every call.")); v.append(sh); return; }
+  if (N.author) sh.append(el("p", { class: "small" }, `Written by ${N.author}.`));
+  if (N.run) sh.append(md(N.run));
+  if (N.findings && N.findings.length) {
+    sh.append(el("h3", {}, "What stands out"));
+    for (const f of N.findings) sh.append(el("div", { class: "finding" }, el("b", {}, f.title), md(f.text)));
+  }
+  if (N.generations) {
+    sh.append(el("h3", {}, "Generation by generation"));
+    for (const [g, text] of Object.entries(N.generations)) sh.append(el("h4", { style: "font:600 16px var(--sign);margin:14px 0 4px" }, `Generation ${g}`), md(text));
+  }
+  v.append(sh);
+}
+
+/* ============================================================ TRANSPORT */
+function buildTrack() {
+  const tr = $("#track");
+  tr.innerHTML = "";
+  tr.append(el("div", { class: "lane" }));
+  for (const g of S.gens) {
+    const narrow = (g.t1 - g.t0) / S.end < 0.08;
+    const label = g.gen === 0 ? "" : (narrow ? `G${g.gen}` : `Generation ${g.gen}`);
+    const s = el("div", { class: "gseg", style: `left:${100 * g.t0 / S.end}%;width:${100 * (g.t1 - g.t0) / S.end}%` }, el("span", { "data-short": g.gen === 0 ? "" : `G${g.gen}` }, label));
+    tr.append(s);
+  }
+  for (const w of S.works) if (w.ref.type === "call") {
+    const c = IX.calls.get(w.ref.id);
+    tr.append(el("div", { class: `tick ${c && c.branch === "wide" ? "wide" : "deep"}`, style: `left:${100 * w.t0 / S.end}%` }));
+  }
+  for (const [, c] of S.cards) { const d = c.segs.find(s => s.type === "dock"); if (d) tr.append(el("div", { class: "kept", style: `left:${100 * d.t0 / S.end}%`, title: `${c.f.name} kept` })); }
+  tr.append(el("div", { class: "done", id: "done" }), el("div", { class: "head", id: "head" }));
+  const seekFrom = e => { const r = tr.getBoundingClientRect(); seek(clamp((e.clientX - r.left) / r.width, 0, 1) * S.end); };
+  let drag = false;
+  tr.onpointerdown = e => { drag = true; tr.setPointerCapture(e.pointerId); seekFrom(e); };
+  tr.onpointermove = e => { if (drag) seekFrom(e); };
+  tr.onpointerup = () => { drag = false; };
+  tr.onkeydown = e => { if (e.key === "ArrowRight") { step(1); e.preventDefault(); } if (e.key === "ArrowLeft") { step(-1); e.preventDefault(); } };
+}
+function updateTrack(t) {
+  const p = S.end ? 100 * t / S.end : 0;
+  const head = $("#head"), done = $("#done");
+  if (head) head.style.left = p + "%";
+  if (done) done.style.width = p + "%";
+  $("#track").setAttribute("aria-valuenow", Math.round(p));
+  const g = genAt(t);
+  $("#gens").querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.g === g));
+}
+function buildGenButtons() {
+  const box = $("#gens");
+  box.innerHTML = "";
+  for (const g of S.gens) box.append(el("button", { "data-g": g.gen, title: g.gen === 0 ? "Code Zero" : `Generation ${g.gen}`, onclick: () => { seek(g.t0 + 0.001); setPlaying(true); } }, g.gen === 0 ? "G0" : `G${g.gen}`));
+}
+let lastGen = null;
+function seek(t) {
+  now = clamp(t, 0, S.end);
+  render(now);
+  const g = genAt(now);
+  if (g !== lastGen) { lastGen = g; if (!selected) showInspector(); }
+}
+function step(dir) {
+  setPlaying(false);
+  const beats = S.beats;
+  if (dir > 0) { const b = beats.find(x => x > now + 0.02); seek(b != null ? b + 0.35 : S.end); }
+  else { const b = [...beats].reverse().find(x => x < now - 0.4); seek(b != null ? b + 0.35 : 0); }
+}
+function setPlaying(p) {
+  if (!S) return;
+  if (p && now >= S.end - 0.01) seek(0);
+  playing = p;
+  $("#play").textContent = p ? "Pause" : "Play";
+  lastFrame = null;
+  if (p) requestAnimationFrame(tick);
+}
+function tick(ts) {
+  if (!playing) return;
+  if (lastFrame != null) {
+    const dt = Math.min(0.1, (ts - lastFrame) / 1000);
+    seek(now + dt * speed);
+    if (now >= S.end) { setPlaying(false); return; }
+  }
+  lastFrame = ts;
+  requestAnimationFrame(tick);
+}
+$("#play").onclick = () => setPlaying(!playing);
+$("#next").onclick = () => step(1);
+$("#prev").onclick = () => step(-1);
+$("#speed").onchange = e => { speed = +e.target.value; };
+document.addEventListener("keydown", e => {
+  if (!S || e.target.closest("input, select, textarea")) return;
+  if (e.key === " " && !e.target.closest("button")) { setPlaying(!playing); e.preventDefault(); }
+  else if (e.key === "ArrowRight" && e.target === document.body) { step(1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft" && e.target === document.body) { step(-1); e.preventDefault(); }
+  else if (e.key === "Escape") select(null);
+});
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== b.dataset.view);
+});
+
+/* ---------- loading a trace file */
+function readFile(file) {
+  const r = new FileReader();
+  r.onload = () => { try { load(JSON.parse(r.result)); } catch (err) { alert("Couldn't read that file as JSON: " + err.message); } };
+  r.readAsText(file);
+}
+const stage = $("#stage");
+stage.addEventListener("dragover", e => { e.preventDefault(); $("#dropzone").hidden = false; $("#dropzone").classList.add("over"); });
+stage.addEventListener("dragleave", e => { if (!stage.contains(e.relatedTarget)) { $("#dropzone").classList.remove("over"); if (T) $("#dropzone").hidden = true; } });
+stage.addEventListener("drop", e => { e.preventDefault(); $("#dropzone").classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+$("#filepick").onchange = e => { const f = e.target.files[0]; if (f) readFile(f); };
+
+if (EMBEDDED_TRACE) load(EMBEDDED_TRACE);
+else { $("#dropzone").hidden = false; $("#inspector").innerHTML = '<div class="insp"><h2>No run loaded</h2><p class="meta">Drop a trace file on the floor, or open a page built by viz/export.py.</p></div>'; }
+</script>
+</body>
+</html>
