@@ -7,3 +7,5 @@
 ## Reply format
 
 Start with the complete code in a single ```python block (imports, then the function with a one-line docstring saying exactly what it computes). After the block, one sentence: what the code computes, and how you read anything ambiguous.
+
+A feature may apply only under a condition (only in some decisions, or for some candidates, when a quantity crosses a threshold) and be zero otherwise. The policy is one weighted sum, so a condition is the only way it can treat different cases differently.

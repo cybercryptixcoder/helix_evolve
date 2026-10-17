@@ -18,7 +18,8 @@
   "temperature": 0.9,
   "max_tokens": 2500,
   "scoreboard": 10,
-  "retry_duplicates": true
+  "retry_duplicates": true,
+  "kept_parents": 1
  },
  "navigator": {
   "enabled": true,
@@ -42,16 +43,19 @@
    0
   ],
   "sigma": 0.3,
-  "near_miss_trials": 0,
-  "near_miss_floor": 0.3,
+  "near_miss_trials": 2,
+  "near_miss_floor": 0.1,
   "probe_multiples": [
    1,
    -1,
    0.3,
    -0.3,
    0.1,
-   -0.1
-  ]
+   -0.1,
+   0.03,
+   -0.03
+  ],
+  "probe_on_search": true
  },
  "novelty": {
   "duplicate_rho": 0.98,
