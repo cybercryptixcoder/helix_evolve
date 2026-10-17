@@ -1,0 +1,98 @@
+{
+ "problem": "setcover",
+ "label": "setcover-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 227.8318475932932,
+  "valid": 240.48213532641714
+ },
+ "champion": {
+  "train": 4.500677115720436,
+  "valid": 3.962457802534288,
+  "progress": 98.02,
+  "valid_progress": 98.35,
+  "library": [
+   "f004",
+   "f008",
+   "f016",
+   "f022",
+   "f038",
+   "f052"
+  ]
+ },
+ "test": {
+  "gap": 5.3049230894329416,
+  "families": {
+   "unicost": 7.062937062937064,
+   "random_cost": 7.61892140341179,
+   "size_cost": 5.774839320756065,
+   "rare_elements": 1.1552502215653293,
+   "big_sets": 4.912667438494463
+  },
+  "code_zero": 360.1083927455966,
+  "progress": 98.53
+ },
+ "progress_curve": [
+  0.0,
+  96.65,
+  96.74,
+  97.08,
+  97.08,
+  97.84,
+  98.02,
+  98.02,
+  98.02,
+  98.02,
+  98.02
+ ],
+ "valid_curve": [
+  0.0,
+  97.27,
+  97.29,
+  97.19,
+  97.19,
+  98.22,
+  98.35,
+  98.35,
+  98.35,
+  98.35,
+  98.35
+ ],
+ "calls": 120,
+ "tokens_in": 338823,
+ "tokens_out": 236942,
+ "features_tried": 88,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "rarity_weighted_efficiency",
+   "origin": "wide"
+  },
+  {
+   "id": "f008",
+   "name": "rarity_weighted_coverage",
+   "origin": "deep"
+  },
+  {
+   "id": "f016",
+   "name": "cost_regret_vs_alternatives",
+   "origin": "deep"
+  },
+  {
+   "id": "f022",
+   "name": "last_chance_share_coverage",
+   "origin": "wide"
+  },
+  {
+   "id": "f038",
+   "name": "cheapest_burden_share_per_cost",
+   "origin": "wide"
+  },
+  {
+   "id": "f052",
+   "name": "raw_new_coverage_share",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792268502.7851095
+}
