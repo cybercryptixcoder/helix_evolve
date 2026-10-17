@@ -85,8 +85,13 @@ def before_json(text, limit=1200):
 
 
 def extract_name(text, default):
-    m = re.search(r"name:\s*`?([A-Za-z_][A-Za-z0-9_]*)", (text or "").split("```")[-1])
-    return m.group(1)[:48] if m else default
+    """`name: snake_case` anywhere in the reply (after the code first, then before it)."""
+    text = text or ""
+    for part in (text.split("```")[-1], text):
+        m = re.search(r"\bname\**\s*:\s*\**\s*`?([A-Za-z_][A-Za-z0-9_]*)", part, re.I)
+        if m and m.group(1).lower() not in ("feature", "def"):
+            return m.group(1)[:48]
+    return default
 
 
 def short(s, n):
