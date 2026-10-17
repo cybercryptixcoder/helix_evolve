@@ -39,6 +39,7 @@ class Problem:
     # how many instances of each split the engine uses (problems may override)
     fit_split = "train"
     search_split = "train"      # the split searches, probes and refits run on (a problem may name a smaller one)
+    probe_split = None          # an even smaller split for the probe's quick first pass (None = search_split)
     candidates_arg = 1          # which argument of the signature holds the candidates (for writing programs)
 
     # ------------------------------------------------------------ must implement
