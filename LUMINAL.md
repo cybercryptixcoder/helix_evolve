@@ -12,6 +12,7 @@ What works, what doesn't, and how we found out. Everything here was measured wit
 | **Hidden thinking** | **send `"reasoning_effort": "none"`**. Nothing else switches it off |
 | Streaming | `"stream": true`. Non-streamed requests were cut off at about 20 s |
 | Parallel calls | 12 at a time worked; halve on 503/429 and recover slowly |
+| **Rate limits** (measured Oct 17) | about 13 requests at the same instant; about 60 requests in a burst, refilling at about 1 request per second (≈60 a minute over the long run). See [Rate limits](#rate-limits-measured-october-17-2026) |
 
 Helix does all of this by default (`helix/llm.py`). With these settings, the last real run made 95 calls with **0 errors, 0 cut-off replies and no hidden reasoning**: median 2.2 s for a Coder call, 3.3 s for the Mutator, 9.1 s for the Researcher.
 
@@ -95,6 +96,41 @@ Conclusions:
 - The 400 for `"prefix": true` read: *"prefix is only available when using beta api (set base_url="https://api.deepseek.com/beta")"*. That suggests Luminal passes these requests through to DeepSeek's own API, which would explain why DeepSeek's parameter (`reasoning_effort`) works and vLLM-style template flags don't. This is an inference from the error, not something Luminal has told us.
 - In the probe, `reasoning_effort: "none"` was sent together with `chat_template_kwargs: {"thinking": false}`. Helix now sends only `reasoning_effort`, and the next real run confirmed that alone is enough.
 
+## Rate limits (measured October 17, 2026)
+
+About 2,500 tiny requests (`max_tokens` 4, `reasoning_effort` none, streamed) from one key, in four kinds of test. Two separate limiters answer HTTP 429 with `Retry-After: 1`, and the `x-reject-reason` header says which one fired:
+
+| Limiter (`x-reject-reason`) | What it limits | Measured |
+|---|---|---|
+| `client-surge-request-rate-limit` | Requests arriving at the same instant | 12 at once always pass. 14 at once: 2 rejected; 16: 3; 20: 7; 24: 11; 32: 17. About 13 get through, however many are sent |
+| `client-request-rate-limit` | Requests over a longer window | Behaves like a bucket of about 60 requests that refills at about 1 request per second (table below) |
+
+Paced tests, each starting with a rested key, one request every 1/rate seconds for 60 s, no retries:
+
+| Rate sent | Rejected | First 429 after | What it shows |
+|---|---|---|---|
+| 1.5 a second (90/min) | 0 of 90 | never | under the refill rate plus the bucket |
+| 2 a second (120/min) | 3 of 120 | 57 s | bucket drains at 1 a second net: ≈ 57-60 requests |
+| 2.5 a second (150/min) | 34 of 150 | 39 s | drains at 1.5 a second net: ≈ 58 |
+| 3.5 a second (210/min) | 91 of 210 | 24 s | drains at 2.5 a second net: ≈ 59; afterwards about 1 success a second |
+
+The three drain times agree on a bucket of about 60 that refills at about 1 a second.
+
+What is **not** limited:
+- **Calls in flight.** 30 long requests (600 tokens, 3 s each) launched 3 a second, peaking at 10 in flight, all passed. The "16 in parallel gets many 429s" seen on October 14 was the surge limiter, not a concurrency cap.
+- **Prompt size.** 10 requests with 20,000-token prompts at once all passed (200,000 input tokens in one burst).
+
+Hammering through 429s doesn't help: 8, 12 and 16 workers retrying with no pause got 86-138 successful requests a minute while sending over 900, and the extra traffic also made connections drop (in this cloud workspace the agent proxy reset some of them).
+
+**What it means for Helix.**
+- One generation makes about 10-15 agent calls, spread over a few seconds to a minute: far below both limits. A single run never comes near them.
+- The limits are per key, so parallel runs share them. The meta loop in [docs/META_LOOP.md](docs/META_LOOP.md) (several short runs at once) will hit the 60-a-minute refill long before anything else; budget about one request a second across everything running on one key.
+- `helix/llm.py` already does the right thing: it honours `Retry-After` and halves the calls in flight on a 429. Keep `HELIX_MAX_CONCURRENT` at 12 or below, so a burst of simultaneous calls stays under the surge limiter.
+
+**Thinking levels, rechecked the same day:** `none`, `low`, `max` and `ultra` all answered a short arithmetic question in 1.1-1.6 s. `ultra`, which returned 503 on the night of October 14, works again.
+
+The probe script isn't in the repo (it was a scratch file); the method is above, and it takes about ten minutes to repeat.
+
 ## Other things we learned the hard way
 
 - **Stream.** Non-streamed requests that ran past about 20 seconds were cut off on the server side (Oct 11). Streaming keeps the connection alive. `llm.py` handles both and falls back if the server ignores `stream`.
@@ -118,8 +154,8 @@ Every call is logged in the run's `llm_calls.jsonl`: the prompt, the reply, any 
 
 ## What we don't know
 
-- ~~**Whether thinking would make the agents better.**~~ *Probed 2026-10-14:* `reasoning_effort` `low` and `medium` (with a large `max_tokens`, streamed and not) both come back as `service_unavailable` after ≈20 s — the thinking tier is not servable on this deployment right now, so `none` is the only usable mode. The question above stays open until that changes; `HELIX_THINKING=on` is how to retry it.
-- ~~**Rate limits, quotas and prices.**~~ *Probed 2026-10-14:* 8 parallel calls fine; at 16 parallel small calls, 6 of 16 returned `rate limit exceeded` at ≈1.6 s. So the free ceiling sits between 8 and 16 concurrent; Helix's adaptive backoff in `llm.py` (halve in-flight on 429/5xx) covers bursts. Prices still unknown.
+- ~~**Whether thinking would make the agents better.**~~ *Probed 2026-10-14:* `reasoning_effort` `low` and `medium` (with a large `max_tokens`, streamed and not) both come back as `service_unavailable` after ≈20 s — the thinking tier is not servable on this deployment right now, so `none` is the only usable mode. *Rechecked 2026-10-17:* every level answers again (see Rate limits). Whether thinking makes the agents better is still untested in a real run; `HELIX_THINKING=on` is how to try it.
+- ~~**Rate limits, quotas and prices.**~~ *Probed 2026-10-14:* 8 parallel calls fine; at 16 parallel small calls, 6 of 16 returned `rate limit exceeded` at ≈1.6 s. *Measured properly 2026-10-17:* two request limiters, about 13 at the same instant and a bucket of about 60 refilling at 1 a second; see [Rate limits](#rate-limits-measured-october-17-2026). Prices still unknown.
 - **Official documentation for the text API.** We didn't find any. The GitHub repository `luminal-ai/luminal` documents Luminal's inference compiler, not the hosted API. The one Luminal document we had covers the Images API (`https://images.luminal.cloud`, Ideogram 4.5), which uses the same keys and prepaid wallet.
 - ~~**Other models.**~~ *Probed 2026-10-14:* `/v1/models` lists only `deepseek-ai/DeepSeek-V4.1-Flash`. A "Pro" model is still not available, so `--pro-every` has never actually been used.
 - **Parameter edges** *probed 2026-10-14:* `temperature` ∈ [0, 2] (2.5 → 400); `max_tokens` ∈ [1, 393216] (0 and −5 → 400); unknown extra fields are ignored, not rejected; a 10,000-character system prompt is fine; an empty user message is fine.
