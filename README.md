@@ -90,6 +90,7 @@ Every run's full trace (every agent call with its reasoning, every program, gene
 | [evaluator/README.md](evaluator/README.md) | The evaluator and the baselines |
 | [results/](results/) | Full traces of every run |
 | [docs/next-concept/](docs/next-concept/) | The next concept: treating improvement as a search space of approaches, pruned by LLM reasoning |
+| [docs/META_LOOP.md](docs/META_LOOP.md) | Plan for a meta loop that evolves Helix itself, scored by a multi-problem evaluator (not built yet) |
 
 ## Quick start
 
