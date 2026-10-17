@@ -2,7 +2,7 @@
  "about": "How Helix v3 searches. The meta loop evolves this folder (config, prompts/, hooks.py).",
  "researcher": {
   "experiments": 4,
-  "effort": "none",
+  "effort": "low",
   "temperature": 0.6,
   "max_tokens": 6000
  },
