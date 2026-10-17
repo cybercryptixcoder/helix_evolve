@@ -62,3 +62,29 @@ python -m ui                      # then open http://localhost:8765/meta
 ```
 
 `scripts/run_meta.sh` takes `HOURS`, `INNER_GENS`, `REPEATS`, `DEEP`, `WIDE`, `PARALLEL`, `PROBLEMS`, `HELD_OUT`, `PUSH=0` (keep results local). `--hours` stops new outer generations and new candidate evaluations once the budget is used; the one in flight finishes, so allow up to an hour extra. The `/meta` page shows the incumbent's score over outer generations, the inner runs in flight and per-problem scores, and can start or stop a run.
+
+## Long runs that survive interruptions
+
+A 4-hour run shouldn't die silently or lose its work. What guards it:
+
+- **Preflight, before the hours start (about 2 minutes).** `scripts/run_meta.sh` installs missing dependencies, checks
+  that every Luminal key answers, and runs a one-generation crash test of Helix and of the meta loop. Any failure
+  stops it there with the error. `DRY=1 scripts/run_meta.sh` runs only the preflight; `SMOKE=0` skips the crash test.
+- **Fail fast.** If every inner run of the starting strategy crashes, the meta loop stops at once with the reason
+  (status `failed`) instead of using the budget.
+- **Nothing finished is lost.** Inner runs checkpoint after every generation. A finished inner run is reused
+  (`record.json`, keyed by the strategy's hash); an unfinished one resumes from its checkpoint. The outer loop saves
+  each generation's candidates as soon as they are written, so a resume evaluates those instead of asking for new
+  ones. The `--hours` budget counts time actually spent, across resumes. Every state file is written atomically.
+- **Resume.** `RESUME=meta_runs/<run> scripts/run_meta.sh` continues a run with its own settings (saved in
+  `launch.env`), then publishes as usual. For a single Helix run: `python -m helix3.run --resume runs/<problem>/<run>`.
+- **Automatic resume after a restart.** `scripts/install_keeper.sh` starts the keeper at login (a macOS LaunchAgent,
+  or a crontab `@reboot` line on Linux). Every 5 minutes it looks for runs whose process is gone and continues
+  them: meta runs through `run_meta.sh`, Helix runs with `--resume`. Runs you stopped (the dashboard's stop button)
+  or that failed are left alone. `python -m helix3.keeper --list` shows every run and whether it is alive.
+- **Awake.** On macOS, `run_meta.sh` keeps the Mac from sleeping while the run goes (`caffeinate`). Closing the lid
+  on battery still sleeps it, and nothing runs while the computer is off: the run continues when it is back.
+
+On macOS, a repo in `~/Downloads`, `~/Documents` or `~/Desktop` is in a protected folder, and a background agent may
+be refused access there. The installer warns about this; moving the repo (for example to `~/code/helix_evolve`) is
+the simplest fix.
