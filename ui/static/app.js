@@ -9,6 +9,26 @@ const fmt = (v, d = 1) => v == null || isNaN(v) ? "—" : Number(v).toFixed(d);
 const pct = v => v == null ? "—" : `${fmt(v)}%`;
 const num = v => v == null || isNaN(v) ? "—" : Number.isInteger(Number(v)) ? String(Number(v)) : Math.abs(v) >= 100 ? Number(v).toFixed(0) : Number(v).toFixed(2);
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+/* y-axis range: from 0, or, when every point after Code Zero (and the baseline) is high, from just below them,
+   so differences of a few points stay visible; Code Zero is then drawn on the bottom edge */
+function yRange(values, extra) {
+  const rel = values.filter(v => v != null && v > 0).concat(extra.filter(v => v != null));
+  const top = Math.min(100, Math.max(10, Math.ceil(Math.max(...rel, 0) / 10) * 10));
+  const mn = rel.length ? Math.min(...rel) : 0;
+  const lo = mn > 60 ? Math.max(0, Math.floor((mn - 2) / 5) * 5) : 0;
+  const step = (top - lo) > 40 ? 20 : (top - lo) > 15 ? 10 : (top - lo) > 6 ? 2 : 1;
+  return { lo, top, step };
+}
+function spreadLabels(items, minGap) {          // items: [{y}], nudged apart vertically, order kept
+  const s = [...items].sort((a, b) => a.y - b.y);
+  for (let i = 1; i < s.length; i++) if (s[i].y - s[i - 1].y < minGap) s[i].y = s[i - 1].y + minGap;
+  return items;
+}
+function baselineLine(b, x0, x1, y, lo, top) {
+  if (!b || b.progress == null || b.progress < lo || b.progress > top) return "";
+  return `<g class="baseline"><line x1="${x0}" x2="${x1}" y1="${y(b.progress)}" y2="${y(b.progress)}"/>
+    <text x="${x1 - 4}" y="${y(b.progress) + 16}" text-anchor="end">textbook rule (${esc(b.name)}): ${fmt(b.progress)}%</text></g>`;
+}
 const api = (u, opt) => fetch(u, opt).then(r => r.json());
 const SVG = "http://www.w3.org/2000/svg";
 
@@ -94,16 +114,22 @@ function compareChart(runs) {
     rs = rs.slice(0, 8);
     const W = 1000, H = 230, L = 44, R = 150, T = 12, B = 28;
     const N = Math.max(...rs.map(r => r.curve.length - 1), 1);
-    const top = Math.max(10, Math.ceil(Math.max(...rs.flatMap(r => r.curve)) / 10) * 10);
-    const x = i => L + (W - L - R) * (i / N), y = v => T + (H - T - B) * (1 - Math.max(0, v) / top);
+    const base = rs[0].baseline;
+    const { lo, top, step } = yRange(rs.flatMap(r => r.curve), [base && base.progress]);
+    const x = i => L + (W - L - R) * (i / N), y = v => T + (H - T - B) * (1 - (Math.min(top, Math.max(lo, v)) - lo) / (top - lo));
     let h = `<g class="axis">`;
-    for (let v = 0; v <= top; v += top > 40 ? 20 : 10) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
+    for (let v = lo; v <= top + 1e-9; v += step) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
     for (let i = 0; i <= N; i++) h += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${i === 0 ? "start" : "G" + i}</text>`;
     h += `</g>`;
+    h += baselineLine(base, L, W - R, y, lo, top);
+    const labels = spreadLabels(rs.map((r, k) => ({ r, k, y: y(r.curve[r.curve.length - 1]) + 4 })), 15);
     rs.forEach((r, k) => {
-      const c = PALETTE[k % PALETTE.length], last = r.curve[r.curve.length - 1];
+      const c = PALETTE[k % PALETTE.length];
       h += `<polyline fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round" points="${r.curve.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>`;
-      h += `<text x="${x(r.curve.length - 1) + 8}" y="${y(last) + 4}" fill="${c}" style="font:600 13px var(--body)">${esc(r.label || "run")} ${fmt(last)}%</text>`;
+    });
+    labels.forEach(({ r, k, y: ly }) => {
+      const c = PALETTE[k % PALETTE.length], last = r.curve[r.curve.length - 1];
+      h += `<text x="${x(r.curve.length - 1) + 8}" y="${ly}" fill="${c}" style="font:600 13px var(--body)">${esc(r.label || "run")} ${fmt(last)}%</text>`;
     });
     return `<h2>${esc(rs[0].title || prob)}: runs compared</h2><section class="hero"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Progress of each run by generation">${h}</svg></section>`;
   }).join("");
@@ -150,6 +176,7 @@ function renderRun() {
     </header>
     <ul class="facts">
       <li><b>${pct(last.valid_progress)}</b>on validation</li>
+      ${m.status && m.status.baseline && m.status.baseline.progress != null && last.progress != null ? `<li><b>${last.progress >= m.status.baseline.progress ? "+" : "−"}${fmt(Math.abs(last.progress - m.status.baseline.progress))} pts</b>${last.progress >= m.status.baseline.progress ? "above" : "below"} the textbook rule (${esc(m.status.baseline.name)})</li>` : ""}
       ${test != null ? `<li><b>${pct(test)}</b>on the held-out test</li>` : ""}
       <li><b>${fmt(last.train, 2)}%</b>gap to the reference (Code Zero ${fmt((m.start.code_zero || {}).train, 2)}%)</li>
       <li><b>${kept}</b>features kept of ${tried}</li>
@@ -174,15 +201,18 @@ function drawChart(m) {
   const target = (m.start.config && m.start.config.generations) || n;
   const N = Math.max(n, target || n);
   const vals = m.gens.map(g => g.progress || 0), vv = m.gens.map(g => g.valid_progress ?? null);
-  const top = Math.max(10, Math.ceil(Math.max(...vals, ...vv.filter(v => v != null)) / 10) * 10);
-  const x = i => L + (W - L - R) * (i / N), y = v => T + (H - T - B) * (1 - Math.max(0, v) / top);
+  const base = m.status && m.status.baseline;
+  const { lo, top, step } = yRange([...vals, ...vv], [base && base.progress]);
+  const x = i => L + (W - L - R) * (i / N), y = v => T + (H - T - B) * (1 - (Math.min(top, Math.max(lo, v)) - lo) / (top - lo));
   const s = document.createElementNS(SVG, "svg");
   s.setAttribute("viewBox", `0 0 ${W} ${H}`); s.setAttribute("role", "img");
   s.setAttribute("aria-label", `Progress over ${n} generations, now ${fmt(vals[vals.length - 1])}%`);
   let h = `<g class="axis">`;
-  for (let v = 0; v <= top; v += top > 40 ? 20 : 10) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
+  for (let v = lo; v <= top + 1e-9; v += step) h += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
   for (let i = 0; i <= N; i++) h += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${i === 0 ? "Code Zero" : "G" + i}</text>`;
+  if (lo > 0) h += `<text x="${L + 22}" y="${H - B - 8}">axis starts at ${lo}%: Code Zero (0%) is drawn on the bottom edge</text>`;
   h += `</g>`;
+  h += baselineLine(base, L, W - R, y, lo, top);
   h += `<polyline class="curve valid" points="${vv.map((v, i) => v == null ? null : `${x(i)},${y(v)}`).filter(Boolean).join(" ")}"/>`;
   h += `<polyline class="curve" points="${vals.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>`;
   m.gens.forEach((g, i) => {
