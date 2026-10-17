@@ -90,7 +90,8 @@ class Outer:
         rec = self.cands[cid]
         say(f"   evaluating {cid} ({rec.get('name', '')})")
         r = evaluate(rec["dir"], self.problems, self.held, self.a.inner_generations, self.a.repeats,
-                     self.a.parallel, self.dir / "evals" / cid, self.a.timeout, self.a.workers)
+                     self.a.parallel, self.dir / "evals" / cid, self.a.timeout, self.a.workers,
+                     fake=getattr(self.a, "fake_inner", False))
         rec["result"] = {k: r[k] for k in ("score", "worst", "noise", "held_out_score", "problems", "held_out",
                                             "minutes", "calls", "crashes")}
         rec["stats"] = self.problem_stats(r)
@@ -330,7 +331,7 @@ class Outer:
             rec.update(invalid=True, verdict="invalid")
         with self.lock:
             self.cands[cid] = rec
-        self.trace.emit("candidate", gen=self.gen, **{k: v for k, v in rec.items() if k != "dir"})
+        self.trace.emit("candidate", **{k: v for k, v in rec.items() if k != "dir"})
         return cid
 
     def supervise(self, cid, r):
@@ -432,6 +433,7 @@ def main(argv=None):
     ap.add_argument("--margin", type=float, default=1.0, help="minimum score gain to promote")
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--fake-inner", action="store_true", help="inner runs without model calls (tests the outer loop)")
     a = ap.parse_args(argv)
     Outer(a).run()
 

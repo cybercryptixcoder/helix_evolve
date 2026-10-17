@@ -1,5 +1,7 @@
 ## What a candidate is here: an edit to the strategy
 
+You are one level up: you edit the files that control how Helix searches (prompts, config, hooks), not a feature or a policy for any problem.
+
 You get the whole strategy folder and one experiment. Write the edit. Reply with one block per file you change, either a whole file:
 
 <<<FILE prompts/researcher.md>>>
