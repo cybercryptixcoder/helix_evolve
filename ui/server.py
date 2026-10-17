@@ -85,7 +85,7 @@ def list_runs():
             start = next((e for e in ev if e["type"] == "run_start"), {})
             gens = [e for e in ev if e["type"] == "gen_end"]
             last = gens[-1] if gens else {}
-            running = st.get("state") == "running" and time.time() - (d / "trace.jsonl").stat().st_mtime < 900
+            running = _run_state(d, st) == "running"
             out.append({"id": _rel(d), "problem": start.get("problem") or d.parent.name, "title": start.get("title", ""),
                         "label": start.get("label", ""), "started": start.get("t"),
                         "generations": max(0, len(gens) - 1), "target": (start.get("config") or {}).get("generations"),
@@ -119,6 +119,8 @@ def run_detail(rel):
         champion = (d / "champion.py").read_text()
     except OSError:
         champion = ""
+    st["state"] = _run_state(d, st)
+    st["resumable"] = st["state"] == "stopped" and (d / "checkpoint.json").exists()
     return {"id": rel, "events": slim, "status": st, "champion": champion}
 
 
@@ -129,12 +131,29 @@ def call_detail(rel, cid):
     return None
 
 
+def _run_state(d, st):
+    """running only if the run's process is alive (older runs without a pid: trace written in the last 15 min)."""
+    if st.get("state") == "finished":
+        return "finished"
+    if st.get("state") == "running":
+        if st.get("pid"):
+            return "running" if _alive(st["pid"]) else "stopped"
+        try:
+            return "running" if time.time() - (d / "trace.jsonl").stat().st_mtime < 900 else "stopped"
+        except OSError:
+            return "stopped"
+    return "stopped"
+
+
 def list_meta():
     out = []
     for root in META_ROOTS:
         if not root.exists():
             continue
         for d in sorted(root.glob("*")):
+            args = _jload(d / "args.json", {}) if (d / "args.json").exists() else {}
+            if args.get("fake_inner") or args.get("fake") or d.name.startswith(("smoke", "_")) or d.name.endswith("test"):
+                continue                                          # crash tests, not real runs
             if (d / "state.json").exists():
                 try:
                     s = json.loads((d / "state.json").read_text())
