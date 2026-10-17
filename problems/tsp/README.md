@@ -17,11 +17,11 @@ here mentions bins, jobs or capacities.
 ## Run it
 
 ```bash
-cd /home/ubuntu/helix_evolve
+# from the repo root
 HELIX_PROMPTS_DIR=$PWD/problems/tsp/prompts \
-HELIX_EVALUATOR_CMD="$PWD/.venv/bin/python -m problems.tsp.cli" \
+HELIX_EVALUATOR_CMD="python -m problems.tsp.cli" \
 HELIX_BOUNDS_MODULE=problems.tsp.bounds \
-.venv/bin/python -m helix.run --engine programs --seed-program problems/tsp/seed.py \
+python -m helix.run --engine programs --seed-program problems/tsp/seed.py \
   --generations 8 --mode full --no-publish
 ```
 

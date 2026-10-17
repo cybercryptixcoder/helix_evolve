@@ -295,6 +295,8 @@ flowchart TB
 | 3 | `20261012-080715-full` | programs, `eb71b70` (all v1 fixes, tune, tune-then-judge, `--epsilon` 0.05) | 17 (stopped) | 38 min | −7.511 | 19.1% | | Worse than run 2. Stagnated at generation 7. 100 of 108 Mutator calls cut off by hidden thinking; deep produced nothing in 9 of 17 generations. Technical failure, not a verdict on the design |
 | 4 | `20261012-124038-full` | features, `62cf672`, **with the hand-written head start** | 10 | 15 min | −6.185 | 34.3% (started at 32.8%) | −5.97 | **Not comparable** (§10). The agents added 1.5 points in 10 generations |
 | 5 | `20261012-134507-full` | features, `234f4e8`, from Code Zero, packing comparison on | 10 | 47 min | −6.986 | 25.1% | −6.703 (25.6%) | The first clean feature-engine run. 99 LLM calls. Not analysed yet |
+| 6 | `20261014-042737-full` | features, fast loop (§15), from Code Zero | 10 | | −7.034 | 24.6% | −6.686 (25.8%) | |
+| 7 | `20261014-051542-full` | features, fast loop (§15), from Code Zero | 25 (incl. a resume) | about 2 h | **−6.156** | **34.6%** | **−6.001 (33.7%)** | Best from scratch so far |
 
 Details:
 - **Run 2:**
@@ -424,8 +426,7 @@ The feature engine was rebuilt for short, iterative runs and now climbs far fast
 anything before it in this repo. Headline: a 10-generation run that used to take ~47 minutes reaches
 its endpoint in ~2-12 minutes, and the from-scratch records moved from −6.986 (run 5) to **−6.156
 official / −6.001 held-out test** (run `results/20261014-051542-full`, 10 features, ~2h wall including
-a 6-generation resume). See `results/20261014-051542-full/report.md` and the notes in the session's
-`~/helix-work/` folder.
+a 6-generation resume). See `results/20261014-051542-full/report.md`.
 
 What changed, in one paragraph per mechanic:
 
@@ -440,9 +441,9 @@ What changed, in one paragraph per mechanic:
 - **Second-chance combos** (near-misses retried next to the kept set), **combine-refit** (a small
   refit before a near-joining feature is refused), **backlog revisits** (past near-misses re-fitted
   against the newest champion, with rotation), and **pair trials** (two singly-failing candidates
-  tried together). Second chances alone contributed members to v6d3's final library (2 of 6).
+  tried together). In one test run, second chances contributed 2 of the 6 features in the final library.
 - **Retire guard.** Retirement never trades train away for more than a quarter of a small validation
-  gain; the old behaviour once made a champion worse (−7.39 → −7.50 official in v6c).
+  gain; the old behaviour once made a champion worse (−7.39 → −7.50 official, in a test run).
 - **Extraction hygiene.** Agent replies that put their `name:` line inside the code fence are cleaned
   (and their name recovered). A stray bare annotation in a composed program used to break official
   scoring silently — the fit path never noticed because `helix/fit.py` has
