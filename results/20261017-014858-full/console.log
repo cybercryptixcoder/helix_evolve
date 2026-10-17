@@ -1,0 +1,164 @@
+Helix | engine features | mode full | models luminal: deepseek-ai/DeepSeek-V4.1-Flash
+run folder: /home/claude/helix_evolve/helix/runs/20261017-014858-full
+   checking the model is answering (before starting)...
+   model is answering
+── generation 0: Code Zero scores -9.181 (p0001); the library starts empty
+
+── generation 1: deep + wide | champion p0001 train -9.271 valid -9.038 | 0 features, 0 weights
+      [mag] f0002 +0.4:-42.501 -0.4:-42.464 +0.1:-42.501 -0.1:-42.464
+   [tim] f0002 probe 1.3s (rejected)
+   f0002 wide residual_imbalance_times_ful rejected by the probe (-42.464)
+      [mag] f0004 +0.4:-14.257 -0.4:-26.292 +0.1:-14.257 -0.1:-26.292
+   [tim] f0004 probe 1.1s (rejected)
+   f0004 wide remaining_demand_cosine      rejected by the probe (-14.257)
+      [mag] f0001 +0.4:-0.350 -0.4:-337.600 +0.1:-0.350 -0.1:-337.600
+   [tim] f0001 probe 1.1s (rejected)
+   f0001 wide neg_tighter_leftover_after_p rejected by the probe (-0.350)
+      [mag] f0003 +0.4:-1.533 -0.4:-14.605 +0.1:-1.533 -0.1:-14.605
+   [tim] f0003 probe 1.3s (rejected)
+   f0003 wide thin_waste_corner            rejected by the probe (-1.533)
+      [mag] f0006 +0.4:-28.648 -0.4:-10.607 +0.1:-28.648 -0.1:-10.607
+   [tim] f0006 probe 0.9s (rejected)
+   f0006 deep complementarity_to_residual_ rejected by the probe (-10.607)
+      [mag] f0008 +0.4:-3.433 -0.4:-17.424 +0.1:-3.433 -0.1:-17.424
+   [tim] f0008 probe 0.9s (rejected)
+   f0008 deep residual_imbalance_after_pla rejected by the probe (-3.433)
+      [mag] f0007 +0.4:-0.350 -0.4:-337.600 +0.1:-0.350 -0.1:-337.600
+   [tim] f0007 probe 1.1s (rejected)
+   f0007 deep post_placement_min_residual  rejected by the probe (-0.350)
+      [mag] f0005 +0.4:-337.600 -0.4:-0.350 +0.1:-337.600 -0.1:-0.350
+   [tim] f0005 probe 1.3s (rejected)
+   f0005 deep fits_with_room_for_another   rejected by the probe (-0.350)
+   [tim] pool 25 batches, 452 sims, 9.8s (0.02s/sim)
+   kept nothing
+   champion p0001: train -9.271, valid -9.038 | 9 LLM calls | 13.3s (agents 9s, fit 13s)
+
+── generation 2: deep + wide | champion p0001 train -9.271 valid -9.038 | 0 features, 0 weights
+      [mag] f0010 +0.4:-23.053 -0.4:-0.061 +0.1:-23.053 -0.1:-0.061
+   [tim] f0010 probe 1.2s free 3.1s refit 0.0s valid 1.1s total 5.3s
+   f0010 wide geometric_slack_after_placem train -0.061  valid -0.522
+      [mag] f0009 +0.4:-14.257 -0.4:-26.292 +0.1:-14.257 -0.1:-26.292
+   [tim] f0009 probe 1.2s (rejected)
+   f0009 wide demand_alignment_cosine      rejected by the probe (-14.257)
+      [mag] f0011 +0.4:-220.817 -0.4:-4.326 +0.1:-220.817 -0.1:-4.326
+   [tim] f0011 probe 1.3s (rejected)
+   f0011 wide post_placement_balance       rejected by the probe (-4.326)
+      [mag] f0012 +0.4:-1.876 -0.4:-321.942 +0.1:-1.876 -0.1:-321.942
+   [tim] f0012 probe 2.2s (rejected)
+   f0012 wide balanced_drain_bottleneck    rejected by the probe (-1.876)
+      [mag] f0014 +0.4:-28.589 -0.4:-11.459 +0.1:-28.589 -0.1:-11.459
+   [tim] f0014 probe 0.9s (rejected)
+   f0014 deep pair_complementarity         rejected by the probe (-11.459)
+      [mag] f0015 +0.4:-4.817 -0.4:-0.292 +0.1:-4.817 -0.1:-0.292
+   [tim] f0015 probe 1.1s (rejected)
+   f0015 deep small_job_packing_density    rejected by the probe (-0.292)
+      [mag] f0013 +0.4:+1.828 -0.4:-1.349 +0.1:+1.828 -0.1:-1.349
+   [tim] f0013 probe 1.0s free 1.8s refit 0.0s valid 0.9s total 3.7s
+   f0013 deep class_match_residual         train +1.828  valid +1.513
+      [mag] f0016 +0.4:-5.132 -0.4:-26.092 +0.1:-4.795 -0.1:-25.002
+   [tim] f0016 probe 1.3s (rejected)
+   f0016 deep fill_gap_ratio               rejected by the probe (-4.795)
+   [tim] pool 32 batches, 1024 sims, 21.9s (0.02s/sim)
+   kept f0013 (deep) class_match_residual
+   champion p0010: train -7.443, valid -7.525 | 18 LLM calls | 26.7s (agents 10s, fit 26s)
+
+── generation 3: deep + wide | champion p0010 train -7.443 valid -7.525 | 1 features, 1 weights
+      [mag] f0017 +0.4:-38.117 -0.4:-36.192 +0.1:-38.117 -0.1:-36.192
+   [tim] f0017 probe 1.5s (rejected)
+   f0017 wide residual_balance_signed      rejected by the probe (-36.192)
+      [mag] f0018 +0.4:-1.748 -0.4:-2.401 +0.1:-1.748 -0.1:-2.401
+   [tim] f0018 probe 1.6s (rejected)
+   f0018 wide graded_stranding_risk        rejected by the probe (-1.748)
+      [mag] f0020 +0.4:-0.552 -0.4:-2.246 +0.1:-0.552 -0.1:-1.447
+   [tim] f0020 probe 1.5s (rejected)
+   f0020 wide stranding_spread_soft_gate   rejected by the probe (-0.552)
+      [mag] f0019 +0.4:-0.101 -0.4:-2.336 +0.1:-0.101 -0.1:-2.175
+   [tim] f0019 probe 1.7s (rejected)
+   f0019 wide stranding_penalty_scaled     rejected by the probe (-0.101)
+      [mag] f0024 +0.4:-7.923 -0.4:-322.810 +0.1:-7.923 -0.1:-322.810
+   [tim] f0024 probe 1.5s (rejected)
+   f0024 deep new_bin_penalty_vs_tight_ope rejected by the probe (-7.923)
+      [mag] f0023 +0.4:-0.081 -0.4:-339.428 +0.1:-0.081 -0.1:-339.428
+   [tim] f0023 probe 1.6s (rejected)
+   f0023 deep open_bin_fill_preference     rejected by the probe (-0.081)
+      [mag] f0021 +0.4:-339.428 -0.4:-1.743 +0.1:-339.428 -0.1:-1.743
+   [tim] f0021 probe 1.7s (rejected)
+   f0021 deep residual_balance_gap         rejected by the probe (-1.743)
+      [mag] f0022 +0.4:-3.425 -0.4:-339.428 +0.1:-3.425 -0.1:-339.428
+   [tim] f0022 probe 1.8s (rejected)
+   f0022 deep small_job_bin_density        rejected by the probe (-3.425)
+   [tim] pool 28 batches, 564 sims, 16.0s (0.03s/sim)
+   kept nothing
+   champion p0010: train -7.443, valid -7.525 | 28 LLM calls | 20.8s (agents 10s, fit 21s)
+
+── generation 4: deep + wide | champion p0010 train -7.443 valid -7.525 | 1 features, 1 weights
+      [mag] f0026 +0.4:-0.552 -0.4:-1.623 +0.1:-0.552 -0.1:-1.623
+   [tim] f0026 probe 1.5s (rejected)
+   f0026 wide stranding_fill_weighted      rejected by the probe (-0.552)
+      [mag] f0025 +0.4:-85.806 -0.4:-1.367 +0.1:-85.806 -0.1:-1.367
+   [tim] f0025 probe 1.3s (rejected)
+   f0025 wide tight_slack_ratio            rejected by the probe (-1.367)
+      [mag] f0028 +0.4:-1.017 -0.4:-0.686 +0.1:-1.017 -0.1:-0.686
+   [tim] f0028 probe 1.7s (rejected)
+   f0028 wide stranding_asymmetry_signed   rejected by the probe (-0.686)
+      [mag] f0027 +0.4:-2.270 -0.4:-3.164 +0.1:-2.270 -0.1:-2.781
+   [tim] f0027 probe 1.6s (rejected)
+   f0027 wide strand_mismatch_weighted     rejected by the probe (-2.270)
+      [mag] f0031 +0.4:+0.302 -0.4:-339.428 +0.1:+0.302 -0.1:-339.428
+   [tim] f0031 probe 1.6s free 2.3s refit 3.3s valid 1.3s total 8.4s
+   f0031 deep closing_bin_penalty          train +0.379  valid +0.183
+      [mag] f0032 +0.4:-13.633 -0.4:-36.289 +0.1:-13.633 -0.1:-36.289
+   [tim] f0032 probe 1.4s (rejected)
+   f0032 deep anticorr_fourth_slot         rejected by the probe (-13.633)
+      [mag] f0029 +0.4:-0.554 -0.4:-35.518 +0.1:-0.554 -0.1:-35.518
+   [tim] f0029 probe 1.4s (rejected)
+   f0029 deep bimodal_pair_large           rejected by the probe (-0.554)
+      [mag] f0030 +0.4:-90.503 -0.4:-15.554 +0.1:-90.503 -0.1:-15.554
+   [tim] f0030 probe 1.5s (rejected)
+   f0030 deep small_fill_last_slot         rejected by the probe (-15.554)
+   [tim] pool 34 batches, 1156 sims, 28.7s (0.02s/sim)
+   kept f0031 (deep) closing_bin_penalty
+   champion p0027: train -7.064, valid -7.343 | 37 LLM calls | 32.4s (agents 10s, fit 31s)
+
+── generation 5: deep + wide | champion p0027 train -7.064 valid -7.343 | 2 features, 2 weights
+      [mag] f0035 +0.4:-2.281 -0.4:-2.632 +0.1:-0.356 -0.1:-0.231
+   [tim] f0035 probe 1.6s (rejected)
+   f0035 wide residual_bottleneck_asymmetr rejected by the probe (-0.230)
+      [mag] f0036 +0.4:-0.325 -0.4:-5.750 +0.1:-0.064 -0.1:-0.108
+   [tim] f0036 probe 1.6s free 3.0s refit 4.7s valid 1.7s total 11.0s
+   f0036 wide closing_bin_penalty_seal_wei train +0.116  valid +0.126
+      [mag] f0034 +0.4:-0.020 -0.4:-1.362 +0.1:+0.034 -0.1:+0.022
+   [tim] f0034 probe 1.7s free 3.1s refit 6.3s valid 1.7s total 12.7s
+   f0034 wide asymmetric_stranding_gate    train +0.096  valid +0.116
+      [mag] f0033 +0.4:-0.110 -0.4:-0.076 +0.1:+0.000 -0.1:+0.000
+   [tim] f0033 probe 1.4s free 2.9s refit 4.7s valid 1.5s total 10.5s
+   f0033 wide asymmetric_binding_fill      train +0.000  valid -0.006
+      [mag] f0038 +0.4:-2.422 -0.4:-0.448 +0.1:-0.139 -0.1:+0.018
+   [tim] f0038 probe 1.6s free 3.1s refit 4.8s valid 1.5s total 11.0s
+   f0038 deep uniform_second_same_class_sl train +0.050  valid -0.005
+      [mag] f0039 +0.4:-0.369 -0.4:-0.240 +0.1:+0.082 -0.1:+0.049
+   [tim] f0039 probe 1.6s free 2.6s refit 4.4s valid 1.5s total 10.1s
+   f0039 deep anticorr_fourth_slot_room    train +0.082  valid +0.060
+      [mag] f0037 +0.4:+0.076 -0.4:-2.608 +0.1:+0.040 -0.1:+0.096
+   [tim] f0037 probe 1.5s free 3.1s refit 4.6s valid 1.5s total 10.6s
+   f0037 deep bimodal_small_slot_for_large train +0.203  valid +0.070
+      [mag] f0040 +0.4:+0.220 -0.4:-30.874 +0.1:+0.096 -0.1:-0.424
+   [tim] f0040 probe 1.9s free 3.6s refit 4.9s valid 1.7s total 12.0s
+   f0040 deep big_with_big_room_penalty    train +0.264  valid +0.161
+   combined 2 of 5 good features: train -6.732, valid -7.095
+   second chance f0038 uniform_second_same_class_slot: no gain (train -1.801, valid -1.593)
+   second chance f0033 asymmetric_binding_fill: no gain (train -0.052, valid +0.015)
+   [tim] pool 76 batches, 4214 sims, 145.9s (0.03s/sim)
+   kept f0040 (deep) big_with_big_room_penalty, f0037 (deep) bimodal_small_slot_for_large
+   champion p0036: train -6.647, valid -7.003 | 46 LLM calls | 151.6s (agents 11s, fit 150s)
+
+══ done
+best: p0036 score -6.774 (Code Zero -9.181, gain +2.407), found in generation 5 by the deep branch
+LLM: 46 calls (0 pro), 81,173 tokens in, 16,179 out
+run folder: /home/claude/helix_evolve/helix/runs/20261017-014858-full
+full transcript: /home/claude/helix_evolve/helix/runs/20261017-014858-full/transcript.md
+final held-out check:  python -m helix.report /home/claude/helix_evolve/helix/runs/20261017-014858-full
+features kept: 4 (f0013 class_match_residual (deep), f0031 closing_bin_penalty (deep), f0037 bimodal_small_slot_for_large (deep), f0040 big_with_big_room_penalty (deep)); tried: 40
+Publishing the final trace with the held-out check...
+Scoring the best program, Code Zero and the baselines on the held-out test split...
+published to results/20261017-014858-full  (commit it, or use Publish on the dashboard)

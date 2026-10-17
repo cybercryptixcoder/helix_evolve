@@ -297,6 +297,7 @@ flowchart TB
 | 5 | `20261012-134507-full` | features, `234f4e8`, from Code Zero, packing comparison on | 10 | 47 min | −6.986 | 25.1% | −6.703 (25.6%) | The first clean feature-engine run. 99 LLM calls. Not analysed yet |
 | 6 | `20261014-042737-full` | features, fast loop (§15), from Code Zero | 10 | | −7.034 | 24.6% | −6.686 (25.8%) | |
 | 7 | `20261014-051542-full` | features, fast loop (§15), from Code Zero | 25 (incl. a resume) | about 2 h | **−6.156** | **34.6%** | **−6.001 (33.7%)** | Best from scratch so far |
+| 8 | `20261017-014858-full` | features, fast loop, from Code Zero, all defaults | 5 | 4 min | −6.774 | 27.5% | −6.645 (26.2%) | A short run to see what the agents actually do (§16). All 4 kept features came from the deep loop |
 
 Details:
 - **Run 2:**
@@ -454,4 +455,16 @@ What changed, in one paragraph per mechanic:
 
 Generation times: ~45–105 s early, growing to 5–16 min with 9–10 feature libraries (the open item;
 `--gen-soft-seconds` bounds the optional extras, `--max-combine` bounds combination attempts).
+
+---
+
+## 16. Update — 17 October 2026: looking inside a run
+
+Before turning the solution space into an explicit search space, a short run was made to see what the current system really does. [docs/WORKLOG.md](docs/WORKLOG.md) has the full account; in short:
+
+- **Run 8** (`results/20261017-014858-full`): 5 generations, all defaults, 4 minutes, 46 agent calls, 27.5% of the way to optimal (26.2% held out). All four kept features came from the deep loop; the Mutator's 20 kept nothing.
+- **The run viewer** ([viz/](viz/README.md)): `python -m viz.export <run>` builds one HTML page that replays a feature-engine run as a factory floor (both loops, every message and feature clickable, exact prompts and replies, code, probe charts, champion diffs). Run 8's page is `results/20261017-014858-full/viewer.html`, with a written read of every call and feature in `notes.json`.
+- **What the run showed** (Notes tab of the viewer): the wide loop mostly varies the one or two features the champion has and has no memory, so it repeats itself; equivalent features under different names or signs aren't recognised; 30 of 40 features are rejected by the one-at-a-time probe; the research log credits claims that sometimes don't describe the kept measurement.
+- **Luminal rate limits measured:** about 13 requests at the same instant, and a bucket of about 60 refilling at about 1 a second ([LUMINAL.md](LUMINAL.md#rate-limits-measured-october-17-2026)). Thinking levels all answer again.
+- Nothing in `helix/`, `evaluator/` or `programs/` changed.
 
