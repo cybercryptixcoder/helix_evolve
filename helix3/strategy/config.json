@@ -76,5 +76,12 @@
   "bench_after": 3,
   "revive_p": 0.2,
   "about": "an approach with no gain for bench_after generations in a row is benched (hidden from the Navigator); each generation it returns with probability revive_p x (1 + rest/4), capped at 0.6"
+ },
+ "perturb": {
+  "every": 4,
+  "restarts": 3,
+  "evals": 16,
+  "kick": 0.8,
+  "about": "every Nth generation the champion's weight fit also restarts from randomly kicked weights (kick x the weight scale); adopted only if better on search and validation"
  }
 }
