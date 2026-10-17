@@ -4,6 +4,23 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 17, 2026 (later): a plain walk through run 8
+
+### What was asked
+
+The viewer does too much: everything sits behind a click and it's hard to follow. Shreyas wants to be *taken through* the run instead: what happened each generation, what the agents hypothesised, where each message went, and above all whether the system does what it was designed to do (the intent, not whether the code ran).
+
+### What was done
+
+- [RUN8_WALKTHROUGH.md](RUN8_WALKTHROUGH.md): who each station is (only the Researcher, Coder and Mutator are LLMs), one full cycle from Code Zero through generation 1, each generation in turn, and a table of intent against actual behaviour.
+- Two facts confirmed in the code while writing it: the Researcher's `target` (its prediction) is saved and never checked (`evolve.py`, `record_hypotheses`); and an idea rejected by the probe is logged as "refuted" with no number (`evolve.py`, `verdict`).
+
+### Open
+
+- Whether to rebuild the viewer as a guided, narrated step-through (one step at a time, the explanation visible without clicking) rather than a free-running factory floor. Not started; waiting for Shreyas.
+
+---
+
 ## October 17, 2026: seeing what the current system actually does
 
 ### What was asked
