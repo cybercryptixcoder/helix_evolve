@@ -25,6 +25,11 @@ OUT="meta_runs/$NAME"
 if [ -z "${LUMINAL_API_KEYS:-}${LUMINAL_API_KEY:-}" ]; then
   echo "No Luminal key. Put LUMINAL_API_KEYS=lum_live_... in .env (see .env.example)." >&2; exit 2
 fi
+# dependencies: install anything missing before hours of unattended running (the first 4 h run died on scipy)
+python - <<'PY' || python -m pip install -q -r helix3/requirements.txt || { echo "could not install helix3/requirements.txt" >&2; exit 3; }
+import numpy, cma, certifi
+PY
+python -c "import helix3.engine, meta.outer" || { echo "Helix doesn't import: see the error above" >&2; exit 3; }
 mkdir -p meta_runs
 
 publish() {

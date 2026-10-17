@@ -17,7 +17,19 @@ import json
 from dataclasses import asdict, dataclass, field
 
 import numpy as np
-from scipy.stats import rankdata
+
+
+def rankdata(a):
+    """Average ranks (1-based, ties share their mean rank), as scipy.stats.rankdata; numpy only."""
+    a = np.asarray(a).ravel()
+    sorter = np.argsort(a, kind="mergesort")
+    inv = np.empty(sorter.size, dtype=np.intp)
+    inv[sorter] = np.arange(sorter.size, dtype=np.intp)
+    s = a[sorter]
+    obs = np.r_[True, s[1:] != s[:-1]]
+    dense = obs.cumsum()[inv]
+    count = np.r_[np.nonzero(obs)[0], len(obs)]
+    return 0.5 * (count[dense] + count[dense - 1] + 1)
 
 MAX_K = 64          # candidates per state used for fingerprints (a fixed subset per state)
 
