@@ -74,6 +74,8 @@ The idea stayed the same; *what* the agents write changed once.
 | 3 | programs | 17 | −7.511 | 19.1% | −7.161 | Most agent replies were cut off by the model's hidden thinking |
 | 4 | features | 10 | −6.185 | 34.3% | −5.971 | **Not comparable:** started from a hand-written head start by mistake (since removed) |
 | 5 | features | 10 | −6.986 | 25.1% | −6.703 (25.6%) | The first clean feature-engine run from Code Zero |
+| 6 | features (fast loop) | 10 | −7.034 | 24.6% | −6.686 (25.8%) | |
+| 7 | features (fast loop) | 25 | **−6.156** | **34.6%** | **−6.001 (33.7%)** | Best from scratch so far |
 
 Every run's full trace (every agent call with its reasoning, every program, generation and feature) is in [`results/`](results/). Run 1 (the first hackathon runs) wasn't kept.
 
