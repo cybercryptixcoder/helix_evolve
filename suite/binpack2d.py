@@ -77,6 +77,8 @@ Six training families of 1,000 jobs: `uniform` (CPU and memory independent, 1-50
         "room_mem_pct": "average memory left per bin, % of capacity",
     }
     search_split = "search"     # the first two train instances of each family: searches run on 12, records on all 18
+    # hidden textbook baseline (never shown to agents): the bin left fullest (Best Fit)
+    baseline = [("import numpy as np\n\ndef feature(item, bins, capacity):\n    return -((bins - item) / capacity).sum(axis=1)\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Best fit: minus the room left after placing.\"\"\"\n    r = (bins - item) / capacity\n    return -r.sum(axis=1)\n",
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Is it the new bin?\"\"\"\n    v = np.zeros(len(bins))\n    v[-1] = 1.0\n    return v\n",

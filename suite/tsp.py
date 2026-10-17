@@ -150,6 +150,8 @@ There are three training families of cities in the unit square: `uniform` (60 ci
         "longest_edge_pct": "the longest edge, % of tour length",
         "closing_edge_pct": "the closing leg from the last city back to the start, % of tour length",
     }
+    # hidden textbook baseline (never shown to agents): go to the nearest city
+    baseline = [("import numpy as np\n\ndef feature(current, candidates, tour, start):\n    return -np.sqrt(((candidates - current) ** 2).sum(1))\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(current, candidates, tour, start):\n"
         "    \"\"\"Minus the distance from the current city.\"\"\"\n"

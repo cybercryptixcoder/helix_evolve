@@ -18,7 +18,7 @@ python -m suite.check --all
 | `tsp` | pick the next city | unvisited cities | best-known tour |
 | `scheduling` | assign an arriving job | machines | lower bound |
 | `coloring` | pick the next vertex to colour | uncoloured vertices | best known |
-| `jobshop` | pick the next operation to dispatch | ready operations | lower bound |
+| `jobshop` | pick the next operation to dispatch | ready operations | best-known schedule |
 
 ## Rules for a problem (what keeps comparisons honest)
 

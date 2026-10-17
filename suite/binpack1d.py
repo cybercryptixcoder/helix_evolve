@@ -97,6 +97,7 @@ Four training families of 500 items: `weibull` (sizes from a Weibull distributio
     metric_notes = {
         "bins": "bins used",
         "lower_bound": "the L1 lower bound ceil(total size / capacity) the gap is measured against",
+        "provable_min_bins": "a tighter lower bound (Martello-Toth L2): no packing, even offline, uses fewer bins",
         "items_per_bin": "average items per bin",
         "mean_fill_pct": "average fill of a bin, % of capacity",
         "full_bins_pct": "% of bins filled to at least 98% of capacity",
@@ -105,7 +106,7 @@ Four training families of 500 items: `weibull` (sizes from a Weibull distributio
     }
     example_features = [
         "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Room left after placing, as a fraction of capacity.\"\"\"\n    return (bins - item) / capacity\n",
-        "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Is it the new bin?\"\"\"\n    v = np.zeros(len(bins))\n    v[-1] = 1.0\n    return v\n",
+        "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two columns: is it the new bin, and the item's size as a fraction of capacity.\"\"\"\n    v = np.zeros((len(bins), 2))\n    v[-1, 0] = 1.0\n    v[:, 1] = item / capacity\n    return v\n",
     ]
 
     def __init__(self):
@@ -172,6 +173,7 @@ Four training families of 500 items: `weibull` (sizes from a Weibull distributio
             "gap": round(100.0 * (n / instance["lower_bound"] - 1), 3),
             "bins": n,
             "lower_bound": instance["lower_bound"],
+            "provable_min_bins": instance["l2"],
             "items_per_bin": round(len(instance["items"]) / n, 3),
             "mean_fill_pct": round(100 * float(fill.mean()), 2),
             "full_bins_pct": round(100 * float((fill >= 0.98).mean()), 1),

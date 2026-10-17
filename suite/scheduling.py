@@ -164,6 +164,8 @@ Three training families: `uniform` (4 machines, 100 jobs, sizes 1-100), `exponen
         "late_growth_pct": "how much the makespan grew during the last 10% of jobs, % of the final makespan",
         "max_machine_jobs": "number of jobs on the most loaded machine",
     }
+    # hidden textbook baseline (never shown to agents): the least-loaded machine
+    baseline = [("import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    return -loads\n", 1.0)]
     example_features = [
         "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n"
         "    \"\"\"Minus the load after adding the job.\"\"\"\n"
