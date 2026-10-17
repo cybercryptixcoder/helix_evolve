@@ -7,6 +7,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\n/g, "<br>");
 const fmt = (v, d = 1) => v == null || isNaN(v) ? "—" : Number(v).toFixed(d);
 const pct = v => v == null ? "—" : `${fmt(v)}%`;
+const num = v => v == null || isNaN(v) ? "—" : Number.isInteger(Number(v)) ? String(Number(v)) : Math.abs(v) >= 100 ? Number(v).toFixed(0) : Number(v).toFixed(2);
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 const api = (u, opt) => fetch(u, opt).then(r => r.json());
 const SVG = "http://www.w3.org/2000/svg";
 
@@ -72,7 +74,7 @@ function renderRail() {
   ol.innerHTML = state.runs.slice(0, 40).map(r => `<li><a href="#/run/${encodeURIComponent(r.id)}" ${r.id === state.runId ? 'aria-current="true"' : ""}>
     <span class="rname">${r.state === "running" ? '<span class="live" title="running"></span>' : ""}${esc(r.problem)}${r.label ? ` <span class="muted">${esc(r.label)}</span>` : ""}</span>
     <span class="rprog">${pct(r.progress)}</span>
-    <span class="rmeta">${r.generations}${r.target ? "/" + r.target : ""} generations · ${r.kept} kept</span>
+    <span class="rmeta">${r.generations}${r.target ? "/" + r.target : ""} ${r.generations === 1 && !r.target ? "generation" : "generations"} · ${r.kept} kept</span>
     ${spark(r.curve)}</a></li>`).join("") || `<li class="muted small">No runs yet.</li>`;
 }
 
@@ -116,7 +118,7 @@ function renderHome() {
     <h2>Runs</h2>
     ${runs.length ? `<ul class="runrows">${runs.map(r => `<li><a href="#/run/${encodeURIComponent(r.id)}">
       <span><span class="rt">${r.state === "running" ? '<span class="live"></span>' : ""}${esc(runLabel(r))}</span><br>
-      <span class="muted small">${esc(r.label || "unlabelled")} · ${r.generations}${r.target ? " of " + r.target : ""} generations · ${r.kept} features kept · ${r.calls ?? 0} model calls${r.state === "running" && r.phase ? " · now: " + esc(r.phase) : ""}</span></span>
+      <span class="muted small">${esc(r.label || "unlabelled")} · ${r.generations}${r.target ? " of " + r.target : ""} ${r.generations === 1 && !r.target ? "generation" : "generations"} · ${plural(r.kept, "feature")} kept · ${r.calls ?? 0} model calls${r.state === "running" && r.phase ? " · now: " + esc(r.phase) : ""}</span></span>
       ${spark(r.curve, 220, 40)}<span class="rp">${pct(r.progress)}</span></a></li>`).join("")}</ul>`
       : `<p class="empty">No runs yet. Start one with the button on the left, or from a terminal: <code>python -m helix3.run binpack2d -g 5</code>.</p>`}`;
 }
@@ -143,7 +145,7 @@ function renderRun() {
   main.innerHTML = `
     <header class="runhead">
       <div><h1>${esc(m.start.title || m.start.problem)}</h1>
-        <p class="sub">${esc(m.start.label || "")} ${running ? `<span class="state"><span class="live"></span>generation ${m.status.gen}: ${esc(m.status.note || m.status.phase)}</span>` : `<span class="state">finished</span>`}</p></div>
+        <p class="sub">${esc(m.start.label || "")} ${running ? `<span class="state"><span class="live"></span>generation ${m.status.gen}: ${esc(m.status.note || m.status.phase)}</span>` : `<span class="state">${m.status && m.status.state === "stopped" ? `stopped after generation ${Math.max(0, (m.gens || []).length - 1)}${m.status.resumable ? " · resumable" : ""}` : "finished"}</span>`}</p></div>
       <div class="big"><b>${pct(last.progress)}</b><span>of the way from Code Zero to the reference</span></div>
     </header>
     <ul class="facts">
@@ -258,11 +260,11 @@ function diagTable(dg) {
   if (!ids.length) return "";
   const keys = [...new Set(ids.flatMap(i => Object.keys(ch[i]).filter(k => !k.startsWith("_") && k !== "error")))].slice(0, 7);
   return `<div style="overflow-x:auto"><table class="t"><tr><th>Instance</th>${keys.map(k => `<th>${esc(k.replace(/_/g, " "))}</th>`).join("")}</tr>
-    ${ids.map(i => `<tr><td>${esc(i)}</td>${keys.map(k => `<td>${fmt(ch[i][k], 2)}${ref[i] && ref[i][k] != null ? ` <span class="muted small">ref ${fmt(ref[i][k], 2)}</span>` : ""}</td>`).join("")}</tr>`).join("")}</table></div>`;
+    ${ids.map(i => `<tr><td>${esc(i)}</td>${keys.map(k => `<td>${num(ch[i][k])}${ref[i] && ref[i][k] != null ? ` <span class="muted small">ref ${num(ref[i][k])}</span>` : ""}</td>`).join("")}</tr>`).join("")}</table></div>`;
 }
 
 function sensTable(m, rows) {
-  const mults = Object.keys(rows[0].deltas);
+  const mults = Object.keys(rows[0].deltas).sort((a, b) => Number(a) - Number(b));
   return `<table class="t"><tr><th>Feature</th>${mults.map(x => `<th>×${x}</th>`).join("")}</tr>${rows.map(r => `<tr><td><button class="chip" data-f="${r.feature}">${esc(r.name)}</button></td>${mults.map(x => { const p = m.pts(r.deltas[x]); return `<td class="${p > 0.05 ? "gain up" : ""}" style="font-size:.92rem">${p == null ? "—" : p < -100 ? "collapses" : (p > 0 ? "+" : "") + fmt(p) + " pts"}</td>`; }).join("")}</tr>`).join("")}</table>
     <p class="small muted">A gain from amplifying means the policy under-uses that direction; a big loss from knocking it out means it relies on it.</p>`;
 }
