@@ -8,3 +8,5 @@ The policy is a weighted sum of **features** (measurements of a candidate). An o
 ## Reply format
 
 Start with the complete code in a single ```python block (imports, then the function with a one-line docstring saying exactly what it measures). After the block, one line: `name: <short_snake_case_name>`.
+
+A feature may apply only under a condition (only in some decisions, or for some candidates, when a quantity crosses a threshold) and be zero otherwise. The policy is one weighted sum, so a condition is the only way it can treat different cases differently.

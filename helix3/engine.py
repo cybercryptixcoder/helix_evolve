@@ -127,6 +127,8 @@ class Engine:
         self._sens_key, self._sens = None, []
         self.S = getattr(problem, "search_split", "train")      # the instances searches and refits run on
         self.P = getattr(problem, "probe_split", None) or self.S  # the probe's quick first pass (can be smaller)
+        if self.s.c("fit", "probe_on_search", default=False):
+            self.P = self.S              # a small probe split was too noisy to judge features (review of bp2d-25)
         self.workers = ThreadPoolExecutor(12)
         self.status = {"phase": "starting"}
         self._cert_lock = threading.Lock()
@@ -299,14 +301,25 @@ class Engine:
             cert = {"error": str(exc)[:200]}
         f.certificate = cert
         t = cert.get("type")
+        if t == "duplicate":
+            src = self.ledger.features.get(cert.get("of", ""))
+            if src is not None and src.id not in self.ledger.library and src.gen < self.champion_gen():
+                # it repeats an idea judged against an older champion: the policy has changed since, so test it again
+                cert = {"retest_of": src.id, "rho": cert.get("rho")}
+                f.certificate = cert
+                return cert
         if t in ("inert", "duplicate", "span"):
             f.status = t
             f.duplicate_of = cert.get("of", "") if t == "duplicate" else ""
-            f.verdict = t
-            src = self.ledger.features.get(f.duplicate_of)
-            if src is not None:                  # inherit the result of the feature it repeats
-                f.best_probe, f.d_valid, f.d_train = src.best_probe, src.d_valid, src.d_train
+            f.verdict = t if t != "duplicate" else f"duplicate of {f.duplicate_of}"
+            # no inherited scores: they were measured against whatever champion existed then
         return cert
+
+    def champion_gen(self):
+        """The last generation in which the policy's set of features changed."""
+        fs = list(self.ledger.features.values())
+        return max([f.kept_gen or 0 for f in fs if f.id in self.ledger.library] +
+                   [f.retired_gen or 0 for f in fs], default=0)
 
     # ------------------------------------------------------------------ diagnostics and sensitivity
     def diagnose(self, feats, x, ids=None):
@@ -525,7 +538,7 @@ class Engine:
         after = self.s.c("streams", "bench_after", default=3)
         ran = {}
         for f in new:
-            if f.node in led.nodes and f.status not in ("invalid", "new"):
+            if f.node in led.nodes and f.status not in ("invalid", "new", "duplicate"):
                 gain = f.d_valid if f.d_valid is not None else f.best_probe
                 ran.setdefault(f.node, []).append((f.status == "kept", gain))
         for nid, rs in ran.items():
@@ -539,7 +552,8 @@ class Engine:
                 n.streak = 0
             else:
                 n.streak += 1
-            if n.state not in ("pruned", "benched") and n.streak >= after:
+            holds_kept = any(i in led.library for i in n.features)
+            if n.state not in ("pruned", "benched") and n.streak >= after and not holds_kept:
                 n.state, n.benched_gen = "benched", g
                 self.trace.emit("bench", gen=g, approach=nid, streak=n.streak)
 
@@ -552,7 +566,7 @@ class Engine:
             rest = self.gen - (n.benched_gen or self.gen)
             if self.rng.random() < min(0.6, p0 * (1 + rest / 4)):
                 n.state, n.revived_gen = "unproven", self.gen
-                n.streak = max(0, self.s.c("streams", "bench_after", default=3) - 1)   # one more miss benches it again
+                n.streak = max(0, self.s.c("streams", "bench_after", default=3) - 2)   # two tries before it rests again
                 self.trace.emit("revive", gen=self.gen, approach=n.id, rested=rest)
 
     def stream_lines(self):
@@ -954,7 +968,9 @@ class Engine:
     def scoreboard(self):
         led = self.ledger
         k = self.s.c("mutator", "scoreboard", default=10)
-        done = [f for f in list(led.features.values()) if f.status not in ("new", "invalid") and f.code]
+        cg = self.champion_gen()
+        done = [f for f in list(led.features.values()) if f.status not in ("new", "invalid", "duplicate") and f.code
+                and not (f.verdict == "redundant" and f.gen < cg)]
         kept = [f for f in done if f.status == "kept"]
         rest = sorted([f for f in done if f.status != "kept"],
                       key=lambda f: -(f.d_valid if f.d_valid is not None else (f.best_probe if f.best_probe is not None else -9)))
@@ -963,7 +979,7 @@ class Engine:
         for f in pick:
             if f.id not in seen:
                 seen.add(f.id)
-                out.append(roles.scoreboard_line(f))
+                out.append(roles.scoreboard_line(f) + f" (gen {f.gen})")
         return "\n".join(out[:k + 2])
 
     # ------------------------------------------------------------------ preparing new features
