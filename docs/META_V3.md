@@ -52,3 +52,13 @@ python -m meta.outer --problems binpack1d,knapsack,tsp,scheduling --held-out col
 Rough cost: one inner run of 5 generations is about 60-90 model calls and 3-10 minutes, depending on the problem and the machine. An outer generation with 4 candidates × 5 problems × 2 repeats is 40 inner runs: about an hour with `--parallel 4` on an 8-core machine, about 3,000 model calls. With several Luminal keys in `.env`, the key pool spreads the calls.
 
 Everything lands in `meta_runs/outer-<timestamp>/`: `state.json` (every candidate, its edit, score, verdict), `candidates/<id>/` (each strategy), `evals/<id>/` (its inner runs, with digests), `outer_strategy/` (what the outer loop runs on now), `trace.jsonl`. The dashboard's Meta loop page reads it.
+
+## Running it unattended, with a live page
+
+```bash
+cp .env.example .env              # put your Luminal key in LUMINAL_API_KEYS (gitignored)
+HOURS=5 scripts/run_meta.sh       # budgeted run; on exit it commits and pushes results/meta/<run>
+python -m ui                      # then open http://localhost:8765/meta
+```
+
+`scripts/run_meta.sh` takes `HOURS`, `INNER_GENS`, `REPEATS`, `DEEP`, `WIDE`, `PARALLEL`, `PROBLEMS`, `HELD_OUT`, `PUSH=0` (keep results local). `--hours` stops new outer generations and new candidate evaluations once the budget is used; the one in flight finishes, so allow up to an hour extra. The `/meta` page shows the incumbent's score over outer generations, the inner runs in flight and per-problem scores, and can start or stop a run.
