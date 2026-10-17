@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="rail" aria-label="Runs">
+    <a class="brand" href="#/" aria-label="Helix home">
+      <svg viewBox="0 0 40 40" aria-hidden="true" class="mark">
+        <path d="M8 4c0 10 24 10 24 20S8 26 8 36" class="s-deep"/>
+        <path d="M32 4c0 10-24 10-24 20s24 2 24 12" class="s-wide"/>
+      </svg>
+      <span>Helix</span>
+    </a>
+    <nav class="views" aria-label="Sections">
+      <a href="#/" data-view="home">Runs</a>
+      <a href="#/suite" data-view="suite">Problems</a>
+      <a href="#/meta" data-view="meta">Meta loop</a>
+    </nav>
+    <div class="rail-head"><h2>Recent runs</h2><button class="ghost" id="newRunBtn">Start a run</button></div>
+    <ol class="runlist" id="runlist"></ol>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-back" data-close></div>
+  <section class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <button class="close" data-close aria-label="Close">×</button>
+    <div id="drawerBody"></div>
+  </section>
+</div>
+<dialog id="newRun">
+  <form method="dialog" id="newRunForm">
+    <h2>Start a run</h2>
+    <p class="muted">Runs from Code Zero on this machine. It shows up in the list as it goes.</p>
+    <label>Problem <select name="problem" id="problemSelect"></select></label>
+    <label>Generations <input name="generations" type="number" min="1" max="60" value="5"></label>
+    <label>Label <input name="label" placeholder="optional, e.g. try-thinking"></label>
+    <div class="row-end"><button value="cancel" class="ghost">Cancel</button><button value="go" class="primary">Start run</button></div>
+  </form>
+</dialog>
+<script src="/app.js"></script>
+</body>
+</html>
