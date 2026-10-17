@@ -1,0 +1,81 @@
+Helix v3 · Travelling salesman: build the tour city by city · 10 generations → runs/jobs/tsp-10
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 514.745% train, 511.723% valid
+── generation 1: champion gap 514.745% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_evolve_run/.venv/lib/python3.11/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['current_minus_centroid_distance', 'distance_ratio_to_start'] → gap 13.241% progress 97.4% (valid 97.6%) | 42s, 11 calls
+── generation 2: champion gap 13.241% (progress 97.4%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['progress_blended_inverse_distance'] → gap 12.014% progress 97.7% (valid 97.7%) | 67s, 23 calls
+── generation 3: champion gap 12.014% (progress 97.7%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['exact_tail_gate'] → gap 11.127% progress 97.8% (valid 97.7%) | 77s, 36 calls
+── generation 4: champion gap 11.127% (progress 97.8%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   perturbation: 3 restarts, best 11.420% vs 11.127%
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 11.127% progress 97.8% (valid 97.7%) | 103s, 48 calls
+── generation 5: champion gap 11.127% (progress 97.8%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['exact_tail_k5_to_7'] → gap 10.605% progress 97.9% (valid 97.7%) | 284s, 60 calls
+── generation 6: champion gap 10.605% (progress 97.9%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['held_karp_tail_k8_to_10'] → gap 10.397% progress 98.0% (valid 97.8%) | 84s, 72 calls
+── generation 7: champion gap 10.397% (progress 98.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 10.397% progress 98.0% (valid 97.8%) | 83s, 86 calls
+── generation 8: champion gap 10.397% (progress 98.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   perturbation: 3 restarts, best 10.508% vs 10.397%
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 10.397% progress 98.0% (valid 97.8%) | 93s, 98 calls
+── generation 9: champion gap 10.397% (progress 98.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+<feature>:20: RuntimeWarning: invalid value encountered in matmul
+<feature>:20: RuntimeWarning: invalid value encountered in matmul
+<feature>:20: RuntimeWarning: invalid value encountered in matmul
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 10.397% progress 98.0% (valid 97.8%) | 114s, 112 calls
+── generation 10: champion gap 10.397% (progress 98.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 10.397% progress 98.0% (valid 97.8%) | 304s, 123 calls
+done: progress 97.98% train, 97.8% valid, test 97.75% | 123 calls
