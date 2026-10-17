@@ -176,7 +176,7 @@ class Ledger:
         fp = self.fingerprint(f, n_candidates)
         if np.linalg.norm(fp) < 1e-12:
             return {"type": "inert", "why": "ranks every candidate equally in every sampled decision"}
-        pool = against if against is not None else [g for g in self.features.values()
+        pool = against if against is not None else [g for g in list(self.features.values())
                                                      if g.id != f.id and g.status not in ("invalid", "new", "duplicate", "checking")]
         best, best_id = 0.0, ""
         for g in pool:
@@ -259,7 +259,7 @@ class Ledger:
                 n.state = "untried"
 
     def save(self, path):
-        data = {"features": [f.record() for f in self.features.values()],
+        data = {"features": [f.record() for f in list(self.features.values())],
                 "nodes": [n.record() for n in self.nodes.values()],
                 "library": self.library, "backlog": self.backlog}
         path.write_text(json.dumps(data, indent=1, default=float))
