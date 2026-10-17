@@ -1,0 +1,91 @@
+{
+ "problem": "cvrp",
+ "label": "cvrp-10",
+ "generations": 10,
+ "code_zero": {
+  "train": 214.74251557742534,
+  "valid": 213.8086226980381
+ },
+ "champion": {
+  "train": 13.871117465134832,
+  "valid": 14.15270243287552,
+  "progress": 93.54,
+  "valid_progress": 93.38,
+  "library": [
+   "f005",
+   "f022",
+   "f027",
+   "f058",
+   "f082"
+  ]
+ },
+ "test": {
+  "gap": 16.035421746047817,
+  "families": {
+   "uniform": 16.922373551064243,
+   "clustered": 15.166731144582661,
+   "eccentric": 14.383407604396352,
+   "large": 17.669174684148015
+  },
+  "code_zero": 215.16661082468255,
+  "progress": 92.55
+ },
+ "progress_curve": [
+  0.0,
+  89.39,
+  89.39,
+  91.47,
+  91.6,
+  91.6,
+  91.6,
+  92.04,
+  92.04,
+  92.04,
+  93.54
+ ],
+ "valid_curve": [
+  0.0,
+  87.96,
+  87.96,
+  89.86,
+  90.01,
+  90.01,
+  90.01,
+  91.12,
+  91.12,
+  91.12,
+  93.38
+ ],
+ "calls": 115,
+ "tokens_in": 371728,
+ "tokens_out": 232151,
+ "features_tried": 85,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "nn_distance",
+   "origin": "deep"
+  },
+  {
+   "id": "f022",
+   "name": "closing_cost_gate",
+   "origin": "deep"
+  },
+  {
+   "id": "f027",
+   "name": "slack_conditional_forward_bridge",
+   "origin": "wide"
+  },
+  {
+   "id": "f058",
+   "name": "insertion_saving_vs_nearest_remainder",
+   "origin": "deep"
+  },
+  {
+   "id": "f082",
+   "name": "phase_mixed_depot_reach",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792269708.3885221
+}
