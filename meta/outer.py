@@ -319,9 +319,12 @@ class Outer:
                 errors, notes = S.validate(cdir)
                 rec["notes"] = notes
             if not errors and changed:
-                rec.update(changed=changed, hash=S.digest_hash(cdir),
-                           change=rec.get("change") or roles.short(rep.text.split("<<<END>>>")[-1], 200))
                 rec["diff"] = S.diff_summary(self.cands[parent]["dir"], cdir, 60)
+                tail = "\n".join(l for l in rep.text.split("<<<END>>>")[-1].splitlines()
+                                 if l.strip() and not l.strip().startswith("name:"))
+                if not tail:
+                    tail = " ".join(l for l in rec["diff"].splitlines() if l.startswith(("+", "---")))
+                rec.update(changed=changed, hash=S.digest_hash(cdir), change=rec.get("change") or roles.short(tail, 240))
                 break
             rec["error"] = "; ".join(errors)[:600] or "nothing changed"
             user += (f"\n\nYour edit could not be used: {rec['error']}\nReply again with corrected blocks.")
