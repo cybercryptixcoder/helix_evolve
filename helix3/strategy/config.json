@@ -33,14 +33,6 @@
     "max_tokens": 3000
   },
   "fit": {
-    "probe_weights": [
-      0.4,
-      -0.4,
-      0.1,
-      -0.1,
-      0.02,
-      -0.02
-    ],
     "probe_margin": 0.08,
     "trial_evals": 16,
     "champion_refit_evals": 24,
@@ -54,10 +46,18 @@
     ],
     "sigma": 0.3,
     "near_miss_trials": 2,
-    "near_miss_floor": 0.3
+    "near_miss_floor": 0.3,
+    "probe_multiples": [
+      1,
+      -1,
+      0.3,
+      -0.3,
+      0.1,
+      -0.1
+    ]
   },
   "novelty": {
-    "duplicate_rho": 0.98,
+    "duplicate_rho": 0.95,
     "span_r2": 0.995,
     "states": 500
   },
