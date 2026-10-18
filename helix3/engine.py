@@ -726,7 +726,8 @@ class Engine:
         else:
             parts.append("## The approach tree\nEmpty: this is the first generation. Brainstorm the initial approaches "
                          "(5-8, genuinely different from each other), from the problem and the diagnostics below.")
-        parts.append("## Champion diagnostics vs the reference\n" + self.p.describe_diagnostics(diag, self.ref_diag))
+        ref = self.ref_diag if self.s.c("diagnostics", "show_reference", default=True) else {}
+        parts.append("## Champion diagnostics" + (" vs the reference" if ref else "") + "\n" + self.p.describe_diagnostics(diag, ref))
         if sens:
             parts.append("## Sensitivity probes (gap reduction on train; + = better)\n" + self.sens_lines(sens))
         recent = [f for f in list(led.features.values()) if f.gen >= self.gen - 2]
@@ -864,7 +865,8 @@ class Engine:
             parts.append("## The champion policy\nNo features yet: every candidate scores 0, so the first candidate always wins (Code Zero).")
         parts.append("## Where the room is\n" + self.room_lines())
         notes = "\n".join(f"- `{k}`: {v}" for k, v in self.p.metric_notes.items())
-        parts.append("## Diagnostics: the champion's solutions vs the reference\n" + self.p.describe_diagnostics(diag, self.ref_diag)
+        ref = self.ref_diag if self.s.c("diagnostics", "show_reference", default=True) else {}
+        parts.append("## Diagnostics: the champion's solutions" + (" vs the reference" if ref else "") + "\n" + self.p.describe_diagnostics(diag, ref)
                      + (f"\n\nMetrics you can name in a prediction (plus `gap`):\n{notes}" if notes else ""))
         if sens:
             parts.append("## Sensitivity probes on the kept features (gap reduction on train; + = better)\n" + self.sens_lines(sens))
