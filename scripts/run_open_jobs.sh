@@ -12,6 +12,7 @@ PY="${PYTHON:-$(command -v python3 || command -v python)}"
 PARALLEL="${PARALLEL:-3}"
 GENS="${GENS:-15}"
 PUSH="${PUSH:-1}"
+FAKE="${FAKE:-0}"                         # 1 = no model calls (tests this script end to end)
 export GIT_NAME="${GIT_NAME:-Shreyas Naik}" GIT_EMAIL="${GIT_EMAIL:-119774329+cybercryptixcoder@users.noreply.github.com}"
 
 # job name | problem | strategy variant
@@ -79,7 +80,8 @@ one() {       # name problem variant
     echo "== $name: resuming"; "$PY" -m helix3.run --resume "$dir" -g "$GENS" >> "$dir.log" 2>&1
   else
     echo "== $name: starting ($prob, $var)"; mkdir -p runs/open
-    "$PY" -m helix3.run "$prob" -g "$GENS" --strategy "runs/variants/$var" --out "$dir" --label "$name" > "$dir.log" 2>&1
+    "$PY" -m helix3.run "$prob" -g "$GENS" --strategy "runs/variants/$var" --out "$dir" --label "$name" \
+      $([ "$FAKE" = "1" ] && echo --fake) > "$dir.log" 2>&1
   fi
   if [ -f "$dir/summary.json" ]; then
     echo "== $name: finished: $(grep -E '^done' "$dir.log" | tail -1)"; cp "$dir.log" "$dir/run.log"; publish "$name"
@@ -87,7 +89,7 @@ one() {       # name problem variant
     echo "== $name: did not finish (see $dir.log); run this script again to resume it" >&2
   fi
 }
-export -f one publish; export PY PUSH GENS
+export -f one publish; export PY PUSH GENS FAKE
 
 mkdir -p runs/open
 echo "$JOBS" | xargs -P "$PARALLEL" -L 1 bash -c 'one "$0" "$1" "$2"'
