@@ -30,7 +30,7 @@ SURGE, BUCKET, REFILL = 6, 45.0, 0.85
 # reasoning first, so a fixed budget cuts the answer off at high effort (round 4: 27.7k reasoning tokens, answer cut)
 THINK_ROOM = {"none": 0, "low": 12000, "medium": 20000, "high": 40000, "xhigh": 56000, "max": 80000, "ultra": 80000}
 CAP = 393216
-THINK_SECONDS = 600          # a thinking call that runs longer is cut and retried one effort level lower
+THINK_SECONDS = 600          # a thinking call that runs longer is cut and retried once without thinking
 STEP_DOWN = {"max": "high", "ultra": "high", "xhigh": "high", "high": "medium", "medium": "low", "low": "none"}
 
 
@@ -158,8 +158,8 @@ class LLM:
                 if not exc.retryable:
                     break
                 penalty = 3.0 if "429" in str(exc) else 0.0
-                if "longer than" in str(exc):          # bounded thinking: step down a level and try again
-                    lower = STEP_DOWN.get(payload["reasoning_effort"], "low")
+                if "longer than" in str(exc):          # bounded thinking: one timeout, then answer without thinking
+                    lower = "none"
                     payload = {**payload, "reasoning_effort": lower,
                                "max_tokens": min(CAP, max_tokens + THINK_ROOM.get(lower, 16000))}
                     effort = lower
