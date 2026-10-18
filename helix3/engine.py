@@ -761,6 +761,10 @@ class Engine:
     def room_lines(self):
         fams = self.champ["families"]
         out = []
+        if getattr(self.p, "open_ceiling", False):       # no reference: cost as a share of Code Zero's, nothing else
+            for fam in sorted(fams, key=lambda f: -fams[f]):
+                out.append(f"- {fam}: cost {fams[fam]:.2f} (Code Zero = 100; lower is better, no known best)")
+            return "\n".join(out)
         for fam in sorted(fams, key=lambda f: -(fams[f] - self._floor(f))):
             out.append(f"- {fam}: gap {fams[fam]:.2f}% (floor {self._floor(fam):.2f}%, Code Zero {self.cz['train'][fam]:.2f}%)")
         return "\n".join(out)
