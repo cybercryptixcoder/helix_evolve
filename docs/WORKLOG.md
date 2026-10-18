@@ -222,3 +222,8 @@ killing it).
 **Round 6** (review-fix round 2): a stall signal (after 2 generations without a keep, agents are told the features
 are saturated and where the room is) and searches on the full train split (18 instances). 15 generations. If it
 doesn't move past ~29%, the plateau is documented as the current limit (escape condition).
+
+**Leakage ablation** (knapsack, 7 generations, `diagnostics.show_reference: false`: the agents see no statistics
+of the reference solution, checked in the prompts): 98.2 → 99.0 → 99.0 → 99.4 → 99.4 → 99.4 → 99.8% train, 99.7%
+valid, 99.0% test, against 100% / 100% / 99.95% with the statistics shown (10 generations). Same trajectory, and it
+found the same endgame idea (exact residual fit) on its own: the reference statistics are not what drives it.
