@@ -3,6 +3,7 @@
     python -m helix3.keeper              # resume every unfinished run whose process is gone, then exit
     python -m helix3.keeper --watch 300  # keep checking every 5 minutes
     python -m helix3.keeper --list       # show runs and whether they are alive
+    python -m helix3.keeper --stop runs/<problem>/<run>   # stop a run for good (the keeper won't resume it)
 
 A run writes an atomic checkpoint after every generation (checkpoint.json) and its pid in status.json. A run is
 *dead* when its status says running but the pid is gone (a crash, a reboot, a closed session). The keeper restarts
@@ -94,7 +95,17 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--watch", type=int, default=0, help="keep checking every N seconds")
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--stop", default=None, help="a run folder to stop for good: marked stopped first, then killed")
     a = ap.parse_args(argv)
+    if a.stop:
+        d = Path(a.stop).resolve()
+        st = json.loads((d / "status.json").read_text())
+        st["state"] = "stopped"                       # first, so a keeper sweep can't resume it in between
+        (d / "status.json").write_text(json.dumps(st))
+        if alive(st.get("pid")):
+            os.killpg(os.getpgid(int(st["pid"])), 15) if os.getpgid(int(st["pid"])) != os.getpgid(0) else os.kill(int(st["pid"]), 15)
+        print(f"stopped {d}")
+        return
     if a.list:
         for d in inner_runs():
             s = state(d)
