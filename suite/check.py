@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 
@@ -36,7 +37,11 @@ def check(name, verbose=True):
         say(f"  {split:5s}: {len(insts):3d} instances, families {fams}; Code Zero mean gap {np.mean(gaps):.2f}% "
             f"({dt:.2f}s, {1000 * dt / max(1, len(insts)):.0f} ms each)")
         if split == "train" and dt > 1.5:
-            problems.append(f"train split takes {dt:.1f}s with Code Zero; keep it under ~1s")
+            msg = f"train split takes {dt:.1f}s with Code Zero; keep it under ~1s"
+            if os.environ.get("HELIX_CHECK_SLOW_OK"):    # a slower machine: speed is a warning, not a failure
+                print("  warning:", msg)
+            else:
+                problems.append(msg)
         if any(not np.isfinite(g) for g in gaps):
             problems.append(f"{split}: non-finite gap")
         if getattr(p, "open_ceiling", False) and any(g != 100.0 for g in gaps):

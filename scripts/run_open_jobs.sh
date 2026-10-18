@@ -4,13 +4,22 @@
 # skipped, unfinished ones resume from their last generation. Each finished job is copied to results/open/<job>/
 # and pushed (commits as Shreyas Naik).
 #
-#   scripts/run_open_jobs.sh                 # everything below
-#   PARALLEL=4 GENS=15 scripts/run_open_jobs.sh
+#   scripts/run_open_jobs.sh                 # everything below, gently (one run at a time)
+#   PARALLEL=2 WORKERS=2 scripts/run_open_jobs.sh   # faster, on a machine with room to spare
+#
+# Gentle on a small shared machine by default: one run at a time (PARALLEL=1), one fitting worker (WORKERS=1),
+# low CPU and IO priority (nice/ionice), a small feature-value cache (HELIX_CACHE_MB), and a memory guard: a run
+# starts only when at least MIN_FREE_MB of memory is available (it waits otherwise).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 PY="${PYTHON:-$(command -v python3 || command -v python)}"
-PARALLEL="${PARALLEL:-3}"
-GENS="${GENS:-15}"
+PARALLEL="${PARALLEL:-1}"
+WORKERS="${WORKERS:-1}"
+GENS="${GENS:-12}"
+MIN_FREE_MB="${MIN_FREE_MB:-1500}"
+export HELIX_CACHE_MB="${HELIX_CACHE_MB:-96}"
+NICE_CMD="nice -n 10"
+command -v ionice >/dev/null && NICE_CMD="ionice -c 3 nice -n 10"
 PUSH="${PUSH:-1}"
 FAKE="${FAKE:-0}"                         # 1 = no model calls (tests this script end to end)
 export GIT_NAME="${GIT_NAME:-Shreyas Naik}" GIT_EMAIL="${GIT_EMAIL:-119774329+cybercryptixcoder@users.noreply.github.com}"
@@ -25,6 +34,10 @@ thermal thermal low-bt
 backtrack backtrack low-bt
 duel duel low-bt
 fairshare fairshare low-bt
+stacker stacker low-bt
+runner runner low-bt
+repair repair low-bt
+progression progression low-bt
 forage-none forage none
 forage-low forage low
 forage-high forage high
@@ -33,9 +46,11 @@ duel-low duel low
 duel-high duel high"
 
 echo "== preflight"
-DRY=1 SMOKE=1 PUSH=0 bash scripts/run_meta.sh || { echo "preflight failed: fix the error above first" >&2; exit 3; }
-for p in forage thermal backtrack duel fairshare; do
-  "$PY" -m suite.check "$p" > /dev/null 2>&1 || { echo "problem $p fails its check: python -m suite.check $p" >&2; exit 3; }
+DRY=1 SMOKE=0 PUSH=0 bash scripts/run_meta.sh || { echo "preflight failed: fix the error above first" >&2; exit 3; }
+"$PY" -m helix3.run binpack1d -g 1 --fake --workers 1 --out "$(mktemp -d)/smoke" > /dev/null 2>&1 \
+  || { echo "preflight: Helix's crash test failed (python -m helix3.run binpack1d -g 1 --fake)" >&2; exit 3; }
+for p in forage thermal backtrack duel fairshare stacker runner repair progression; do
+  HELIX_CHECK_SLOW_OK=1 "$PY" -m suite.check "$p" > /dev/null 2>&1 || { echo "problem $p fails its check: python -m suite.check $p" >&2; exit 3; }
 done
 
 echo "== strategy variants"
@@ -73,14 +88,23 @@ publish() {
   ) 9> runs/.git.lock
 }
 
+wait_for_memory() {   # don't start a run while the machine is short of memory
+  while [ -r /proc/meminfo ]; do
+    local free; free=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+    [ "${free:-0}" -ge "$MIN_FREE_MB" ] && return
+    echo "   (waiting: ${free} MB available, need $MIN_FREE_MB)"; sleep 120
+  done
+}
+
 one() {       # name problem variant
   local name="$1" prob="$2" var="$3" dir="runs/open/$1"
   if [ -f "$dir/summary.json" ] && [ -f "results/open/$name/summary.json" ]; then echo "== $name: done already"; return; fi
+  wait_for_memory
   if [ -f "$dir/checkpoint.json" ]; then
-    echo "== $name: resuming"; "$PY" -m helix3.run --resume "$dir" -g "$GENS" >> "$dir.log" 2>&1
+    echo "== $name: resuming"; $NICE_CMD "$PY" -m helix3.run --resume "$dir" -g "$GENS" --workers "$WORKERS" >> "$dir.log" 2>&1
   else
     echo "== $name: starting ($prob, $var)"; mkdir -p runs/open
-    "$PY" -m helix3.run "$prob" -g "$GENS" --strategy "runs/variants/$var" --out "$dir" --label "$name" \
+    $NICE_CMD "$PY" -m helix3.run "$prob" -g "$GENS" --strategy "runs/variants/$var" --out "$dir" --label "$name" --workers "$WORKERS" \
       $([ "$FAKE" = "1" ] && echo --fake) > "$dir.log" 2>&1
   fi
   if [ -f "$dir/summary.json" ]; then
@@ -89,7 +113,7 @@ one() {       # name problem variant
     echo "== $name: did not finish (see $dir.log); run this script again to resume it" >&2
   fi
 }
-export -f one publish; export PY PUSH GENS FAKE
+export -f one publish wait_for_memory; export PY PUSH GENS FAKE WORKERS MIN_FREE_MB NICE_CMD
 
 mkdir -p runs/open
 echo "$JOBS" | xargs -P "$PARALLEL" -L 1 bash -c 'one "$0" "$1" "$2"'

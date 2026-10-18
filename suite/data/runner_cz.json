@@ -1,0 +1,125 @@
+{
+"method": "Code Zero (first candidate of the shuffled list): summed level costs",
+"instances": {
+"train/meadow-000": {
+"fingerprint": "96ac23d03953",
+"cost": 3990.2374487875
+},
+"train/meadow-001": {
+"fingerprint": "bf64e2761465",
+"cost": 3985.627620154411
+},
+"train/meadow-002": {
+"fingerprint": "873533d3276f",
+"cost": 3998.546613854566
+},
+"train/caves-000": {
+"fingerprint": "d1667c8a1c18",
+"cost": 3931.2990927834835
+},
+"train/caves-001": {
+"fingerprint": "d2a5286fa68a",
+"cost": 3988.3964868675835
+},
+"train/caves-002": {
+"fingerprint": "02915ef09674",
+"cost": 3903.770144095594
+},
+"train/towers-000": {
+"fingerprint": "a42fe3d26740",
+"cost": 3995.4581869800413
+},
+"train/towers-001": {
+"fingerprint": "0ccb81c1f6b6",
+"cost": 3969.970131320987
+},
+"train/towers-002": {
+"fingerprint": "d768acab32b1",
+"cost": 4045.289772632346
+},
+"valid/meadow-100": {
+"fingerprint": "3079679f4b79",
+"cost": 3864.2762530475325
+},
+"valid/meadow-101": {
+"fingerprint": "585938750852",
+"cost": 4058.0
+},
+"valid/meadow-102": {
+"fingerprint": "a04d84a2d7ec",
+"cost": 4020.693113247188
+},
+"valid/caves-100": {
+"fingerprint": "63cde109169e",
+"cost": 4062.122678810547
+},
+"valid/caves-101": {
+"fingerprint": "949bc375b05d",
+"cost": 3952.1994629027686
+},
+"valid/caves-102": {
+"fingerprint": "ed9f381a06b7",
+"cost": 3966.2637925971226
+},
+"valid/towers-100": {
+"fingerprint": "27cd97fd2fa2",
+"cost": 4027.0459216037884
+},
+"valid/towers-101": {
+"fingerprint": "625cbb431bc5",
+"cost": 4032.5597464046696
+},
+"valid/towers-102": {
+"fingerprint": "f3060d4e868a",
+"cost": 3883.7601148763124
+},
+"test/meadow-200": {
+"fingerprint": "3ebdc50e7632",
+"cost": 3999.56553375
+},
+"test/meadow-201": {
+"fingerprint": "6faff46a0a62",
+"cost": 3854.8639520945835
+},
+"test/meadow-202": {
+"fingerprint": "657f92628671",
+"cost": 4018.3147985595315
+},
+"test/caves-200": {
+"fingerprint": "e5ea0118de5e",
+"cost": 4068.1412547634727
+},
+"test/caves-201": {
+"fingerprint": "28c5d33d05e8",
+"cost": 3805.0150810764744
+},
+"test/caves-202": {
+"fingerprint": "e4a1ade6c09e",
+"cost": 3926.8099073690587
+},
+"test/towers-200": {
+"fingerprint": "fe1fda2986cc",
+"cost": 3962.6130374564686
+},
+"test/towers-201": {
+"fingerprint": "7a809e402755",
+"cost": 3983.6905515926323
+},
+"test/towers-202": {
+"fingerprint": "c7a6eeeb4778",
+"cost": 3856.815401125388
+},
+"test/foundry-200": {
+"fingerprint": "b91b2bb29891",
+"cost": 4032.8121526036807
+},
+"test/foundry-201": {
+"fingerprint": "3620ad5088cf",
+"cost": 3980.1234824188596
+},
+"test/foundry-202": {
+"fingerprint": "4ed510848a9f",
+"cost": 4067.2932521725725
+}
+}
+}

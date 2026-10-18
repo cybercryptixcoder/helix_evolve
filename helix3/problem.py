@@ -126,6 +126,10 @@ REGISTRY = {
     "fairshare": "suite.fairshare:FairShare",
     "backtrack": "suite.backtrack:Backtrack",
     "duel": "suite.duel:Duel",
+    "stacker": "suite.stacker:Stacker",
+    "runner": "suite.runner:Runner",
+    "repair": "suite.repair:Repair",
+    "progression": "suite.progression:Progression",
 }
 
 

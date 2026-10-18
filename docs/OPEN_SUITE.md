@@ -64,7 +64,7 @@ problems (`runner`, `repair`): `gap = 100 * cost / cost_of_code_zero` as before.
 routine, a small simulator...) each have a hidden correct version and a test suite of 20-40 cases generated from it.
 An instance injects 2-4 seeded bugs (operator swaps, off-by-one, wrong variable, changed constant, negated
 condition, swapped arguments). The candidates are single-edit patches over the program (each mutation operator at
-each applicable place). The engine applies the chosen patch and keeps it only if the tests get better (fewer
-failing, or less numeric error); otherwise it reverts. The features see what a debugger sees: for each candidate
+each applicable place). The engine applies the chosen patch and keeps it only if no passing test breaks and either fewer tests fail
+or the total numeric error at least halves; otherwise it reverts. Bug sets that Code Zero repairs by luck are redrawn. The features see what a debugger sees: for each candidate
 patch its kind and line, how many failing and passing tests execute that line, the errors the failing tests raise
 (exception kinds, how far off the numbers are), and what has been tried. Never the correct program.

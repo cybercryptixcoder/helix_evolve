@@ -1,0 +1,535 @@
+{
+"method": "repair instances (buggy programs) and Code Zero's cost per instance; rebuild with `python -m suite.repair --cz`",
+"version": 6,
+"budget": 250,
+"instances": {
+"train/billing-000": {
+"fingerprint": "70fc963515bf",
+"cost": 331.5503356068423,
+"program": "tariff",
+"bugs": [
+"line 21: variable (variable charge)",
+"line 19: off-by-one (constant+-1 -1)",
+"line 6: negate (negate not)"
+],
+"bug_idx": [
+97,
+81,
+9
+],
+"redraws": 0,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if not (h >= 8 and h < 11):\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net < 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net * 0.21 + 4.0\n    elif plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining > -1:\n            size = 10.0 + 5.0 * block\n            used = min(charge, size)\n            charge = charge + used * (0.11 + 0.03 * block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if off < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 24:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 0.96\n    return max(charge - credit, 2.5)",
+"failing_left": 4
+},
+"train/billing-001": {
+"fingerprint": "b45d15403c87",
+"cost": 472.01888183187776,
+"program": "parcel",
+"bugs": [
+"line 17: negate (negate not)",
+"line 7: operator (operator Add)",
+"line 10: off-by-one (constant+-1 -1)"
+],
+"bug_idx": [
+92,
+35,
+66
+],
+"redraws": 0,
+"text": "def parcel(weight, length, width, height, zone, service, count):\n    vol = length * width * height / 5000.0\n    billable = max(weight, vol)\n    if billable <= 0.5:\n        base = 3.2\n    elif billable <= 2.0:\n        base = 4.5 + (billable + 0.5) * 1.8\n    else:\n        base = 7.2 + (billable - 2.0) * 1.1\n    if service == -1:\n        fee = base * 0.8\n        if zone > 3:\n            fee = fee + 1.5\n    elif service == 1:\n        fee = base\n        z = 1\n        while not z < zone:\n            fee = fee + 0.6\n            z = z + 1\n    else:\n        fee = base * (1.5 + 0.1 * zone)\n        if length > 60:\n            fee = fee + (length - 60) * 0.05\n    total = 0.0\n    for i in range(count):\n        if i < 3:\n            total = total + fee\n        else:\n            total = total + fee * 0.85\n    if total > 100:\n        total = 100 + (total - 100) / 2\n    return total",
+"failing_left": 11
+},
+"train/billing-002": {
+"fingerprint": "64cb1af3dc78",
+"cost": 270.4257446580283,
+"program": "tariff",
+"bugs": [
+"line 21: variable (variable charge)",
+"line 15: negate (negate not)"
+],
+"bug_idx": [
+97,
+64
+],
+"redraws": 0,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if h >= 8 and h < 11:\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net < 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net * 0.21 + 4.0\n    elif not plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining > 0:\n            size = 10.0 + 5.0 * block\n            used = min(charge, size)\n            charge = charge + used * (0.11 + 0.03 * block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if off < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 24:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 0.96\n    return max(charge - credit, 2.5)",
+"failing_left": 1
+},
+"train/geometry-000": {
+"fingerprint": "95242f3047f0",
+"cost": 490.20167039647987,
+"program": "fence",
+"bugs": [
+"line 19: constant (constant*/2 /2)",
+"line 14: off-by-one (constant+-1 +1)",
+"line 24: swap (swap swap)"
+],
+"bug_idx": [
+290,
+208,
+353
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 2 * dx:\n            rate = 19.0\n        elif dx > 3 * dy:\n            rate = 11.5\n        else:\n            rate = 14.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 6 and gates < 2:\n            gates = gates + 1\n            cost = cost + 45.0\n    area = abs(area2) / 2\n    if area > 300:\n        cost = cost - (300 - area) * 0.1\n    return cost",
+"failing_left": 12
+},
+"train/geometry-001": {
+"fingerprint": "bdf3fa965e12",
+"cost": 558.2192002029736,
+"program": "levels",
+"bugs": [
+"line 6: constant (constant*/2 *2)",
+"line 10: variable (variable width)",
+"line 13: negate (negate not)",
+"line 12: swap (swap swap)"
+],
+"bug_idx": [
+15,
+71,
+158,
+108
+],
+"redraws": 0,
+"text": "def levels(xs, ys, h):\n    crossings = 0\n    touches = 0\n    first = -1.0\n    width = 0.0\n    for i in range(len(xs) - 2):\n        a = ys[i] - h\n        b = ys[i + 1] - h\n        if a == 0 or b == 0:\n            touches = width + 1\n        elif a * b < 0:\n            x = xs[i] + (a - b) / ((xs[i + 1] - xs[i]) * a)\n            if not crossings == 0:\n                first = x\n            else:\n                width = x - first\n            crossings = crossings + 1\n    if crossings == 0:\n        return (touches, -1.0, 0.0)\n    return (crossings + touches, first, width)",
+"failing_left": 15
+},
+"train/geometry-002": {
+"fingerprint": "bb9721bede1f",
+"cost": 550.5276273027104,
+"program": "fence",
+"bugs": [
+"line 24: off-by-one (constant+-1 +1)",
+"line 17: constant (constant*/2 *2)",
+"line 12: constant (constant*/2 *2)"
+],
+"bug_idx": [
+355,
+224,
+182
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 4 * dx:\n            rate = 19.0\n        elif dx > 2 * dy:\n            rate = 11.5\n        else:\n            rate = 28.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 12 and gates < 2:\n            gates = gates + 1\n            cost = cost + 45.0\n    area = abs(area2) / 2\n    if area > 300:\n        cost = cost - (area - 301) * 0.1\n    return cost",
+"failing_left": 15
+},
+"train/simulation-000": {
+"fingerprint": "4c887371274b",
+"cost": 393.3232598164192,
+"program": "cart",
+"bugs": [
+"line 20: swap (swap swap)",
+"line 26: negate (negate not)",
+"line 13: variable (variable i)"
+],
+"bug_idx": [
+180,
+245,
+86
+],
+"redraws": 0,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.5 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i]\n        if k == 0:\n            loss = 0.3 * mass * seg\n        elif k == 1:\n            loss = 1.8 * mass * seg\n        elif i == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if loss >= energy:\n            dist = dist + loss / (seg * energy)\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if not (energy < 40 and boosts < 1):\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 7
+},
+"train/simulation-001": {
+"fingerprint": "b2246e8a8388",
+"cost": 573.2841776630846,
+"program": "inventory",
+"bugs": [
+"line 25: swap (swap swap)",
+"line 25: off-by-one (constant+-1 +1)",
+"line 18: constant (constant*/10 *10)"
+],
+"bug_idx": [
+202,
+212,
+133
+],
+"redraws": 0,
+"text": "def inventory(demand, start, level, qty, lead, policy):\n    stock = start\n    due = -1\n    lost = 0\n    holding = 0.0\n    orders = 0\n    for day in range(len(demand)):\n        if day == due:\n            stock = stock + qty\n            due = -1\n        want = demand[day]\n        if want > stock:\n            lost = lost + (want - stock)\n            stock = 0\n        else:\n            stock = stock - want\n        if stock > 50:\n            holding = holding + 10.0 + (stock - 50) * 3.5\n        else:\n            holding = holding + stock * 0.2\n        if due < 0:\n            if policy == 0 and stock <= level:\n                due = day + lead\n                orders = orders + 1\n            elif policy == 1 and 7 % day == 7:\n                due = day + lead\n                orders = orders + 1\n    return lost * 4.0 + holding + orders * 12.0",
+"failing_left": 16
+},
+"train/simulation-002": {
+"fingerprint": "eccd89188598",
+"cost": 311.4571290901096,
+"program": "cart",
+"bugs": [
+"line 26: negate (negate not)",
+"line 20: swap (swap swap)"
+],
+"bug_idx": [
+245,
+180
+],
+"redraws": 2,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.5 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i]\n        if k == 0:\n            loss = 0.3 * mass * seg\n        elif k == 1:\n            loss = 1.8 * mass * seg\n        elif k == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if loss >= energy:\n            dist = dist + loss / (seg * energy)\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if not (energy < 40 and boosts < 1):\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 3
+},
+"valid/billing-100": {
+"fingerprint": "105c7ef53bb0",
+"cost": 491.17867190578295,
+"program": "tariff",
+"bugs": [
+"line 14: operator (operator Div)",
+"line 20: operator (operator Div)"
+],
+"bug_idx": [
+54,
+87
+],
+"redraws": 0,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if h >= 8 and h < 11:\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net < 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net / 0.21 + 4.0\n    elif plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining > 0:\n            size = 10.0 + 5.0 / block\n            used = min(remaining, size)\n            charge = charge + used * (0.11 + 0.03 * block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if off < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 24:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 0.96\n    return max(charge - credit, 2.5)",
+"failing_left": 12
+},
+"valid/billing-101": {
+"fingerprint": "409283517940",
+"cost": 472.01888183187776,
+"program": "parcel",
+"bugs": [
+"line 17: off-by-one (comparison LtE)",
+"line 10: off-by-one (constant+-1 -1)",
+"line 18: constant (constant*/10 /10)"
+],
+"bug_idx": [
+93,
+66,
+101
+],
+"redraws": 1,
+"text": "def parcel(weight, length, width, height, zone, service, count):\n    vol = length * width * height / 5000.0\n    billable = max(weight, vol)\n    if billable <= 0.5:\n        base = 3.2\n    elif billable <= 2.0:\n        base = 4.5 + (billable - 0.5) * 1.8\n    else:\n        base = 7.2 + (billable - 2.0) * 1.1\n    if service == -1:\n        fee = base * 0.8\n        if zone > 3:\n            fee = fee + 1.5\n    elif service == 1:\n        fee = base\n        z = 1\n        while z <= zone:\n            fee = fee + 0.06\n            z = z + 1\n    else:\n        fee = base * (1.5 + 0.1 * zone)\n        if length > 60:\n            fee = fee + (length - 60) * 0.05\n    total = 0.0\n    for i in range(count):\n        if i < 3:\n            total = total + fee\n        else:\n            total = total + fee * 0.85\n    if total > 100:\n        total = 100 + (total - 100) / 2\n    return total",
+"failing_left": 11
+},
+"valid/billing-102": {
+"fingerprint": "cae6c0bc13a6",
+"cost": 290.3049117271671,
+"program": "tariff",
+"bugs": [
+"line 22: operator (operator Div)",
+"line 33: constant (constant*/2 *2)"
+],
+"bug_idx": [
+119,
+192
+],
+"redraws": 1,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if h >= 8 and h < 11:\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net < 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net * 0.21 + 4.0\n    elif plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining > 0:\n            size = 10.0 + 5.0 * block\n            used = min(remaining, size)\n            charge = charge + used * (0.11 + 0.03 / block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if off < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 24:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 1.92\n    return max(charge - credit, 2.5)",
+"failing_left": 2
+},
+"valid/geometry-100": {
+"fingerprint": "05ab05beadc1",
+"cost": 731.2199601821046,
+"program": "fence",
+"bugs": [
+"line 20: variable (variable area2)",
+"line 14: off-by-one (constant+-1 +1)",
+"line 24: swap (swap swap)",
+"line 19: constant (constant*/2 *2)"
+],
+"bug_idx": [
+306,
+208,
+353,
+289
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 2 * dx:\n            rate = 19.0\n        elif dx > 3 * dy:\n            rate = 11.5\n        else:\n            rate = 14.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 24 and gates < 2:\n            gates = area2 + 1\n            cost = cost + 45.0\n    area = abs(area2) / 2\n    if area > 300:\n        cost = cost - (300 - area) * 0.1\n    return cost",
+"failing_left": 24
+},
+"valid/geometry-101": {
+"fingerprint": "f89fbafa0ffb",
+"cost": 455.8886620090333,
+"program": "levels",
+"bugs": [
+"line 16: variable (variable a)",
+"line 17: constant (constant*/2 *2)"
+],
+"bug_idx": [
+185,
+202
+],
+"redraws": 2,
+"text": "def levels(xs, ys, h):\n    crossings = 0\n    touches = 0\n    first = -1.0\n    width = 0.0\n    for i in range(len(xs) - 1):\n        a = ys[i] - h\n        b = ys[i + 1] - h\n        if a == 0 or b == 0:\n            touches = touches + 1\n        elif a * b < 0:\n            x = xs[i] + (xs[i + 1] - xs[i]) * a / (a - b)\n            if crossings == 0:\n                first = x\n            else:\n                width = x - a\n            crossings = crossings + 2\n    if crossings == 0:\n        return (touches, -1.0, 0.0)\n    return (crossings + touches, first, width)",
+"failing_left": 10
+},
+"valid/geometry-102": {
+"fingerprint": "085c43e0e1ca",
+"cost": 571.1071190960575,
+"program": "fence",
+"bugs": [
+"line 12: constant (constant*/2 /2)",
+"line 19: constant (constant*/2 /2)",
+"line 24: swap (swap swap)"
+],
+"bug_idx": [
+183,
+290,
+349
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 1 * dx:\n            rate = 19.0\n        elif dx > 2 * dy:\n            rate = 11.5\n        else:\n            rate = 14.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 6 and gates < 2:\n            gates = gates + 1\n            cost = cost + 45.0\n    area = abs(area2) / 2\n    if area > 300:\n        cost = (area - 300) * 0.1 - cost\n    return cost",
+"failing_left": 16
+},
+"valid/simulation-100": {
+"fingerprint": "d5d5003a2c81",
+"cost": 392.1590766575023,
+"program": "cart",
+"bugs": [
+"line 26: negate (negate not)",
+"line 2: constant (constant*/10 /10)"
+],
+"bug_idx": [
+245,
+6
+],
+"redraws": 0,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.05 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i]\n        if k == 0:\n            loss = 0.3 * mass * seg\n        elif k == 1:\n            loss = 1.8 * mass * seg\n        elif k == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if loss >= energy:\n            dist = dist + seg * energy / loss\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if not (energy < 40 and boosts < 1):\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 7
+},
+"valid/simulation-101": {
+"fingerprint": "478ab5dd42e6",
+"cost": 653.8489606158731,
+"program": "inventory",
+"bugs": [
+"line 25: constant (constant*/2 *2)",
+"line 25: off-by-one (constant+-1 -1)",
+"line 18: off-by-one (constant+-1 -1)",
+"line 18: constant (constant*/2 *2)"
+],
+"bug_idx": [
+211,
+213,
+128,
+131
+],
+"redraws": 0,
+"text": "def inventory(demand, start, level, qty, lead, policy):\n    stock = start\n    due = -1\n    lost = 0\n    holding = 0.0\n    orders = 0\n    for day in range(len(demand)):\n        if day == due:\n            stock = stock + qty\n            due = -1\n        want = demand[day]\n        if want > stock:\n            lost = lost + (want - stock)\n            stock = 0\n        else:\n            stock = stock - want\n        if stock > 50:\n            holding = holding + 10.0 + (stock - 49) * 0.7\n        else:\n            holding = holding + stock * 0.2\n        if due < 0:\n            if policy == 0 and stock <= level:\n                due = day + lead\n                orders = orders + 1\n            elif policy == 1 and day % 14 == 5:\n                due = day + lead\n                orders = orders + 1\n    return lost * 4.0 + holding + orders * 12.0",
+"failing_left": 20
+},
+"valid/simulation-102": {
+"fingerprint": "e0a02b890d73",
+"cost": 393.4175597524095,
+"program": "cart",
+"bugs": [
+"line 26: negate (negate not)",
+"line 19: variable (variable boosts)",
+"line 13: negate (negate not)"
+],
+"bug_idx": [
+245,
+156,
+80
+],
+"redraws": 0,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.5 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i]\n        if k == 0:\n            loss = 0.3 * mass * seg\n        elif k == 1:\n            loss = 1.8 * mass * seg\n        elif not k == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if boosts >= energy:\n            dist = dist + seg * energy / loss\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if not (energy < 40 and boosts < 1):\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 7
+},
+"test/billing-200": {
+"fingerprint": "cd8a0110c611",
+"cost": 331.5503356068423,
+"program": "tariff",
+"bugs": [
+"line 27: variable (variable block)",
+"line 15: negate (negate not)",
+"line 6: negate (negate not)",
+"line 20: operator (operator Div)"
+],
+"bug_idx": [
+155,
+64,
+9,
+87
+],
+"redraws": 0,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if not (h >= 8 and h < 11):\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net < 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net * 0.21 + 4.0\n    elif not plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining > 0:\n            size = 10.0 + 5.0 / block\n            used = min(remaining, size)\n            charge = charge + used * (0.11 + 0.03 * block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if block < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 24:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 0.96\n    return max(charge - credit, 2.5)",
+"failing_left": 4
+},
+"test/billing-201": {
+"fingerprint": "4337b424df5c",
+"cost": 472.01888183187776,
+"program": "parcel",
+"bugs": [
+"line 17: operator (comparison Gt)",
+"line 7: operator (operator Div)"
+],
+"bug_idx": [
+94,
+34
+],
+"redraws": 0,
+"text": "def parcel(weight, length, width, height, zone, service, count):\n    vol = length * width * height / 5000.0\n    billable = max(weight, vol)\n    if billable <= 0.5:\n        base = 3.2\n    elif billable <= 2.0:\n        base = 4.5 + (billable - 0.5) / 1.8\n    else:\n        base = 7.2 + (billable - 2.0) * 1.1\n    if service == 0:\n        fee = base * 0.8\n        if zone > 3:\n            fee = fee + 1.5\n    elif service == 1:\n        fee = base\n        z = 1\n        while z > zone:\n            fee = fee + 0.6\n            z = z + 1\n    else:\n        fee = base * (1.5 + 0.1 * zone)\n        if length > 60:\n            fee = fee + (length - 60) * 0.05\n    total = 0.0\n    for i in range(count):\n        if i < 3:\n            total = total + fee\n        else:\n            total = total + fee * 0.85\n    if total > 100:\n        total = 100 + (total - 100) / 2\n    return total",
+"failing_left": 11
+},
+"test/billing-202": {
+"fingerprint": "75fd8e073a40",
+"cost": 576.1112402156324,
+"program": "tariff",
+"bugs": [
+"line 10: operator (comparison Gt)",
+"line 19: off-by-one (comparison GtE)",
+"line 30: constant (constant*/2 /2)",
+"line 34: swap (swap swap)"
+],
+"bug_idx": [
+38,
+75,
+177,
+197
+],
+"redraws": 0,
+"text": "def tariff(usage, plan, months, solar):\n    total = 0.0\n    peak = 0.0\n    for h in range(len(usage)):\n        total = total + usage[h]\n        if h >= 8 and h < 11:\n            peak = peak + usage[h]\n    net = total - solar\n    credit = 0.0\n    if net > 0:\n        credit = -net * 0.04\n        net = 0.0\n    if plan == 0:\n        charge = net * 0.21 + 4.0\n    elif plan == 1:\n        charge = 0.0\n        block = 0\n        remaining = net\n        while remaining >= 0:\n            size = 10.0 + 5.0 * block\n            used = min(remaining, size)\n            charge = charge + used * (0.11 + 0.03 * block)\n            remaining = remaining - used\n            block = block + 1\n    else:\n        off = net - peak\n        if off < 0:\n            off = 0.0\n        charge = off * 0.12 + min(peak, net) * 0.34\n    if months >= 12:\n        charge = charge * 0.92\n    elif months >= 12:\n        charge = charge * 0.96\n    return max(credit - charge, 2.5)",
+"failing_left": 16
+},
+"test/geometry-200": {
+"fingerprint": "9bbb569b69f2",
+"cost": 390.0198018294966,
+"program": "fence",
+"bugs": [
+"line 12: constant (constant*/2 *2)",
+"line 24: operator (operator Div)"
+],
+"bug_idx": [
+182,
+351
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 4 * dx:\n            rate = 19.0\n        elif dx > 2 * dy:\n            rate = 11.5\n        else:\n            rate = 14.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 12 and gates < 2:\n            gates = gates + 1\n            cost = cost + 45.0\n    area = abs(area2) / 2\n    if area > 300:\n        cost = cost - (area - 300) / 0.1\n    return cost",
+"failing_left": 7
+},
+"test/geometry-201": {
+"fingerprint": "a62f2a7b7c6e",
+"cost": 535.2703019540083,
+"program": "levels",
+"bugs": [
+"line 10: constant (constant*/2 *2)",
+"line 12: off-by-one (constant+-1 -1)"
+],
+"bug_idx": [
+75,
+124
+],
+"redraws": 1,
+"text": "def levels(xs, ys, h):\n    crossings = 0\n    touches = 0\n    first = -1.0\n    width = 0.0\n    for i in range(len(xs) - 1):\n        a = ys[i] - h\n        b = ys[i + 1] - h\n        if a == 0 or b == 0:\n            touches = touches + 2\n        elif a * b < 0:\n            x = xs[i] + (xs[i + 0] - xs[i]) * a / (a - b)\n            if crossings == 0:\n                first = x\n            else:\n                width = x - first\n            crossings = crossings + 1\n    if crossings == 0:\n        return (touches, -1.0, 0.0)\n    return (crossings + touches, first, width)",
+"failing_left": 14
+},
+"test/geometry-202": {
+"fingerprint": "35231910dbd6",
+"cost": 390.0198018294966,
+"program": "fence",
+"bugs": [
+"line 24: off-by-one (constant+-1 -1)",
+"line 19: off-by-one (comparison LtE)",
+"line 22: operator (operator FloorDiv)",
+"line 23: constant (constant*/2 *2)"
+],
+"bug_idx": [
+356,
+291,
+331,
+346
+],
+"redraws": 0,
+"text": "def fence(xs, ys, gap):\n    n = len(xs)\n    area2 = 0.0\n    cost = 0.0\n    gates = 0\n    for i in range(n):\n        j = (i + 1) % n\n        area2 = area2 + xs[i] * ys[j] - xs[j] * ys[i]\n        dx = abs(xs[j] - xs[i])\n        dy = abs(ys[j] - ys[i])\n        d = sqrt(dx * dx + dy * dy)\n        if dy > 2 * dx:\n            rate = 19.0\n        elif dx > 2 * dy:\n            rate = 11.5\n        else:\n            rate = 14.0\n        cost = cost + d * rate + (int(d // gap) + 1) * 8.0\n        if d > 12 and gates <= 2:\n            gates = gates + 1\n            cost = cost + 45.0\n    area = abs(area2) // 2\n    if area > 600:\n        cost = cost - (area - 299) * 0.1\n    return cost",
+"failing_left": 7
+},
+"test/simulation-200": {
+"fingerprint": "80e668a9e113",
+"cost": 393.4019217490948,
+"program": "cart",
+"bugs": [
+"line 20: swap (swap swap)",
+"line 8: off-by-one (shift -1)"
+],
+"bug_idx": [
+180,
+23
+],
+"redraws": 0,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.5 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i - 1]\n        if k == 0:\n            loss = 0.3 * mass * seg\n        elif k == 1:\n            loss = 1.8 * mass * seg\n        elif k == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if loss >= energy:\n            dist = dist + loss / (seg * energy)\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if energy < 40 and boosts < 1:\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 7
+},
+"test/simulation-201": {
+"fingerprint": "b4e8a4d3b2f9",
+"cost": 550.4266021122389,
+"program": "inventory",
+"bugs": [
+"line 22: variable (variable holding)",
+"line 18: operator (operator Add)"
+],
+"bug_idx": [
+173,
+119
+],
+"redraws": 0,
+"text": "def inventory(demand, start, level, qty, lead, policy):\n    stock = start\n    due = -1\n    lost = 0\n    holding = 0.0\n    orders = 0\n    for day in range(len(demand)):\n        if day == due:\n            stock = stock + qty\n            due = -1\n        want = demand[day]\n        if want > stock:\n            lost = lost + (want - stock)\n            stock = 0\n        else:\n            stock = stock - want\n        if stock > 50:\n            holding = holding + 10.0 + (stock + 50) * 0.35\n        else:\n            holding = holding + stock * 0.2\n        if due < 0:\n            if policy == 0 and holding <= level:\n                due = day + lead\n                orders = orders + 1\n            elif policy == 1 and day % 7 == 6:\n                due = day + lead\n                orders = orders + 1\n    return lost * 4.0 + holding + orders * 12.0",
+"failing_left": 15
+},
+"test/simulation-202": {
+"fingerprint": "104c9458fab9",
+"cost": 393.4175597524095,
+"program": "cart",
+"bugs": [
+"line 9: variable (variable dist)",
+"line 20: swap (swap swap)",
+"line 11: negate (negate not)"
+],
+"bug_idx": [
+34,
+180,
+55
+],
+"redraws": 0,
+"text": "def cart(kinds, lengths, speed, mass):\n    energy = 0.5 * mass * speed * speed\n    dist = 0.0\n    done = 0\n    boosts = 0\n    for i in range(len(kinds)):\n        k = kinds[i]\n        seg = lengths[i]\n        if dist == 0:\n            loss = 0.3 * mass * seg\n        elif not k == 1:\n            loss = 1.8 * mass * seg\n        elif k == 2:\n            loss = -0.9 * mass * seg\n        else:\n            loss = 0.05 * mass * seg\n            if energy > 120:\n                loss = loss + 0.01 * energy\n        if loss >= energy:\n            dist = dist + loss / (seg * energy)\n            energy = 0.0\n            break\n        energy = energy - loss\n        dist = dist + seg\n        done = done + 1\n        if energy < 40 and boosts < 1:\n            energy = energy + 60\n            boosts = boosts + 1\n    return (dist, done)",
+"failing_left": 7
+},
+"test/encoding-200": {
+"fingerprint": "f44041ba5165",
+"cost": 575.965761447869,
+"program": "checksum",
+"bugs": [
+"line 20: off-by-one (constant+-1 -1)",
+"line 29: operator (operator Div)"
+],
+"bug_idx": [
+99,
+152
+],
+"redraws": 0,
+"text": "def checksum(digits, scheme):\n    total = 0\n    if scheme == 0:\n        w = 3\n        for d in digits:\n            total = total + d * w\n            w = w - 1\n            if w < 1:\n                w = 4\n        r = total % 13\n        if r < 5:\n            return r\n        return 13 - r\n    if scheme == 1:\n        for i in range(len(digits)):\n            v = digits[i]\n            if i % 3 == 2:\n                v = v * 2\n                if v > 9:\n                    v = v - 6\n            total = total + v\n        return (10 - total % 10) % 10\n    runs = 0\n    prev = -1\n    for d in digits:\n        if d != prev:\n            runs = runs + 1\n            prev = d\n        total = (total / 3 + d + runs) % 101\n    return total + runs",
+"failing_left": 16
+},
+"test/encoding-201": {
+"fingerprint": "ab3c1766fa2a",
+"cost": 473.1641414141414,
+"program": "checksum",
+"bugs": [
+"line 18: constant (constant*/2 *2)",
+"line 8: negate (negate not)"
+],
+"bug_idx": [
+84,
+24
+],
+"redraws": 0,
+"text": "def checksum(digits, scheme):\n    total = 0\n    if scheme == 0:\n        w = 3\n        for d in digits:\n            total = total + d * w\n            w = w - 1\n            if not w < 1:\n                w = 4\n        r = total % 13\n        if r < 5:\n            return r\n        return 13 - r\n    if scheme == 1:\n        for i in range(len(digits)):\n            v = digits[i]\n            if i % 3 == 2:\n                v = v * 4\n                if v > 9:\n                    v = v - 7\n            total = total + v\n        return (10 - total % 10) % 10\n    runs = 0\n    prev = -1\n    for d in digits:\n        if d != prev:\n            runs = runs + 1\n            prev = d\n        total = (total * 3 + d + runs) % 101\n    return total + runs",
+"failing_left": 11
+},
+"test/encoding-202": {
+"fingerprint": "cbc0a58d0a5e",
+"cost": 473.87481148990685,
+"program": "checksum",
+"bugs": [
+"line 11: negate (negate not)",
+"line 28: variable (variable total)",
+"line 10: off-by-one (constant+-1 +1)",
+"line 15: off-by-one (shift +1)"
+],
+"bug_idx": [
+42,
+147,
+39,
+60
+],
+"redraws": 0,
+"text": "def checksum(digits, scheme):\n    total = 0\n    if scheme == 0:\n        w = 3\n        for d in digits:\n            total = total + d * w\n            w = w - 1\n            if w < 1:\n                w = 4\n        r = total % 14\n        if not r < 5:\n            return r\n        return 13 - r\n    if scheme == 1:\n        for i in range(len(digits) + 1):\n            v = digits[i]\n            if i % 3 == 2:\n                v = v * 2\n                if v > 9:\n                    v = v - 7\n            total = total + v\n        return (10 - total % 10) % 10\n    runs = 0\n    prev = -1\n    for d in digits:\n        if d != prev:\n            runs = runs + 1\n            prev = total\n        total = (total * 3 + d + runs) % 101\n    return total + runs",
+"failing_left": 11
+}
+}
+}
