@@ -1,0 +1,125 @@
+{
+"method": "Code Zero (first candidate of the shuffled list): total points over the instance's games",
+"instances": {
+"train/trio-000": {
+"fingerprint": "fc81a124428c",
+"score": 201.0
+},
+"train/trio-001": {
+"fingerprint": "542ae8de0147",
+"score": 187.0
+},
+"train/trio-002": {
+"fingerprint": "c6b7cf3a15cc",
+"score": 202.0
+},
+"train/penta-000": {
+"fingerprint": "751ebaeaa12e",
+"score": 146.0
+},
+"train/penta-001": {
+"fingerprint": "2fdddb04e183",
+"score": 130.0
+},
+"train/penta-002": {
+"fingerprint": "57b0d6d736e0",
+"score": 201.25
+},
+"train/rising-000": {
+"fingerprint": "1c825231cc67",
+"score": 120.0
+},
+"train/rising-001": {
+"fingerprint": "d643427e57ea",
+"score": 106.0
+},
+"train/rising-002": {
+"fingerprint": "9ef9818a5042",
+"score": 181.0
+},
+"valid/trio-100": {
+"fingerprint": "b12194eac5f5",
+"score": 238.0
+},
+"valid/trio-101": {
+"fingerprint": "2bac1693ae28",
+"score": 248.0
+},
+"valid/trio-102": {
+"fingerprint": "1c6436e51550",
+"score": 217.0
+},
+"valid/penta-100": {
+"fingerprint": "9785db1be188",
+"score": 115.0
+},
+"valid/penta-101": {
+"fingerprint": "d0aa288b92ec",
+"score": 172.0
+},
+"valid/penta-102": {
+"fingerprint": "0eae7970a6e2",
+"score": 144.0
+},
+"valid/rising-100": {
+"fingerprint": "b95e1cffb1c8",
+"score": 126.0
+},
+"valid/rising-101": {
+"fingerprint": "9018c96cd930",
+"score": 245.75
+},
+"valid/rising-102": {
+"fingerprint": "d218d019d477",
+"score": 110.0
+},
+"test/trio-200": {
+"fingerprint": "dcd914c79bfc",
+"score": 284.0
+},
+"test/trio-201": {
+"fingerprint": "cf603b761a49",
+"score": 175.0
+},
+"test/trio-202": {
+"fingerprint": "b604c0c4ef6a",
+"score": 198.0
+},
+"test/penta-200": {
+"fingerprint": "a36567e416a2",
+"score": 119.0
+},
+"test/penta-201": {
+"fingerprint": "da573d6efce4",
+"score": 147.5
+},
+"test/penta-202": {
+"fingerprint": "1aa854bdb86e",
+"score": 187.25
+},
+"test/rising-200": {
+"fingerprint": "36fcb8b8996f",
+"score": 154.25
+},
+"test/rising-201": {
+"fingerprint": "0feab28d3d3e",
+"score": 136.0
+},
+"test/rising-202": {
+"fingerprint": "e1a70f5f8004",
+"score": 123.25
+},
+"test/prism-200": {
+"fingerprint": "c07b24bfed7f",
+"score": 85.0
+},
+"test/prism-201": {
+"fingerprint": "70c70039f1c4",
+"score": 105.0
+},
+"test/prism-202": {
+"fingerprint": "fff7ade4703e",
+"score": 99.0
+}
+}
+}

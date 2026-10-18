@@ -250,3 +250,17 @@ versus chance; repeating round 6's configuration (the cloud job list does this) 
   luck; (2) the meta loop's results (Shreyas's cloud run) and what it changes; (3) a population of champions
   (islands) so a plateau in one doesn't stall the search; (4) drop perturbation generations unless they start
   paying off; (5) held-out families inside validation, against over-fitting to training families.
+
+## The 4-hour meta run (cloud VM, October 17-18) and the open suite, round 2
+
+**Meta run** (`results/meta/outer-20261017-164239`): one outer generation in 6.8 hours on a 2-core VM, which it
+overloaded (Shreyas had to reboot it). Four strategies evaluated (4 problems x 2 repeats each): the starting strategy
+27.6; "shift one Mutator slot to the Researcher" 38.2 (promoted, and swapped into the outer loop); one candidate
+13.3; one with 5 of 8 inner runs timing out. The noise between repeats was about 7.6 points, so +10.6 is suggestive,
+not proven. Verdict: not worth more compute on this hardware; paused. The winning idea can be checked directly as an
+A/B of two Helix configurations later.
+
+**Open suite round 2** (docs/OPEN_SUITE.md): stacker (puzzle game), runner (arcade game as a speedrun), repair
+(evolving a debugger: which patch to try next on a buggy program), progression (a set avoiding an invented equation,
+as large as possible). `scripts/run_open_jobs.sh` runs all 9 open problems and then a thinking-mode ablation, gently
+by default (one run at a time, one fitting worker, nice/ionice, a small cache, a memory guard).
