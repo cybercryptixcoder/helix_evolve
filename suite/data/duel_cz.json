@@ -1,0 +1,125 @@
+{
+"method": "Code Zero (first candidate of the shuffled list): 100 x opponents' share of points over the instance's games",
+"instances": {
+"train/grid-000": {
+"fingerprint": "1e757aabe23d",
+"cost": 54.492753623188406
+},
+"train/grid-001": {
+"fingerprint": "5c65a60dfdc3",
+"cost": 57.64192139737991
+},
+"train/grid-002": {
+"fingerprint": "212f70772b49",
+"cost": 53.72693726937269
+},
+"train/hex-000": {
+"fingerprint": "9921f8c74e16",
+"cost": 60.06884681583477
+},
+"train/hex-001": {
+"fingerprint": "a27a9f36021f",
+"cost": 56.406124093473004
+},
+"train/hex-002": {
+"fingerprint": "01ba1e34c02a",
+"cost": 60.535714285714285
+},
+"train/web-000": {
+"fingerprint": "59c9aef80ee8",
+"cost": 55.801921655580195
+},
+"train/web-001": {
+"fingerprint": "4e8aa1af8f1d",
+"cost": 50.99925980754996
+},
+"train/web-002": {
+"fingerprint": "c9b9aac3e05b",
+"cost": 59.150805270863835
+},
+"valid/grid-100": {
+"fingerprint": "554c7e421d2a",
+"cost": 54.27728613569322
+},
+"valid/grid-101": {
+"fingerprint": "3f5630b755ba",
+"cost": 58.37491090520314
+},
+"valid/grid-102": {
+"fingerprint": "c6a9fb9410cd",
+"cost": 56.37630662020906
+},
+"valid/hex-100": {
+"fingerprint": "db9e7cecf5fe",
+"cost": 56.016949152542374
+},
+"valid/hex-101": {
+"fingerprint": "a0d482538863",
+"cost": 62.53164556962025
+},
+"valid/hex-102": {
+"fingerprint": "04b0ce5efd64",
+"cost": 57.18927701056052
+},
+"valid/web-100": {
+"fingerprint": "f1861df96fde",
+"cost": 53.07142857142857
+},
+"valid/web-101": {
+"fingerprint": "fe6d5c86f567",
+"cost": 57.164291072768194
+},
+"valid/web-102": {
+"fingerprint": "0541fb91cf20",
+"cost": 48.768115942028984
+},
+"test/grid-200": {
+"fingerprint": "2b8eabca66f7",
+"cost": 52.860246198406955
+},
+"test/grid-201": {
+"fingerprint": "3a0046a2be0b",
+"cost": 63.46433770014556
+},
+"test/grid-202": {
+"fingerprint": "24e175301134",
+"cost": 54.53900709219858
+},
+"test/hex-200": {
+"fingerprint": "d4be47bd58ef",
+"cost": 65.69717707442258
+},
+"test/hex-201": {
+"fingerprint": "e7c07cc82fc9",
+"cost": 60.01742160278746
+},
+"test/hex-202": {
+"fingerprint": "d1d0a3dedf13",
+"cost": 57.46569814366425
+},
+"test/web-200": {
+"fingerprint": "3954b0599fb1",
+"cost": 54.79548660084626
+},
+"test/web-201": {
+"fingerprint": "27b869b0e317",
+"cost": 51.69675090252708
+},
+"test/web-202": {
+"fingerprint": "47813941f852",
+"cost": 54.7008547008547
+},
+"test/islands-200": {
+"fingerprint": "d4bf0aa3e0c4",
+"cost": 51.29824561403509
+},
+"test/islands-201": {
+"fingerprint": "0e84edb59586",
+"cost": 51.5818431911967
+},
+"test/islands-202": {
+"fingerprint": "c83689ab6bf0",
+"cost": 55.354659248956885
+}
+}
+}

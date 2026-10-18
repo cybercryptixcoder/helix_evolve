@@ -120,6 +120,12 @@ REGISTRY = {
     "setcover": "suite.setcover:SetCover",
     "jobshop": "suite.jobshop:JobShop",
     "cvrp": "suite.cvrp:CVRP",
+    # the open suite (docs/OPEN_SUITE.md): open_ceiling, gap = 100 * cost / Code Zero's cost
+    "forage": "suite.forage:Forage",
+    "thermal": "suite.thermal:Thermal",
+    "fairshare": "suite.fairshare:FairShare",
+    "backtrack": "suite.backtrack:Backtrack",
+    "duel": "suite.duel:Duel",
 }
 
 

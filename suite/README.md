@@ -21,6 +21,18 @@ python -m suite.check --all
 | `jobshop` | pick the next operation to dispatch | ready operations | best-known schedule |
 | `cvrp` | pick the vehicle's next stop | unvisited customers that fit + back to the depot | best-known routes |
 
+## Open suite
+
+No reference, no floor, no ceiling (`docs/OPEN_SUITE.md`): `open_ceiling = True`, gap = 100 x cost / Code Zero's cost on the instance (Code Zero = 100 exactly), candidates reshuffled at every decision with the instance's seed.
+
+| Problem | Decision | Candidates | Cost |
+|---|---|---|---|
+| `forage` | the drone's next target | visible items + the charger | value lost (decayed or never collected) + a penalty per battery run-out |
+| `thermal` | place an arriving or waiting job in a heating data hall | servers with room (none: the queue, automatically) | minutes lost to heat slowdown and queueing |
+| `fairshare` | staff the next shift position | eligible volunteers + leave uncovered | 5 x uncovered + unmet preferences + unfairness (parts reported separately) |
+| `backtrack` | the variable a fixed depth-first solver branches on next (invented "tide pools" puzzle) | unassigned variables | search nodes until the first solution, summed over a ladder of 3 puzzles (~30/55/85 variables), each capped at 15 x size; Code Zero costs cached in `suite/data/backtrack_cz.json` (`python -m suite.backtrack --cz`) |
+| `duel` | the cell to claim in an invented territory game ("spore") | legal claims | 100 x the opponents' share of points over 24 seeded games against a pool of 4 scripted opponents; Code Zero costs cached in `suite/data/duel_cz.json` (`python -m suite.duel --cz`) |
+
 ## Rules for a problem (what keeps comparisons honest)
 
 - **Deterministic instances** from fixed seeds, for `train`, `valid` and `test` (different seeds). `test` may add families listed in `held_out_families` that train never shows.

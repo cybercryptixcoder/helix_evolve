@@ -1,0 +1,425 @@
+{
+"method": "Code Zero (first candidate of the shuffled list) search nodes per instance",
+"instances": {
+"train/scatter-000": {
+"fingerprint": "e02908f777e5",
+"cost": 2565,
+"puzzles": [
+465,
+795,
+1305
+],
+"sizes": [
+31,
+53,
+87
+]
+},
+"train/scatter-001": {
+"fingerprint": "aef2a7fac146",
+"cost": 2475,
+"puzzles": [
+435,
+795,
+1245
+],
+"sizes": [
+29,
+53,
+83
+]
+},
+"train/scatter-002": {
+"fingerprint": "a7ab81e2e87b",
+"cost": 2580,
+"puzzles": [
+480,
+810,
+1290
+],
+"sizes": [
+32,
+54,
+86
+]
+},
+"train/strip-000": {
+"fingerprint": "48589ec927d3",
+"cost": 2550,
+"puzzles": [
+435,
+825,
+1290
+],
+"sizes": [
+29,
+55,
+86
+]
+},
+"train/strip-001": {
+"fingerprint": "c13d04475646",
+"cost": 2490,
+"puzzles": [
+450,
+795,
+1245
+],
+"sizes": [
+30,
+53,
+83
+]
+},
+"train/strip-002": {
+"fingerprint": "02d81b0783ca",
+"cost": 2550,
+"puzzles": [
+465,
+840,
+1245
+],
+"sizes": [
+31,
+56,
+83
+]
+},
+"train/clusters-000": {
+"fingerprint": "7c622fb9486b",
+"cost": 2550,
+"puzzles": [
+465,
+810,
+1275
+],
+"sizes": [
+31,
+54,
+85
+]
+},
+"train/clusters-001": {
+"fingerprint": "b636d939448b",
+"cost": 2520,
+"puzzles": [
+435,
+795,
+1290
+],
+"sizes": [
+29,
+53,
+86
+]
+},
+"train/clusters-002": {
+"fingerprint": "0863d8169bf6",
+"cost": 2535,
+"puzzles": [
+450,
+840,
+1245
+],
+"sizes": [
+30,
+56,
+83
+]
+},
+"valid/scatter-100": {
+"fingerprint": "7d7dfded9db4",
+"cost": 2640,
+"puzzles": [
+480,
+855,
+1305
+],
+"sizes": [
+32,
+57,
+87
+]
+},
+"valid/scatter-101": {
+"fingerprint": "cc932c38f343",
+"cost": 2550,
+"puzzles": [
+450,
+825,
+1275
+],
+"sizes": [
+30,
+55,
+85
+]
+},
+"valid/scatter-102": {
+"fingerprint": "da03c7e2faa0",
+"cost": 2595,
+"puzzles": [
+435,
+855,
+1305
+],
+"sizes": [
+29,
+57,
+87
+]
+},
+"valid/strip-100": {
+"fingerprint": "7a42280c1fc3",
+"cost": 2580,
+"puzzles": [
+450,
+855,
+1275
+],
+"sizes": [
+30,
+57,
+85
+]
+},
+"valid/strip-101": {
+"fingerprint": "fb2ce950c670",
+"cost": 2565,
+"puzzles": [
+420,
+840,
+1305
+],
+"sizes": [
+28,
+56,
+87
+]
+},
+"valid/strip-102": {
+"fingerprint": "1e1b60fa5f31",
+"cost": 2580,
+"puzzles": [
+480,
+795,
+1305
+],
+"sizes": [
+32,
+53,
+87
+]
+},
+"valid/clusters-100": {
+"fingerprint": "70fe2cc4ef17",
+"cost": 2520,
+"puzzles": [
+435,
+840,
+1245
+],
+"sizes": [
+29,
+56,
+83
+]
+},
+"valid/clusters-101": {
+"fingerprint": "e18906a9fbed",
+"cost": 2535,
+"puzzles": [
+480,
+795,
+1260
+],
+"sizes": [
+32,
+53,
+84
+]
+},
+"valid/clusters-102": {
+"fingerprint": "4bfb0937b638",
+"cost": 2550,
+"puzzles": [
+450,
+810,
+1290
+],
+"sizes": [
+30,
+54,
+86
+]
+},
+"test/scatter-200": {
+"fingerprint": "a2c56b4c214c",
+"cost": 2595,
+"puzzles": [
+465,
+840,
+1290
+],
+"sizes": [
+31,
+56,
+86
+]
+},
+"test/scatter-201": {
+"fingerprint": "cff5715035c4",
+"cost": 2565,
+"puzzles": [
+420,
+855,
+1290
+],
+"sizes": [
+28,
+57,
+86
+]
+},
+"test/scatter-202": {
+"fingerprint": "753ad0c508bf",
+"cost": 2550,
+"puzzles": [
+420,
+855,
+1275
+],
+"sizes": [
+28,
+57,
+85
+]
+},
+"test/strip-200": {
+"fingerprint": "cc1dcaf57051",
+"cost": 2580,
+"puzzles": [
+450,
+825,
+1305
+],
+"sizes": [
+30,
+55,
+87
+]
+},
+"test/strip-201": {
+"fingerprint": "601e5bce562b",
+"cost": 2610,
+"puzzles": [
+480,
+855,
+1275
+],
+"sizes": [
+32,
+57,
+85
+]
+},
+"test/strip-202": {
+"fingerprint": "3359efc631bf",
+"cost": 2550,
+"puzzles": [
+420,
+855,
+1275
+],
+"sizes": [
+28,
+57,
+85
+]
+},
+"test/clusters-200": {
+"fingerprint": "129fbac47884",
+"cost": 2535,
+"puzzles": [
+435,
+855,
+1245
+],
+"sizes": [
+29,
+57,
+83
+]
+},
+"test/clusters-201": {
+"fingerprint": "270b16a59f9d",
+"cost": 2565,
+"puzzles": [
+465,
+795,
+1305
+],
+"sizes": [
+31,
+53,
+87
+]
+},
+"test/clusters-202": {
+"fingerprint": "613a0b052adc",
+"cost": 2610,
+"puzzles": [
+465,
+840,
+1305
+],
+"sizes": [
+31,
+56,
+87
+]
+},
+"test/hubs-200": {
+"fingerprint": "285ee6148d2e",
+"cost": 2565,
+"puzzles": [
+465,
+795,
+1305
+],
+"sizes": [
+31,
+53,
+87
+]
+},
+"test/hubs-201": {
+"fingerprint": "7c1355c13b5f",
+"cost": 2241,
+"puzzles": [
+141,
+825,
+1275
+],
+"sizes": [
+31,
+55,
+85
+]
+},
+"test/hubs-202": {
+"fingerprint": "0e4af9bdc313",
+"cost": 2595,
+"puzzles": [
+465,
+855,
+1275
+],
+"sizes": [
+31,
+57,
+85
+]
+}
+}
+}
