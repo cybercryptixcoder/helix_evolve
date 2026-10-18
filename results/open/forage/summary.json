@@ -1,0 +1,119 @@
+{
+ "problem": "forage",
+ "label": "forage",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 54.57921762981567,
+  "valid": 54.251675851958936,
+  "progress": 45.42,
+  "valid_progress": 45.75,
+  "library": [
+   "f006",
+   "f020",
+   "f019",
+   "f024",
+   "f022",
+   "f030",
+   "f025",
+   "f028",
+   "f086"
+  ]
+ },
+ "test": {
+  "gap": 54.105233980304384,
+  "families": {
+   "scatter": 58.916174839571376,
+   "hotspots": 39.96128643194097,
+   "waves": 62.43639105261849,
+   "drift": 55.1070835970867
+  },
+  "code_zero": 100.0,
+  "progress": 45.89
+ },
+ "progress_curve": [
+  0.0,
+  38.54,
+  44.28,
+  44.49,
+  44.09,
+  45.19,
+  45.19,
+  45.19,
+  45.19,
+  45.19,
+  45.42,
+  45.42,
+  45.42
+ ],
+ "valid_curve": [
+  0.0,
+  38.19,
+  44.78,
+  44.85,
+  44.74,
+  45.2,
+  45.2,
+  45.2,
+  45.2,
+  45.2,
+  45.75,
+  45.75,
+  45.75
+ ],
+ "calls": 132,
+ "tokens_in": 578848,
+ "tokens_out": 217054,
+ "features_tried": 104,
+ "kept": [
+  {
+   "id": "f006",
+   "name": "value_density_per_cycle_time",
+   "origin": "wide"
+  },
+  {
+   "id": "f020",
+   "name": "local_arrival_opportunity_cost",
+   "origin": "deep"
+  },
+  {
+   "id": "f019",
+   "name": "soft_battery_shortfall",
+   "origin": "deep"
+  },
+  {
+   "id": "f024",
+   "name": "horizon_pressure_per_expiry_window",
+   "origin": "wide"
+  },
+  {
+   "id": "f022",
+   "name": "competition_adjusted_arrival_value",
+   "origin": "wide"
+  },
+  {
+   "id": "f030",
+   "name": "best_alternative_opportunity_cost",
+   "origin": "wide"
+  },
+  {
+   "id": "f025",
+   "name": "two_step_density_gain",
+   "origin": "deep"
+  },
+  {
+   "id": "f028",
+   "name": "static_history_density_ratio",
+   "origin": "deep"
+  },
+  {
+   "id": "f086",
+   "name": "charger_unlockable_value",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792362299.2615259
+}
