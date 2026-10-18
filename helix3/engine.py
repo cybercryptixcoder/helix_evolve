@@ -126,6 +126,8 @@ class Engine:
         self.spread, self.xscale = 1.0, 1.0
         self._sens_key, self._sens = None, []
         self.S = getattr(problem, "search_split", "train")      # the instances searches and refits run on
+        if self.s.c("fit", "search_on_train", default=False):
+            self.S = "train"             # the full train split: fewer gains that don't survive validation
         self.P = getattr(problem, "probe_split", None) or self.S  # the probe's quick first pass (can be smaller)
         if self.s.c("fit", "probe_on_search", default=False):
             self.P = self.S              # a small probe split was too noisy to judge features (review of bp2d-25)
@@ -529,6 +531,28 @@ class Engine:
             f"progress {self.champ['progress']:.1f}% (valid {self.champ['valid_progress']:.1f}%) | "
             f"{time.time() - t0:.0f}s, {self.llm.calls} calls")
 
+    def stall_lines(self):
+        """When the champion hasn't gained for a while, say so plainly, with where the room is."""
+        k = self.s.c("streams", "stall_after", default=2)
+        hist = [h for h in self.history if h.get("gen", 0) >= 1]
+        if len(hist) < k:
+            return ""
+        since = 0
+        for h in reversed(hist):
+            if h.get("accepted"):
+                break
+            since += 1
+        if since < k:
+            return ""
+        fams = self.champ["families"]
+        worst = sorted(fams, key=lambda f: -(fams[f] - self._floor(f)))[:2]
+        lib = ", ".join(f.name for f in self.ledger.lib()) or "none"
+        return (f"## Stalled: {since} generations without a kept feature\n"
+                f"The current features ({lib}) are saturated: re-expressing them won't help. The room left is mostly in "
+                f"{' and '.join(worst)} (see the room by family). Look for what is different about those cases and for "
+                "quantities nothing in the policy measures yet, including conditional ones that only switch on in those "
+                "cases. Open new approaches rather than refining exhausted ones.")
+
     # ------------------------------------------------------------------ streams
     def update_streams(self, new):
         """After a generation: each approach that ran experiments either gained (streak resets) or didn't.
@@ -722,6 +746,9 @@ class Engine:
         if groups:
             parts.append("## Groups of tried features that rank candidates alike (|rho| >= 0.9): the same idea, re-expressed\n" + groups
                          + "\nProductive groups are veins to keep mining (sub-approaches, conditions); spent groups are not.")
+        st = self.stall_lines()
+        if st:
+            parts.append(st)
         n_exp = self.s.c("researcher", "experiments", default=4)
         slots = self.s.c("mutator", "slots", default=4)
         parts.append(f"## Budget this generation\n- Researcher: {n_exp} experiments (assign up to {n_exp} approaches)\n"
@@ -881,6 +908,9 @@ class Engine:
         if finds:
             parts.append("## The Mutator's recent finds (it doesn't know why they work)\n" +
                          "\n".join(roles.feature_line(f, with_code=True, max_code=700) for f in finds[:3]))
+        st = self.stall_lines()
+        if st:
+            parts.append(st)
         n = self.s.c("researcher", "experiments", default=4)
         parts.append(f"Design {n} experiments, at least one per assignment. Put the JSON block first.")
         return "\n\n".join(parts)

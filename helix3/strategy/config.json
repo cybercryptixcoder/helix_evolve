@@ -55,7 +55,8 @@
    0.03,
    -0.03
   ],
-  "probe_on_search": true
+  "probe_on_search": true,
+  "search_on_train": true
  },
  "novelty": {
   "duplicate_rho": 0.98,
@@ -79,7 +80,8 @@
  "streams": {
   "bench_after": 3,
   "revive_p": 0.2,
-  "about": "an approach with no gain for bench_after generations in a row is benched (hidden from the Navigator); each generation it returns with probability revive_p x (1 + rest/4), capped at 0.6"
+  "about": "an approach with no gain for bench_after generations in a row is benched (hidden from the Navigator); each generation it returns with probability revive_p x (1 + rest/4), capped at 0.6",
+  "stall_after": 2
  },
  "perturb": {
   "every": 4,
