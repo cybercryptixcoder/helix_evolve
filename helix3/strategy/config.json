@@ -69,7 +69,7 @@
  "ledger_lines": 14,
  "breakthrough": {
   "every": 5,
-  "effort": "max",
+  "effort": "high",
   "roles": [
    "navigator",
    "researcher"
