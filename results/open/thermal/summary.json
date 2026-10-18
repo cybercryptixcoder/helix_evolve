@@ -1,0 +1,77 @@
+{
+ "problem": "thermal",
+ "label": "thermal",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 47.191456091078095,
+  "valid": 48.0330099870192,
+  "progress": 52.81,
+  "valid_progress": 51.97,
+  "library": [
+   "f018",
+   "f045"
+  ]
+ },
+ "test": {
+  "gap": 52.73805243748531,
+  "families": {
+   "row": 33.243058030649564,
+   "pods": 59.893680893462886,
+   "bursts": 64.07395804309097,
+   "mixed": 53.7415127827378
+  },
+  "code_zero": 100.0,
+  "progress": 47.26
+ },
+ "progress_curve": [
+  0.0,
+  49.44,
+  50.4,
+  51.07,
+  51.29,
+  52.71,
+  52.81,
+  52.81,
+  52.81,
+  52.81,
+  52.81,
+  52.81,
+  52.81
+ ],
+ "valid_curve": [
+  0.0,
+  44.51,
+  51.02,
+  50.48,
+  50.84,
+  51.63,
+  51.97,
+  51.97,
+  51.97,
+  51.97,
+  51.97,
+  51.97,
+  51.97
+ ],
+ "calls": 133,
+ "tokens_in": 464657,
+ "tokens_out": 207820,
+ "features_tried": 100,
+ "kept": [
+  {
+   "id": "f018",
+   "name": "coupled_steady_state_slowdown_minutes",
+   "origin": "wide"
+  },
+  {
+   "id": "f045",
+   "name": "queue_scaled_relative_coolness",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792364223.9718435
+}

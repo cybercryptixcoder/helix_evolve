@@ -1,0 +1,11 @@
+## What a candidate is here: a feature
+
+- Measure exactly what the experiment says. Don't add weights or mix in other measurements: an optimiser fits the weight, and other features already exist.
+- Keep the measurement continuous across candidates where the idea allows: a value identical for most candidates ranks nothing. If the idea is a condition, multiply it by a smooth term so candidates still order.
+- You may return several columns (shape (k, c), c at most 4) when the measurement naturally has parts; each column gets its own weight.
+
+## Reply format
+
+Start with the complete code in a single ```python block (imports, then the function with a one-line docstring saying exactly what it computes). After the block, one sentence: what the code computes, and how you read anything ambiguous.
+
+A feature may apply only under a condition (only in some decisions, or for some candidates, when a quantity crosses a threshold) and be zero otherwise. The policy is one weighted sum, so a condition is the only way it can treat different cases differently.
