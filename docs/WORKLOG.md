@@ -207,3 +207,18 @@ near-miss trials; no inherited scores, near-copies of features judged under an o
 duplicates aren't stream evidence, old redundant results leave the scoreboard; approaches holding a kept feature are
 never benched, revived approaches get two tries, one forced kept-parent slot; agents are told features may be
 conditional. Round 5 (binpack2d, 12 generations) tests them.
+
+**Round 5** (plateau fixes, binpack2d): 5.9 → 24.6 → 27.6 → 28.4 → 28.5 → 28.6 → 28.6% (validation up to 25.1%,
+the best yet), then flat; stopped at generation 7. The fixes made the search healthier (gated features got kept,
+validation rose) but did not break the plateau. Comparison: the 34.6% run (October 12 engine) also plateaued
+(generations 7-12) and broke out at 13-15 with features conditioned on large items and job mixes, growing its
+library to 10 features; today's engine stays at 5-6.
+
+Also fixed along the way: thinking calls are bounded (10 minutes, then one retry without thinking; a max-effort
+Researcher had run 27+ minutes); breakthrough generations think at high; the keeper resumed runs that had been
+stopped on purpose (it now never resumes a stopped or failed run, and `keeper --stop` marks a run stopped before
+killing it).
+
+**Round 6** (review-fix round 2): a stall signal (after 2 generations without a keep, agents are told the features
+are saturated and where the room is) and searches on the full train split (18 instances). 15 generations. If it
+doesn't move past ~29%, the plateau is documented as the current limit (escape condition).
