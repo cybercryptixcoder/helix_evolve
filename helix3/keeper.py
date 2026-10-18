@@ -54,7 +54,8 @@ def state(d):
         ck = {}
     done = st.get("state") == "finished" or (ck.get("target") and ck.get("gen", 0) >= ck["target"])
     return {"dir": d, "gen": ck.get("gen"), "target": ck.get("target"), "pid": st.get("pid"),
-            "alive": alive(st.get("pid")), "finished": bool(done)}
+            "alive": alive(st.get("pid")), "finished": bool(done),
+            "stopped": st.get("state") in ("stopped", "failed")}
 
 
 def detach(cmd, log, env=None):
@@ -69,7 +70,7 @@ def sweep(verbose=True):
     restarted = []
     for d in inner_runs():
         s = state(d)
-        if s["finished"] or s["alive"]:
+        if s["finished"] or s["alive"] or s["stopped"]:
             continue
         detach([sys.executable, "-m", "helix3.run", "--resume", str(d)], d / "resume.log")
         restarted.append(str(d))
@@ -109,7 +110,8 @@ def main(argv=None):
     if a.list:
         for d in inner_runs():
             s = state(d)
-            tag = "finished" if s["finished"] else ("running" if s["alive"] else "DEAD (resumable)")
+            tag = "finished" if s["finished"] else ("running" if s["alive"] else
+                                                    "stopped on purpose" if s["stopped"] else "DEAD (resumable)")
             print(f"{d.relative_to(ROOT)}: generation {s['gen']} of {s['target']} - {tag}")
         return
     lock = open(ROOT / "runs" / ".keeper.lock" if (ROOT / "runs").exists() else ROOT / ".keeper.lock", "w")
