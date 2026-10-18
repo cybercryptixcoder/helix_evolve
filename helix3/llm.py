@@ -30,6 +30,8 @@ SURGE, BUCKET, REFILL = 6, 45.0, 0.85
 # reasoning first, so a fixed budget cuts the answer off at high effort (round 4: 27.7k reasoning tokens, answer cut)
 THINK_ROOM = {"none": 0, "low": 12000, "medium": 20000, "high": 40000, "xhigh": 56000, "max": 80000, "ultra": 80000}
 CAP = 393216
+THINK_SECONDS = 600          # a thinking call that runs longer is cut and retried one effort level lower
+STEP_DOWN = {"max": "high", "ultra": "high", "xhigh": "high", "high": "medium", "medium": "low", "low": "none"}
 
 
 def load_env():
@@ -141,7 +143,7 @@ class LLM:
             k = self._acquire()
             penalty = 0.0
             try:
-                rep = self._stream(k.key, payload)
+                rep = self._stream(k.key, payload, THINK_SECONDS if payload["reasoning_effort"] != "none" else None)
                 rep.seconds = round(time.time() - t0, 2)
                 if rep.finish == "length" and not grown and payload["max_tokens"] < CAP:
                     # cut off by the token limit (usually the hidden reasoning ate it): once more, with double room
@@ -156,13 +158,18 @@ class LLM:
                 if not exc.retryable:
                     break
                 penalty = 3.0 if "429" in str(exc) else 0.0
+                if "longer than" in str(exc):          # bounded thinking: step down a level and try again
+                    lower = STEP_DOWN.get(payload["reasoning_effort"], "low")
+                    payload = {**payload, "reasoning_effort": lower,
+                               "max_tokens": min(CAP, max_tokens + THINK_ROOM.get(lower, 16000))}
+                    effort = lower
             finally:
                 self._release(k, penalty)
             time.sleep(min(20, 1.5 * 2 ** attempt) + random.random())
         self._record(role, system, user, None, temperature, effort, meta, str(last))
         raise last or LLMError("model call failed")
 
-    def _stream(self, key, payload):
+    def _stream(self, key, payload, max_seconds=None):
         req = urllib.request.Request(self.base_url + "/chat/completions", data=json.dumps(payload).encode(),
                                      headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
         try:
@@ -173,9 +180,12 @@ class LLM:
         except (urllib.error.URLError, socket.timeout, ConnectionError, OSError) as e:
             raise LLMError(f"connection: {e}", retryable=True)
         content, reasoning, usage, finish, seen = [], [], {}, "", False
+        t0 = time.time()
         try:
             with resp:
                 for line in resp:
+                    if max_seconds and time.time() - t0 > max_seconds:
+                        raise LLMError(f"thinking took longer than {max_seconds}s", retryable=True)
                     line = line.decode(errors="replace").strip()
                     if not line.startswith("data:"):
                         continue
