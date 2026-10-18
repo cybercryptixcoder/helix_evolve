@@ -1,0 +1,88 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.047413773924198654,
+  "valid": 0.07054514833772692,
+  "progress": 99.64,
+  "valid_progress": 99.52,
+  "library": [
+   "f003",
+   "f006",
+   "f027",
+   "f025",
+   "f030",
+   "f018"
+  ]
+ },
+ "test": {
+  "gap": 0.15956943541264684,
+  "families": {
+   "uncorrelated": 0.07806827378836016,
+   "weakly_correlated": 0.09199956986767344,
+   "strongly_correlated": 0.09394410690449033,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.5282341784412559
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 98.73
+ },
+ "progress_curve": [
+  0.0,
+  98.27,
+  98.27,
+  98.34,
+  99.4,
+  99.64
+ ],
+ "valid_curve": [
+  0.0,
+  98.13,
+  98.13,
+  98.14,
+  99.22,
+  99.52
+ ],
+ "calls": 67,
+ "tokens_in": 146654,
+ "tokens_out": 129950,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "density_vs_best_remaining",
+   "origin": "wide"
+  },
+  {
+   "id": "f006",
+   "name": "raw_weight_signal",
+   "origin": "deep"
+  },
+  {
+   "id": "f027",
+   "name": "pair_fill_leftover_endgame",
+   "origin": "deep"
+  },
+  {
+   "id": "f025",
+   "name": "residue_vs_lightest_penalty",
+   "origin": "deep"
+  },
+  {
+   "id": "f030",
+   "name": "pair_fill_densest_partner_gated",
+   "origin": "wide"
+  },
+  {
+   "id": "f018",
+   "name": "scarcity_dominance_count",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792273296.2027836
+}

@@ -1,0 +1,3693 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "blocked_neighbour_fraction",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Fraction of the candidate's uncoloured neighbours that would lose the colour the candidate is about to take.\"\"\"\n    k = adjacency.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    c = neighbor_colors.shape[1]\n    if c == 0:\n        return np.zeros(k)\n    zero = neighbor_colors == 0\n    has_free = zero.any(axis=1)\n    t = np.argmax(zero, axis=1)                 # smallest colour not used by neighbours\n    t = np.where(has_free, t, c)                # c means \"a brand new colour is needed\"\n    reuse = t < c\n    safe_t = np.where(reuse, t, 0)\n    # M[u, v] = how many neighbours of u currently carry the colour candidate v would take\n    M = neighbor_colors[:, safe_t]\n    blocked = (M == 0) & adjacency               # colouring v kills colour t_v for u\n    impact = blocked.sum(axis=0).astype(float) * reuse\n    uncoloured_deg = adjacency.sum(axis=1).astype(float)\n    frac = impact / np.maximum(uncoloured_deg, 1.0)\n    return np.nan_to_num(frac, nan=0.0, posinf=0.0, neginf=0.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fraction of the candidate's uncoloured neighbours that would lose the colour the candidate is about to take.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    3.4120750366120283
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -27.41
+    ],
+    [
+     -1.0,
+     26.4235
+    ]
+   ],
+   "best_probe": 26.4235,
+   "best_w": -1.0,
+   "d_train": 26.4235,
+   "d_valid": 16.6883,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.4012
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "constrained_neighbour_pressure",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Mean over uncoloured neighbours of 1/(their still-available colours + 1), counting only neighbours that lose their smallest feasible colour when this candidate takes its own smallest feasible colour; high when colouring this candidate now starves already-constrained neighbours.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros(0)\n    adj = np.asarray(adjacency, dtype=bool)\n    blocked = nc > 0                                  # (k, c): colours already taken by a neighbour\n    avail = (~blocked).sum(axis=1).astype(float)      # existing colours still free per candidate\n\n    if c == 0:\n        # No colours exist yet: this candidate's colour becomes new to every neighbour.\n        gain = adj.copy()\n        w = np.ones(k)\n    else:\n        # Smallest feasible colour for each candidate (argmin -> first non-blocked column).\n        col = np.argmin(blocked, axis=1)\n        col = np.where(avail > 0, col, c)             # c = must open a new colour\n        col_safe = np.clip(col, 0, c - 1)\n        B = blocked[:, col_safe]                      # B[j, i] = neighbour j already has candidate i's colour\n        is_new = col >= c\n        B[:, is_new] = False                          # a brand-new colour was free for every neighbour\n        gain = (~B) & adj                             # neighbour j's option set shrinks\n        w = 1.0 / (avail + 1.0)                       # scarcity of each neighbour\n\n    pressure = (gain * w[None, :]).sum(axis=0)        # sum over neighbours for each candidate\n    norm = adj.sum(axis=0) + 1.0                      # candidate's uncoloured degree\n    return pressure / norm\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a08",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Mean over uncoloured neighbours of 1/(their still-available colours + 1), counting only neighbours that lose their smallest feasible colour when this candidate takes its own smallest feasible colour; high when colouring this candidate now starves already-constrained neighbours.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    5.696765316894506
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     14.2013
+    ],
+    [
+     -1.0,
+     31.8978
+    ]
+   ],
+   "best_probe": 31.8978,
+   "best_w": -1.0,
+   "d_train": 31.8978,
+   "d_valid": 34.2492,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "neighbour_option_drop",
+   "code": "import numpy as np\n\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Lookahead pressure of giving each candidate its smallest available colour: share of uncoloured neighbours that would lose that option, share that would be forced to open a new colour, and the candidate's own leftover flexibility.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    A = np.asarray(adjacency, dtype=np.float64)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n    if c == 0:\n        return np.zeros((k, 3))\n\n    free = (nc == 0)                                    # (k, c) colour still available to candidate\n    nfree = free.sum(axis=1)                            # (k,)\n    t = np.where(nfree > 0, np.argmax(free, axis=1), c) # smallest available colour (c = a new colour)\n\n    t_safe = np.minimum(t, c - 1)\n    F = free[:, t_safe]                                 # F[m, i] = colour t_i still free at neighbour m\n    F[:, t >= c] = False                                # a brand-new target colour blocks nothing\n\n    inv = 1.0 / np.maximum(A.sum(axis=1), 1.0)\n\n    drop = (A * F.T).sum(axis=1) * inv                              # neighbours losing option t_i\n    single = nfree == 1\n    close = (A * (F & single[:, None]).T).sum(axis=1) * inv         # neighbours forced to a new colour\n    flex = nfree / float(c)                                         # own flexibility (saturation complement)\n\n    out = np.stack([drop, close, flex], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Lookahead pressure of giving each candidate its smallest available colour: share of uncoloured neighbours that would lose that option, share that would be forced to open a new colour, and the candidate's own leftover flexibility.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 3,
+   "scales": [
+    3.4120750366120283,
+    5.874987314596758,
+    4.043945669271938
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -33.8478
+    ],
+    [
+     -1.0,
+     22.0493
+    ]
+   ],
+   "best_probe": 22.0493,
+   "best_w": -1.0,
+   "d_train": 32.9066,
+   "d_valid": 21.259,
+   "trial_x": [
+    -1.2317654614927318,
+    -1.6321927914465668,
+    0.030934886692009583
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8576
+   },
+   "error": "",
+   "calls": [
+    "c010"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "saturation_and_blocking_pressure",
+   "code": "import numpy as np\nimport math\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: fraction of existing colours already present among its neighbours (saturation), the fraction of its uncoloured neighbours that would lose the colour it is about to take if it were coloured now (future blocking), and its degree normalised by the largest degree in the candidate set.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    # saturation: how many distinct colours its coloured neighbours already use\n    sat = (nc > 0).sum(axis=1) / float(max(c, 1))\n\n    # would-be colour: first colour column that is free (a brand-new colour counts as free)\n    free_ext = np.concatenate([nc <= 0, np.ones((k, 1), dtype=bool)], axis=1)\n    j = np.argmax(free_ext, axis=1)                     # first free colour, always exists\n    # free_ext[p, col] = 1 iff candidate p could still take colour col\n    reach = adj @ free_ext.astype(float)                # (k, c+1): for each candidate,count of its uncoloured neighbours free at each colour\n    would_block = reach[np.arange(k), j]                # neighbours that lose their option if this candidate takes colour j\n    rowsum = adj.sum(axis=1)\n    blocking = would_block / np.maximum(rowsum, 1.0)    # fraction of its uncoloured neighbours blocked\n\n    dmax = max(float(deg.max()) if k else 1.0, 1.0)\n    degn = deg / dmax\n\n    return np.stack([sat, blocking, degn], axis=1)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a08",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: fraction of existing colours already present among its neighbours (saturation), the fraction of its uncoloured neighbours that would lose the colour it is about to take if it were coloured now (future blocking), and its degree normalised by the largest degree in the candidate set.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 3,
+   "scales": [
+    4.043945669271938,
+    3.6428099499456006,
+    6.908816583697485
+   ],
+   "weights": [
+    2.913288050647484,
+    -0.44905866629774444,
+    0.3795185741123687
+   ],
+   "probe": [
+    [
+     1.0,
+     20.485
+    ],
+    [
+     -1.0,
+     10.9178
+    ]
+   ],
+   "best_probe": 20.485,
+   "best_w": 1.0,
+   "d_train": 38.4648,
+   "d_valid": 36.265,
+   "trial_x": [
+    2.972593519056363,
+    -0.30926586679210477,
+    0.16257101907972796
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9341
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": 1,
+   "importance": 5.9195,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "saturation_forward_gain_degree",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: DSATUR-style saturation, a forward-looking constraint gain (how many still-uncoloured neighbours would lose the candidate's would-be colour), and whole-graph degree.\"\"\"\n    neighbor_colors = np.asarray(neighbor_colors)\n    k = neighbor_colors.shape[0]\n    c = neighbor_colors.shape[1]\n    deg = np.asarray(degree, dtype=float).reshape(k)\n    if k == 0:\n        return np.zeros((0, 3))\n\n    has_col = neighbor_colors > 0                 # (k, c) colours already used by neighbours\n    sat = has_col.sum(axis=1).astype(float)       # saturation degree\n\n    # Would-be colour of each candidate: first colour column that is zero, else a new colour (index c).\n    has_zero = ~has_col                           # (k, c) colours still available in the neighbourhood\n    any_zero = has_zero.any(axis=1)               # (k,)\n    if c > 0:\n        would_be = np.where(any_zero, has_zero.argmax(axis=1), c)\n    else:\n        would_be = np.full(k, c, dtype=int)\n\n    # Forward gain: number of uncoloured neighbours for which that colour is still available,\n    # i.e. neighbours that would be forced to give it up once this candidate takes it.\n    gain = np.zeros(k)\n    if c > 0:\n        idx = np.arange(k)\n        jj = np.where(any_zero, would_be, 0)\n        gv = has_zero[idx, jj].astype(float)\n        gv[~any_zero] = 0.0                        # opening a brand-new colour: neutral here\n        gain = adjacency.astype(float) @ gv        # (k,)\n\n    denom_c = float(max(c, 1))\n    maxdeg = float(max(deg.max(), 1.0)) if k else 1.0\n\n    sat_norm = sat / denom_c\n    gain_norm = gain / (deg + 1.0)\n    deg_norm = deg / maxdeg\n\n    out = np.stack([sat_norm, gain_norm, deg_norm], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a09",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: DSATUR-style saturation, a forward-looking constraint gain (how many still-uncoloured neighbours would lose the candidate's would-be colour), and whole-graph degree.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 3,
+   "scales": [
+    4.043945669271938,
+    8.295896338655487,
+    6.908816583697485
+   ],
+   "weights": [
+    2.3427553833928285,
+    -0.8300343192495605,
+    0.19296446224576685
+   ],
+   "probe": [
+    [
+     1.0,
+     20.0657
+    ],
+    [
+     -1.0,
+     -8.2854
+    ]
+   ],
+   "best_probe": 20.0657,
+   "best_w": 1.0,
+   "d_train": 41.9273,
+   "d_valid": 36.2018,
+   "trial_x": [
+    2.638181925400095,
+    -0.21049560724667765,
+    0.13434849637429938
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.6666
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": 1,
+   "importance": 6.1869,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "dsatur_saturation_frac",
+   "code": "import numpy as np\n\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"DSATUR saturation: number of distinct colours among a candidate's coloured neighbours, divided by the colours used so far.\"\"\"\n    k = neighbor_colors.shape[0]\n    c = neighbor_colors.shape[1]\n    if c == 0:\n        return np.zeros(k, dtype=float)\n    distinct = (neighbor_colors > 0).sum(axis=1).astype(float)\n    return distinct / float(c)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The colour a candidate can take is fixed by which colours already appear among its coloured neighbours, so a candidate with many distinct neighbour colours is the most constrained one and, if postponed, is the one that later forces a new colour. Colouring it first should cut colours, most where constraints bind hardest (dense). The 'fewest still-available colours' half of the assignment is c minus this count, i.e. the same quantity with the opposite sign, so one column tests both.",
+    "feature": "Add one feature column. Let k = neighbor_colors.shape[0], c = neighbor_colors.shape[1]. If c == 0 return np.zeros(k). Otherwise return (neighbor_colors > 0).sum(axis=1).astype(float) / float(c): the number of distinct colours among the candidate's coloured neighbours (DSATUR saturation degree) divided by the number of colours used so far. Values lie in [0, 1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "It computes, per candidate, the DSATUR saturation degree (how many distinct colours already sit on its coloured neighbours) normalised by the number of colours used so far, so values lie in [0, 1]; I followed the experiment literally, returning zeros at the first decision (c = 0) where no colours e\u2026",
+   "measures": "DSATUR saturation: number of distinct colours among a candidate's coloured neighbours, divided by the colours used so far.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    4.043945669271938
+   ],
+   "weights": [
+    1.5221910436781194
+   ],
+   "probe": [
+    [
+     1.0,
+     25.9551
+    ],
+    [
+     -1.0,
+     0.0
+    ]
+   ],
+   "best_probe": 25.9551,
+   "best_w": 1.0,
+   "d_train": 25.9551,
+   "d_valid": 27.1741,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "colors",
+    "family": "dense",
+    "direction": "down",
+    "before": 17,
+    "after": 14,
+    "held": true,
+    "checked": true,
+    "instance": "dense-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8396
+   },
+   "error": "",
+   "calls": [
+    "c008"
+   ],
+   "kept_gen": 1,
+   "importance": 1.3889,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "first_free_color_index",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Index of the candidate's first free existing colour, or c if none is free, divided by c.\"\"\"\n    k = neighbor_colors.shape[0]\n    c = neighbor_colors.shape[1]\n    if c == 0:\n        return np.zeros(k)\n    free = (neighbor_colors == 0)\n    has_free = free.any(axis=1)\n    first_free = free.argmax(axis=1)\n    idx = np.where(has_free, first_free, c)\n    return idx.astype(float) / float(c)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Colour economy is decided by whether a vertex can be absorbed into an existing class. The lowest-numbered colour a candidate can still take measures exactly how cheaply it can be absorbed; a candidate that can take no existing colour has that index equal to c and must open a new colour. Normalising by c puts 'opens a new colour' at the extreme of the column, so a single fitted weight implements reuse-plus-new-colour-penalty.",
+    "feature": "Add one feature column. Let c = neighbor_colors.shape[1]. If c == 0 return np.zeros(k). Otherwise: free = (neighbor_colors == 0); has_free = free.any(axis=1); first_free = free.argmax(axis=1); idx = np.where(has_free, first_free, c); return idx.astype(float) / float(c). This is the index of the candidate's first free (available) colour, or c when no existing colour is free, divided by c. Values lie in [0, 1], with 1 exactly for candidates that would open a new colour.",
+    "prediction": {
+     "family": "sparse",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "It computes, for each candidate, the lowest-numbered colour not yet used by any of its coloured neighbours (or `c` when every existing colour is blocked), normalised by `c` so blocked candidates sit exactly at 1 and cheaply absorbable ones near 0; when no colour exists yet it returns all zeros.",
+   "measures": "Index of the candidate's first free existing colour, or c if none is free, divided by c.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    3.501305177529108
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     0.2172
+    ],
+    [
+     -1.0,
+     0.0
+    ]
+   ],
+   "best_probe": 0.2172,
+   "best_w": 1.0,
+   "d_train": 0.2172,
+   "d_valid": 4.1764,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "colors",
+    "family": "sparse",
+    "direction": "down",
+    "before": 7,
+    "after": 8,
+    "held": false,
+    "checked": true,
+    "instance": "sparse-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8352
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "neighbour_profile_concentration",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Herfindahl concentration of each candidate's coloured-neighbour colour profile, rescaled so an even spread over the c colours gives 0 and all coloured neighbours in one colour gives 1; 0 when c < 2 or the candidate has no coloured neighbours.\"\"\"\n    neighbor_colors = np.asarray(neighbor_colors)\n    k, c = neighbor_colors.shape\n    if c < 2 or k == 0:\n        return np.zeros(k)\n    tot = neighbor_colors.sum(axis=1).astype(float)\n    safe_tot = np.maximum(tot, 1.0)\n    p = neighbor_colors / safe_tot[:, None]\n    h = (p ** 2).sum(axis=1)\n    denom = 1.0 - 1.0 / c\n    value = (h - 1.0 / c) / denom\n    return np.where(tot > 0, value, 0.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A candidate whose coloured neighbours sit almost entirely in one colour class is embedded in a single region of the colouring, whereas a candidate whose neighbours are spread evenly fits no class in particular. Measuring the concentration of the candidate's neighbour-colour profile (against a uniform spread over the c colours) tests whether colour-class-shaped neighbourhoods carry any signal at all; if the planted/geometric group structure is exploitable through neighbourhood shape, this column should be the one that carries it.",
+    "feature": "Add one feature column. Let c = neighbor_colors.shape[1]. If c < 2 return np.zeros(k). Otherwise: tot = neighbor_colors.sum(axis=1).astype(float); p = neighbor_colors / np.maximum(tot, 1.0)[:, None]; h = (p ** 2).sum(axis=1); return np.where(tot > 0, (h - 1.0 / c) / (1.0 - 1.0 / c), 0.0). This is the Herfindahl concentration of the candidate's coloured-neighbour colour profile, rescaled so that an even spread over the c colours gives 0 and all coloured neighbours in one colour gives 1; candidates with no coloured neighbours get 0. Values lie in [0, 1].",
+    "prediction": {
+     "family": "planted",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes the Herfindahl index of each candidate's neighbour-colour counts, rescaled against a uniform spread over the c colours used so far; I read the c < 2 case (including c = 0 and c = 1, where the rescaling denominator is zero or the index is degenerate) as returning zeros for all candidat\u2026",
+   "measures": "Herfindahl concentration of each candidate's coloured-neighbour colour profile, rescaled so an even spread over the c colours gives 0 and all coloured neighbours in one colour gives 1; 0 when c < 2 or the candidate has no coloured neighbours.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    2.799508645298918
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     1.3131
+    ],
+    [
+     -1.0,
+     12.8969
+    ]
+   ],
+   "best_probe": 12.8969,
+   "best_w": -1.0,
+   "d_train": 12.8969,
+   "d_valid": 19.1103,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {
+    "metric": "colors",
+    "family": "planted",
+    "direction": "down",
+    "before": 12,
+    "after": 12,
+    "held": null,
+    "checked": false,
+    "instance": "planted-000",
+    "why": "inert at the fitted weight and at an exaggerated one: the metric didn't move, so not checked"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.6843
+   },
+   "error": "",
+   "calls": [
+    "c009"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "saturation_forced_colour_pressure",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Four columns per candidate: fraction of existing colours among its coloured neighbours (saturation), fraction of its uncoloured neighbours that would lose the colour it is about to take (blocking), fraction of its uncoloured neighbours for which that colour is their ONLY remaining free existing colour (i.e. colouring it now forces them towards a brand-new colour), and whole-graph degree normalised by the largest candidate degree.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 4))\n\n    # saturation: distinct colours already used by coloured neighbours, as a fraction of colours used\n    has_col = nc > 0\n    sat = has_col.sum(axis=1) / float(max(c, 1))\n\n    # would-be colour: first colour column that is still free (a brand-new colour, index c, counts as free)\n    free_ex = nc <= 0                                        # (k, c) existing colours still available\n    free_ext = np.concatenate([free_ex, np.ones((k, 1), dtype=bool)], axis=1)\n    j = np.argmax(free_ext, axis=1)                          # (k,) in [0, c]\n\n    idx = np.arange(k)\n    reach = adj @ free_ext.astype(float)                     # (k, c+1): neighbours free at each colour\n    rowsum = adj.sum(axis=1)\n\n    # blocking: neighbours that lose their option j if the candidate takes j\n    would_block = reach[idx, j]\n    blocking = would_block / np.maximum(rowsum, 1.0)\n\n    # forced: neighbours for which j is the single free existing colour left (they must open a new colour)\n    forced = np.zeros(k)\n    if c > 0:\n        count_ex = free_ex.sum(axis=1)                       # (k,) free existing colours per vertex\n        only_one = (count_ex == 1).astype(float)             # vertices down to one option\n        a = free_ex.astype(float) * only_one[:, None]        # (k, c): the sole option, if unique\n        m = adj @ a                                          # (k, c): neighbours whose sole option is that colour\n        jj = np.minimum(j, c - 1)\n        forced = np.where(j < c, m[idx, jj], 0.0) / np.maximum(rowsum, 1.0)\n\n    dmax = max(float(deg.max()) if k else 1.0, 1.0)\n    degn = deg / dmax\n\n    out = np.stack([sat, blocking, forced, degn], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Four columns per candidate: fraction of existing colours among its coloured neighbours (saturation), fraction of its uncoloured neighbours that would lose the colour it is about to take (blocking), fraction of its uncoloured neighbours for which that colour is their ONLY remaining free existing colour (i.e. colouring it now forces them towards a brand-new colour), and whole-graph degree normalised by the largest candidate degree.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 4,
+   "scales": [
+    5.836579051693378,
+    4.87468671909675,
+    16.041214512014474,
+    6.428015127613243
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 20.485,
+   "best_w": null,
+   "d_train": 38.4648,
+   "d_valid": 36.265,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9885
+   },
+   "error": "",
+   "calls": [
+    "c016"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "saturation_scarcity_weighted_blocking",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: DSATUR saturation, scarcity-weighted forward blocking (neighbours that lose the would-be colour are weighted by how few options they have left, so blocking a nearly-forced neighbour counts most), and the fraction of its uncoloured neighbours that are close to forced.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    k, c = nc.shape\n    deg = np.asarray(degree, dtype=float).reshape(k)\n    if k == 0:\n        return np.zeros((0, 3))\n\n    has_col = nc > 0\n    has_zero = ~has_col\n    sat = has_col.sum(axis=1).astype(float)\n\n    # would-be colour: first free existing colour, else a brand-new colour (index c)\n    any_zero = has_zero.any(axis=1)\n    if c > 0:\n        would_be = np.where(any_zero, has_zero.argmax(axis=1), c)\n    else:\n        would_be = np.full(k, c, dtype=int)\n\n    # each uncoloured vertex's number of still-free existing colours (+1 for the always-open new colour)\n    free_existing = has_zero.sum(axis=1).astype(float)\n    weight = 1.0 / (free_existing + 1.0)\n\n    adj = np.asarray(adjacency, dtype=float)\n\n    # scarcity-weighted blocking: neighbour n loses its option would_be[p]\n    if c > 0:\n        jj = np.minimum(would_be, c - 1)\n        blocked = has_zero[:, jj].T                    # [p, n] = neighbour n still free at candidate p's colour\n        blocked = blocked * adj * (would_be < c)[:, None]\n        sharp = blocked @ weight\n    else:\n        sharp = np.zeros(k)\n\n    # fraction of uncoloured neighbours that are close to forced (0 or 1 free existing colour)\n    fragile_count = adj @ (free_existing <= 1.0).astype(float)\n    rowsum = adj.sum(axis=1)\n\n    sat_norm = sat / float(max(c, 1))\n    sharp_norm = sharp / (deg + 1.0)\n    fragile_norm = fragile_count / np.maximum(rowsum, 1.0)\n\n    out = np.stack([sat_norm, sharp_norm, fragile_norm], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: DSATUR saturation, scarcity-weighted forward blocking (neighbours that lose the would-be colour are weighted by how few options they have left, so blocking a nearly-forced neighbour counts most), and the fraction of its uncoloured neighbours that are close to forced.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.836579051693378,
+    23.46319304778204,
+    15.99707883087615
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -31.7984
+    ],
+    [
+     -5.161751,
+     -44.9492
+    ],
+    [
+     1.548525,
+     -26.2963
+    ],
+    [
+     -1.548525,
+     -31.7395
+    ],
+    [
+     0.516175,
+     -9.2256
+    ],
+    [
+     -0.516175,
+     -17.9701
+    ]
+   ],
+   "best_probe": -9.2256,
+   "best_w": 0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.818,
+    "lib_r2": 0.7501
+   },
+   "error": "",
+   "calls": [
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "neighbourhood_starvation_lookahead",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"For each candidate take its would-be (smallest free) colour, then look at the neighbourhood *after* that move: the worst remaining-option scarcity 1/(free colours left + 1) over any uncoloured neighbour, and the degree-weighted share of neighbours that this move forces to open a brand-new colour.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 2))\n    adj = np.asarray(adjacency, dtype=bool)\n    deg = np.asarray(degree, dtype=float).reshape(k)\n\n    blocked = nc > 0                                  # (k, c): colours already taken by a coloured neighbour\n    avail = (~blocked).sum(axis=1).astype(float)      # existing colours still free for each candidate\n\n    # Would-be colour of each candidate (first free column, else a new colour index c).\n    if c == 0:\n        j = np.zeros(k, dtype=int)\n        is_new = np.ones(k, dtype=bool)\n    else:\n        any_free = avail > 0\n        j = np.where(any_free, np.argmin(blocked, axis=1), c)\n        is_new = j >= c\n\n    # For neighbour q and candidate p: does q lose the colour j_p because p takes it?\n    if c > 0:\n        jc = np.clip(j, 0, c - 1)\n        blocked_at = blocked[:, jc]                   # (k q, k p): q already blocked at p's colour\n    else:\n        blocked_at = np.zeros((k, k), dtype=bool)\n    lose = adj & (~blocked_at) & (~is_new)[None, :]   # q was free at p's existing colour -> loses it\n\n    avail_after = np.maximum(avail[None, :] - lose.astype(float), 0.0)   # (k q, k p)\n\n    # Column 1: worst-case post-move scarcity across uncoloured neighbours (max, not mean).\n    inv = np.where(adj, 1.0 / (avail_after + 1.0), 0.0)\n    col1 = inv.max(axis=0)\n\n    # Column 2: degree-weighted share of neighbours pushed to a brand-new colour by this move.\n    forced = adj.astype(float) * ((avail_after <= 0.0) & (avail[None, :] > 0.0)).astype(float)\n    maxdeg = max(float(deg.max()), 1.0) if k else 1.0\n    col2 = (deg[None, :] * forced).sum(axis=0) / ((deg + 1.0) * maxdeg)\n\n    out = np.stack([col1, col2], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "For each candidate take its would-be (smallest free) colour, then look at the neighbourhood *after* that move: the worst remaining-option scarcity 1/(free colours left + 1) over any uncoloured neighbour, and the degree-weighted share of neighbours that this move forces to open a brand-new colour.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    7.457825170411878,
+    15.253805261484514
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -44.301
+    ],
+    [
+     -5.161751,
+     -41.1111
+    ],
+    [
+     1.548525,
+     -29.1961
+    ],
+    [
+     -1.548525,
+     -30.9259
+    ],
+    [
+     0.516175,
+     -9.6591
+    ],
+    [
+     -0.516175,
+     -21.4352
+    ]
+   ],
+   "best_probe": -9.6591,
+   "best_w": 0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.8299,
+    "lib_r2": 0.4263
+   },
+   "error": "",
+   "calls": [
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "open_edge_share_class_and_peer_pressure",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: its share of the uncoloured subgraph's edges (how pivotal it still is), its saturation weighted by the size of the existing colour classes it touches (pressure from the large classes, divided by n), and the mean saturation of its uncoloured neighbours (second-order DSATUR peer pressure).\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    n = float(k + cs.sum())\n\n    # 1) share of still-uncoloured edges incident to the candidate\n    rowsum = adj.sum(axis=1)\n    open_share = rowsum / np.maximum(rowsum.max(), 1.0)\n\n    # 2) saturation weighted by colour-class sizes: touching big classes is worse\n    present = (nc > 0).astype(float)                       # (k, c)\n    if c > 0:\n        class_pressure = (present @ cs) / max(n, 1.0)      # sum of touched class sizes / n\n    else:\n        class_pressure = np.zeros(k)\n\n    # 3) mean saturation of the candidate's uncoloured neighbours\n    sat = present.sum(axis=1) / float(max(c, 1))           # (k,) in [0, 1]\n    peer = (adj @ sat) / (rowsum + 1.0)\n\n    out = np.stack([open_share, class_pressure, peer], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a12",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: its share of the uncoloured subgraph's edges (how pivotal it still is), its saturation weighted by the size of the existing colour classes it touches (pressure from the large classes, divided by n), and the mean saturation of its uncoloured neighbours (second-order DSATUR peer pressure).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.355234539033078,
+    17.428056115014947,
+    16.583126540202453
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -17.1423
+    ],
+    [
+     -5.161751,
+     -66.4332
+    ],
+    [
+     1.548525,
+     -6.048
+    ],
+    [
+     -1.548525,
+     -42.7146
+    ],
+    [
+     0.516175,
+     -5.7702
+    ],
+    [
+     -0.516175,
+     -17.6755
+    ]
+   ],
+   "best_probe": -5.7702,
+   "best_w": 0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7647,
+    "lib_r2": 0.7425
+   },
+   "error": "",
+   "calls": [
+    "c012"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "residual_degree_and_color_class_occupancy",
+   "code": "import numpy as np\n\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: its residual degree inside the still-uncoloured subgraph (relative to the largest residual degree), the size of the colour class it would join relative to the largest class (0 when it would open a new colour), and the average size of the colour classes among its coloured neighbours (relative to the whole graph).\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(-1)\n    sizes = np.asarray(color_sizes, dtype=float).reshape(-1)\n\n    k, c = nc.shape\n    n = float(k) + float(sizes.sum())\n    if k == 0:\n        return np.zeros((0, 3))\n\n    # --- column 1: residual degree in the uncoloured subgraph (degeneracy / smallest-last signal)\n    res = adj.sum(axis=1)\n    res_max = max(float(res.max()), 1.0)\n    col_res = res / res_max\n\n    # --- would-be colour: first colour column that is free, else a brand-new colour (index c)\n    has_col = nc > 0\n    if c > 0:\n        any_free = (~has_col).any(axis=1)\n        j = np.where(any_free, (~has_col).argmax(axis=1), c)\n    else:\n        j = np.full(k, c, dtype=int)\n\n    # --- column 2: occupancy of the colour class the candidate would join\n    sz_max = max(float(sizes.max()) if sizes.size else 1.0, 1.0)\n    if c > 0:\n        j_clip = np.minimum(j, c - 1)\n        would_size = np.where(j < c, sizes[j_clip], 0.0)\n    else:\n        would_size = np.zeros(k, dtype=float)\n    col_occ = would_size / sz_max\n\n    # --- column 3: mass of the colour classes sitting on its coloured neighbours\n    nc_sum = nc.sum(axis=1)\n    if c > 0:\n        mass = (nc @ sizes) / np.maximum(nc_sum, 1.0)\n        col_mass = np.where(nc_sum > 0, mass / max(n, 1.0), 0.0)\n    else:\n        col_mass = np.zeros(k, dtype=float)\n\n    out = np.stack([col_res, col_occ, col_mass], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a13",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: its residual degree inside the still-uncoloured subgraph (relative to the largest residual degree), the size of the colour class it would join relative to the largest class (0 when it would open a new colour), and the average size of the colour classes among its coloured neighbours (relative to the whole graph).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.355234539033078,
+    7.7382022281435745,
+    56.82753457097977
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -14.0938
+    ],
+    [
+     -5.161751,
+     -31.7761
+    ],
+    [
+     1.548525,
+     -17.8901
+    ],
+    [
+     -1.548525,
+     -22.9995
+    ],
+    [
+     0.516175,
+     -11.7664
+    ],
+    [
+     -0.516175,
+     -4.0644
+    ]
+   ],
+   "best_probe": -4.0644,
+   "best_w": -0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f007",
+    "rho": 0.4749,
+    "lib_r2": 0.6711
+   },
+   "error": "",
+   "calls": [
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "colour_class_pull_and_critical_blocking",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: the size share of the colour class it would join (0 if it must open a new colour), the share of its uncoloured neighbours for which that same colour is their last free option, and the mean number of free colours left to its uncoloured neighbours.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n    if c == 0:\n        # No colours used yet: everyone opens a fresh colour, nothing to consolidate/critical.\n        return np.zeros((k, 3))\n\n    free_mask = nc <= 0                                  # (k,c) existing colours still available\n    n_free = free_mask.sum(axis=1).astype(float)         # (k,) how many existing colours it can still take\n    any_free = n_free > 0\n    would_be = np.where(any_free, np.argmax(free_mask, axis=1), c)   # (k,) would-be colour\n\n    # Column A: pull towards a large existing colour class (consolidation); new colour has size 0.\n    n_total = float(k + cs.sum())\n    cs_ext = np.concatenate([cs, np.zeros(1)])           # index c -> a brand-new colour\n    consolidation = cs_ext[would_be] / max(n_total, 1.0)\n\n    rowsum = adj.sum(axis=1)\n\n    # Column B: adjacent uncoloured neighbours for which the candidate's would-be colour\n    # is their LAST remaining option -> colouring this candidate now is critical for them.\n    z = (n_free == 1.0).astype(float)                    # neighbour has exactly one option left\n    same = (would_be[:, None] == would_be[None, :]).astype(float)\n    critical = (adj * same * z[None, :]).sum(axis=1) / np.maximum(rowsum, 1.0)\n\n    # Column C: how much freedom the uncoloured neighbourhood still has (least-constraining view).\n    flexibility = (adj @ n_free) / np.maximum(rowsum, 1.0) / float(max(c, 1))\n\n    out = np.stack([consolidation, critical, flexibility], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: the size share of the colour class it would join (0 if it must open a new colour), the share of its uncoloured neighbours for which that same colour is their last free option, and the mean number of free colours left to its uncoloured neighbours.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    92.77183281761175,
+    16.041214512014474,
+    14.927710524024066
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -71.4909
+    ],
+    [
+     -5.161751,
+     -24.1667
+    ],
+    [
+     1.548525,
+     -58.974
+    ],
+    [
+     -1.548525,
+     -18.5256
+    ],
+    [
+     0.516175,
+     -20.9722
+    ],
+    [
+     -0.516175,
+     -8.3699
+    ]
+   ],
+   "best_probe": -8.3699,
+   "best_w": -0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.5014,
+    "lib_r2": 0.3263
+   },
+   "error": "",
+   "calls": [
+    "c021",
+    "c022"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "forced_new_color_lookahead",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: fraction of its uncoloured neighbours that would be forced to open a new colour if the candidate takes its smallest available existing colour.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=bool)\n    k, c = nc.shape\n    if c == 0:\n        return np.zeros(k, dtype=float)\n\n    blocked = nc > 0\n    avail = ~blocked\n    avail_cnt = avail.sum(axis=1)\n\n    jstar = np.argmax(avail, axis=1)\n    jstar = np.where(avail_cnt == 0, c, jstar)\n    js = np.minimum(jstar, c - 1)\n\n    # A[n, i] = 1 iff neighbour n still has colour js[i] free\n    A = avail[:, js]\n    remaining = avail_cnt[:, None] - A\n\n    forced = (remaining <= 0) & (avail_cnt[:, None] >= 1) & adj & (jstar < c)[None, :]\n    denom = adj.sum(axis=1) + 1.0\n    return forced.sum(axis=0) / denom\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a10",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f002/f004 count neighbours that merely lose their smallest colour; that is a soft proxy. The costly event is a neighbour being pushed over the edge: after this candidate takes its colour, the neighbour has no free existing colour and must open a new one. In dense, where the champion ends at 14 colours vs ref 11 and opens colour 14 at 65.7% of the order, 3 colours are wasted exactly on such forced openings \u2014 so explicitly counting how many neighbours a candidate forces should be a sharper, harder-threshold version of the blocking pressure.",
+    "feature": "One column per candidate. nc=(k,c) float, adj=(k,k) bool. If c==0 return zeros(k). blocked = nc>0; avail = ~blocked; avail_cnt = avail.sum(1). jstar = argmax(avail, axis=1), then set jstar = c where avail_cnt==0. js = minimum(jstar, c-1). A = avail[:, js], so A[n,i]=1 iff neighbour n still has colour js[i] free. remaining = avail_cnt[:,None] - A, shape (k,k). forced = (remaining <= 0) & (avail_cnt[:,None] >= 1) & adj & (jstar < c)[None,:]  \u2014 neighbour n is not already forced (avail_cnt[n]>=1) and candidate i taking its would-be existing colour leaves n with zero free existing colours. value = forced.sum(axis=0) / (adj.sum(axis=1) + 1.0). Per candidate i: fraction of its uncoloured neighbours it would push into opening a new colour. Finite, in [0,1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": "f002 (+31.9 alone) and f004 both measured blocking as 'loses its smallest colour'; that is a proxy for the real cost. This narrows the proxy to the actual damage, a forced new colour."
+   },
+   "coder_note": "The code counts, for each candidate, how many of its uncoloured neighbours would be left with no free existing colour (and are not already in that state) once the candidate takes its would-be smallest existing colour, divided by the candidate's uncoloured degree plus one; I read `jstar` as the firs\u2026",
+   "measures": "Per candidate: fraction of its uncoloured neighbours that would be forced to open a new colour if the candidate takes its smallest available existing colour.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    18.148262065013686
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -56.3381
+    ],
+    [
+     -5.161751,
+     -12.1591
+    ],
+    [
+     1.548525,
+     -21.3186
+    ],
+    [
+     -1.548525,
+     -4.0278
+    ],
+    [
+     0.516175,
+     -10.6944
+    ],
+    [
+     -0.516175,
+     -2.9924
+    ]
+   ],
+   "best_probe": -2.9924,
+   "best_w": -0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "colors",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.4129,
+    "lib_r2": 0.0612
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "balanced_class_reuse",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: how far below the average class size the emptiest existing colour it can still take is, clipped to [-1, 1].\"\"\"\n    k = neighbor_colors.shape[0]\n    c = color_sizes.shape[0]\n    if c == 0:\n        return np.zeros(k)\n    avail = (neighbor_colors == 0)                      # (k, c) colours this candidate can still take\n    avail_cnt = avail.sum(axis=1)                       # (k,)\n    mean = color_sizes.sum() / c                        # average class size\n    masked = np.where(avail, color_sizes[None, :].astype(float), np.inf)\n    smin = masked.min(axis=1)                           # emptiest available class size\n    smin = np.where(avail_cnt == 0, mean, smin)         # neutral when no existing colour is open\n    value = np.clip((mean - smin) / (mean + 1.0), -1.0, 1.0)\n    return value\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a11",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "No kept feature ever looks at color_sizes. In dense the champion reaches 11 colours by halfway yet finishes with 14 and smallest_class 1 vs ref 5: the late colours are opened thin and stay thin. If, among the existing colours a candidate can still take, it is preferred when its emptiest option belongs to a below-average class, colours already opened get topped up instead of new thin ones being carved out, and the class-size profile tightens.",
+    "feature": "One column per candidate, built from color_sizes. If c==0 return zeros(k). avail = (nc == 0), shape (k,c); avail_cnt = avail.sum(1); mean = color_sizes.sum()/c. masked = np.where(avail, color_sizes[None,:].astype(float), np.inf); smin = masked.min(axis=1); then set smin = mean where avail_cnt == 0 (neutral, so this does not duplicate a saturation/forced-new-colour signal). value = np.clip((mean - smin)/(mean + 1.0), -1, 1). Positive: the emptiest existing colour this candidate can still take is below average size (colouring it now fills a thin class). Negative: every colour still open to it is over-full.",
+    "prediction": {
+     "family": "dense",
+     "metric": "smallest_class",
+     "direction": "up"
+    },
+    "builds_on": "f006",
+    "lesson": "dense-000 diagnostics: smallest_class 1 vs ref 5, singleton_classes 1 vs ref 0, 3 colours above ref, last colour opened at 65.7% of the order \u2014 class balance is an untouched quantity."
+   },
+   "coder_note": "The code computes, per candidate, `(mean_class_size - smallest_available_class_size) / (mean_class_size + 1)`, clipped to [-1, 1]: positive when the emptiest existing colour it can still take is below average (filling a thin class), negative when all colours open to it are over-full; when no existi\u2026",
+   "measures": "Per candidate: how far below the average class size the emptiest existing colour it can still take is, clipped to [-1, 1].",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    5.964801951800426
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -33.7063
+    ],
+    [
+     -5.161751,
+     -24.4444
+    ],
+    [
+     1.548525,
+     -12.1465
+    ],
+    [
+     -1.548525,
+     -19.6688
+    ],
+    [
+     0.516175,
+     -2.9924
+    ],
+    [
+     -0.516175,
+     -11.6035
+    ]
+   ],
+   "best_probe": -2.9924,
+   "best_w": 0.516175,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "smallest_class",
+    "family": "dense",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.4176,
+    "lib_r2": 0.1334
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "uncolored_subgraph_pressure",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Degree of each candidate inside the still-uncoloured subgraph, divided by max(k-1, 1).\"\"\"\n    k = adjacency.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    udeg = adjacency.sum(axis=1).astype(float)\n    return udeg / max(k - 1, 1)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a12",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion only sees whole-graph degree, which is static, plus colour-side pressure. The degree inside the still-uncoloured subgraph decays as a vertex's neighbours get coloured, so it tracks how saturated a vertex is about to become \u2014 a degeneracy-style ordering. If this signal carries information the saturation features do not, it should most help the family with the most room left after dense: sparse (6.67%), where colouring high-remaining-degree vertices first is the classical good greedy.",
+    "feature": "One column per candidate: udeg = adjacency.sum(axis=1) (degree inside the uncoloured subgraph); value = udeg / max(k - 1, 1). If k == 0 return zeros(0). Values are in [0,1]. The whole-graph-relative form udeg/deg is deliberately not used: early in a dense decision every candidate has udeg close to deg, which would be a near-constant column and would tell the optimiser nothing.",
+    "prediction": {
+     "family": "sparse",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each candidate, its degree within the uncoloured subgraph (`adjacency.sum(axis=1)`) normalised by `max(k-1, 1)`, returning an empty array when there are no candidates; the normaliser is read exactly as written (so a single candidate yields 0), and no other quantity is mixed in.",
+   "measures": "Degree of each candidate inside the still-uncoloured subgraph, divided by max(k-1, 1).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    35.16869735931649
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.161751,
+     -25.843
+    ],
+    [
+     -5.161751,
+     -46.5767
+    ],
+    [
+     1.548525,
+     -9.2327
+    ],
+    [
+     -1.548525,
+     -40.8822
+    ],
+    [
+     0.516175,
+     -11.657
+    ],
+    [
+     -0.516175,
+     -25.2483
+    ]
+   ],
+   "best_probe": -9.2327,
+   "best_w": 1.548525,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "sparse",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f012",
+    "rho": 0.8637,
+    "lib_r2": 0.6453
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "scarcity_saturation_forced_new",
+   "code": "import numpy as np\nimport math\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns: saturation weighted by colour scarcity (colours with few vertices so far count more when present among a candidate's neighbours), the fraction of its uncoloured neighbours that would be *forced onto a brand-new colour* if the candidate took its smallest free colour, and its degree normalised by the largest degree in the candidate set.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(-1)\n    sizes = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    dmax = max(float(deg.max()) if k else 1.0, 1.0)\n    degn = deg / dmax\n\n    if c == 0:\n        out = np.zeros((k, 3))\n        out[:, 2] = degn\n        return out\n\n    # --- column 1: scarcity-weighted saturation -----------------------------\n    # a colour used by very few vertices so far is \"rare\"; a candidate whose\n    # neighbourhood touches rare colours is more urgent to colour now.\n    present = nc > 0                                   # (k, c)\n    W = 1.0 / np.maximum(sizes, 1.0)                   # (c,)\n    wsum = max(float(W.sum()), 1e-9)\n    satw = (present.astype(float) @ W) / wsum          # in [0, 1]\n\n    # --- column 2: neighbours that would be forced onto a NEW colour --------\n    # would-be colour of each candidate = first free existing colour (if any),\n    # else a brand-new colour (which removes no existing option from anyone).\n    free_ex = nc <= 0                                  # (k, c) existing colours still available\n    any_free = free_ex.any(axis=1)\n    jj = free_ex.argmax(axis=1)                        # first free existing colour\n\n    # a neighbour is \"fragile\" if exactly one existing colour is still free to it\n    fe = free_ex.sum(axis=1).astype(float)\n    fragile = (fe == 1.0)\n\n    # G[p, col] = # fragile uncoloured neighbours of p for which `col` is free\n    G = (adj * fragile[None, :]) @ free_ex.astype(float)   # (k, c)\n    idx = np.arange(k)\n    forced = np.where(any_free, G[idx, jj], 0.0)       # taking p's colour kills their last option\n    rowsum = adj.sum(axis=1)\n    forced_frac = forced / np.maximum(rowsum, 1.0)\n\n    out = np.stack([satw, forced_frac, degn], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns: saturation weighted by colour scarcity (colours with few vertices so far count more when present among a candidate's neighbours), the fraction of its uncoloured neighbours that would be *forced onto a brand-new colour* if the candidate took its smallest free colour, and its degree normalised by the largest degree in the candidate set.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.029339560096228,
+    15.469254522893873,
+    6.423452379627707
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -25.6339
+    ],
+    [
+     -5.337962,
+     -37.2569
+    ],
+    [
+     1.601389,
+     -20.2386
+    ],
+    [
+     -1.601389,
+     -26.508
+    ],
+    [
+     0.533796,
+     -2.4145
+    ],
+    [
+     -0.533796,
+     -13.9128
+    ]
+   ],
+   "best_probe": -2.4145,
+   "best_w": 0.533796,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.8627,
+    "lib_r2": 0.8513
+   },
+   "error": "",
+   "calls": [
+    "c025"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "forced_new_colour_and_clustering",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"DSATUR saturation, the fraction of uncoloured neighbours whose *last* free existing colour the candidate's would-be colour would block (pushing them into a brand-new colour), and the candidate's local clustering coefficient inside the uncoloured subgraph.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    adj = np.asarray(adjacency, dtype=bool)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    A = adj.astype(float)\n    has_zero = nc <= 0                              # (k, c): existing colours still free in the neighbourhood\n    sat = (nc > 0).sum(axis=1).astype(float)        # DSATUR saturation\n    free_existing = has_zero.sum(axis=1)            # (k,) how many existing colours are still available\n    any_zero = free_existing > 0\n    if c > 0:\n        would_be = np.where(any_zero, has_zero.argmax(axis=1), c)\n    else:\n        would_be = np.full(k, c, dtype=int)\n\n    # free_ext[q, j] = 1 if q could still take existing colour j (j < c); column c = the new colour (always free)\n    free_ext = np.concatenate([has_zero, np.ones((k, 1), dtype=bool)], axis=1)\n    # blocked[p, q] = 1 iff p and q are adjacent and q would lose colour would_be[p]\n    blocked = A * free_ext[:, would_be].T           # (k, k)\n\n    # neighbours that were one step from a new colour: exactly one existing colour left,\n    # and the candidate's move takes it away -> they must open a fresh colour.\n    at_edge = (free_existing == 1).astype(float)\n    forced = blocked @ at_edge                      # (k,)\n    edge = A.sum(axis=1)                            # degree inside the uncoloured subgraph\n\n    # local clustering coefficient of the candidate inside the uncoloured subgraph\n    A2 = A @ A\n    tri = (A2 * A).sum(axis=1) / 2.0                # number of triangles through each candidate\n    denom = deg_u = edge\n    clust = np.where(deg_u >= 2.0,\n                     2.0 * tri / np.maximum(deg_u * (deg_u - 1.0), 1.0),\n                     0.0)\n\n    out = np.stack([\n        sat / float(max(c, 1)),\n        forced / np.maximum(edge, 1.0),\n        clust,\n    ], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "DSATUR saturation, the fraction of uncoloured neighbours whose *last* free existing colour the candidate's would-be colour would block (pushing them into a brand-new colour), and the candidate's local clustering coefficient inside the uncoloured subgraph.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.628901791118168,
+    26.57711754301939,
+    12.646774777874404
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -30.3801
+    ],
+    [
+     -5.337962,
+     -32.4731
+    ],
+    [
+     1.601389,
+     -29.415
+    ],
+    [
+     -1.601389,
+     -25.7942
+    ],
+    [
+     0.533796,
+     -15.1094
+    ],
+    [
+     -0.533796,
+     -16.4423
+    ]
+   ],
+   "best_probe": -15.1094,
+   "best_w": 0.533796,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.8053,
+    "lib_r2": 0.7228
+   },
+   "error": "",
+   "calls": [
+    "c028"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "blocked_neighbour_fragility_clustering_interface",
+   "code": "import numpy as np\n\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Bold variant of neighbour_option_drop: instead of the *share* of uncoloured neighbours blocked by the candidate's would-be colour, use the *fragility* of the single most endangered blocked neighbour (1 / its free-option count, i.e. a max over neighbours), plus two unrelated quantities: the local clustering among the candidate's uncoloured neighbours, and the fraction of its neighbours that are already coloured.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    A = np.asarray(adjacency, dtype=np.float64)\n    deg = np.asarray(degree, dtype=np.float64).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    u = A.sum(axis=1)  # degree inside the still-uncoloured subgraph\n\n    # ---- column 1: fragility of the most endangered neighbour blocked by giving i its smallest free colour\n    frag = np.zeros(k, dtype=np.float64)\n    if c > 0:\n        free = (nc == 0)                                  # (k, c) colour still available to candidate\n        nfree = free.sum(axis=1)                          # (k,) options left per candidate\n        nfree_safe = np.maximum(nfree, 1)\n        anyfree = nfree > 0\n        t = np.where(anyfree, np.argmax(free, axis=1), c)  # smallest free colour, c = a brand-new one\n        t_safe = np.minimum(t, c - 1)\n        F = free[:, t_safe]                                # F[m, i] = colour t_i still free at neighbour m\n        if np.any(t >= c):\n            F[:, t >= c] = False                           # a brand-new target colour blocks no existing option\n        W = A * F.T                                        # W[i, m] = i ~ m and m loses its option t_i\n        pressure = W * (1.0 / nfree_safe)[None, :]         # fragility of each blocked neighbour\n        frag = pressure.max(axis=1)                        # worst-case, not mean: crush the tightest neighbour\n\n    # ---- column 2: local clustering of the uncoloured neighbourhood (edges among neighbours / possible pairs)\n    edges_among = 0.5 * (A @ u - u)\n    possible = 0.5 * u * (u - 1.0)\n    clustering = np.clip(edges_among / np.maximum(possible, 1.0), 0.0, 1.0)\n\n    # ---- column 3: interface with the already-coloured part (fraction of neighbours already coloured)\n    interface = (deg - u) / np.maximum(deg, 1.0)\n\n    out = np.stack([frag, clustering, interface], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f003",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Bold variant of neighbour_option_drop: instead of the *share* of uncoloured neighbours blocked by the candidate's would-be colour, use the *fragility* of the single most endangered blocked neighbour (1 / its free-option count, i.e. a max over neighbours), plus two unrelated quantities: the local clustering among the candidate's uncoloured neighbours, and the fraction of its neighbours that are already coloured.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    6.051654306289958,
+    7.690781583008023,
+    8.917883728482067
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -42.2387
+    ],
+    [
+     -5.337962,
+     -18.9112
+    ],
+    [
+     1.601389,
+     -36.6077
+    ],
+    [
+     -1.601389,
+     -11.4112
+    ],
+    [
+     0.533796,
+     -21.3034
+    ],
+    [
+     -0.533796,
+     -14.6465
+    ]
+   ],
+   "best_probe": -11.4112,
+   "best_w": -1.601389,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f015",
+    "rho": 0.4975,
+    "lib_r2": 0.186
+   },
+   "error": "",
+   "calls": [
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "uncoloured_neighbour_clustering",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Local clustering coefficient of each candidate inside the uncoloured subgraph: the share of pairs of its still-uncoloured neighbours that are themselves adjacent (triangle density around the candidate).\"\"\"\n    A = np.asarray(adjacency, dtype=float)\n    k = A.shape[0]\n    if k == 0:\n        return np.zeros(0, dtype=float)\n\n    du = A.sum(axis=1)                       # degree inside the uncoloured subgraph\n    A2 = A @ A\n    # (A^3)_pp = 2 * (triangles through p), so triangle count = diag(A2 @ A) / 2\n    tri = np.einsum('ij,ji->i', A2, A) / 2.0\n    pairs = du * (du - 1.0) / 2.0            # neighbour pairs that could be edges\n    out = np.where(pairs > 0.0, tri / np.maximum(pairs, 1.0), 0.0)\n    return np.clip(np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=0.0), 0.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a17",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Local clustering coefficient of each candidate inside the uncoloured subgraph: the share of pairs of its still-uncoloured neighbours that are themselves adjacent (triangle density around the candidate).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    12.646774777874404
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -24.6393
+    ],
+    [
+     -5.337962,
+     -31.2526
+    ],
+    [
+     1.601389,
+     -15.3535
+    ],
+    [
+     -1.601389,
+     -21.5109
+    ],
+    [
+     0.533796,
+     -2.907
+    ],
+    [
+     -0.533796,
+     -5.9722
+    ]
+   ],
+   "best_probe": -2.907,
+   "best_w": 0.533796,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.946,
+    "lib_r2": 0.1095
+   },
+   "error": "",
+   "calls": [
+    "c026"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "uncolored_clustering_embedding",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Local clustering coefficient of each candidate in the still-uncoloured subgraph, plus the mean clustering coefficient of its uncoloured neighbours (how tightly the candidate's uncoloured neighbourhood is itself woven).\"\"\"\n    A = np.asarray(adjacency, dtype=float)\n    k = A.shape[0]\n    if k == 0:\n        return np.zeros((0, 2))\n\n    degU = A.sum(axis=1)                       # uncoloured degree\n    A2 = A @ A                                 # two-step walks\n    tri = 0.5 * (A2 * A).sum(axis=1)           # triangles through each candidate\n    poss = degU * (degU - 1.0) / 2.0           # possible triangles\n    clust = np.where(poss > 0, tri / np.maximum(poss, 1e-9), 0.0)\n\n    # mean clustering of the candidate's uncoloured neighbours\n    nbr_mean = (A @ clust) / np.maximum(degU, 1.0)\n\n    out = np.stack([clust, nbr_mean], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a17",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Local clustering coefficient of each candidate in the still-uncoloured subgraph, plus the mean clustering coefficient of its uncoloured neighbours (how tightly the candidate's uncoloured neighbourhood is itself woven).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    12.646774777874404,
+    28.509598127631776
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -23.3262
+    ],
+    [
+     -5.337962,
+     -34.2227
+    ],
+    [
+     1.601389,
+     -8.1019
+    ],
+    [
+     -1.601389,
+     -25.2707
+    ],
+    [
+     0.533796,
+     -8.4625
+    ],
+    [
+     -0.533796,
+     -14.9074
+    ]
+   ],
+   "best_probe": -8.1019,
+   "best_w": 1.601389,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.1741,
+    "lib_r2": 0.1124
+   },
+   "error": "",
+   "calls": [
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "degree_weighted_blocking_pressure",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Blocking pressure on each candidate's would-be colour, weighting each blocked uncoloured neighbour by its own uncoloured degree.\"\"\"\n    k = adjacency.shape[0]\n    c = neighbor_colors.shape[1]\n    if c == 0 or k == 0:\n        return np.zeros(k, dtype=float)\n\n    nc = neighbor_colors\n    zero = (nc == 0)\n    has_zero = zero.any(axis=1)\n    b = np.where(has_zero, zero.argmax(axis=1), c)  # would-be colour, c = new colour\n\n    inside = adjacency.sum(axis=1).astype(float)          # uncoloured degree\n    w = (inside + 1.0) / (k + 1.0)                        # in (0, 1]\n\n    same = (b[:, None] == b[None, :]) & (b[:, None] < c)  # only existing colours block\n    mask = adjacency & same\n\n    count = mask.sum(axis=1).astype(float)\n    val = (mask.astype(float) @ w) / np.maximum(count, 1.0)\n    return np.where(count > 0, val, 0.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a08",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f004/f002 count starving neighbours equally, so the policy happily blocks low-degree neighbours and leaves the densest remaining vertices to be starved later, where dense opens colours 12-14 at 66% of the order. Weighting each blocked neighbour by how many uncoloured vertices it still constrains makes the pressure point at the vertices whose loss actually costs a colour.",
+    "feature": "One column. Let nc=(k,c) counts, adj the candidate adjacency (bool), b the would-be colour of each candidate = first column index with nc==0, or c if none (and b=0 when c==0, in which case return zeros(k)). inside = adj.sum(axis=1) (uncoloured degree). Neighbour weight w_j = (inside_j + 1)/(k + 1) in (0,1]. mask[i,j] = adj[i,j] and b_i==b_j and b_i < c (a candidate that must open a new colour blocks nobody, row value 0). Return val_i = sum_j mask[i,j]*w_j / max(count_i, 1) where count_i = sum_j mask[i,j]; 0 where count_i==0. Range [0,1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f010 (scarcity-weighted blocking) and f004's plain count both flatten the neighbour set; the dense diagnostics show the cost lands late (last colour at 65.7% of the order, one singleton class), i.e. the policy starves small neighbours and pays for it at the tail."
+   },
+   "coder_note": "The code computes, per candidate, the average uncoloured-degree weight `(inside_j+1)/(k+1)` of the uncoloured neighbours that share its would-be colour (the first colour absent from its coloured neighbours, or a new colour), returning 0 for candidates that open a new colour or block nobody; I read \u2026",
+   "measures": "Blocking pressure on each candidate's would-be colour, weighting each blocked uncoloured neighbour by its own uncoloured degree.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    23.263253320072547
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -44.4487
+    ],
+    [
+     -5.337962,
+     -35.5038
+    ],
+    [
+     1.601389,
+     -26.4983
+    ],
+    [
+     -1.601389,
+     -28.8763
+    ],
+    [
+     0.533796,
+     -11.3889
+    ],
+    [
+     -0.533796,
+     -17.3611
+    ]
+   ],
+   "best_probe": -11.3889,
+   "best_w": 0.533796,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.3228,
+    "lib_r2": 0.1181
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "dsatur_lexicographic_stack",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"(10 * sat_frac + resid_frac) / 11, sat_frac = distinct colours among coloured neighbours / max(c,1), resid_frac = uncoloured neighbours / max(k-1,1).\"\"\"\n    k = adjacency.shape[0]\n    c = neighbor_colors.shape[1]\n\n    if c > 0:\n        sat = (neighbor_colors > 0).sum(axis=1).astype(float)\n    else:\n        sat = np.zeros(k, dtype=float)\n    sat_frac = sat / max(c, 1)\n\n    resid = adjacency.sum(axis=1).astype(float)\n    resid_frac = resid / max(k - 1, 1)\n\n    return (10.0 * sat_frac + resid_frac) / 11.0\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a15",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's saturation columns are an average, not a lexicographic order, so among candidates with equal saturation nothing steers the choice. A steep saturation column with a small residual-degree tie-break tests whether plain DSATUR-with-degree-tie-break ordering is enough to close the dense endgame (14 -> 11) or whether saturation is already spent and only the tie-break is new information.",
+    "feature": "One column: (10 * sat_frac + resid_frac) / 11, where sat_frac = number of colours present among the candidate's coloured neighbours divided by max(c, 1) (0 if c==0) and resid_frac = (number of uncoloured neighbours of the candidate) / max(k-1, 1). Range [0,1]; at the first decision it is pure residual degree, later saturation dominates ten-to-one.",
+    "prediction": {
+     "family": "dense",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "f006",
+    "lesson": "f006 (pure saturation fraction) has a x0 sensitivity of exactly +0.000, so saturation alone adds nothing on top of f004/f005; this probe asks whether the missing piece is the ordered tie-break rather than another saturation-like quantity."
+   },
+   "coder_note": "This computes one column per candidate: the DSATUR saturation fraction (distinct colours among its coloured neighbours over the colours used so far, 0 when no colour is used yet) weighted ten-to-one against the fraction of its neighbours that are still uncoloured, so at the first decision it is pur\u2026",
+   "measures": "(10 * sat_frac + resid_frac) / 11, sat_frac = distinct colours among coloured neighbours / max(c,1), resid_frac = uncoloured neighbours / max(k-1,1).",
+   "status": "span",
+   "verdict": "span",
+   "width": 1,
+   "scales": [
+    6.197812489137496
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "type": "span",
+    "r2": 0.99969,
+    "of": [
+     "f004",
+     "f005",
+     "f006"
+    ]
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "forward_gain_x_saturation",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"sat_frac * gain_frac: fraction of existing colours among a candidate's coloured neighbours times the fraction of its uncoloured neighbours that would take the same (existing) colour.\"\"\"\n    k = adjacency.shape[0]\n    c = neighbor_colors.shape[1]\n    if k == 0:\n        return np.zeros(0)\n\n    # --- saturation fraction: (# distinct colours present among coloured neighbours) / max(c, 1)\n    if c == 0:\n        sat_frac = np.zeros(k)\n        b = np.zeros(k, dtype=int)\n    else:\n        sat_frac = (neighbor_colors > 0).sum(axis=1).astype(float) / float(c)\n        zero_mask = (neighbor_colors == 0)\n        has_zero = zero_mask.any(axis=1)\n        # first column index that is 0, else c (candidate forced to open a new colour)\n        b = np.where(has_zero, np.argmax(zero_mask, axis=1), c)\n\n    # --- gain fraction: (# uncoloured neighbours sharing the candidate's would-be colour) / max(uncoloured_degree, 1)\n    uncolored_degree = adjacency.sum(axis=1).astype(float)\n    if c == 0:\n        gain_frac = np.zeros(k)\n    else:\n        same_color = (b[:, None] == b[None, :])\n        existing = (b < c)[:, None]          # candidate's colour is an existing one\n        mask = adjacency & same_color & existing\n        count = mask.sum(axis=1).astype(float)\n        gain_frac = count / np.maximum(uncolored_degree, 1.0)\n\n    return sat_frac * gain_frac\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a09",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f005's forward gain and saturation are fitted with separate global weights, so the gain column is trusted equally in sparse decisions, where blocking costs nothing, and in dense decisions, where it is the whole game. A product column is near zero unless the candidate is both highly saturated and about to take a colour its uncoloured neighbours want, which is exactly the dense situation that opens colours 12-14.",
+    "feature": "One column: sat_frac * gain_frac, where sat_frac = (# colours present among coloured neighbours)/max(c,1) (0 if c==0), and gain_frac = (number of uncoloured neighbours j with b_j == b_i and b_i < c) / max(uncoloured_degree, 1), with b = first column index of nc equal to 0, or c if the row has no zero. Candidates forced to open a new colour get gain_frac = 0. Range [0,1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": "f015 (forced-new-colour lookahead) and f011 (post-move starvation lookahead) both failed as standalone counts on top of the champion; the information is there but only relevant when saturation is already high, which a product encodes and a sum does not."
+   },
+   "coder_note": "The code computes one column, `sat_frac * gain_frac`: `sat_frac` is the fraction of colours used so far that appear among a candidate's coloured neighbours (0 when no colours exist), and `gain_frac` is the fraction of the candidate's uncoloured neighbours that would receive the same existing colour\u2026",
+   "measures": "sat_frac * gain_frac: fraction of existing colours among a candidate's coloured neighbours times the fraction of its uncoloured neighbours that would take the same (existing) colour.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    8.222492885179292
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.337962,
+     -38.2058
+    ],
+    [
+     -5.337962,
+     -38.8594
+    ],
+    [
+     1.601389,
+     -20.665
+    ],
+    [
+     -1.601389,
+     -23.5816
+    ],
+    [
+     0.533796,
+     -4.3056
+    ],
+    [
+     -0.533796,
+     -10.6944
+    ]
+   ],
+   "best_probe": -4.3056,
+   "best_w": 0.533796,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.498,
+    "lib_r2": 0.0919
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "saturation_and_colour_competition",
+   "code": "import numpy as np\nimport math\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: saturation (fraction of existing colours already used by its coloured neighbours), colour competition (fraction of its uncoloured neighbours whose own smallest available colour is the same as the candidate's would-be colour, i.e. neighbours it would block by taking that colour), and degree normalised by the largest degree in the candidate set.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    # saturation: distinct colours already present among coloured neighbours\n    has_col = nc > 0\n    sat = has_col.sum(axis=1).astype(float) / float(max(c, 1))\n\n    # would-be colour: first existing colour that is free, else a brand-new colour (index c)\n    has_zero = ~has_col\n    any_zero = has_zero.any(axis=1)\n    if c > 0:\n        would_be = np.where(any_zero, has_zero.argmax(axis=1), c)\n    else:\n        would_be = np.full(k, c, dtype=int)\n\n    # one-hot of each candidate's would-be colour, then count neighbours that want that same colour\n    ncol = c + 1\n    W = np.zeros((k, ncol))\n    W[np.arange(k), would_be] = 1.0\n    comp_counts = adj @ W                              # (k, ncol): neighbours sharing each would-be colour\n    comp = comp_counts[np.arange(k), would_be]         # neighbours that compete for the very colour this candidate would take\n    rowsum = adj.sum(axis=1)\n    comp_frac = comp / np.maximum(rowsum, 1.0)\n\n    dmax = max(float(deg.max()) if k else 1.0, 1.0)\n    degn = deg / dmax\n\n    out = np.stack([sat, comp_frac, degn], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: saturation (fraction of existing colours already used by its coloured neighbours), colour competition (fraction of its uncoloured neighbours whose own smallest available colour is the same as the candidate's would-be colour, i.e. neighbours it would block by taking that colour), and degree normalised by the largest degree in the candidate set.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.719264420077775,
+    3.778565030391834,
+    6.481853259677847
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -19.245
+    ],
+    [
+     -5.142386,
+     -44.9838
+    ],
+    [
+     1.542716,
+     -9.7222
+    ],
+    [
+     -1.542716,
+     -21.8713
+    ],
+    [
+     0.514239,
+     -8.2168
+    ],
+    [
+     -0.514239,
+     -10.3998
+    ]
+   ],
+   "best_probe": -8.2168,
+   "best_w": 0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8176,
+    "lib_r2": 0.7225
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "saturation_remaining_degree_class_mass",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: saturation share of the colours used so far, centrality in the remaining uncoloured graph (uncoloured-degree fraction), and the share of all vertices sitting in the colour classes that touch its coloured neighbourhood.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    # keep colour-size vector aligned with the c columns (defensive, costs nothing)\n    if cs.size < c:\n        cs = np.concatenate([cs, np.zeros(c - cs.size)])\n    else:\n        cs = cs[:c]\n\n    present = nc > 0                                  # (k, c) colours its coloured neighbours already use\n\n    # 1) classic DSATUR saturation, normalised by colours used so far\n    sat = present.sum(axis=1) / float(max(c, 1))\n\n    # 2) centrality inside the still-uncoloured subgraph: how connected the candidate\n    #    is to the vertices that remain to be coloured (not its whole-graph degree)\n    rem = adj.sum(axis=1)\n    rem_norm = rem / float(max(k - 1, 1))\n\n    # 3) colour-class mass: fraction of the whole graph that lives in the colour classes\n    #    present in this candidate's neighbourhood.  A crowded neighbourhood (large classes\n    #    around it) is a different kind of pressure from merely many distinct colours.\n    n_total = float(k) + float(cs.sum())\n    mass = present.astype(float) @ cs / max(n_total, 1.0)\n\n    out = np.stack([sat, rem_norm, mass], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: saturation share of the colours used so far, centrality in the remaining uncoloured graph (uncoloured-degree fraction), and the share of all vertices sitting in the colour classes that touch its coloured neighbourhood.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 3,
+   "scales": [
+    5.719264420077775,
+    36.258918663328494,
+    18.58590746599633
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f024",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f024",
+    "rho": 0.9718
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "balanced_reuse_competition_weighted",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: the best value of (how far below the average class size a still-takeable colour is) times the scarcity of that colour (1/(1 + number of its uncoloured neighbours that could also take it)).\"\"\"\n    nc = np.asarray(neighbor_colors)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros(0)\n    if c == 0:\n        return np.zeros(k)\n\n    sizes = np.asarray(color_sizes, dtype=float).reshape(c)\n    avail = (nc == 0)                                   # (k, c) colours this candidate can still take\n    avail_f = avail.astype(float)\n    adj_f = np.asarray(adjacency, dtype=float)\n\n    # How many of the candidate's uncoloured neighbours could also take each colour.\n    comp = adj_f @ avail_f                              # (k, c), >= 0\n    scarce = 1.0 / (1.0 + comp)                         # (k, c) in (0, 1]: low competition -> high\n\n    mean = sizes.sum() / float(c)                       # average class size\n    deficit = np.clip((mean - sizes) / (mean + 1.0), -1.0, 1.0)   # (c,) positive for empty classes\n\n    score = deficit[None, :] * scarce                   # (k, c)\n    masked = np.where(avail, score, -np.inf)\n    best = masked.max(axis=1)                           # best takeable colour for this candidate\n    best = np.where(avail.any(axis=1), best, 0.0)       # neutral when a new colour must be opened\n    return np.nan_to_num(best, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a11",
+   "kind": "variant",
+   "parent": "f016",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: the best value of (how far below the average class size a still-takeable colour is) times the scarcity of that colour (1/(1 + number of its uncoloured neighbours that could also take it)).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    18.030310878736497
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -28.4916
+    ],
+    [
+     -5.142386,
+     -3.952
+    ],
+    [
+     1.542716,
+     -27.8506
+    ],
+    [
+     -1.542716,
+     -4.7222
+    ],
+    [
+     0.514239,
+     -3.6966
+    ],
+    [
+     -0.514239,
+     -1.3889
+    ]
+   ],
+   "best_probe": -1.3889,
+   "best_w": -0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.5702,
+    "lib_r2": 0.1865
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "uncoloured_clustering_and_contact",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: share of its neighbours that are still uncoloured (how 'early' in the graph it sits), local clustering among its uncoloured neighbours (triangles, normalised), and the fraction of its uncoloured neighbours that already touch at least one coloured vertex (second-order constraint).\"\"\"\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(-1)\n    k = adj.shape[0]\n    if k == 0:\n        return np.zeros((0, 3))\n\n    uncol_deg = adj.sum(axis=1)                          # neighbours still uncoloured\n    coloured_neigh = np.maximum(deg - uncol_deg, 0.0)    # neighbours already coloured\n\n    # 1) how much of the candidate's neighbourhood is still open\n    frac_uncol = uncol_deg / np.maximum(deg, 1.0)\n\n    # 2) triangles / possible edges among its uncoloured neighbours\n    a2 = adj @ adj\n    tri2 = np.diag(a2)                                   # 2 * edges among the uncoloured neighbours\n    denom = np.maximum(uncol_deg * (uncol_deg - 1.0), 1.0)\n    clust = np.where(uncol_deg >= 2.0, tri2 / denom, 0.0)\n\n    # 3) of its uncoloured neighbours, the share that are themselves already touching a coloured vertex\n    touching = (coloured_neigh > 0).astype(float)\n    second = (adj @ touching) / np.maximum(uncol_deg, 1.0)\n\n    out = np.stack([frac_uncol, clust, second], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a21",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: share of its neighbours that are still uncoloured (how 'early' in the graph it sits), local clustering among its uncoloured neighbours (triangles, normalised), and the fraction of its uncoloured neighbours that already touch at least one coloured vertex (second-order constraint).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    9.248735043735847,
+    6.342589500433448,
+    9.35566125771289
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -26.2749
+    ],
+    [
+     -5.142386,
+     -23.221
+    ],
+    [
+     1.542716,
+     -5.5779
+    ],
+    [
+     -1.542716,
+     -16.8392
+    ],
+    [
+     0.514239,
+     -1.8279
+    ],
+    [
+     -0.514239,
+     -10.4895
+    ]
+   ],
+   "best_probe": -1.8279,
+   "best_w": 0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.4361,
+    "lib_r2": 0.0797
+   },
+   "error": "",
+   "calls": [
+    "c034"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "uncoloured_clustering_and_degree_share",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Two columns per candidate: (1) the local clustering coefficient inside the uncoloured subgraph -- how many edges join its still-uncoloured neighbours (edges among N(p) / possible pairs, 0 when fewer than two such neighbours), and (2) the share of the candidate's total edges that go to still-uncoloured vertices (its remaining constraint weight).\"\"\"\n    adj = np.asarray(adjacency, dtype=float)\n    deg_tot = np.asarray(degree, dtype=float).reshape(-1)\n    adj = np.atleast_2d(adj)\n    k = adj.shape[0]\n    if k == 0:\n        return np.zeros((0, 2))\n    # (A^3)[p,p] / 2 = number of edges among the uncoloured neighbours of p\n    A2 = adj @ adj\n    A3_diag = np.einsum('ij,ji->i', A2, adj)\n    edges_among = 0.5 * A3_diag\n    d_un = adj.sum(axis=1)                      # uncoloured degree\n    pairs = d_un * (d_un - 1.0) / 2.0\n    clust = np.where(pairs > 0.0, edges_among / np.maximum(pairs, 1.0), 0.0)\n    clust = np.clip(clust, 0.0, 1.0)\n    share = d_un / np.maximum(deg_tot, 1.0)\n    share = np.clip(share, 0.0, 1.0)\n    out = np.stack([clust, share], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a22",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Two columns per candidate: (1) the local clustering coefficient inside the uncoloured subgraph -- how many edges join its still-uncoloured neighbours (edges among N(p) / possible pairs, 0 when fewer than two such neighbours), and (2) the share of the candidate's total edges that go to still-uncoloured vertices (its remaining constraint weight).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    14.020076809708064,
+    9.248735043735847
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -28.807
+    ],
+    [
+     -5.142386,
+     -26.8936
+    ],
+    [
+     1.542716,
+     -15.7799
+    ],
+    [
+     -1.542716,
+     -22.8338
+    ],
+    [
+     0.514239,
+     -8.0021
+    ],
+    [
+     -0.514239,
+     -7.5631
+    ]
+   ],
+   "best_probe": -7.5631,
+   "best_w": -0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.5629,
+    "lib_r2": 0.4889
+   },
+   "error": "",
+   "calls": [
+    "c036"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "saturation_forward_gain_distance_two_reach",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: DSATUR saturation, the parent's forward blocking gain, the fraction of existing colours reachable at distance two through an uncoloured neighbour, and uncoloured degree.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 4))\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(k)\n\n    has_col = nc > 0                            # (k, c) colours already used by direct neighbours\n    sat = has_col.sum(axis=1).astype(float)     # saturation degree\n\n    # --- parent thread: forward blocking gain at the would-be colour ---\n    has_zero = ~has_col\n    any_zero = has_zero.any(axis=1)\n    if c > 0:\n        would_be = np.where(any_zero, has_zero.argmax(axis=1), c)\n    else:\n        would_be = np.full(k, c, dtype=int)\n\n    gain = np.zeros(k)\n    if c > 0:\n        idx = np.arange(k)\n        jj = np.where(any_zero, would_be, 0)\n        gv = has_zero[idx, jj].astype(float)\n        gv[~any_zero] = 0.0                     # opening a fresh colour: neutral here\n        gain = adj @ gv                         # uncoloured neighbours forced off that colour\n\n    # --- new thread: colours visible at distance two, through an uncoloured neighbour ---\n    # adj @ has_col[p, j] = number of uncoloured neighbours of p that sit next to colour j.\n    # Distinctness over j gives how rich p's two-hop colour horizon is.\n    if c > 0:\n        reach2 = (adj @ has_col.astype(float)) > 0\n        d2 = reach2.sum(axis=1).astype(float) / float(c)\n    else:\n        d2 = np.zeros(k)\n\n    # --- how much of p's conflict surface is still open (uncoloured neighbours) ---\n    urow = adj.sum(axis=1)\n\n    denom_c = float(max(c, 1))\n    maxdeg = float(max(deg.max(), 1.0)) if k else 1.0\n    umax = float(max(urow.max(), 1.0)) if k else 1.0\n\n    out = np.stack([\n        sat / denom_c,\n        gain / (deg + 1.0),\n        d2,\n        urow / umax,\n    ], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: DSATUR saturation, the parent's forward blocking gain, the fraction of existing colours reachable at distance two through an uncoloured neighbour, and uncoloured degree.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 4,
+   "scales": [
+    5.719264420077775,
+    9.683605182165971,
+    5.2769614521731985,
+    5.423144225747805
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -17.1057
+    ],
+    [
+     -5.142386,
+     -43.8335
+    ],
+    [
+     1.542716,
+     -10.9722
+    ],
+    [
+     -1.542716,
+     -29.123
+    ],
+    [
+     0.514239,
+     -5.9722
+    ],
+    [
+     -0.514239,
+     -10.0686
+    ]
+   ],
+   "best_probe": -5.9722,
+   "best_w": 0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.8629,
+    "lib_r2": 0.7641
+   },
+   "error": "",
+   "calls": [
+    "c039"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "class_supply_existing",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Supply of uncoloured vertices that could still join a candidate's would-be existing colour class (0 for candidates that must open a new colour).\"\"\"\n    nc = np.asarray(neighbor_colors)\n    adj = np.asarray(adjacency)\n    k, c = nc.shape\n    if c == 0:\n        return np.zeros(k, dtype=float)\n\n    free = (nc == 0)                      # (k, c) colours not used by any neighbour\n    free_count = free.sum(1)              # (k,)\n    has = free_count > 0\n    q = np.where(has, free.argmax(1), c)  # would-be colour, c = new colour\n\n    # Z[p, u] = 1 iff candidate u has no neighbour in candidate p's would-be class\n    Z = (nc[:, np.minimum(q, c - 1)] == 0).T.astype(float)\n    M = Z * (1.0 - adj)\n    np.fill_diagonal(M, 0.0)\n\n    supply = M.sum(1) / max(k - 1, 1)\n    return np.where(q == c, 0.0, supply)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a19",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion picks vertices whose would-be class is already nearly closed: it never asks whether the class can still absorb anybody. In planted graphs the set of uncoloured vertices with no neighbour in class q is essentially the surviving true group of q, so high supply means q is a pure, still-growable group; preferring it keeps classes pure instead of splitting a group. On dense the same quantity says whether the class p joins has room left. This tests class capacity directly (a scope change from every neighbour-local measure tried).",
+    "feature": "One column, existing colours only. nc = neighbor_colors, adj = adjacency, k, c = nc.shape. If c == 0 return zeros(k). free = (nc == 0); free_count = free.sum(1); has = free_count > 0; q = np.where(has, free.argmax(1), c) (would-be colour, c = new colour). Z[p,u] = 1 iff nc[u, q[p]] == 0, built as Z = (nc[:, np.minimum(q, c-1)] == 0).T.astype(float). M = Z * (1.0 - adj) with np.fill_diagonal(M, 0.0). supply = M.sum(1) / max(k-1, 1). Return np.where(q == c, 0.0, supply) (candidates that must open a new colour get 0).",
+    "prediction": {
+     "family": "planted",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "Every class-level attempt so far (f011, f014, f018, f023) stayed neighbour-local; the planted gap (33%) is a class-purity failure, not a local-pressure failure."
+   },
+   "coder_note": "The code computes, for each candidate, the fraction of the other uncoloured vertices that have no neighbour already in the candidate's would-be colour class (the class it would join), i.e. the remaining supply of vertices that class could still absorb; candidates that would have to open a new colou\u2026",
+   "measures": "Supply of uncoloured vertices that could still join a candidate's would-be existing colour class (0 for candidates that must open a new colour).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    15.218209151427532
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -20.0097
+    ],
+    [
+     -5.142386,
+     -32.5434
+    ],
+    [
+     1.542716,
+     -8.5577
+    ],
+    [
+     -1.542716,
+     -24.0278
+    ],
+    [
+     0.514239,
+     -2.8998
+    ],
+    [
+     -0.514239,
+     -14.7951
+    ]
+   ],
+   "best_probe": -2.8998,
+   "best_w": 0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "colors",
+    "family": "planted",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.5082,
+    "lib_r2": 0.0785
+   },
+   "error": "",
+   "calls": [
+    "c042"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "phase_reuse_blend",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Blend of early blocking (share of uncoloured neighbours that would take the candidate's would-be colour) and late free-colour share, weighted by the coloured fraction.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    adj = np.asarray(adjacency)\n    k, c = nc.shape\n    sizes = np.asarray(color_sizes)\n    coloured = int(sizes.sum())\n    if c == 0:\n        return np.zeros(k, dtype=float)\n\n    frac = coloured / max(k + coloured, 1)\n\n    free = (nc == 0)                       # (k, c) colours still available to each candidate\n    free_count = free.sum(1).astype(float)  # (k,)\n    q = np.where(free_count > 0, free.argmax(1), c)  # first free colour, or c = new colour\n    free_share = free_count / max(c, 1)\n\n    # Z[p, u] = 1 iff candidate u would also get candidate p's would-be colour for free\n    Z = (nc[:, np.minimum(q, c - 1)] == 0).T.astype(float)  # (k, k)\n    B = (Z * adj).sum(1)                    # (k,) uncoloured neighbours sharing that colour\n    udeg = adj.sum(1).astype(float)\n    blocking = np.where(q == c, 0.0, B / np.maximum(udeg, 1.0))\n\n    return (1.0 - frac) * blocking + frac * free_share\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a18",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's kept features are static, so DSATUR-like blocking always dominates; that is right early, but late it opens colours that end as singletons (dense: last colour at 65.7%, one singleton, smallest class 1 vs ref 5). If the trade-off is a timing one, a single column whose ranking shifts with the coloured fraction (blocking early -> reuse-an-existing-colour late) will predict late colours and singletons better than either static quantity; if timing is irrelevant the blend will be no better than f004 and the prediction fails.",
+    "feature": "One column. nc, adj, k, c = shape as usual; sizes = color_sizes; coloured = sizes.sum(); frac = coloured / max(k + coloured, 1). If c == 0 return zeros(k). free = (nc == 0); free_count = free.sum(1); q = np.where(free_count > 0, free.argmax(1), c). free_share = free_count / max(c, 1). Z[p,u] = 1 iff nc[u, q[p]] == 0 via Z = (nc[:, np.minimum(q, c-1)] == 0).T.astype(float); B = (Z * adj).sum(1); udeg = adj.sum(1); blocking = np.where(q == c, 0.0, B / np.maximum(udeg, 1.0)). Return (1.0 - frac) * blocking + frac * free_share.",
+    "prediction": {
+     "family": "dense",
+     "metric": "singleton_classes",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f025 (forward_gain x saturation) and f007 (first free colour index) failed as static combinations; the interaction that has never been tested is with global progress, which changes the effective weight per decision rather than the ranking shape."
+   },
+   "coder_note": "The code computes one column per candidate: a coloured-fraction-weighted blend of early blocking pressure (fraction of uncoloured neighbours that would also take the candidate's first free colour) and late free-colour share (fraction of existing colours still free for the candidate), returning zero\u2026",
+   "measures": "Blend of early blocking (share of uncoloured neighbours that would take the candidate's would-be colour) and late free-colour share, weighted by the coloured fraction.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.6239641405676135
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -59.2447
+    ],
+    [
+     -5.142386,
+     -10.3001
+    ],
+    [
+     1.542716,
+     -26.0211
+    ],
+    [
+     -1.542716,
+     -10.4167
+    ],
+    [
+     0.514239,
+     -5.5556
+    ],
+    [
+     -0.514239,
+     -4.8611
+    ]
+   ],
+   "best_probe": -4.8611,
+   "best_w": -0.514239,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "singleton_classes",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.888,
+    "lib_r2": 0.4372
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "doomed_absorption_on_open",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"For candidates that must open a new colour: the number of other doomed (no-free-colour) vertices that are non-adjacent to it, normalised by k-1; 0 otherwise.\"\"\"\n    nc = np.asarray(neighbor_colors)\n    adj = np.asarray(adjacency)\n    k = adj.shape[0]\n    c = nc.shape[1] if nc.ndim == 2 else 0\n    if c == 0:\n        return np.zeros(k, dtype=float)\n    free_count = (nc == 0).sum(1)\n    doomed = (free_count == 0).astype(float)\n    q = np.where(free_count > 0, (nc == 0).argmax(1), c)\n    absorb = ((1.0 - adj.astype(float)) @ doomed) - doomed\n    return np.where(q == c, absorb / max(k - 1, 1), 0.0)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a08",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Dense loses 3 colours to late singletons: the forced-openers (rows with no free colour) are coloured one at a time, each paying a new colour. When a new colour must be opened, the right vertex is the one whose new class can immediately absorb the other doomed vertices, i.e. the doomed are mutually non-adjacent. This is class-level closure over the whole remaining set (not over a candidate's neighbours) and is exactly the global scope the neighbour-local variants lack.",
+    "feature": "One column, nonzero only for candidates that must open a new colour. nc, adj, k, c; if c == 0 return zeros(k). free_count = (nc == 0).sum(1); doomed = (free_count == 0).astype(float); q = np.where(free_count > 0, (nc == 0).argmax(1), c). absorb = ((1.0 - adj) @ doomed) - doomed (subtract the self-count, since adj diagonal is False). Return np.where(q == c, absorb / max(k-1, 1), 0.0).",
+    "prediction": {
+     "family": "dense",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "f018",
+    "lesson": "f018's forced-new-colour column counted stranding among a candidate's own neighbours and was rejected; counting how many already-doomed vertices the new class can swallow is a global, class-level quantity instead."
+   },
+   "coder_note": "The code computes, for each candidate that has no free existing colour (must open a new colour), the count of other such doomed vertices that are non-adjacent to it (so a new class could absorb them), divided by k-1, and 0 for all other candidates; I read `q` as the colour the candidate would take \u2026",
+   "measures": "For candidates that must open a new colour: the number of other doomed (no-free-colour) vertices that are non-adjacent to it, normalised by k-1; 0 otherwise.",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    115.52345813127222
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.142386,
+     -4.0278
+    ],
+    [
+     -5.142386,
+     -8.9112
+    ],
+    [
+     1.542716,
+     -4.0278
+    ],
+    [
+     -1.542716,
+     -8.9112
+    ],
+    [
+     0.514239,
+     -5.4167
+    ],
+    [
+     -0.514239,
+     1.4423
+    ]
+   ],
+   "best_probe": 1.4423,
+   "best_w": -0.514239,
+   "d_train": 4.8611,
+   "d_valid": -3.4722,
+   "trial_x": [
+    2.8295368592800783,
+    -0.47411283101891266,
+    0.7314736320134119,
+    2.397850970997948,
+    -1.1564384848883422,
+    0.02125025387221599,
+    1.3783789098033625,
+    -0.22731559671123597
+   ],
+   "prediction": {
+    "metric": "colors",
+    "family": "dense",
+    "direction": "down",
+    "before": 14,
+    "after": 13,
+    "held": true,
+    "checked": true,
+    "instance": "dense-000",
+    "why": "checked at an exaggerated weight (the fitted weight left it unchanged)"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.379,
+    "lib_r2": 0.2521
+   },
+   "error": "",
+   "calls": [
+    "c041"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "class_weighted_saturation_blocking_remaining_deg",
+   "code": "import numpy as np\nimport math\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Three columns per candidate: class-size-weighted colour coverage (share of coloured vertices that sit in colour classes the candidate touches), the fraction of its uncoloured neighbours that would lose the would-be colour, and the share of its neighbours that are still uncoloured.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n\n    coloured = float(cs.sum())\n    n = float(k) + coloured\n\n    # column 1: class-size-weighted saturation. Unlike plain saturation (a count of\n    # distinct neighbouring colours) each touched colour contributes how many vertices\n    # actually carry it, so being surrounded by a few *large* classes ranks high.\n    present = (nc > 0).astype(float)                 # (k, c)\n    if c > 0:\n        wsat = present @ cs                          # (k,)\n    else:\n        wsat = np.zeros(k)\n    wsat = wsat / max(n, 1.0)\n\n    # column 2: parent's blocking thread -- fraction of uncoloured neighbours that\n    # would lose the colour the candidate is about to take.\n    free_ext = np.concatenate([nc <= 0, np.ones((k, 1), dtype=bool)], axis=1)\n    j = np.argmax(free_ext, axis=1)                  # first free colour (new colour column guarantees one)\n    reach = adj @ free_ext.astype(float)             # (k, c+1) uncoloured neighbours free at each colour\n    would_block = reach[np.arange(k), j]\n    rowsum = adj.sum(axis=1)\n    blocking = would_block / np.maximum(rowsum, 1.0)\n\n    # column 3: how \"remaining-graph core\" the candidate is: uncoloured neighbours\n    # over all neighbours (coloured + uncoloured), a different normalisation from\n    # whole-graph degree.\n    uncol_share = rowsum / np.maximum(deg, 1.0)\n\n    out = np.stack([wsat, blocking, uncol_share], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Three columns per candidate: class-size-weighted colour coverage (share of coloured vertices that sit in colour classes the candidate touches), the fraction of its uncoloured neighbours that would lose the would-be colour, and the share of its neighbours that are still uncoloured.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    16.81267337498028,
+    4.659241604026011,
+    8.851549638521249
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -30.1852
+    ],
+    [
+     -5.320289,
+     -30.665
+    ],
+    [
+     1.596087,
+     -21.4886
+    ],
+    [
+     -1.596087,
+     -23.4499
+    ],
+    [
+     0.532029,
+     -18.109
+    ],
+    [
+     -0.532029,
+     -9.7756
+    ]
+   ],
+   "best_probe": -9.7756,
+   "best_w": -0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.747,
+    "lib_r2": 0.9575
+   },
+   "error": "",
+   "calls": [
+    "c047"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "saturation_gain_colourclass_load",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"DSATUR saturation, forward constraint gain (uncoloured neighbours that lose the candidate's would-be colour), and the would-be colour's class load (a brand-new colour counts as a size-1 class).\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n    adj = np.asarray(adjacency, dtype=float)\n    deg = np.asarray(degree, dtype=float).reshape(k)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n\n    used = nc > 0                       # (k, c) colours already present among coloured neighbours\n    free = ~used                        # colours still available in the neighbourhood\n    sat = used.sum(axis=1).astype(float)\n\n    any_free = free.any(axis=1)\n    if c > 0:\n        would_be = np.where(any_free, free.argmax(axis=1), c)   # first free colour, else a new one\n    else:\n        would_be = np.full(k, 0, dtype=int)\n\n    # Forward gain: uncoloured neighbours that would lose the candidate's would-be colour.\n    gain = np.zeros(k)\n    if c > 0:\n        idx = np.arange(k)\n        jj = np.where(any_free, would_be, 0)\n        gv = free[idx, jj].astype(float)\n        gv[~any_free] = 0.0             # opening a brand-new colour is neutral here\n        gain = adj @ gv\n\n    # Class load of the colour the candidate would take: how big the class it joins is.\n    # A brand-new colour is charged the size it will have right after this vertex (one).\n    total_coloured = float(cs.sum())\n    denom = max(total_coloured, 1.0)\n    sizes_ext = np.concatenate([cs, np.array([1.0])]) if c > 0 else np.array([1.0])\n    load = np.clip(sizes_ext[would_be] / denom, 0.0, 1.0)\n\n    sat_norm = sat / float(max(c, 1))\n    gain_norm = gain / (deg + 1.0)\n\n    out = np.stack([sat_norm, gain_norm, load], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "DSATUR saturation, forward constraint gain (uncoloured neighbours that lose the candidate's would-be colour), and the would-be colour's class load (a brand-new colour counts as a size-1 class).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    5.790697268168067,
+    9.294787436092,
+    22.50301769630824
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -20.1166
+    ],
+    [
+     -5.320289,
+     -43.5816
+    ],
+    [
+     1.596087,
+     -19.0812
+    ],
+    [
+     -1.596087,
+     -22.183
+    ],
+    [
+     0.532029,
+     -13.2479
+    ],
+    [
+     -0.532029,
+     -6.1574
+    ]
+   ],
+   "best_probe": -6.1574,
+   "best_w": -0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7109,
+    "lib_r2": 0.7299
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "constrained_absorber_pull",
+   "code": "import numpy as np\n\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"For every uncoloured candidate: the share of its uncoloured non-neighbours that could later share its would-be colour, each weighted by how few colours it still has free (1/(free colours + 1)), normalised by k-1, excluding the candidate itself.\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    k = adj.shape[0]\n    if k == 0:\n        return np.zeros(0, dtype=float)\n    c = nc.shape[1] if nc.ndim == 2 else 0\n\n    free = nc <= 0                        # (k, c) colours still available in the neighbourhood\n    free_count = free.sum(axis=1)         # (k,)\n    w = 1.0 / (free_count + 1.0)          # a more constrained vertex is a more valuable co-recipient\n\n    if c == 0:\n        free_ext = np.ones((k, 1), dtype=float)\n    else:\n        # add a column for the brand-new colour, which is free for everyone\n        free_ext = np.concatenate([free.astype(float), np.ones((k, 1), dtype=float)], axis=1)\n\n    j = np.argmax(free_ext > 0, axis=1)   # first free colour, else the new-colour column\n    A = free_ext * w[:, None]             # (k, c+1) each vertex's constraint weight at each colour\n    M = (1.0 - adj) @ A                   # (k, c+1) non-adjacent weight available at each colour\n    idx = np.arange(k)\n    absorbers = M[idx, j] - A[idx, j]     # drop the candidate's own contribution\n    return np.nan_to_num(absorbers / max(k - 1, 1), nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a08",
+   "kind": "variant",
+   "parent": "f034",
+   "idea": {},
+   "coder_note": "",
+   "measures": "For every uncoloured candidate: the share of its uncoloured non-neighbours that could later share its would-be colour, each weighted by how few colours it still has free (1/(free colours + 1)), normalised by k-1, excluding the candidate itself.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    55.44194301156944
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -21.0719
+    ],
+    [
+     -5.320289,
+     -46.5738
+    ],
+    [
+     1.596087,
+     -14.0741
+    ],
+    [
+     -1.596087,
+     -42.2656
+    ],
+    [
+     0.532029,
+     -10.7016
+    ],
+    [
+     -0.532029,
+     -24.9019
+    ]
+   ],
+   "best_probe": -10.7016,
+   "best_w": 0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f013",
+    "rho": 0.7628,
+    "lib_r2": 0.5744
+   },
+   "error": "",
+   "calls": [
+    "c046"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "uncoloured_neighbourhood_density",
+   "code": "import numpy as np\nimport math\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Two columns per candidate: the triangle clustering between its uncoloured neighbours (edges among them divided by the pairs available), and its two-hop reach (sum of the uncoloured degrees of its uncoloured neighbours) normalised.\"\"\"\n    adj = np.asarray(adjacency, dtype=float)\n    k = adj.shape[0]\n    if k == 0:\n        return np.zeros((0, 2))\n\n    du = adj.sum(axis=1)                    # uncoloured degree of each candidate\n    a2 = adj @ adj                          # (k, k) walks of length 2\n    a3diag = np.sum(adj * a2, axis=1)       # (A^3)_pp = 6 * triangles through p (ordered)\n    edges_among = 0.5 * a3diag              # number of edges among p's uncoloured neighbours\n    pairs = du * (du - 1.0) * 0.5           # unordered neighbour pairs\n    clust = np.where(pairs > 0.0, edges_among / np.maximum(pairs, 1.0), 0.0)\n\n    reach = adj @ du                        # two-hop reach of each candidate\n    rmax = max(float(reach.max()) if k else 1.0, 1.0)\n    reach_n = reach / rmax\n\n    out = np.stack([clust, reach_n], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a26",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Two columns per candidate: the triangle clustering between its uncoloured neighbours (edges among them divided by the pairs available), and its two-hop reach (sum of the uncoloured degrees of its uncoloured neighbours) normalised.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    12.156882778675579,
+    5.1770911516828475
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -27.4466
+    ],
+    [
+     -5.320289,
+     -43.0287
+    ],
+    [
+     1.596087,
+     -16.6667
+    ],
+    [
+     -1.596087,
+     -28.9226
+    ],
+    [
+     0.532029,
+     -13.2479
+    ],
+    [
+     -0.532029,
+     -17.4074
+    ]
+   ],
+   "best_probe": -13.2479,
+   "best_w": 0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f017",
+    "rho": 0.8152,
+    "lib_r2": 0.4334
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "colour_mass_and_uncoloured_clustering",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: (1) average size-fraction of the colour classes its coloured neighbours belong to ('colour mass'), (2) the clustering coefficient of its still-uncoloured neighbourhood, (3) the size-fraction of the colour class it would join (0 if it would open a new colour).\"\"\"\n    nc = np.asarray(neighbor_colors, dtype=float)\n    adj = np.asarray(adjacency, dtype=float)\n    cs = np.asarray(color_sizes, dtype=float).reshape(-1)\n    k, c = nc.shape\n    if k == 0:\n        return np.zeros((0, 3))\n    n = max(float(k + cs.sum()), 1.0)\n\n    # (1) colour mass: how much of the graph's colouring hangs off this candidate's coloured neighbours\n    colcount = nc.sum(axis=1)\n    mass = (nc @ cs) if c > 0 else np.zeros(k)\n    mass = mass / (n * np.maximum(colcount, 1.0))\n\n    # (2) clustering coefficient inside the uncoloured neighbourhood (edges among its uncoloured neighbours / possible pairs)\n    a2 = adj @ adj\n    tri = 0.5 * np.einsum('ij,ij->i', a2, adj)      # edges among neighbours of each candidate\n    unc = adj.sum(axis=1)\n    pairs = 0.5 * unc * np.maximum(unc - 1.0, 0.0)\n    clust = tri / np.maximum(pairs, 1.0)\n    clust[unc < 2.0] = 0.0\n\n    # (3) size-fraction of the class the candidate would take (would-be colour = first free one, else a new class of size 0)\n    free_ext = np.concatenate([nc <= 0, np.ones((k, 1), dtype=bool)], axis=1)\n    j = np.argmax(free_ext, axis=1)\n    cs_pad = np.concatenate([cs, np.zeros(1)])\n    would_be_class = cs_pad[j] / n\n\n    out = np.stack([mass, clust, would_be_class], axis=1)\n    return np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=-1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a17",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Per candidate: (1) average size-fraction of the colour classes its coloured neighbours belong to ('colour mass'), (2) the clustering coefficient of its still-uncoloured neighbourhood, (3) the size-fraction of the colour class it would join (0 if it would open a new colour).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 3,
+   "scales": [
+    58.896402832718856,
+    12.156882778675579,
+    86.73115314959458
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -33.692
+    ],
+    [
+     -5.320289,
+     -36.362
+    ],
+    [
+     1.596087,
+     -30.0463
+    ],
+    [
+     -1.596087,
+     -19.3224
+    ],
+    [
+     0.532029,
+     -19.3687
+    ],
+    [
+     -0.532029,
+     -17.7609
+    ]
+   ],
+   "best_probe": -17.7609,
+   "best_w": -0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f021",
+    "rho": 0.8899,
+    "lib_r2": 0.1391
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "class_coherence_peers_minus_rivals",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Per candidate: (# uncoloured peers that would take the same smallest-free colour and are non-adjacent) minus (# such peers that are adjacent), divided by k-1; 0 for candidates with no free colour.\"\"\"\n    k = neighbor_colors.shape[0]\n    c = neighbor_colors.shape[1]\n    if k == 0 or c == 0:\n        return np.zeros(k, dtype=float)\n\n    free = (neighbor_colors == 0)                      # (k, c)\n    has = free.any(axis=1)                             # (k,)\n    first = np.argmax(free, axis=1)                    # index of first free colour\n    j = np.where(has, first, -1)                       # -1 where no free colour\n\n    same = (j[:, None] == j[None, :]) & has[:, None] & has[None, :]\n    eye = np.eye(k, dtype=bool)\n    adj = adjacency.astype(bool)\n\n    peers = (same & ~adj & ~eye).sum(axis=1)           # non-adjacent future classmates\n    rivals = (same & adj).sum(axis=1)                  # adjacent rivals denied the colour\n\n    out = (peers - rivals) / max(k - 1, 1)\n    return np.where(has, out, 0.0).astype(float)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a08",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion is DSATUR+blocking and burns 3 extra colours on dense after the halfway point: it picks a vertex for its constraint pressure, never for the colour class it is building, so classes end up incoherent (a singleton, colour 14 opened at 66%). Measure, per candidate, the net class it would consolidate: other uncoloured vertices that would take the SAME smallest-free colour and are non-adjacent (future classmates) minus those that would take the same colour and are adjacent (rivals who will be denied it). High value = colouring this vertex now anchors a class that can absorb the tail.",
+    "feature": "One column. nc=(k,c); if k==0 or c==0 return zeros(k). free=(nc==0); has=free.any(axis=1); j=j of first True column (argmax of free) where has, else -1. same = (j[:,None]==j[None,:]) & has[:,None] & has[None,:]; peers = (same & ~adj & ~eye(k)).sum(axis=1); rivals = (same & adj).sum(axis=1). Return (peers - rivals)/max(k-1,1); candidates with has==False get 0. Finite, in [-1,1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "colors",
+     "direction": "down"
+    },
+    "builds_on": "f034",
+    "lesson": "f034 packed doomed vertices into one new colour and cut dense colours 14->13 (prediction held) but lost overall because it only acted on doomed candidates; f032's raw class supply was rejected, so supply alone is useless without knowing whether those vertices actually converge on the same colour. This extends packing to every decision."
+   },
+   "coder_note": "The code computes, for each candidate, the first colour it would take (smallest-free, `c` if none), then counts other uncoloured vertices with the same would-be colour that are non-adjacent (peers) minus those that are adjacent (rivals), normalised by k-1; I read \"smallest-free colour\" as the index\u2026",
+   "measures": "Per candidate: (# uncoloured peers that would take the same smallest-free colour and are non-adjacent) minus (# such peers that are adjacent), divided by k-1; 0 for candidates with no free colour.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.080997213978234
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -22.1465
+    ],
+    [
+     -5.320289,
+     -29.5539
+    ],
+    [
+     1.596087,
+     -13.3557
+    ],
+    [
+     -1.596087,
+     -18.8594
+    ],
+    [
+     0.532029,
+     -10.4167
+    ],
+    [
+     -0.532029,
+     -15.4167
+    ]
+   ],
+   "best_probe": -10.4167,
+   "best_w": 0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "colors",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f032",
+    "rho": 0.4296,
+    "lib_r2": 0.1969
+   },
+   "error": "",
+   "calls": [
+    "c052"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "local_degree_dominance",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Local degree dominance: (deg - mean_deg_of_uncoloured_neighbours) / (deg + that mean + 1).\"\"\"\n    deg = np.asarray(degree, dtype=float)\n    A = np.asarray(adjacency, dtype=float)\n    un = A.sum(axis=1)\n    safe_un = np.where(un > 0, un, 1.0)\n    mn = (A @ deg) / safe_un\n    m = np.where(un > 0, mn, deg)\n    return (deg - m) / (deg + m + 1.0)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a02",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "a02 as raw degree is already inside f005, so raw degree or degree/max-degree would be a monotone copy. What is not measured is whether a vertex dominates its own neighbourhood: a hub whose uncoloured neighbours are much less connected than itself sits on a dense pocket that should be coloured while colours are plentiful, whereas a vertex surrounded by bigger hubs can wait. Test whether the hub-early ordering is really about local dominance rather than global degree.",
+    "feature": "One column. deg=(k,) float whole-graph degree; A=(k,k) float adjacency restricted to uncoloured; un=A.sum(axis=1); mn=(A@deg)/where(un>0, un, 1); m=where(un>0, mn, deg). Return (deg-m)/(deg+m+1). Finite, in (-1,1).",
+    "prediction": {
+     "family": "dense",
+     "metric": "deg_rank_corr",
+     "direction": "up"
+    },
+    "builds_on": "f005",
+    "lesson": "f005 already carries whole-graph degree and the champion is degree-driven (deg_rank_corr 0.45-0.64), so a02 only earns its slot if the signal is relative, not absolute."
+   },
+   "coder_note": "This computes, per candidate, the whole-graph degree minus the mean whole-graph degree of its uncoloured neighbours, normalised by their sum plus one, so a hub sitting in a locally low-degree pocket scores positive and a vertex surrounded by bigger hubs scores negative; where a candidate has no unc\u2026",
+   "measures": "Local degree dominance: (deg - mean_deg_of_uncoloured_neighbours) / (deg + that mean + 1).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.171073683864159
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -13.4722
+    ],
+    [
+     -5.320289,
+     -35.721
+    ],
+    [
+     1.596087,
+     -15.1166
+    ],
+    [
+     -1.596087,
+     -18.1019
+    ],
+    [
+     0.532029,
+     -13.109
+    ],
+    [
+     -0.532029,
+     -16.7424
+    ]
+   ],
+   "best_probe": -13.109,
+   "best_w": 0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "deg_rank_corr",
+    "family": "dense",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7439,
+    "lib_r2": 0.7502
+   },
+   "error": "",
+   "calls": [
+    "c051"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "pool_conflict_density",
+   "code": "import numpy as np\n\ndef feature(neighbor_colors, adjacency, degree, color_sizes):\n    \"\"\"Internal conflict density of a candidate's pool of uncoloured non-neighbours: adjacent pairs / all ordered pairs in that pool (0 if pool < 2).\"\"\"\n    A = adjacency.astype(np.float64)\n    k = A.shape[0]\n\n    # N = uncoloured non-neighbours of each candidate (no self, no edges)\n    N = 1.0 - A\n    if k > 0:\n        np.fill_diagonal(N, 0.0)\n\n    pool = N.sum(axis=1)                     # size of each candidate's pool\n    # twice the number of adjacent pairs inside each pool\n    pairs = np.einsum('ij,jl,il->i', N, A, N)\n\n    out = np.zeros(k, dtype=np.float64)\n    mask = pool >= 2.0\n    if np.any(mask):\n        denom = pool[mask] * (pool[mask] - 1.0)   # ordered pairs in the pool\n        out[mask] = pairs[mask] / np.maximum(denom, 1.0)\n\n    out = np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)\n    return np.clip(out, 0.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a20",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The dense pathology is smallest_class=1 with one singleton: a colour opens that can never absorb anyone. The Navigator's class-viability quantity is the internal conflict of the candidate's future classmates: among its uncoloured non-neighbours, what fraction of pairs are mutually adjacent. If that pool is nearly a clique, at most one of them can ever join the class, so the class is dead on arrival. Using density (divided by pool size) keeps this independent of the raw supply f032 already failed with.",
+    "feature": "One column. A=(k,k) float adjacency restricted to uncoloured; N=1.0-A with the diagonal set to 0. pool=N.sum(axis=1); pairs=diag(N@A@N) (twice the adjacent pairs inside the candidate's uncoloured non-neighbourhood); return where(pool>=2, pairs/maximum(pool*(pool-1),1), 0.0). Finite, in [0,1].",
+    "prediction": {
+     "family": "dense",
+     "metric": "singleton_classes",
+     "direction": "down"
+    },
+    "builds_on": "f032",
+    "lesson": "f032 measured the size of the would-be class pool and was rejected; this probe keeps the pool fixed out of the value and measures only its internal conflict, so it ranks candidates differently from any supply feature."
+   },
+   "coder_note": "The code computes, for each candidate, the fraction of ordered pairs among its uncoloured non-neighbours that are mutually adjacent (`diag(N\u00b7A\u00b7N) / (pool\u00b7(pool-1))`, 0 when the pool has fewer than 2 members), clipped to [0,1]; I read \"pairs\" as the ordered-pair count (hence the `pool*(pool-1)` deno\u2026",
+   "measures": "Internal conflict density of a candidate's pool of uncoloured non-neighbours: adjacent pairs / all ordered pairs in that pool (0 if pool < 2).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    338.7209448638739
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     5.320289,
+     -45.5704
+    ],
+    [
+     -5.320289,
+     -37.3022
+    ],
+    [
+     1.596087,
+     -44.7585
+    ],
+    [
+     -1.596087,
+     -27.0467
+    ],
+    [
+     0.532029,
+     -34.3276
+    ],
+    [
+     -0.532029,
+     -26.9781
+    ]
+   ],
+   "best_probe": -26.9781,
+   "best_w": -0.532029,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "singleton_classes",
+    "family": "dense",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f038",
+    "rho": 0.4254,
+    "lib_r2": 0.0265
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "saturation-first",
+   "description": "Prefer the candidate with the most distinct colours among its coloured neighbours (DSATUR saturation degree) and the fewest still-available colours.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f006"
+   ],
+   "best_gain": 27.1741,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [
+    [
+     1,
+     27.1741
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a02",
+   "title": "degree-order",
+   "description": "Prefer high-degree / high coloured-neighbour-count vertices so hubs are coloured early while colours are still plentiful.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f041"
+   ],
+   "best_gain": -13.109,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -13.109
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "color-reuse",
+   "description": "Prefer candidates that fit an existing colour: lowest first-available colour index, with an explicit penalty for opening a new colour.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f007"
+   ],
+   "best_gain": 4.1764,
+   "last_gen": 1,
+   "notes": [
+    {
+     "gen": 2,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     4.1764
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "class-balance",
+   "description": "Prefer candidates adjacent to the largest (or smallest) colour classes, to close classes off and keep class sizes balanced.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 1,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "neighborhood-similarity",
+   "description": "Prefer candidates whose coloured-neighbour colour profile resembles an existing colour class, to exploit planted/geometric group structure.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f008"
+   ],
+   "best_gain": 19.1103,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     19.1103
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "uncolored-lookahead",
+   "description": "Prefer candidates with many uncoloured neighbours, or whose colouring most reduces the options of uncoloured neighbours, to avoid future conflicts.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 1,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: blocked_neighbour_fraction",
+   "description": "Fraction of the candidate's uncoloured neighbours that would lose the colour the candidate is about to take.",
+   "parent": "",
+   "origin": "wide",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f001",
+    "f003",
+    "f020"
+   ],
+   "best_gain": 21.259,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     21.259
+    ],
+    [
+     3,
+     -11.4112
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "wide find: constrained_neighbour_pressure",
+   "description": "Mean over uncoloured neighbours of 1/(their still-available colours + 1), counting only neighbours that lose their smallest feasible colour when this candidate takes its own smallest feasible colour;\u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f002",
+    "f004",
+    "f009",
+    "f011",
+    "f014",
+    "f018",
+    "f023",
+    "f026",
+    "f034",
+    "f035",
+    "f037",
+    "f040"
+   ],
+   "best_gain": 36.265,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     36.265
+    ],
+    [
+     2,
+     -8.3699
+    ],
+    [
+     3,
+     -2.4145
+    ],
+    [
+     4,
+     -3.4722
+    ],
+    [
+     5,
+     -9.7756
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": 5
+  },
+  {
+   "id": "a09",
+   "title": "wide find: saturation_forward_gain_degree",
+   "description": "Per candidate: DSATUR-style saturation, a forward-looking constraint gain (how many still-uncoloured neighbours would lose the candidate's would-be colour), and whole-graph degree.",
+   "parent": "",
+   "origin": "wide",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f005",
+    "f010",
+    "f019",
+    "f025",
+    "f027",
+    "f031",
+    "f036"
+   ],
+   "best_gain": 36.2018,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     36.2018
+    ],
+    [
+     2,
+     -9.2256
+    ],
+    [
+     3,
+     -4.3056
+    ],
+    [
+     4,
+     -5.9722
+    ],
+    [
+     5,
+     -6.1574
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "forced_new_color_lookahead",
+   "description": "Simulate each candidate's smallest available colour, then count how many of its uncoloured neighbours would have every existing colour blocked (forced to open a new colour), normalised by its uncoloured degree.",
+   "parent": "a08",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f015"
+   ],
+   "best_gain": -2.9924,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -2.9924
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "balanced_class_reuse",
+   "description": "Among a candidate's feasible existing colours, score the one belonging to the currently smallest class, so classes stay balanced and dense graphs stop opening singleton colours.",
+   "parent": "a04",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f016",
+    "f028"
+   ],
+   "best_gain": -1.3889,
+   "last_gen": 4,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     -2.9924
+    ],
+    [
+     4,
+     -1.3889
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "uncolored_subgraph_pressure",
+   "description": "Score candidates by their degree inside the uncoloured subgraph (row sums of adjacency) relative to whole-graph degree, colouring the most constrained-in-remaining-graph vertices first.",
+   "parent": "a06",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f017",
+    "f012"
+   ],
+   "best_gain": -5.7702,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 4,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -5.7702
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "wide find: residual_degree_and_color_class_occupancy",
+   "description": "Three columns per candidate: its residual degree inside the still-uncoloured subgraph (relative to the largest residual degree), the size of the colour class it would join relative to the largest cla\u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f013"
+   ],
+   "best_gain": -4.0644,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 4,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -4.0644
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "degree-weighted blocking",
+   "description": "Like the constrained-pressure vein, but each uncoloured neighbour that loses its would-be colour is weighted by that neighbour's residual degree (or 1/(its free colours+1) times degree), so blocking a hard-to-colour hub counts far more than blocking a leaf.",
+   "parent": "a08",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 3,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "dsatur lexicographic stack",
+   "description": "Encode classic DSATUR tie-breaking as one steep column: saturation fraction scaled large, plus a small residual-degree-inside-uncoloured term so ties are broken toward the densest remaining vertex (dense/planted endgame).",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "pruned",
+   "created_gen": 3,
+   "features": [
+    "f024"
+   ],
+   "best_gain": null,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [
+    {
+     "feature": "f024",
+     "type": "span",
+     "r2": 0.99969,
+     "of": [
+      "f004",
+      "f005",
+      "f006"
+     ]
+    }
+   ],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     null
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "recent-class fill",
+   "description": "Prefer candidates that can take the most recently opened colour class (and next-most-recent), so new colours get filled before they are stranded as singletons.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 3,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "wide find: uncoloured_neighbour_clustering",
+   "description": "Local clustering coefficient of each candidate inside the uncoloured subgraph: the share of pairs of its still-uncoloured neighbours that are themselves adjacent (triangle density around the candidat\u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f021",
+    "f022",
+    "f039"
+   ],
+   "best_gain": -2.907,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     3,
+     -2.907
+    ],
+    [
+     5,
+     -17.7609
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a18",
+   "title": "phase-conditioned pressure",
+   "description": "Columns that multiply the saturation/blocking pressure and colour-reuse scores by the coloured fraction (or its complement), so the fit can shift the effective weighting from structure-first early to reuse-first late.",
+   "parent": "a08",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f033"
+   ],
+   "best_gain": -4.8611,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -4.8611
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a19",
+   "title": "colour-class supply",
+   "description": "For the candidate's would-be colour, count the uncoloured vertices that could still take that class after the move (its remaining supply, scaled by k), i.e. the class's future capacity rather than local neighbour pressure.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f032"
+   ],
+   "best_gain": -2.8998,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -2.8998
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a20",
+   "title": "class viability",
+   "description": "How many of the candidate's uncoloured non-neighbours are mutually adjacent (conflict among its future classmates), normalised: rewards candidates whose colour class can still absorb vertices.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f042"
+   ],
+   "best_gain": -26.9781,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -26.9781
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a21",
+   "title": "wide find: uncoloured_clustering_and_contact",
+   "description": "Per candidate: share of its neighbours that are still uncoloured (how 'early' in the graph it sits), local clustering among its uncoloured neighbours (triangles, normalised), and the fraction of its \u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f029"
+   ],
+   "best_gain": -1.8279,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -1.8279
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a22",
+   "title": "wide find: uncoloured_clustering_and_degree_share",
+   "description": "Two columns per candidate: (1) the local clustering coefficient inside the uncoloured subgraph -- how many edges join its still-uncoloured neighbours (edges among N(p) / possible pairs, 0 when fewer \u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f030"
+   ],
+   "best_gain": -7.5631,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -7.5631
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a23",
+   "title": "two-hop blocking degradation",
+   "description": "Extend the constrained-pressure vein: weight each uncoloured neighbour blocked by the candidate's colour by how close that neighbour already is to exhaustion (its remaining free-colour count inverse), so blocking near-doomed vertices counts far more than blocking flexible ones.",
+   "parent": "a08",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a24",
+   "title": "singleton-class elimination",
+   "description": "Directly target dense's leftover singleton colour classes: penalize candidates that consume a colour no one else can join, and prefer moves that let the smallest existing classes merge or fill.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a25",
+   "title": "reverse-degree foresight",
+   "description": "Prefer low-degree vertices late and high-degree early only inside still-thin colour classes, i.e. an index-residual degree ranking conditioned on the class a candidate would join.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a26",
+   "title": "wide find: uncoloured_neighbourhood_density",
+   "description": "Two columns per candidate: the triangle clustering between its uncoloured neighbours (edges among them divided by the pairs available), and its two-hop reach (sum of the uncoloured degrees of its unc\u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f038"
+   ],
+   "best_gain": -13.2479,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -13.2479
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f004",
+  "f005",
+  "f006"
+ ],
+ "backlog": [
+  "f034"
+ ]
+}

@@ -1,0 +1,71 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.2956217024925882,
+  "valid": 3.4678312022325204,
+  "progress": 42.31,
+  "valid_progress": 34.07,
+  "library": [
+   "f010",
+   "f018",
+   "f019"
+  ]
+ },
+ "test": {
+  "gap": 8.478821029223823,
+  "families": {
+   "weibull": 3.433178840442585,
+   "uniform": 4.001766710834438,
+   "small": 0.8354218880534633,
+   "large": 6.417411595184711,
+   "bimodal": 33.14437997945757,
+   "scaled": 3.040767161370169
+  },
+  "code_zero": 7.376614077127708,
+  "progress": -24.69
+ },
+ "progress_curve": [
+  0.0,
+  31.0,
+  40.31,
+  40.31,
+  42.31,
+  42.31
+ ],
+ "valid_curve": [
+  0.0,
+  23.56,
+  33.88,
+  33.88,
+  34.07,
+  34.07
+ ],
+ "calls": 62,
+ "tokens_in": 128998,
+ "tokens_out": 136736,
+ "features_tried": 45,
+ "kept": [
+  {
+   "id": "f010",
+   "name": "complement_pairing",
+   "origin": "deep"
+  },
+  {
+   "id": "f018",
+   "name": "comb_pairing",
+   "origin": "deep"
+  },
+  {
+   "id": "f019",
+   "name": "size_scaled_pair_target",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792270523.2431018
+}

@@ -1,0 +1,64 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.03391943822344164,
+  "valid": 0.07440213066657042,
+  "progress": 99.75,
+  "valid_progress": 99.49,
+  "library": [
+   "f001",
+   "f024"
+  ]
+ },
+ "test": {
+  "gap": 0.17608027838507714,
+  "families": {
+   "uncorrelated": 0.12164309736289274,
+   "weakly_correlated": 0.17359260266927024,
+   "strongly_correlated": 0.05123367104601373,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.5283309727857547
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 98.59
+ },
+ "progress_curve": [
+  0.0,
+  99.04,
+  99.04,
+  99.75,
+  99.75,
+  99.75
+ ],
+ "valid_curve": [
+  0.0,
+  99.23,
+  99.23,
+  99.49,
+  99.49,
+  99.49
+ ],
+ "calls": 69,
+ "tokens_in": 169227,
+ "tokens_out": 312240,
+ "features_tried": 51,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "density_slack_tradeoff",
+   "origin": "wide"
+  },
+  {
+   "id": "f024",
+   "name": "two_item_completion",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792287940.6575122
+}

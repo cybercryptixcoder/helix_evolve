@@ -1,0 +1,70 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 14.772727272727273,
+  "valid": 18.310308972073674,
+  "progress": 74.36,
+  "valid_progress": 68.04,
+  "library": [
+   "f001",
+   "f004",
+   "f003"
+  ]
+ },
+ "test": {
+  "gap": 28.148148148148145,
+  "families": {
+   "sparse": 13.33333333333333,
+   "dense": 22.222222222222225,
+   "geometric": 0.0,
+   "planted": 83.33333333333333,
+   "medium": 21.85185185185186
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 50.84
+ },
+ "progress_curve": [
+  0.0,
+  70.26,
+  74.36,
+  74.36,
+  74.36,
+  74.36
+ ],
+ "valid_curve": [
+  0.0,
+  66.72,
+  68.04,
+  68.04,
+  68.04,
+  68.04
+ ],
+ "calls": 55,
+ "tokens_in": 126323,
+ "tokens_out": 113260,
+ "features_tried": 40,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "dsatur_saturation_and_crowding",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "static_degree",
+   "origin": "deep"
+  },
+  {
+   "id": "f003",
+   "name": "colored_neighbor_fraction",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792278825.4487312
+}

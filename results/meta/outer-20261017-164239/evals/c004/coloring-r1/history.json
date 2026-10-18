@@ -1,0 +1,303 @@
+[
+ {
+  "gen": 0,
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941,
+  "progress": 0.0,
+  "valid_progress": 0.0,
+  "families": {
+   "sparse": 46.666666666666664,
+   "dense": 43.18181818181819,
+   "geometric": 18.404558404558404,
+   "planted": 122.22222222222221
+  },
+  "accepted": [],
+  "library": [],
+  "weights": [],
+  "features": [],
+  "plan_source": null,
+  "seconds": 0.0,
+  "agent_seconds": 0.0,
+  "calls": 0,
+  "tokens_in": 0,
+  "tokens_out": 0,
+  "evals": 2,
+  "nodes": {
+   "untried": 0,
+   "promising": 0,
+   "unproven": 0,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 1,
+  "train": 17.38053613053613,
+  "valid": 26.37626262626263,
+  "progress": 69.84,
+  "valid_progress": 53.96,
+  "families": {
+   "sparse": 0.0,
+   "dense": 14.393939393939396,
+   "geometric": 5.128205128205125,
+   "planted": 50.0
+  },
+  "accepted": [
+   "f008",
+   "f005",
+   "f003"
+  ],
+  "library": [
+   "f008",
+   "f005",
+   "f003"
+  ],
+  "weights": [
+   [
+    -1.4974951092046516
+   ],
+   [
+    0.6299133716183976
+   ],
+   [
+    0.4773995173304996
+   ]
+  ],
+  "features": [
+   "f005",
+   "f006",
+   "f007",
+   "f008",
+   "f001",
+   "f002",
+   "f003",
+   "f004"
+  ],
+  "plan_source": "navigator",
+  "seconds": 33.2,
+  "agent_seconds": 20.0,
+  "calls": 12,
+  "tokens_in": 19236,
+  "tokens_out": 4641,
+  "evals": 244,
+  "nodes": {
+   "untried": 2,
+   "promising": 5,
+   "unproven": 2,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 2,
+  "train": 16.045066045066047,
+  "valid": 23.106060606060606,
+  "progress": 72.15,
+  "valid_progress": 59.67,
+  "families": {
+   "sparse": 0.0,
+   "dense": 17.171717171717177,
+   "geometric": 2.5641025641025625,
+   "planted": 44.44444444444445
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f005",
+   "f003"
+  ],
+  "weights": [
+   [
+    -2.064744943029544
+   ],
+   [
+    0.551015792457802
+   ],
+   [
+    0.22226994230388356
+   ]
+  ],
+  "features": [
+   "f015",
+   "f016",
+   "f017",
+   "f018",
+   "f013",
+   "f014",
+   "f011",
+   "f012"
+  ],
+  "plan_source": "navigator",
+  "seconds": 83.6,
+  "agent_seconds": 80.2,
+  "calls": 24,
+  "tokens_in": 51438,
+  "tokens_out": 22543,
+  "evals": 330,
+  "nodes": {
+   "untried": 1,
+   "promising": 5,
+   "unproven": 6,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 3,
+  "train": 15.350621600621603,
+  "valid": 22.411616161616163,
+  "progress": 73.36,
+  "valid_progress": 60.88,
+  "families": {
+   "sparse": 0.0,
+   "dense": 14.393939393939396,
+   "geometric": 2.5641025641025625,
+   "planted": 44.44444444444445
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f005",
+   "f003"
+  ],
+  "weights": [
+   [
+    -2.0025882791166616
+   ],
+   [
+    0.5466043988737391
+   ],
+   [
+    0.23666302438163692
+   ]
+  ],
+  "features": [
+   "f023",
+   "f024",
+   "f025",
+   "f026",
+   "f019",
+   "f020",
+   "f021",
+   "f022"
+  ],
+  "plan_source": "navigator",
+  "seconds": 68.6,
+  "agent_seconds": 65.7,
+  "calls": 34,
+  "tokens_in": 79788,
+  "tokens_out": 36069,
+  "evals": 416,
+  "nodes": {
+   "untried": 1,
+   "promising": 5,
+   "unproven": 10,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 4,
+  "train": 15.113636363636363,
+  "valid": 20.810308972073678,
+  "progress": 73.77,
+  "valid_progress": 63.68,
+  "families": {
+   "sparse": 6.666666666666665,
+   "dense": 26.01010101010101,
+   "geometric": 0.0,
+   "planted": 27.777777777777775
+  },
+  "accepted": [
+   "f033"
+  ],
+  "library": [
+   "f008",
+   "f005",
+   "f033"
+  ],
+  "weights": [
+   [
+    -2.0015396262936367
+   ],
+   [
+    0.5345426582810168
+   ],
+   [
+    0.4644166948300676
+   ]
+  ],
+  "features": [
+   "f032",
+   "f033",
+   "f034",
+   "f035",
+   "f031",
+   "f028",
+   "f029",
+   "f030"
+  ],
+  "plan_source": "navigator",
+  "seconds": 77.3,
+  "agent_seconds": 64.4,
+  "calls": 45,
+  "tokens_in": 112996,
+  "tokens_out": 50006,
+  "evals": 647,
+  "nodes": {
+   "untried": 2,
+   "promising": 4,
+   "unproven": 13,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 5,
+  "train": 7.133838383838382,
+  "valid": 20.052733214497923,
+  "progress": 87.62,
+  "valid_progress": 65.0,
+  "families": {
+   "sparse": 0.0,
+   "dense": 17.424242424242422,
+   "geometric": 0.0,
+   "planted": 11.111111111111109
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f005",
+   "f033"
+  ],
+  "weights": [
+   [
+    -2.028167344081779
+   ],
+   [
+    0.6756020047337304
+   ],
+   [
+    0.5102241764762993
+   ]
+  ],
+  "features": [
+   "f042",
+   "f043",
+   "f044",
+   "f045",
+   "f041",
+   "f040",
+   "f038",
+   "f039"
+  ],
+  "plan_source": "navigator",
+  "seconds": 434.1,
+  "agent_seconds": 431.0,
+  "calls": 57,
+  "tokens_in": 149217,
+  "tokens_out": 127567,
+  "evals": 733,
+  "nodes": {
+   "untried": 2,
+   "promising": 3,
+   "unproven": 16,
+   "pruned": 0
+  }
+ }
+]

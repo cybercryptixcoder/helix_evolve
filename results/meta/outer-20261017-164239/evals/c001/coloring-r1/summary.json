@@ -1,0 +1,76 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 17.26560476560477,
+  "valid": 19.93172676996206,
+  "progress": 70.03,
+  "valid_progress": 65.21,
+  "library": [
+   "f012",
+   "f019",
+   "f030",
+   "f039"
+  ]
+ },
+ "test": {
+  "gap": 22.744708994708997,
+  "families": {
+   "sparse": 13.33333333333333,
+   "dense": 16.666666666666675,
+   "geometric": 4.464285714285713,
+   "planted": 61.111111111111114,
+   "medium": 18.148148148148156
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 60.28
+ },
+ "progress_curve": [
+  0.0,
+  53.88,
+  46.6,
+  57.37,
+  60.15,
+  70.03
+ ],
+ "valid_curve": [
+  0.0,
+  51.27,
+  55.99,
+  63.06,
+  65.69,
+  65.21
+ ],
+ "calls": 54,
+ "tokens_in": 132349,
+ "tokens_out": 94099,
+ "features_tried": 41,
+ "kept": [
+  {
+   "id": "f012",
+   "name": "blocked_uncolored_neighbor_count",
+   "origin": "wide"
+  },
+  {
+   "id": "f019",
+   "name": "blocked_neighbor_share_times_own_saturation_defi",
+   "origin": "wide"
+  },
+  {
+   "id": "f030",
+   "name": "blocked_region_depth",
+   "origin": "deep"
+  },
+  {
+   "id": "f039",
+   "name": "saturation_local_peak_contrast",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792271898.2901692
+}

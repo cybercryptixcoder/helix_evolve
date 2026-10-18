@@ -1,0 +1,69 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 7.01728247373245,
+  "valid": 16.47873266833359,
+  "progress": 99.3,
+  "valid_progress": 98.4,
+  "library": [
+   "f003",
+   "f045",
+   "f044"
+  ]
+ },
+ "test": {
+  "gap": 7.810955502540454,
+  "families": {
+   "uniform": 2.4196890066377894,
+   "exponential": 5.946444841166044,
+   "bimodal": 12.807881773399012,
+   "lognormal": 10.069806388958964
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 99.13
+ },
+ "progress_curve": [
+  0.0,
+  98.21,
+  98.21,
+  98.21,
+  98.21,
+  99.3
+ ],
+ "valid_curve": [
+  0.0,
+  97.99,
+  97.99,
+  97.99,
+  97.99,
+  98.4
+ ],
+ "calls": 67,
+ "tokens_in": 137646,
+ "tokens_out": 272516,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "relative_job_size_below_mean_slack",
+   "origin": "wide"
+  },
+  {
+   "id": "f045",
+   "name": "tiny_fraction_gate_fill_to_current_max",
+   "origin": "deep"
+  },
+  {
+   "id": "f044",
+   "name": "tiny_avoid_large_job_machines",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792280147.437731
+}

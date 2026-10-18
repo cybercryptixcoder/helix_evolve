@@ -1,0 +1,769 @@
+{
+ "incumbent": "c005",
+ "gen": 1,
+ "pending": null,
+ "used": 24362.8,
+ "candidates": [
+  {
+   "id": "c001",
+   "dir": "meta_runs/outer-20261017-164239/candidates/c001",
+   "origin": "seed",
+   "name": "starting strategy",
+   "gen": 0,
+   "hash": "a3e835dbe80a",
+   "parent": null,
+   "result": {
+    "score": 27.64,
+    "worst": -5.24,
+    "noise": 7.58,
+    "held_out_score": -6.45,
+    "problems": {
+     "binpack1d": {
+      "score": -5.24,
+      "spread": 15.19,
+      "final": -0.2,
+      "auc": 26.97,
+      "final_beyond": -19.11,
+      "auc_beyond": 15.57,
+      "plateau": 2,
+      "crashes": 0
+     },
+     "knapsack": {
+      "score": 63.14,
+      "spread": 1.64,
+      "final": 99.28,
+      "auc": 98.98,
+      "final_beyond": 75.19,
+      "auc_beyond": 45.06,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "tsp": {
+      "score": 43.49,
+      "spread": 3.98,
+      "final": 97.12,
+      "auc": 97.62,
+      "final_beyond": 40.02,
+      "auc_beyond": 48.7,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "scheduling": {
+      "score": 9.16,
+      "spread": 9.52,
+      "final": 98.3,
+      "auc": 98.44,
+      "final_beyond": 0.34,
+      "auc_beyond": 22.38,
+      "plateau": 1,
+      "crashes": 0
+     }
+    },
+    "held_out": {
+     "coloring": {
+      "score": -6.45,
+      "spread": 7.83,
+      "final": 54.98,
+      "auc": 60.58,
+      "final_beyond": -15.24,
+      "auc_beyond": 6.74,
+      "plateau": 3.5,
+      "crashes": 0
+     }
+    },
+    "minutes": 46.2,
+    "calls": 631,
+    "crashes": []
+   },
+   "stats": {
+    "binpack1d": {
+     "final": -0.2,
+     "auc": 26.97,
+     "plateau": 2,
+     "flat_tail": 1,
+     "duplicates": 14,
+     "invalid": 0,
+     "probe_rejected": 24.5,
+     "kept_deep": 2,
+     "kept_wide": 1,
+     "predictions_held": 2,
+     "calls": 63.5
+    },
+    "knapsack": {
+     "final": 99.28,
+     "auc": 98.98,
+     "plateau": 1,
+     "flat_tail": 2,
+     "duplicates": 21,
+     "invalid": 0,
+     "probe_rejected": 13.5,
+     "kept_deep": 1.5,
+     "kept_wide": 2,
+     "predictions_held": 3.5,
+     "calls": 69
+    },
+    "tsp": {
+     "final": 97.12,
+     "auc": 97.62,
+     "plateau": 1,
+     "flat_tail": 2.5,
+     "duplicates": 6.5,
+     "invalid": 0,
+     "probe_rejected": 24,
+     "kept_deep": 2,
+     "kept_wide": 2,
+     "predictions_held": 5,
+     "calls": 58.5
+    },
+    "scheduling": {
+     "final": 98.3,
+     "auc": 98.44,
+     "plateau": 1,
+     "flat_tail": 3,
+     "duplicates": 24.5,
+     "invalid": 0.5,
+     "probe_rejected": 8.5,
+     "kept_deep": 0,
+     "kept_wide": 4,
+     "predictions_held": 5.5,
+     "calls": 71
+    },
+    "coloring": {
+     "final": 54.98,
+     "auc": 60.58,
+     "plateau": 3.5,
+     "flat_tail": 1.5,
+     "duplicates": 1,
+     "invalid": 0.5,
+     "probe_rejected": 18.5,
+     "kept_deep": 2,
+     "kept_wide": 2,
+     "predictions_held": 5.5,
+     "calls": 53.5
+    }
+   },
+   "verdict": "replaced"
+  },
+  {
+   "id": "c002",
+   "dir": "meta_runs/outer-20261017-164239/candidates/c002",
+   "origin": "wide",
+   "gen": 1,
+   "parent": "c001",
+   "name": "sharper_deep_fresh_wide",
+   "change": "--- config.json + \"experiments\": 3, + \"effort\": \"medium\", + \"temperature\": 0.7, + \"effort\": \"low\", + \"temperature\": 0.3, + \"max_tokens\": 3000 + \"slots\": 5, + \"fresh\": 2, + \"effort\": \"low\", + \"temperature\": 1.0, + \"max_tokens\": 3000, + \"sco\u2026",
+   "node": "",
+   "notes": [],
+   "diff": "--- config.json\n-  \"experiments\": 4,\n-  \"effort\": \"low\",\n-  \"temperature\": 0.6,\n+  \"experiments\": 3,\n+  \"effort\": \"medium\",\n+  \"temperature\": 0.7,\n-  \"effort\": \"none\",\n-  \"temperature\": 0.2,\n-  \"max_tokens\": 2500\n+  \"effort\": \"low\",\n+  \"temperature\": 0.3,\n+  \"max_tokens\": 3000\n-  \"slots\": 4,\n-  \"fresh\": 1,\n-  \"effort\": \"none\",\n-  \"temperature\": 0.9,\n-  \"max_tokens\": 2500,\n-  \"scoreboard\": 10,\n+  \"slots\": 5,\n+  \"fresh\": 2,\n+  \"effort\": \"low\",\n+  \"temperature\": 1.0,\n+  \"max_tokens\": 3000,\n+  \"scoreboard\": 12,\n-  \"effort\": \"none\",\n-  \"temperature\": 0.5,\n+  \"effort\": \"low\",\n+  \"temperature\": 0.6,\n-  \"accept_margin\": 0.03,\n+  \"accept_margin\": 0.02,\n-  \"near_miss_trials\": 0,\n-  \"near_miss_floor\": 0.3,\n+  \"near_miss_trials\": 2,\n+  \"near_miss_floor\": 0.25,\n-  \"duplicate_rho\": 0.98,\n+  \"duplicate_rho\": 0.97,\n-  \"every\": 5,\n+  \"every\": 4,\n-  \"revive_p\": 0.2,\n+  \"revive_p\": 0.25,\n--- hooks.py\n-    for n in promising[:2]:\n-        research.append({\"approach\": n[\"id\"], \"mode\": \"exploit\", \"why\": \"it has gained before\"})\n+    # Only one exploit slot per generation: depth on the single best approach, not two half-deep ones.\n+    if promising:\n+        research.append({\"approach\": promising[0][\"id\"], \"mode\": \"exploit\", \"why\": \"the strongest gained approach\"})\n+    if len(promising) > 1 and view[\"gen\"] % 3 == 0:\n+        research.append({\"approach\": promising[1][\"id\"], \"mode\": \"exploit\", \"why\": \"second promising: occasional depth\"})\n-    if unproven and view[\"gen\"] % 2 == 0:\n+    if unproven and view[\"gen\"] % 2 == 0 and len(research) < n_research:\n+    n_vary = cfg[\"mutator\"][\"slots\"] - cfg[\"mutator\"][\"fresh\"]\n+    # Kept features first (their variants win far more often), then near-misses; spread across approaches.\n+    kept = [f for f in feats if f[\"status\"] == \"kept\"]\n+    rest = [f for f in feats if f[\"status\"] != \"kept\"]\n-    for f in feats:                                   # one parent per approach: spread the width\n-        if f[\"node\"] in seen_nodes:\n-            continue\n+    for f in kept + rest:\n+        if f[\"node\"] in seen_nodes and len(vary) < n_vary:\n+            # allow a second parent from the same approach only once slots run thin\n+            if len(seen_nodes) >= n_vary:\n+                continue\n-        if len(vary) >= cfg[\"mutator\"][\"slots\"] - cfg[\"mutator\"][\"fresh\"]:\n+        if len(vary) >= n_vary:",
+   "changed": [
+    "config.json",
+    "hooks.py"
+   ],
+   "hash": "03ce06b44f19",
+   "result": {
+    "score": 29.4,
+    "worst": 0.0,
+    "noise": 3.16,
+    "held_out_score": 0.0,
+    "problems": {
+     "binpack1d": {
+      "score": 2.92,
+      "spread": 2.92,
+      "final": 22.16,
+      "auc": 30.85,
+      "final_beyond": 13.72,
+      "auc_beyond": 25.72,
+      "plateau": 1.5,
+      "crashes": 1
+     },
+     "knapsack": {
+      "score": 65.95,
+      "spread": 8.51,
+      "final": 99.09,
+      "auc": 99.31,
+      "final_beyond": 68.3,
+      "auc_beyond": 62.43,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "tsp": {
+      "score": 48.72,
+      "spread": 1.22,
+      "final": 97.65,
+      "auc": 97.47,
+      "final_beyond": 50.99,
+      "auc_beyond": 45.3,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "scheduling": {
+      "score": 0.0,
+      "spread": 0.0,
+      "final": 98.87,
+      "auc": 98.53,
+      "final_beyond": 98.87,
+      "auc_beyond": 98.53,
+      "plateau": 1,
+      "crashes": 2
+     }
+    },
+    "held_out": {
+     "coloring": {
+      "score": 0.0,
+      "spread": 0.0,
+      "final": 41.59,
+      "auc": 40.05,
+      "final_beyond": 41.59,
+      "auc_beyond": 40.05,
+      "plateau": 0.5,
+      "crashes": 2
+     }
+    },
+    "minutes": 120.2,
+    "calls": 525,
+    "crashes": [
+     {
+      "problem": "binpack1d",
+      "seed": 1,
+      "error": "timed out after 3600s"
+     },
+     {
+      "problem": "scheduling",
+      "seed": 0,
+      "error": "timed out after 3600s"
+     },
+     {
+      "problem": "scheduling",
+      "seed": 1,
+      "error": "timed out after 3600s"
+     },
+     {
+      "problem": "coloring",
+      "seed": 0,
+      "error": "timed out after 3600s"
+     },
+     {
+      "problem": "coloring",
+      "seed": 1,
+      "error": "timed out after 3600s"
+     }
+    ]
+   },
+   "stats": {
+    "binpack1d": {
+     "final": 22.16,
+     "auc": 30.85,
+     "plateau": 1.5,
+     "flat_tail": 3,
+     "duplicates": 7.5,
+     "invalid": 0,
+     "probe_rejected": 18,
+     "kept_deep": 0.5,
+     "kept_wide": 2,
+     "predictions_held": 2,
+     "calls": 59.5
+    },
+    "knapsack": {
+     "final": 99.09,
+     "auc": 99.31,
+     "plateau": 1,
+     "flat_tail": 2.5,
+     "duplicates": 15.5,
+     "invalid": 0,
+     "probe_rejected": 11.5,
+     "kept_deep": 0.5,
+     "kept_wide": 2,
+     "predictions_held": 4,
+     "calls": 66.5
+    },
+    "tsp": {
+     "final": 97.65,
+     "auc": 97.47,
+     "plateau": 1,
+     "flat_tail": 0.5,
+     "duplicates": 8,
+     "invalid": 0,
+     "probe_rejected": 23,
+     "kept_deep": 1.5,
+     "kept_wide": 3.5,
+     "predictions_held": 4,
+     "calls": 62
+    },
+    "scheduling": {
+     "final": 98.87,
+     "auc": 98.53,
+     "plateau": 1,
+     "flat_tail": 0,
+     "duplicates": 11.5,
+     "invalid": 0,
+     "probe_rejected": 0,
+     "kept_deep": 2,
+     "kept_wide": 4.5,
+     "predictions_held": 1.5,
+     "calls": 39.5
+    },
+    "coloring": {
+     "final": 41.59,
+     "auc": 40.05,
+     "plateau": 0.5,
+     "flat_tail": 1,
+     "duplicates": 3.5,
+     "invalid": 1,
+     "probe_rejected": 5.5,
+     "kept_deep": 0,
+     "kept_wide": 1.5,
+     "predictions_held": 1.5,
+     "calls": 35
+    }
+   },
+   "repaired": true,
+   "delta": 1.76,
+   "verdict": "flat"
+  },
+  {
+   "id": "c004",
+   "dir": "meta_runs/outer-20261017-164239/candidates/c004",
+   "origin": "deep",
+   "gen": 1,
+   "parent": "c001",
+   "name": "negative_probe_margin_admits_trial",
+   "change": "config.json: change \"fit\": {\"probe_margin\": 0.0, ...} to \"probe_margin\": -0.15. Nothing else changes.",
+   "hypothesis": "The probe gate is the binding constraint, not the fitter: probe_margin is 0.0 and only 16/45 (binpack) and 16/44 (tsp) features ever reach a trial, while 24 are rejected by the probe every generation. With probe sigma 0.3, a margin of 0.0 accepts anything at noise level, so the gate is both too permissive to noise and (through the single-gain probe) too strict in practice. Lowering the margin lets near-neutral features be judged by the 16-eval trial instead of a one-shot probe, which is where the deep loop's kept features actually come from.",
+   "prediction": {
+    "family": "all",
+    "metric": "probe_rejected",
+    "direction": "down"
+   },
+   "node": "m01",
+   "kind": "probe",
+   "notes": [],
+   "diff": "--- config.json\n-  \"probe_margin\": 0.0,\n+  \"probe_margin\": -0.15,",
+   "changed": [
+    "config.json"
+   ],
+   "hash": "022bbbc17b88",
+   "result": {
+    "score": 13.27,
+    "worst": -11.59,
+    "noise": 13.48,
+    "held_out_score": -1.21,
+    "problems": {
+     "binpack1d": {
+      "score": -11.59,
+      "spread": 18.84,
+      "final": -7.25,
+      "auc": 24.12,
+      "final_beyond": -27.5,
+      "auc_beyond": 12.28,
+      "plateau": 1.5,
+      "crashes": 0
+     },
+     "knapsack": {
+      "score": 18.29,
+      "spread": 25.58,
+      "final": 97.4,
+      "auc": 98.73,
+      "final_beyond": 9.34,
+      "auc_beyond": 31.71,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "tsp": {
+      "score": 46.93,
+      "spread": 2.29,
+      "final": 97.53,
+      "auc": 97.44,
+      "final_beyond": 48.33,
+      "auc_beyond": 44.84,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "scheduling": {
+      "score": -0.56,
+      "spread": 7.21,
+      "final": 98.12,
+      "auc": 98.25,
+      "final_beyond": -9.77,
+      "auc_beyond": 13.24,
+      "plateau": 1,
+      "crashes": 0
+     }
+    },
+    "held_out": {
+     "coloring": {
+      "score": -1.21,
+      "spread": 12.03,
+      "final": 58.67,
+      "auc": 60.11,
+      "final_beyond": -5.79,
+      "auc_beyond": 5.64,
+      "plateau": 4,
+      "crashes": 0
+     }
+    },
+    "minutes": 67.5,
+    "calls": 633,
+    "crashes": []
+   },
+   "stats": {
+    "binpack1d": {
+     "final": -7.25,
+     "auc": 24.12,
+     "plateau": 1.5,
+     "flat_tail": 2.5,
+     "duplicates": 15.5,
+     "invalid": 0,
+     "probe_rejected": 29.5,
+     "kept_deep": 0.5,
+     "kept_wide": 1.5,
+     "predictions_held": 0.5,
+     "calls": 63.5
+    },
+    "knapsack": {
+     "final": 97.4,
+     "auc": 98.73,
+     "plateau": 1,
+     "flat_tail": 1.5,
+     "duplicates": 21,
+     "invalid": 0,
+     "probe_rejected": 18,
+     "kept_deep": 3.5,
+     "kept_wide": 1.5,
+     "predictions_held": 2.5,
+     "calls": 69.5
+    },
+    "tsp": {
+     "final": 97.53,
+     "auc": 97.44,
+     "plateau": 1,
+     "flat_tail": 1.5,
+     "duplicates": 8.5,
+     "invalid": 0,
+     "probe_rejected": 23.5,
+     "kept_deep": 1.5,
+     "kept_wide": 2.5,
+     "predictions_held": 3.5,
+     "calls": 59
+    },
+    "scheduling": {
+     "final": 98.12,
+     "auc": 98.25,
+     "plateau": 1,
+     "flat_tail": 2.5,
+     "duplicates": 23,
+     "invalid": 0,
+     "probe_rejected": 18.5,
+     "kept_deep": 1,
+     "kept_wide": 1,
+     "predictions_held": 2.5,
+     "calls": 69
+    },
+    "coloring": {
+     "final": 58.67,
+     "auc": 60.11,
+     "plateau": 4,
+     "flat_tail": 1,
+     "duplicates": 3.5,
+     "invalid": 1,
+     "probe_rejected": 27.5,
+     "kept_deep": 2.5,
+     "kept_wide": 1.5,
+     "predictions_held": 4.5,
+     "calls": 55.5
+    }
+   },
+   "prediction_outcome": {
+    "metric": "probe_rejected",
+    "family": "all",
+    "direction": "down",
+    "before": 17.625,
+    "after": 22.375,
+    "held": false,
+    "checked": true
+   },
+   "delta": -14.37,
+   "verdict": "worse"
+  },
+  {
+   "id": "c005",
+   "dir": "meta_runs/outer-20261017-164239/candidates/c005",
+   "origin": "deep",
+   "gen": 1,
+   "parent": "c001",
+   "name": "shift_one_mutator_slot_to_researcher",
+   "change": "config.json: set \"researcher\": {\"experiments\": 5, ...} and \"mutator\": {\"slots\": 3, ...}; leave \"mutator\".\"fresh\": 1 unchanged (hooks.py computes fresh slots as slots - len(vary), so with 3 slots and 1 fresh the Mutator still gets two varied parents once the ledger has entries).",
+   "hypothesis": "In generation 1 the Mutator has no parents (vary is empty in every digest: 'fresh 4'), so its slots produce blind variations that are mostly duplicates, while the kept features come from the deep loop (binpack: 3 kept deep, 0 wide). The budget is dominated by a loop that cannot use its slots in the generation where nearly all the gain happens (90% of final by gen 1-2). Moving one slot to the Researcher buys a fifth deep experiment per generation at the cost of a blind fresh slot.",
+   "prediction": {
+    "family": "all",
+    "metric": "kept_deep",
+    "direction": "up"
+   },
+   "node": "m04",
+   "kind": "improve",
+   "notes": [],
+   "diff": "--- config.json\n-  \"experiments\": 4,\n+  \"experiments\": 5,\n-  \"slots\": 4,\n+  \"slots\": 3,",
+   "changed": [
+    "config.json"
+   ],
+   "hash": "54e30b90b682",
+   "result": {
+    "score": 38.23,
+    "worst": 18.16,
+    "noise": 3.56,
+    "held_out_score": -0.15,
+    "problems": {
+     "binpack1d": {
+      "score": 18.16,
+      "spread": 1.46,
+      "final": 32.37,
+      "auc": 27.34,
+      "final_beyond": 19.61,
+      "auc_beyond": 16.0,
+      "plateau": 3.5,
+      "crashes": 0
+     },
+     "knapsack": {
+      "score": 70.91,
+      "spread": 1.84,
+      "final": 99.52,
+      "auc": 99.12,
+      "final_beyond": 83.0,
+      "auc_beyond": 52.76,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "tsp": {
+      "score": 43.31,
+      "spread": 0.54,
+      "final": 97.41,
+      "auc": 97.19,
+      "final_beyond": 45.89,
+      "auc_beyond": 39.42,
+      "plateau": 1,
+      "crashes": 0
+     },
+     "scheduling": {
+      "score": 20.54,
+      "spread": 10.38,
+      "final": 98.79,
+      "auc": 98.15,
+      "final_beyond": 28.89,
+      "auc_beyond": 8.01,
+      "plateau": 1,
+      "crashes": 0
+     }
+    },
+    "held_out": {
+     "coloring": {
+      "score": -0.15,
+      "spread": 5.85,
+      "final": 55.17,
+      "auc": 66.92,
+      "final_beyond": -14.73,
+      "auc_beyond": 21.74,
+      "plateau": 1.5,
+      "crashes": 0
+     }
+    },
+    "minutes": 59.0,
+    "calls": 628,
+    "crashes": []
+   },
+   "stats": {
+    "binpack1d": {
+     "final": 32.37,
+     "auc": 27.34,
+     "plateau": 3.5,
+     "flat_tail": 1,
+     "duplicates": 14,
+     "invalid": 0,
+     "probe_rejected": 18,
+     "kept_deep": 2,
+     "kept_wide": 2.5,
+     "predictions_held": 3.5,
+     "calls": 63
+    },
+    "knapsack": {
+     "final": 99.52,
+     "auc": 99.12,
+     "plateau": 1,
+     "flat_tail": 1,
+     "duplicates": 20.5,
+     "invalid": 0,
+     "probe_rejected": 11.5,
+     "kept_deep": 2,
+     "kept_wide": 3,
+     "predictions_held": 3,
+     "calls": 68.5
+    },
+    "tsp": {
+     "final": 97.41,
+     "auc": 97.19,
+     "plateau": 1,
+     "flat_tail": 1.5,
+     "duplicates": 6,
+     "invalid": 0,
+     "probe_rejected": 17.5,
+     "kept_deep": 2.5,
+     "kept_wide": 2.5,
+     "predictions_held": 7,
+     "calls": 58
+    },
+    "scheduling": {
+     "final": 98.79,
+     "auc": 98.15,
+     "plateau": 1,
+     "flat_tail": 0.5,
+     "duplicates": 19,
+     "invalid": 0,
+     "probe_rejected": 9,
+     "kept_deep": 1,
+     "kept_wide": 2.5,
+     "predictions_held": 7,
+     "calls": 67.5
+    },
+    "coloring": {
+     "final": 55.17,
+     "auc": 66.92,
+     "plateau": 1.5,
+     "flat_tail": 3,
+     "duplicates": 4.5,
+     "invalid": 0,
+     "probe_rejected": 18,
+     "kept_deep": 1,
+     "kept_wide": 2.5,
+     "predictions_held": 4,
+     "calls": 57
+    }
+   },
+   "prediction_outcome": {
+    "metric": "kept_deep",
+    "family": "all",
+    "direction": "up",
+    "before": 1.375,
+    "after": 1.875,
+    "held": true,
+    "checked": true
+   },
+   "delta": 10.59,
+   "verdict": "incumbent"
+  },
+  {
+   "id": "c003",
+   "dir": "meta_runs/outer-20261017-164239/candidates/c003",
+   "origin": "wide",
+   "gen": 1,
+   "parent": "c001",
+   "name": "exploratory_rebalance",
+   "change": "--- config.json + \"experiments\": 3, + \"effort\": \"medium\", + \"temperature\": 0.7, + \"effort\": \"low\", + \"max_tokens\": 3000 + \"slots\": 5, + \"fresh\": 2, + \"effort\": \"low\", + \"temperature\": 1.0, + \"effort\": \"low\", + \"near_miss_trials\": 2, + \"max\u2026",
+   "node": "",
+   "notes": [],
+   "diff": "--- config.json\n-  \"experiments\": 4,\n-  \"effort\": \"low\",\n-  \"temperature\": 0.6,\n+  \"experiments\": 3,\n+  \"effort\": \"medium\",\n+  \"temperature\": 0.7,\n-  \"effort\": \"none\",\n+  \"effort\": \"low\",\n-  \"max_tokens\": 2500\n+  \"max_tokens\": 3000\n-  \"slots\": 4,\n-  \"fresh\": 1,\n-  \"effort\": \"none\",\n-  \"temperature\": 0.9,\n+  \"slots\": 5,\n+  \"fresh\": 2,\n+  \"effort\": \"low\",\n+  \"temperature\": 1.0,\n-  \"effort\": \"none\",\n+  \"effort\": \"low\",\n-  \"near_miss_trials\": 0,\n+  \"near_miss_trials\": 2,\n-  \"max_pairs\": 2\n+  \"max_pairs\": 3\n-  \"every\": 5,\n+  \"every\": 4,\n--- hooks.py\n-    \"\"\"A plan with the same shape as the Navigator's: who researches what, what the Mutator varies.\"\"\"\n+    \"\"\"A plan shaped like the Navigator's. Effort follows evidence early, then deliberately over-samples the\n+    untried and unproven so the search doesn't collapse onto the first promising branch.\"\"\"\n+    slots = cfg[\"mutator\"][\"slots\"]\n+    gen = view[\"gen\"]\n+\n-    for n in promising[:2]:\n-        research.append({\"approach\": n[\"id\"], \"mode\": \"exploit\", \"why\": \"it has gained before\"})\n-    for n in untried:\n-        if len(research) >= n_research - 1:\n-            break\n-        research.append({\"approach\": n[\"id\"], \"mode\": \"explore\", \"why\": \"not tried yet\"})\n-    if unproven and view[\"gen\"] % 2 == 0:\n-        research.append({\"approach\": unproven[0][\"id\"], \"mode\": \"probe\", \"why\": \"weak but unproven: occasional retry\"})\n+    # early generations: mostly explore, because the map is thin and one lucky gain is not evidence\n+    explore_first = gen <= 1 or not promising\n+    if explore_first:\n+        for n in untried:\n+            if len(research) >= n_research:\n+                break\n+            research.append({\"approach\": n[\"id\"], \"mode\": \"explore\", \"why\": \"early: map is thin\"})\n+        for n in promising[:1]:\n+            if len(research) >= n_research:\n+                break\n+            research.append({\"approach\": n[\"id\"], \"mode\": \"exploit\", \"why\": \"the one branch that gained\"})\n+    else:\n+        for n in promising[:2]:\n+            research.append({\"approach\": n[\"id\"], \"mode\": \"exploit\", \"why\": \"it has gained before\"})\n+        for n in untried:\n+            if len(research) >= n_research - 1:\n+                break\n+            research.append({\"approach\": n[\"id\"], \"mode\": \"explore\", \"why\": \"not tried yet\"})\n+        if len(research) < n_research:\n+            for n in unproven:\n+                if len(research) >= n_research:\n+                    break\n+                research.append({\"approach\": n[\"id\"], \"mode\": \"probe\", \"why\": \"no gain yet, not proven dead\"})\n+    # parents for the Mutator: keep the top two kept features in, then spread one-per-approach across nodes\n+    kept = [f for f in view[\"features\"] if f[\"status\"] == \"kept\"]\n+    kept.sort(key=lambda f: -(f[\"d_valid\"] if f[\"d_valid\"] is not None else (f[\"best_probe\"] or -99)))\n-    vary, seen_nodes = [], set()\n-    for f in feats:                                   # one parent per approach: spread the width\n-        if f[\"node\"] in seen_nodes:\n+    n_vary = slots - cfg[\"mutator\"][\"fresh\"]\n+    vary, seen = [], set()\n+    for f in kept[:2]:                                # variants of kept features win most often\n+        if f[\"id\"] not in seen:\n+            vary.append(f[\"id\"])\n+            seen.add(f[\"id\"])\n+    for f in feats:\n+        if len(vary) >= n_vary:\n+            break\n+        if f[\"id\"] in seen or f[\"node\"] in {g[\"node\"] for g in feats if g[\"id\"] in vary[2:]}:\n-        seen_nodes.add(f[\"node\"])\n-        if len(vary) >= cfg[\"mutator\"][\"slots\"] - cfg[\"mutator\"][\"fresh\"]:\n-            break\n+        seen.add(f[\"id\"])\n+    vary = vary[:n_vary]\n+\n-            \"mutate\": {\"vary\": vary, \"fresh\": cfg[\"mutator\"][\"slots\"] - len(vary)}, \"combine\": combine, \"prune\": []}\n--- prompts/mutator.md\n-- **Fresh:** something that nothing on the scoreboard already does.\n+- **Fresh:** something that nothing on the scoreboard already does. Reach for a quantity or a comparison the scoreboard hasn't touched at all, not a re-skin of what it already measures.\n+\n+Work in this order:\n+1. Read the scoreboard for **shape**, not for a winner: which families of ideas exist, which are over-represented. Then deliberately go to an under-represented one, or outside all of them.\n+2. When varying a parent, change the *form* (a comparison instead of a level, a ratio instead of a difference, a condition that switches it off for part of the candidates), not a constant.\n+3. A near-miss (small positive gain, not kept) is a good parent: change the one thing that most likely stopped it from gaining more.\n+4. Never mirror the parent's sign or its monotone shape: a sign flip or monotone transform is a duplicate.\n+\n+The **scoreboard** shows what was already evaluated and what happened to it (gain = how much better the result got; negative = worse). Don't reproduce any of it: disguised copies are detected and discarded without being evaluated.\n--- prompts/navigator.md\n-1. **Brainstorm** new approaches when the map is thin or the promising ones are drying up. Make them genuinely different from each other, and add deeper sub-approaches under promising ones.\n-2. **Assign the Researcher** to approaches, each with a mode: `explore` (an untried approach), `exploit` (deepen a promising one), `probe` (a cheap experiment to learn whether an unproven one has anything).\n+1. **Brainstorm** new approaches when the map is thin or the promising ones are drying up. Make them genuinely different from each other, and add deeper sub-approaches under promising ones. Keep at least one genuinely distant approach in play even when a branch is winning.\n+2. **Assign the Researcher** to approaches, each with a mode: `explore` (an untried approach), `exploit` (deepen a promising one), `probe` (a cheap experiment to learn whether an unproven one has anything). In the first generations, favour `explore`: one gain is not yet a map.\n-5. **Prune requests**: approaches you believe are dead. The Prover will try to certify it; only a verified certificate prunes.\n+5. **Prune requests**: approaches you believe are dead. The Prover will try to certify it; only a verified certificate prunes. Prune sparingly: an approach that keeps failing but you have no certificate for is `unproven`, not dead.\n--- prompts/researcher.md\n-1. **Find a mechanism, not a symptom.** Name a concrete difference between the incumbent's results and the reference (or between what works and what doesn't), and the decision that produces it.\n-2. **Design experiments of two kinds:**\n+1. **First pick the mechanism, then the experiment.** Name a concrete difference between the incumbent's results and the reference (or between what works and what doesn't), and the specific decision that produces it. An experiment without a mechanism behind it is a lottery ticket: use those sparingly.\n+2. **Design experiments of three kinds:**\n-3. **Don't repeat the ledger.** If an idea was tried, change it meaningfully or leave it. A disguised copy is detected and discarded. When the ledger shows a group of tried features that behave alike, that idea is spent: look at a different quantity altogether.\n-4. **Learn from what failed.** A prediction that didn't hold means the mechanism you believed is wrong or incomplete. Say what it taught you (`lesson`) before proposing the next experiment.\n-5. **Predict.** Every experiment names one metric from the diagnostics, where it should move (a family or scope), and the direction. The engine checks it.\n-6. **Be exact** in `change`: describe the candidate so precisely that it can be written without guessing.\n+   - `seesaw`: deliberately the *opposite* tendency of a feature that gained, or the same quantity under an inverted condition, to find the other side of a trade-off the incumbent may have overshot.\n+3. **Chase near-misses before they're cold.** A Mutator find that gained a little but wasn't kept is often one sharpening away from a keeper: explain *why* it nearly worked and design the version that removes the near-miss.\n+4. **Don't repeat the ledger.** If an idea was tried, change it meaningfully or leave it. A disguised copy is detected and discarded. When the ledger shows a group of tried features that behave alike, that idea is spent: look at a different quantity altogether.\n+5. **Learn from what failed.** A prediction that didn't hold means the mechanism you believed is wrong or incomplete. Say what it taught you (`lesson`) before proposing the next experiment.\n+6. **Predict.** Every experiment names one metric from the diagnostics, where it should move (a family or scope), and the direction. The engine checks it.\n+7. **Be exact** in `change`: describe the candidate so precisely that it can be written without guessing. Prefer comparisons between normalised quantities; use a hard threshold only when the condition is the idea.\n-   \"kind\": \"probe | improve\",\n+   \"kind\": \"probe | improve | seesaw\",",
+   "changed": [
+    "config.json",
+    "hooks.py",
+    "prompts/mutator.md",
+    "prompts/navigator.md",
+    "prompts/researcher.md"
+   ],
+   "hash": "a76a9cc7825a",
+   "verdict": "skipped (time)"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "m01",
+   "title": "probe gating and rejection",
+   "description": "Change how cheap probes decide whether a feature is worth deep investment, so probe_rejected (8-25/run) stops discarding features that would have gained.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "c004"
+   ],
+   "best_gain": -14.37,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "m02",
+   "title": "duplicate suppression",
+   "description": "Reduce the 6-25 duplicates per run by making the Mutator see what was already tried and steering it away from near-identical features.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 1,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "m03",
+   "title": "wide-loop breadth vs depth",
+   "description": "Rebalance Mutator slot allocation and parent selection so wide variants explore genuinely different mechanisms instead of clustering.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 1,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "m04",
+   "title": "early-generation targeting",
+   "description": "Since 90% of gains land by gen 1-2, front-load effort: more experiments and better parent seeding in generation 0-1, less later.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "c005"
+   ],
+   "best_gain": 10.59,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "m05",
+   "title": "researcher experiment design",
+   "description": "Make the Researcher design sharper, falsifiable experiments (isolate one mechanism, predict direction) rather than broad feature edits.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 1,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ]
+}

@@ -1,0 +1,3479 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "greedy_fill_surplus",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Greedy fill potential: how much of the remaining capacity this item would leave usable, via its value density relative to the best density still available.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = float(remaining)\n    cap = float(capacity) if capacity > 0 else 1.0\n    # density of each candidate\n    dens = v / np.maximum(w, 1.0)\n    max_dens = np.max(dens) if dens.size else 0.0\n    # how much capacity would remain after taking this item\n    left = rem - w\n    # efficiency of the leftover space, proxied by the best density among the other candidates\n    masked = np.where(np.arange(dens.size)[:, None] != np.arange(dens.size)[None, :], dens[None, :], -np.inf)\n    best_other = np.max(masked, axis=1) if dens.size > 1 else np.zeros(dens.size)\n    best_other = np.where(np.isfinite(best_other), best_other, 0.0)\n    # value gained now vs value we could get from the leftover space at the best alternative density\n    gained = v\n    reclaimable = left * best_other\n    # relative surplus: does taking this item beat spending its weight elsewhere\n    surplus = (gained - reclaimable) / np.maximum(np.abs(gained) + np.abs(reclaimable), 1.0)\n    # scale also by how tightly the item fits (small leftover waste preferred)\n    tight = left / rem if rem > 0 else np.zeros_like(w)\n    return 0.5 * surplus - 0.5 * tight\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a03",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Greedy fill potential: how much of the remaining capacity this item would leave usable, via its value density relative to the best density still available.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    27.047708523337178
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -7.0739
+    ],
+    [
+     -1.0,
+     3.7347
+    ]
+   ],
+   "best_probe": 3.7347,
+   "best_w": -1.0,
+   "d_train": 3.7347,
+   "d_valid": 4.0057,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9462
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "value_times_remaining_share",
+   "code": "import numpy as np\nimport math\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value density times the fraction of remaining capacity the item would consume, i.e. value * (weight/remaining).\"\"\"\n    rem = max(float(remaining), 1.0)\n    cap = max(float(capacity), 1.0)\n    w = np.asarray(weights, dtype=float)\n    v = np.asarray(values, dtype=float)\n    # how much of the currently free space this item eats\n    frac = np.clip(w / rem, 0.0, 1.0)\n    # value scaled by absolute capacity so it lives in a comparable range\n    vnorm = np.clip(v / cap, 0.0, 1.0)\n    return vnorm * frac\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a03",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value density times the fraction of remaining capacity the item would consume, i.e. value * (weight/remaining).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    826.8958397755035
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -0.7731
+    ],
+    [
+     -1.0,
+     -1.7224
+    ]
+   ],
+   "best_probe": -0.7731,
+   "best_w": 1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.2129
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "relative_density_scarcity",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value density relative to the best remaining density, with scarcity bonus.\"\"\"\n    # density of each candidate\n    dens = values / np.maximum(weights, 1.0)\n    best = np.max(dens) if dens.size else 1.0\n    best = best if best > 0 else 1.0\n    rel = dens / best  # in (0, 1]\n    # how tight the remaining capacity is: if capacity nearly full, prefer light items\n    fill = remaining / max(capacity, 1)\n    # weight share of candidate vs remaining capacity\n    share = weights / max(remaining, 1.0)\n    # combine: exploit high density but discount items that eat a large share when tight\n    return rel * (1.0 - share) ** (1.0 - fill)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value density relative to the best remaining density, with scarcity bonus.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    9.379046544786274
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     11.9134
+    ],
+    [
+     -1.0,
+     -15.3542
+    ]
+   ],
+   "best_probe": 11.9134,
+   "best_w": 1.0,
+   "d_train": 11.9134,
+   "d_valid": 13.2554,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "density_excess_value",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"How well a candidate's value fits the typical value density of the remaining pool: value minus the remaining-pool density times its weight, normalised.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = float(remaining)\n    cap = float(capacity) if capacity else 1.0\n    rem = max(rem, 1.0)\n    # density of the whole remaining candidate pool (value per unit weight)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    # value in excess of what this item's weight would be \"worth\" at pool density\n    excess = v - density * w\n    # scale by a robust typical magnitude of the excess\n    scale = np.abs(excess).max()\n    scale = scale if scale > 0 else 1.0\n    return np.tanh(excess / scale)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "How well a candidate's value fits the typical value density of the remaining pool: value minus the remaining-pool density times its weight, normalised.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.4631935477766667
+   ],
+   "weights": [
+    0.23108627384485503
+   ],
+   "probe": [
+    [
+     1.0,
+     12.9486
+    ],
+    [
+     -1.0,
+     -15.328
+    ]
+   ],
+   "best_probe": 12.9486,
+   "best_w": 1.0,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.9346
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": 1,
+   "importance": 0.5012,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "value_density_ratio",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value-per-weight ratio of each candidate, scaled by the best ratio among candidates.\"\"\"\n    d = values / np.maximum(weights, 1)\n    return d / (d.max() + 1e-9)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion takes the first fitting item, so in uncorrelated it grabs low-value/high-weight items (value_per_weight 1.01 vs ref 1.69). Ranking by value/weight is the fractional-knapsack greedy: it should raise value_per_weight and take more, lighter items on uncorrelated, where value and weight are independent.",
+    "feature": "d = values / np.maximum(weights, 1); return d / (d.max() + 1e-9). One column, the candidate's value-per-weight ratio scaled by the best ratio among candidates in this decision.",
+    "prediction": {
+     "family": "uncorrelated",
+     "metric": "value_per_weight",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's value/weight ratio divided by the maximum such ratio among the current candidates (guarding weight with `max(weight,1)` and the denominator with `1e-9`), giving the top-ratio candidate a score of ~1 and others proportionally less.",
+   "measures": "Value-per-weight ratio of each candidate, scaled by the best ratio among candidates.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    9.332887776124775
+   ],
+   "weights": [
+    2.784051785035618
+   ],
+   "probe": [
+    [
+     1.0,
+     13.0875
+    ],
+    [
+     -1.0,
+     -16.1288
+    ]
+   ],
+   "best_probe": 13.0875,
+   "best_w": 1.0,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "value_per_weight",
+    "family": "uncorrelated",
+    "direction": "up",
+    "before": 1.0098,
+    "after": 1.6926,
+    "held": true,
+    "checked": true,
+    "instance": "uncorrelated-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.9697
+   },
+   "error": "",
+   "calls": [
+    "c010"
+   ],
+   "kept_gen": 1,
+   "importance": 5.3059,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "value_minus_tightness_weight_penalty",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"values/capacity minus (weights/remaining) scaled by tightness = 1 - remaining/capacity.\"\"\"\n    cap = max(float(capacity), 1.0)\n    rem = max(float(remaining), 1.0)\n    tightness = 1.0 - rem / cap\n    return values / cap - (weights / rem) * tightness\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a02",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In strongly_correlated (value=weight+100) value is nearly proportional to weight, so density is almost flat and the champion wastes 28 capacity and takes too-heavy items. Penalising weight by how tight the remaining capacity is should bias toward lighter items exactly when capacity is scarce.",
+    "feature": "tightness = 1.0 - remaining / capacity; return values / capacity - (weights / remaining) * tightness. One column: value per capacity unit minus the candidate's share of remaining capacity, scaled by how full the knapsack already is.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate, its value per unit of total capacity minus its weight share of the remaining capacity weighted by how full the knapsack already is (tightness = 1 \u2212 remaining/capacity); I guard the divisions by clamping `capacity` and `remaining` to at least 1.0, and read \"tightness\" l\u2026",
+   "measures": "values/capacity minus (weights/remaining) scaled by tightness = 1 - remaining/capacity.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    19.686144789865143
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     6.1385
+    ],
+    [
+     -1.0,
+     -9.6598
+    ]
+   ],
+   "best_probe": 6.1385,
+   "best_w": 1.0,
+   "d_train": 6.1385,
+   "d_valid": 7.2283,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "before": 6.4743,
+    "after": 2.2992,
+    "held": true,
+    "checked": true,
+    "instance": "strongly_correlated-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.2751
+   },
+   "error": "",
+   "calls": [
+    "c009"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "remaining_fraction_used",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Fraction of the remaining capacity each candidate consumes, weights / remaining, rescaled to [-1, 1].\"\"\"\n    r = max(float(remaining), 1.0)\n    frac = np.clip(np.asarray(weights, dtype=float) / r, 0.0, 1.0)\n    return 2.0 * frac - 1.0\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion leaves unused capacity in every family (6, 1, 28, 18). Preferring the candidate that consumes the largest fraction of what is left should pack the knapsack tighter and, in inverse_strongly_correlated where heavy items carry the value, take fewer but heavier items.",
+    "feature": "return weights / remaining. One column, the fraction of the remaining capacity this candidate would consume (all candidates fit, so in [0,1]).",
+    "prediction": {
+     "family": "inverse_strongly_correlated",
+     "metric": "items_taken",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `weights / remaining` (clipped to [0, 1]) for each candidate, the fraction of the still-free capacity the item would consume; I guard the division by using `max(remaining, 1)` since all candidates fit and `remaining \u2265 1` whenever any candidate exists.",
+   "measures": "Fraction of the remaining capacity each candidate consumes, weights / remaining, rescaled to [-1, 1].",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    9.234429469022043
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 3.7347,
+   "best_w": null,
+   "d_train": 3.7347,
+   "d_valid": 4.0057,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9985
+   },
+   "error": "",
+   "calls": [
+    "c008",
+    "c011"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "value_only_normalised",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Candidate value divided by the knapsack's total capacity.\"\"\"\n    return values / max(capacity, 1)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Isolating value with no weight term tells us whether raw value alone ranks candidates usefully or whether weight must enter. In uncorrelated, value is independent of weight, so pure value should beat Code Zero but far less than density.",
+    "feature": "return values / capacity. One column, the candidate's value as a fraction of the knapsack capacity (ignores weight entirely).",
+    "prediction": {
+     "family": "uncorrelated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's value as a fraction of the total capacity (guarding against a zero capacity), ignoring weight entirely; the division by capacity is the normalisation the experiment specifies.",
+   "measures": "Candidate value divided by the knapsack's total capacity.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    115.07449373965643
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     7.1156
+    ],
+    [
+     -1.0,
+     -7.9413
+    ]
+   ],
+   "best_probe": 7.1156,
+   "best_w": 1.0,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "gap",
+    "family": "uncorrelated",
+    "direction": "down",
+    "before": 40.2763,
+    "after": 3.2527,
+    "held": true,
+    "checked": true,
+    "instance": "uncorrelated-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9196
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "density_excess_capacity_fit",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value in excess of what the candidate's weight is worth at the pool density, weighted by how well that weight fits the leftover capacity slot.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = max(float(remaining), 1.0)\n    cap = float(capacity) if capacity else 1.0\n    # remaining-pool density (value per unit weight)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    excess = v - density * w\n    scale = np.abs(excess).max()\n    scale = scale if scale > 0 else 1.0\n    base = np.tanh(excess / scale)\n    # how much of the remaining capacity this item would consume (0..1]\n    frac = np.clip(w / rem, 0.0, 1.0)\n    # items that use a moderate share of the remaining capacity are favoured;\n    # peak near frac ~ 0.5 of remaining, taper for tiny or near-filling items\n    fit = np.tanh(4.0 * frac * (1.0 - frac))\n    return base * fit\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value in excess of what the candidate's weight is worth at the pool density, weighted by how well that weight fits the leftover capacity slot.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    14.37707694188532
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     3.25397,
+     -0.1826
+    ],
+    [
+     -3.25397,
+     -8.0625
+    ],
+    [
+     0.976191,
+     -0.0882
+    ],
+    [
+     -0.976191,
+     -0.8688
+    ],
+    [
+     0.325397,
+     -0.0565
+    ],
+    [
+     -0.325397,
+     0.0149
+    ]
+   ],
+   "best_probe": 0.0149,
+   "best_w": -0.325397,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.9268,
+    "lib_r2": 0.4875
+   },
+   "error": "",
+   "calls": [
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "density_rank_with_fill_penalty",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density rank of each candidate within the pool, blended with how much of the remaining capacity it would consume.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = len(v)\n    if k == 0:\n        return np.zeros(0)\n    d = v / np.maximum(w, 1.0)\n    # rank fraction of density among candidates (0 = worst, 1 = best); ties get average rank\n    order = np.argsort(d, kind=\"mergesort\")\n    ranks = np.empty(k, dtype=float)\n    ranks[order] = np.arange(k, dtype=float)\n    # average ties\n    sd = d[order]\n    i = 0\n    while i < k:\n        j = i\n        while j + 1 < k and sd[j + 1] == sd[i]:\n            j += 1\n        if j > i:\n            ranks[order[i:j + 1]] = 0.5 * (i + j)\n        i = j + 1\n    rank_frac = ranks / max(k - 1, 1) if k > 1 else np.zeros(k)\n    # how much of the remaining capacity this item consumes (0..1), mild penalty for big items\n    rem = max(float(remaining), 1.0)\n    fill = np.clip(w / rem, 0.0, 1.0)\n    # rank drives the choice; fill breaks near-ties toward lighter items\n    return rank_frac - 0.5 * fill\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Density rank of each candidate within the pool, blended with how much of the remaining capacity it would consume.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.404927618530936
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9989
+   },
+   "error": "",
+   "calls": [
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "value_tightness_fit_penalty",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value per capacity minus a weight penalty whose strength grows with tightness, but also rewards leaving a slack-sized remainder (fill-fit).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    cap = max(float(capacity), 1.0)\n    rem = max(float(remaining), 1.0)\n    tightness = 1.0 - rem / cap\n    # slack-aware: penalise items that overshoot a \"nice\" leftover, reward fitting the remaining room\n    leftover = rem - w\n    fit = np.tanh(leftover / rem)          # +1 if item is small vs. room, -1 if it nearly fills\n    # base greedy term\n    base = v / cap - (w / rem) * tightness\n    # when nearly full (high tightness), weight the leftover-fit term more\n    boosted = base + tightness * fit * (v / (v.max() + 1e-9))\n    return np.tanh(boosted)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a02",
+   "kind": "variant",
+   "parent": "f006",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value per capacity minus a weight penalty whose strength grows with tightness, but also rewards leaving a slack-sized remainder (fill-fit).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    15.494071298012647
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     3.25397,
+     -1.1262
+    ],
+    [
+     -3.25397,
+     -8.7454
+    ],
+    [
+     0.976191,
+     -0.1507
+    ],
+    [
+     -0.976191,
+     -0.0438
+    ],
+    [
+     0.325397,
+     -0.0191
+    ],
+    [
+     -0.325397,
+     -0.0011
+    ]
+   ],
+   "best_probe": -0.0011,
+   "best_w": -0.325397,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f008",
+    "rho": 0.946,
+    "lib_r2": 0.1278
+   },
+   "error": "",
+   "calls": [
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "density_regret_of_taking_now",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Regret of taking this item now: value density lost relative to the best-density item that would no longer fit afterwards.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = float(max(remaining, 1))\n    d = v / np.maximum(w, 1.0)\n    order = np.argsort(-d)\n    d_sorted = d[order]\n    w_sorted = w[order]\n    # prefix sums of weights in descending-density order\n    cw = np.cumsum(w_sorted)\n    # density-weighted value obtainable by greedy fill of the remaining capacity after taking each candidate\n    # approximate: for each candidate, remaining after it = rem - w_i\n    rem_after = rem - w\n    # total weight in the sorted-by-density list that fits within rem_after\n    # count how many top-density items fit (vectorised via searchsorted on cumulative weights)\n    counts = np.searchsorted(cw, rem_after, side=\"right\")\n    counts = np.clip(counts, 0, len(w))\n    # value obtainable from those items (full) plus fractional leftover\n    cv = np.concatenate([[0.0], np.cumsum(d_sorted * w_sorted)])\n    full_val = cv[counts]\n    leftover_w = rem_after - np.where(counts > 0, cw[np.maximum(counts - 1, 0)], 0.0)\n    # density of the next item in the sorted order (if any) for fractional fill\n    next_d = np.where(counts < len(w), d_sorted[np.minimum(counts, len(w) - 1)], 0.0)\n    greedy_after = full_val + np.maximum(leftover_w, 0.0) * next_d\n    # same greedy potential if we skip this item (rem unchanged, ignoring this item's presence is fine as approx)\n    counts0 = np.searchsorted(cw, np.full_like(rem_after, rem), side=\"right\")\n    counts0 = np.clip(counts0, 0, len(w))\n    full0 = cv[counts0]\n    left0 = rem - np.where(counts0 > 0, cw[np.maximum(counts0 - 1, 0)], 0.0)\n    next0 = np.where(counts0 < len(w), d_sorted[np.minimum(counts0, len(w) - 1)], 0.0)\n    greedy_no = full0 + np.maximum(left0, 0.0) * next0\n    regret = greedy_no - (v + greedy_after)\n    scale = np.abs(regret).max()\n    scale = scale if scale > 0 else 1.0\n    return np.tanh(regret / scale)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Regret of taking this item now: value density lost relative to the best-density item that would no longer fit afterwards.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.7802012814986594
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 12.9486,
+   "best_w": null,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9834
+   },
+   "error": "",
+   "calls": [
+    "c016"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "density_vs_leftover_usability",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value density measured against the best density among items that would leave the capacity still usable after taking them (density of candidates that don't strand the knapsack vs those that do).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = max(float(remaining), 1.0)\n    d = v / np.maximum(w, 1.0)\n    dmax = d.max() + 1e-9\n    # how much of the leftover capacity could plausibly still be used: leftover vs typical item weight\n    typical_w = max(w.mean(), 1.0)\n    leftover = rem - w\n    # fraction of leftover capacity that can still hold at least a typical-sized item\n    usable = np.clip(leftover / (typical_w + 1e-9), 0.0, None)\n    # smooth squeeze: density credited only in proportion to usable leftover (log-compressed)\n    squeeze = np.log1p(usable) / (1.0 + np.log1p(usable))\n    # penalise items whose density is high but which strand the knapsack\n    return np.tanh((d / dmax) - (1.0 - squeeze))\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value density measured against the best density among items that would leave the capacity still usable after taking them (density of candidates that don't strand the knapsack vs those that do).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.662442263712963
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.984
+   },
+   "error": "",
+   "calls": [
+    "c017"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "share_smoothed_value_density",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Ranks candidates by how much value they contribute per unit of *scarcity-adjusted* weight: value / (weight + remaining/k), i.e. a density smoothed toward equal weight-sharing among the still-fitting pool.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = max(len(v), 1)\n    rem = float(max(remaining, 1.0))\n    # effective weight each item would need to \"share\" the remaining capacity evenly\n    share = rem / k\n    denom = w + share\n    d = v / np.maximum(denom, 1e-9)\n    scale = d.max()\n    if scale <= 0:\n        return np.zeros_like(d)\n    return d / scale\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a09",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Ranks candidates by how much value they contribute per unit of *scarcity-adjusted* weight: value / (weight + remaining/k), i.e. a density smoothed toward equal weight-sharing among the still-fitting pool.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.9930036117541055
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     3.25397,
+     0.0
+    ],
+    [
+     -3.25397,
+     -0.0626
+    ],
+    [
+     0.976191,
+     0.0
+    ],
+    [
+     -0.976191,
+     -0.0233
+    ],
+    [
+     0.325397,
+     0.0
+    ],
+    [
+     -0.325397,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 3.25397,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f011",
+    "rho": 0.8373,
+    "lib_r2": 0.4639
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "density_times_fill_safety",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Relative value density times a fill-safety factor that penalises residuals stranding an unfillable gap.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    k = w.shape[0]\n\n    dens = v / np.maximum(w, 1.0)\n    mx = dens.max() if k > 0 else 0.0\n    if mx <= 0.0:\n        rel = np.zeros(k, dtype=float)\n    else:\n        rel = dens / mx\n\n    if k > 0:\n        min1 = w.min()\n        if k > 1:\n            min2 = np.sort(w)[1]\n        else:\n            min2 = R\n        min_other = np.where(w <= min1 + 1e-9, min2, min1)\n        min_other = np.maximum(min_other, 1e-9)\n    else:\n        min_other = np.full(k, 1e-9, dtype=float)\n\n    new_rem = R - w\n    # Fill-safety: 1 when residual is 0 or still fits some other candidate,\n    # smoothly <1 when the residual is a positive gap smaller than every other item.\n    safe = np.clip(new_rem / min_other, 0.0, 1.0)\n    safe = np.where(new_rem <= 0.0, 1.0, safe)\n\n    # Sharpen the safety penalty so stranded residuals are strongly demoted,\n    # while keeping the factor continuous and in [0,1].\n    safe = safe * safe\n\n    return rel * safe\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a07",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In strongly_correlated value = weight + 100, so the whole 0.75% gap equals the 452 unused capacity: the champion ends with a residual smaller than every remaining item (smallest left out 752). Taking an item that leaves 0 < residual < (smallest other weight) makes the knapsack unfillable for good. Scale relative density by a fill-safety factor that is 1 when the residual is 0 or still fits some other candidate, and <1 when it would strand an unfillable gap.",
+    "feature": "v, w as float; R=remaining. dens=v/max(w,1); mx=dens.max() (guard 0); rel=dens/mx. new_rem=R-w. min1=w.min(); if k>1: min2=sorted(w)[1] else min2=R. min_other=where(w<=min1+1e-9, min2, min1), clipped to >=1e-9. safe=clip(new_rem/min_other,0,1); safe=where(new_rem<=0,1.0,safe). Return rel*safe (single column).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "fill_pct",
+     "direction": "up"
+    },
+    "builds_on": "f004",
+    "lesson": "f006's tightness penalty was redundant because it penalised using capacity in general, not the specific unfillable residual; the diagnostic (unused 452 = gap) says target the residual itself."
+   },
+   "coder_note": "This computes each candidate's value-per-weight density relative to the best candidate density, multiplied by a fill-safety factor `clip((R\u2212w)/min_other, 0, 1)` (set to 1 when the residual is \u2264 0), where `min_other` is the smallest other candidate weight (second-smallest overall if this candidate i\u2026",
+   "measures": "Relative value density times a fill-safety factor that penalises residuals stranding an unfillable gap.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.248070930811455
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9962
+   },
+   "error": "",
+   "calls": [
+    "c023",
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "density_gap_adaptive_fill",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density z-score (tanh-squashed) plus a flatness-weighted weight-share term, where flatness is the pool density CV.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    dens = v / np.maximum(w, 1.0)\n    if dens.size == 0:\n        return np.zeros(0)\n    mean = dens.mean()\n    std = dens.std()\n    z = (dens - mean) / (std + 1e-9)\n    flat = min(std / (abs(mean) + 1e-9), 1.0)\n    share = w / max(R, 1.0)\n    # weight-share term is only informative when densities are flat; scale it by\n    # the flatness so it can actually reorder candidates in the strongly-correlated case\n    return np.tanh(0.5 * z) + flat * share\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A raw density z-score ranks identically to f005, so instead make the density gap adaptive: when the pool's densities are flat (low coefficient of variation, the strongly_correlated case) fall back on weight share to spend capacity; when densities vary, trust the z-score. This adds information only exactly where density is uninformative.",
+    "feature": "v,w as float; R=remaining. dens=v/max(w,1); mean=dens.mean(); std=dens.std(); z=(dens-mean)/(std+1e-9). flat=min(std/(abs(mean)+1e-9),1.0). share=w/max(R,1.0). Return np.tanh(0.5*z) + (1.0-flat)*share.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": ""
+   },
+   "coder_note": "This computes the tanh-squashed density z-score plus a weight-share term scaled by (1 \u2212 flatness), where flatness is the density coefficient of variation capped at 1; I read \"flat\" as the CV of the candidate densities and used `max(R,1.0)` for the share denominator as specified.",
+   "measures": "Density z-score (tanh-squashed) plus a flatness-weighted weight-share term, where flatness is the pool density CV.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.509443014398223
+   ],
+   "weights": [
+    -0.6096121888058833
+   ],
+   "probe": [
+    [
+     3.25397,
+     -0.0337
+    ],
+    [
+     -3.25397,
+     -0.2303
+    ],
+    [
+     0.976191,
+     -0.0319
+    ],
+    [
+     -0.976191,
+     -0.0136
+    ],
+    [
+     0.325397,
+     -0.0228
+    ],
+    [
+     -0.325397,
+     -0.0023
+    ]
+   ],
+   "best_probe": -0.0023,
+   "best_w": -0.325397,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.747,
+    "lib_r2": 0.7964
+   },
+   "error": "",
+   "calls": [
+    "c020",
+    "c026"
+   ],
+   "kept_gen": 2,
+   "importance": 0.149,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "density_times_fit_sqrt",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Relative value density times sqrt of the remaining-capacity fit fraction, with fit measured against total capacity.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    dens = v / np.maximum(w, 1.0)\n    mx = dens.max() if dens.size > 0 else 0.0\n    if not np.isfinite(mx) or mx <= 0.0:\n        mx = 1.0\n    rel = dens / mx\n    # Fit measured against the total capacity (not the remaining one), so the\n    # discount depends on the item's absolute weight share, not on how full we are.\n    fit = np.clip((capacity - w) / max(float(capacity), 1.0), 0.0, 1.0)\n    return rel * np.sqrt(fit)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a05",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f003 multiplied density by (1 - w/remaining) linearly; a square-root shape discounts heavy items far less steeply, leaving the top-density items but not collapsing on weight share, so it can keep value while still steering away from capacity hogs. Tests whether the shape of the fit factor, not its presence, matters.",
+    "feature": "v,w as float; dens=v/max(w,1); mx=dens.max() (guard 1); rel=dens/mx. fit=clip((remaining-w)/max(remaining,1.0),0.0,1.0). Return rel*np.sqrt(fit).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f003",
+    "lesson": "f003 (linear fit) scored +13.26 but was redundant; changing only the exponent isolates whether shape adds beyond f005."
+   },
+   "coder_note": "This computes each candidate's value density relative to the best candidate density, multiplied by the square root of the fraction of remaining capacity left after taking it; I read \"guard 1\" as replacing a non-positive or non-finite max density with 1.0, and used `max(remaining, 1.0)` as the denom\u2026",
+   "measures": "Relative value density times sqrt of the remaining-capacity fit fraction, with fit measured against total capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.2831647290520705
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9998
+   },
+   "error": "",
+   "calls": [
+    "c022",
+    "c025"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "relative_value_tightness_penalty",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Relative value (value / max candidate value) minus weight-over-capacity scaled by tightness (1 - remaining/capacity), returned as two separate columns.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    cap = max(float(capacity), 1.0)\n    tight = 1.0 - float(remaining) / cap\n    mv = v.max() if v.size else 1.0\n    mv = mv if mv > 0 else 1.0\n    rel_value = v / mv\n    penalty = (w / cap) * tight\n    return np.stack([rel_value, -penalty], axis=1)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a08",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f006 showed a value-minus-tightness-weight term reproduced the density gain (redundant). Probe whether any residual tightness information survives when value is normalised by the current max candidate value (relative, not absolute) and the penalty uses total capacity rather than remaining: if this also fails to add, tightness carries no signal beyond density.",
+    "feature": "v,w as float; cap=max(capacity,1.0). tight=1.0 - remaining/cap. mv=v.max() if v.size else 1.0; mv=mv if mv>0 else 1.0. Return v/mv - (w/cap)*tight.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f006",
+    "lesson": "f006 was redundant; this changes the base (relative value) and normaliser (capacity) to test if the tightness idea has any orthogonal content left."
+   },
+   "coder_note": "This computes each candidate's value normalised by the current maximum candidate value, minus its weight-over-total-capacity fraction scaled by the tightness `1 - remaining/capacity`; I read \"tightness\" as using total capacity in both the weight fraction and the remaining/capacity term exactly as s\u2026",
+   "measures": "Relative value (value / max candidate value) minus weight-over-capacity scaled by tightness (1 - remaining/capacity), returned as two separate columns.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.6458995399144905,
+    419.2599542217255
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 7.1156,
+   "best_w": null,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f008",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f008",
+    "rho": 0.9999
+   },
+   "error": "",
+   "calls": [
+    "c021",
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "density_excess_weighted_median_fit",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density excess (value minus pool-density times weight) but measured against the capacity-weighted median density of the pool, with residual-fit conditioning.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    if v.size == 0:\n        return np.zeros(0)\n    R = max(float(remaining), 1.0)\n    C = float(capacity) if capacity else 1.0\n    dens = v / np.maximum(w, 1.0)\n    # capacity-weighted median density: robust reference density of the pool\n    order = np.argsort(dens)\n    cw = np.cumsum(w[order])\n    total_w = cw[-1] if cw.size else 0.0\n    if total_w <= 0:\n        ref = float(dens.mean())\n    else:\n        idx = int(np.searchsorted(cw, 0.5 * total_w))\n        idx = min(idx, dens.size - 1)\n        ref = float(dens[order[idx]])\n    excess = v - ref * w\n    scale = np.abs(excess).max()\n    scale = scale if scale > 0 else 1.0\n    base = np.tanh(excess / scale)\n    # residual-fit: prefer items whose weight leaves a remainder that is a\n    # meaningful fraction of remaining capacity (not tiny, not huge)\n    frac = w / R\n    fit = 1.0 - np.abs(frac - 0.5)  # peaks at half of remaining capacity\n    # only meaningful when the pool is tight relative to capacity\n    tight = np.clip(1.0 - R / max(C, 1.0), 0.0, 1.0)\n    return base + 0.5 * tight * fit\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Density excess (value minus pool-density times weight) but measured against the capacity-weighted median density of the pool, with residual-fit conditioning.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.683580339854521
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 12.9486,
+   "best_w": null,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9949
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "density_vs_fractional_bound",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density measured against the best density achievable by any subset of the pool within the remaining capacity (fractional-knapsack bound normaliser).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    d = v / np.maximum(w, 1.0)\n    # fractional-knapsack upper bound density: sort by density, fill capacity fractionally\n    order = np.argsort(-d)\n    ws = w[order]\n    vs = v[order]\n    cumw = np.cumsum(ws)\n    # value obtained by taking items in density order until capacity is filled\n    full = cumw <= R\n    val = vs[full].sum()\n    idx = np.searchsorted(cumw, R)\n    if idx < len(ws):\n        rem_cap = R - (cumw[idx - 1] if idx > 0 else 0.0)\n        frac = min(max(rem_cap / max(ws[idx], 1e-9), 0.0), 1.0)\n        val += frac * vs[idx]\n    best_density = val / R  # density of the fractional-knapsack optimum\n    # compare each candidate's density to that reference, squashed\n    rel = (d - best_density) / (best_density + 1e-9)\n    return np.tanh(rel)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Density measured against the best density achievable by any subset of the pool within the remaining capacity (fractional-knapsack bound normaliser).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.3146711573376306
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "density_relative_excess_fit",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Excess of candidate value over pool density times weight, rescaled by the pool's value-to-weight balance: normalized by the mean absolute excess relative to the pool's density times the candidate's own weight.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = max(float(remaining), 1.0)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    excess = v - density * w\n    # scale each excess by the pool density times its own weight (relative excess)\n    rel = excess / (density * w + 1e-9)\n    # squash asymmetrically: penalize negative (below-pool-density) more\n    pos = np.tanh(rel)\n    neg = np.tanh(rel * 0.5)\n    # blend: positive excess keeps full signal, negative excess dampened\n    out = np.where(rel >= 0, pos, neg)\n    # modulation by fit into remaining capacity: favour items leaving useful room\n    frac = np.clip(w / rem, 0.0, 1.0)\n    fit = 1.0 - np.abs(frac - 0.5)\n    return out * fit\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Excess of candidate value over pool density times weight, rescaled by the pool's value-to-weight balance: normalized by the mean absolute excess relative to the pool's density times the candidate's own weight.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.337655257113833
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9981
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "density_regret_lookahead",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Regret-based lookahead: candidate value minus the best value-per-weight alternative's value at the same weight cost, on a log-ratio scale.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    dens = v / np.maximum(w, 1.0)\n    best = dens.max() if dens.size else 1.0\n    # value the candidate would be worth at the best density in the pool\n    opportunity = best * w\n    # regret: value lost by taking this item instead of the best-density use of its weight\n    regret = v - opportunity\n    # normalise by the value the best density would give for the remaining capacity\n    scale = best * R\n    scale = scale if scale > 0 else 1.0\n    # also credit freeing up space for a big-ticket item: penalise consuming a large share of remaining\n    share = w / R\n    return np.tanh(regret / scale) - 0.5 * np.tanh(share)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a03",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Regret-based lookahead: candidate value minus the best value-per-weight alternative's value at the same weight cost, on a log-ratio scale.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    38.371431232554556
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.862068,
+     -1.3555
+    ],
+    [
+     -2.862068,
+     -2.8966
+    ],
+    [
+     0.858621,
+     -0.3301
+    ],
+    [
+     -0.858621,
+     -0.6567
+    ],
+    [
+     0.286207,
+     -0.1239
+    ],
+    [
+     -0.286207,
+     -0.2137
+    ]
+   ],
+   "best_probe": -0.1239,
+   "best_w": 0.286207,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9237,
+    "lib_r2": 0.1587
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "leave_one_out_density_excess",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value density of a candidate measured against the density of the *rest* of the pool (leave-one-out), signed: high when the item is denser than what remains.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.size\n    if k == 0:\n        return np.zeros(0)\n    # leave-one-out pool density: density of all candidates except this one\n    tot_w = w.sum()\n    tot_v = v.sum()\n    rest_w = np.maximum(tot_w - w, 1e-9)\n    rest_v = tot_v - v\n    rest_dens = rest_v / rest_w\n    d = v / np.maximum(w, 1.0)\n    # relative excess of this item's density over the remaining pool\n    rel = (d - rest_dens) / (np.abs(rest_dens) + np.abs(d) + 1e-9)\n    # weight-of-evidence: how much leaving this item out actually shifts the pool\n    lev = w / (tot_w + 1e-9)\n    return np.tanh(2.0 * rel) * (1.0 - lev)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value density of a candidate measured against the density of the *rest* of the pool (leave-one-out), signed: high when the item is denser than what remains.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.8662828736586332
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9998
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "density_surplus_vs_best_fit",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Excess value over the pool density, but re-expressed as a *budget* argument: how much better the item's value is than the value the same weight could earn if spent on the densest remaining items, weighted by leftover-capacity fit.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    rem = max(float(remaining), 1.0)\n    cap = float(capacity) if capacity else 1.0\n    dens = v / np.maximum(w, 1.0)\n    best = dens.max()\n    # opportunity cost: value the same weight could have earned at the best density\n    opp = best * w\n    surplus = v - opp\n    # normalise by the pool's value scale, not by surplus magnitude\n    scale = np.abs(v).max()\n    scale = scale if scale > 0 else 1.0\n    base = surplus / scale\n    # fit term: how close this item's weight is to filling the leftover exactly\n    frac = np.clip(w / rem, 0.0, 1.0)\n    fit = 1.0 - np.abs(frac - 1.0)  # peaks when the item nearly fills the remainder\n    return np.tanh(base) * fit\n\nname: density_surplus_vs_best_fit\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Excess value over the pool density, but re-expressed as a *budget* argument: how much better the item's value is than the value the same weight could earn if spent on the densest remaining items, weighted by leftover-capacity fit.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    55.19811910976181
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.862068,
+     -0.101
+    ],
+    [
+     -2.862068,
+     -2.2229
+    ],
+    [
+     0.858621,
+     -0.0493
+    ],
+    [
+     -0.858621,
+     -0.6399
+    ],
+    [
+     0.286207,
+     0.0102
+    ],
+    [
+     -0.286207,
+     -0.0359
+    ]
+   ],
+   "best_probe": 0.0102,
+   "best_w": 0.286207,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.7547,
+    "lib_r2": 0.1539
+   },
+   "error": "",
+   "calls": [
+    "c034"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "density_excess_headroom_packability",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Excess of a candidate's value over the pool-median density benchmark, where the benchmark is re-evaluated against the *best* density item, then scaled by how tightly the leftover capacity can still be packed.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    cap = float(capacity) if capacity else 1.0\n    R = max(R, 1.0)\n\n    # pooled density (kept from parent)\n    pw = w.sum()\n    pv = v.sum()\n    pool_density = pv / pw if pw > 0 else 0.0\n\n    # per-candidate excess vs the pool benchmark (parent thread)\n    excess = v - pool_density * w\n\n    # NEW: benchmark against the *local* density ceiling instead of the pool mean.\n    # d_max is the density of the best-density candidate; a candidate whose density\n    # is near d_max has little \"excess headroom\" left, so its excess is discounted.\n    d = v / np.maximum(w, 1.0)\n    d_max = d.max()\n    headroom = d_max - d                       # >= 0\n    # normalise headroom by its spread so it's O(1)\n    h_scale = headroom.max()\n    h_scale = h_scale if h_scale > 0 else 1.0\n    h = headroom / h_scale                     # 0 for best-density item, ~1 for worst\n\n    # NEW: residual-packing factor. After taking this item, how much capacity\n    # is left, and is that leftover expressible as a small number of remaining\n    # items? If the leftover is tiny relative to the smallest remaining weight,\n    # it just strands capacity -> penalise.\n    w_min = w.min()\n    left = R - w\n    # fraction of leftover that is \"packable\" by the smallest remaining item\n    packable = np.clip(left / np.maximum(w_min, 1.0), 0.0, 1.0)\n    # a leftover that is a near-multiple of w_min is good; a fractional remainder is bad\n    frac = left / np.maximum(w_min, 1.0) - np.floor(left / np.maximum(w_min, 1.0))\n    stranded = np.abs(frac - 0.5) * packable    # ~0.5 when badly stranded, ~0 when clean\n\n    # combine: excess (parent) reduced by headroom, adjusted by packing quality\n    scale = np.abs(excess).max()\n    scale = scale if scale > 0 else 1.0\n    base = excess / scale\n    return np.tanh(base * (1.0 - 0.5 * h)) - 0.3 * stranded\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Excess of a candidate's value over the pool-median density benchmark, where the benchmark is re-evaluated against the *best* density item, then scaled by how tightly the leftover capacity can still be packed.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.427232577051316
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 12.9486,
+   "best_w": null,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9889
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "residual_fill_complement",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Largest other candidate item fitting the residual after taking each candidate, as a fraction of that residual.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = w.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    rem = max(float(remaining), 1.0)\n    r = np.clip(rem - w, 0.0, None)\n    F = (w[None, :] <= r[:, None])\n    F[np.arange(k), np.arange(k)] = False\n    usable = np.where(F, w[None, :], 0.0)\n    best_fill = usable.max(axis=1) if k > 1 else np.zeros(k)\n    out = np.where(r > 0, best_fill / np.maximum(r, 1.0), 0.0)\n    return np.clip(out, 0.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a10",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "On strongly_correlated the density ordering is (value=w+100) nearly a function of weight alone, so the champion's 91% overlap failure comes from ties: two heavy items are near-equal in density and the decision is decided by what the leftover capacity can still be filled with. This measures, per candidate, the largest other item that still fits the residual after taking it, as a fraction of that residual: a pure pairwise complementarity quantity that ranks candidates by the hole they leave, not by their own value/weight.",
+    "feature": "v=values, w=weights (float). rem=max(remaining,1). r=clip(rem-w,0,None). Build boolean matrix F[i,j] = (w[j] <= r[i]) and set F[i,i]=False. usable = where(F, w[j], 0). best_fill = usable.max(axis=1) (largest OTHER item fitting candidate i's residual; 0 if none). Return clip(where(r>0, best_fill/maximum(r,1), 0), 0, 1). One column, k=1 or no fill -> 0.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "shared_with_reference_pct",
+     "direction": "up"
+    },
+    "builds_on": "f005",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each candidate, the largest *other* candidate item that still fits in the residual capacity left after taking it, divided by that residual (clipped to [0,1], and 0 when the residual is empty or no other item fits); I read \"largest other item\" as the max weight among the other can\u2026",
+   "measures": "Largest other candidate item fitting the residual after taking each candidate, as a fraction of that residual.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    71.33065439694835
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.862068,
+     -0.7721
+    ],
+    [
+     -2.862068,
+     -2.1566
+    ],
+    [
+     0.858621,
+     -0.4436
+    ],
+    [
+     -0.858621,
+     -0.701
+    ],
+    [
+     0.286207,
+     -0.2586
+    ],
+    [
+     -0.286207,
+     -0.3522
+    ]
+   ],
+   "best_probe": -0.2586,
+   "best_w": 0.286207,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "shared_with_reference_pct",
+    "family": "strongly_correlated",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.9472,
+    "lib_r2": 0.0034
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "residual_value_regret",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Own value minus the best value of another item that still fits after taking it, over the best candidate value, with the alternative's value scaled by how much residual space it leaves (smooth tie-breaker).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.size\n    rem = max(float(remaining), 1.0)\n    vm = v.max() if k > 0 else 0.0\n    if vm <= 0.0:\n        return np.zeros(k)\n    r = np.clip(rem - w, 0.0, None)  # residual capacity after taking each candidate\n    F = (w[None, :] <= r[:, None])   # (k, k): item j fits after taking i\n    F[np.arange(k), np.arange(k)] = False  # exclude the candidate itself\n    # smooth weight: an alternative that leaves more room after itself is a better future option\n    slack = np.clip(r[:, None] - w[None, :], 0.0, None)  # (k, k): room left after i then j\n    scale = slack / (slack + w[None, :] + 1.0)           # in [0,1), monotone in slack\n    alt = np.where(F, v[None, :] * (1.0 + scale), 0.0).max(axis=1)\n    return np.clip((v - alt) / vm, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a12",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion never asks what taking a candidate costs in future opportunity: in strongly_correlated (every item worth weight+100) a heavy item eats space that could hold a much better alternative. Score = own value minus the best value still reachable among the items that fit the residual after taking it, normalised by the best candidate value; this is a one-step lookahead regret and should reorder the near-tied heavy items.",
+    "feature": "v, w float; k=v.size; rem=max(remaining,1); vm=max over candidates of v (guard >0). r=clip(rem-w,0,None). F[i,j]=(w[j]<=r[i]) with F[i,i]=False. best_alt = where(F, v[j], 0).max(axis=1) (best value of another item that still fits after taking i; 0 if none). Return clip((v - best_alt)/vm, -1, 1). One column.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate, its own value minus the best value among other candidates that still fit in the residual capacity after taking it (0 if none), divided by the best candidate value and clipped to [-1, 1]; I read \"another item\" as excluding the candidate itself via the diagonal mask, and\u2026",
+   "measures": "Own value minus the best value of another item that still fits after taking it, over the best candidate value, with the alternative's value scaled by how much residual space it leaves (smooth tie-breaker).",
+   "status": "retired",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    30.161093443973638
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.862068,
+     -2.4653
+    ],
+    [
+     -2.862068,
+     -2.1689
+    ],
+    [
+     0.858621,
+     -1.0972
+    ],
+    [
+     -0.858621,
+     -1.6971
+    ],
+    [
+     0.286207,
+     -0.4822
+    ],
+    [
+     -0.286207,
+     -0.8014
+    ]
+   ],
+   "best_probe": -0.4822,
+   "best_w": 0.286207,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f008",
+    "rho": 0.4128,
+    "lib_r2": 0.0188
+   },
+   "error": "",
+   "calls": [
+    "c039",
+    "c041"
+   ],
+   "kept_gen": 3,
+   "importance": -0.0691,
+   "retired_gen": 3
+  },
+  {
+   "id": "f028",
+   "name": "pool_rank_percentile_blend",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Percentile rank of candidate value minus percentile rank of candidate weight, in [-1, 1].\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.size\n    if k < 2:\n        return np.zeros(k)\n\n    def pct(x):\n        order = np.argsort(x, kind='mergesort')\n        p = np.empty(k)\n        p[order] = np.arange(k)\n        p /= (k - 1)\n        return p\n\n    pv = pct(v)\n    pw = pct(w)\n    return np.clip(pv - pw, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a11",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Every kept feature is a ratio or a density-shaped quantity, all of which saturate near the top of the pool and are sensitive to a few extreme weights. A scale-free order statistic (where a candidate sits in the pool's value ranking minus where it sits in the weight ranking) is a genuinely different measurement: it equalises spacing across the whole pool and should behave differently exactly on strongly_correlated, where densities are compressed.",
+    "feature": "v, w float; k=v.size. If k<2 return zeros(k). Percentile of a vector x: order=argsort(x, kind='mergesort'); p=empty(k); p[order]=arange(k); p/= (k-1). Compute pv for v and pw for w. Return clip(pv - pw, -1, 1). One column.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each candidate, its percentile position in the pool's value ranking minus its percentile position in the pool's weight ranking (clipped to [-1, 1]); ties are broken by original index via the stable mergesort, and k<2 returns zeros as specified.",
+   "measures": "Percentile rank of candidate value minus percentile rank of candidate weight, in [-1, 1].",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.6982010578650213
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.862068,
+     -0.0091
+    ],
+    [
+     -2.862068,
+     0.0132
+    ],
+    [
+     0.858621,
+     0.0117
+    ],
+    [
+     -0.858621,
+     0.0062
+    ],
+    [
+     0.286207,
+     0.0073
+    ],
+    [
+     -0.286207,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0132,
+   "best_w": -2.862068,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.6154,
+    "lib_r2": 0.2973
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "residual_gated_weight_penalty",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value scaled by best candidate value minus a tightness-weighted weight penalty gated on residual unfillability.\"\"\"\n    v = values.astype(float)\n    w = weights.astype(float)\n    k = v.size\n    rem = max(float(remaining), 1.0)\n    cap = max(float(capacity), 1.0)\n    vm = max(float(v.max()), 1e-12) if k > 0 else 1.0\n    tight = 1.0 - rem / cap\n    r = np.clip(rem - w, 0.0, None)  # residual capacity after taking each candidate\n    # F[i,j] = w[j] <= r[i], with diagonal excluded\n    F = (w[None, :] <= r[:, None])\n    np.fill_diagonal(F, False)\n    best_fill = np.where(F, w[None, :], 0.0).max(axis=1) if k > 0 else np.zeros(0)\n    fill = np.where(r > 0, best_fill / np.maximum(r, 1.0), 0.0)\n    unfill = 1.0 - np.clip(fill, 0.0, 1.0)\n    return np.clip(v / vm - tight * (w / rem) * unfill, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f006's tightness weight penalty gained only on strongly_correlated, which is exactly the family where value=w+100 makes the true objective 'fill the capacity AND take many items'. If that is the mechanism, the penalty should bite hardest on items that both eat remaining capacity and strand the leftover (no other item comes close to filling the residual). This gates the penalty on residual unfillability, testing whether the gain is an endgame/count effect rather than a plain weight discount.",
+    "feature": "v, w float; k=v.size; rem=max(remaining,1); cap=max(capacity,1); vm=max(v) guarded >0; tight=1-rem/cap. r=clip(rem-w,0,None). F[i,j]=(w[j]<=r[i]), F[i,i]=False; best_fill=where(F,w[j],0).max(axis=1); fill=where(r>0, best_fill/maximum(r,1), 0); unfill=1-clip(fill,0,1). Return clip(v/vm - tight*(w/rem)*unfill, -1, 1). One column.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "items_taken",
+     "direction": "up"
+    },
+    "builds_on": "f006",
+    "lesson": "f006 (plain tightness weight penalty) gained +7.2 on strongly_correlated but was judged redundant; the count/endgame reading of that gain is what this probe isolates."
+   },
+   "coder_note": "This computes each candidate's value normalised by the best candidate value, minus a penalty proportional to its weight share of remaining capacity, scaled by tightness and by how poorly the leftover capacity can be refilled by any other single item; I read `F[i,i]=False` as excluding self-matching\u2026",
+   "measures": "Value scaled by best candidate value minus a tightness-weighted weight penalty gated on residual unfillability.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.695386920436237
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 7.1156,
+   "best_w": null,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f008",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f008",
+    "rho": 0.996
+   },
+   "error": "",
+   "calls": [
+    "c040",
+    "c042"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "density_excess_per_remaining_room",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value minus the pool density times weight, but judged only against the room left: excess per unit of remaining capacity, sign-aware and tanh-squashed.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    excess = v - density * w\n    # scale the excess by the fraction of remaining capacity the item eats:\n    # an item that barely dents R is judged on its density-surplus per unit room\n    room_frac = np.clip(w / R, 1e-6, 1.0)\n    per_room = excess / room_frac\n    scale = np.abs(per_room).max()\n    scale = scale if scale > 0 else 1.0\n    return np.tanh(per_room / scale)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value minus the pool density times weight, but judged only against the room left: excess per unit of remaining capacity, sign-aware and tanh-squashed.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.9955494473526487
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "density_vs_residual_envelope",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value-per-weight ratio measured against the best ratio achievable by any subset of the remaining pool that fits the residual capacity (upper density envelope), tanh-squashed.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    d = v / np.maximum(w, 1.0)\n    # best density in the pool, and the best density among items that fit in the residual\n    d_best = d.max() + 1e-9\n    # residual after taking this candidate, as a share of remaining capacity\n    residual = (R - w) / R\n    # a candidate is \"enveloped\" if its density is high but its leftover is hard to fill:\n    # use the best density among items that could still fit in the residual (a cheap proxy\n    # for the density envelope of the residual sub-pool), else fall back to the global best.\n    # For each candidate, envelope_i = best density of any item j (j != i) with w_j <= R - w_i.\n    k = len(v)\n    envelope = np.empty(k)\n    Rres = R - w\n    # vectorised: for each i, max density over items fitting in Rres[i]\n    order = np.argsort(w)\n    ws = w[order]\n    ds = d[order]\n    # suffix max of density over weight-sorted items is not enough (weight threshold varies),\n    # so use a cumulative-max over increasing weight: max density among items with w <= t\n    cummax = np.maximum.accumulate(ds)\n    for i in range(k):\n        t = Rres[i]\n        if t <= 0:\n            envelope[i] = 0.0\n        else:\n            j = np.searchsorted(ws, t, side='right') - 1\n            envelope[i] = cummax[j] if j >= 0 else 0.0\n    # ratio of this candidate's density to the envelope of its residual; squashed\n    ratio = d / (envelope + 0.05 * d_best)\n    return np.tanh(ratio - 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value-per-weight ratio measured against the best ratio achievable by any subset of the remaining pool that fits the residual capacity (upper density envelope), tanh-squashed.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.967405543141054
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9975
+   },
+   "error": "",
+   "calls": [
+    "c047"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "density_z_slack_gated",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density z-score squashed, gated by the slack of each candidate: candidates that waste little of the remaining capacity keep their density signal, wasters are pushed toward the pool's average density (a soft penalty proportional to wasted capacity share).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(max(remaining, 1.0))\n    dens = v / np.maximum(w, 1.0)\n    if dens.size == 0:\n        return np.zeros(0)\n    mean = dens.mean()\n    std = dens.std()\n    z = np.tanh(0.5 * (dens - mean) / (std + 1e-9))\n    # wasted capacity proxy: share of remaining capacity left after taking the item,\n    # scaled by how small the item is relative to what's left (big items are riskier)\n    slack = 1.0 - w / R\n    # gate: full density signal when slack is small (little waste), fade to 0 when slack large\n    gate = 1.0 - slack\n    return z * gate\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a06",
+   "kind": "variant",
+   "parent": "f016",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Density z-score squashed, gated by the slack of each candidate: candidates that waste little of the remaining capacity keep their density signal, wasters are pushed toward the pool's average density (a soft penalty proportional to wasted capacity share).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    55.833155742701344
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -0.3275
+    ],
+    [
+     -2.92455,
+     -8.7207
+    ],
+    [
+     0.877365,
+     -0.197
+    ],
+    [
+     -0.877365,
+     -3.0795
+    ],
+    [
+     0.292455,
+     -0.1862
+    ],
+    [
+     -0.292455,
+     -0.9839
+    ]
+   ],
+   "best_probe": -0.1862,
+   "best_w": 0.292455,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.9336,
+    "lib_r2": 0.2114
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "density_opportunity_cost",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Candidate value relative to the best value still reachable: how much taking it lowers the best remaining value-per-weight.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining) if remaining and remaining > 0 else 1.0\n    d = v / np.maximum(w, 1.0)\n    # best density among the other candidates (excluding self) is the opportunity cost\n    if d.size <= 1:\n        return np.zeros_like(v)\n    # for each candidate: max density of the rest\n    order = np.argsort(-d)\n    best = d[order[0]]\n    second = d[order[1]] if d.size > 1 else best\n    best_other = np.where(np.arange(d.size) == order[0], second, best)\n    # opportunity cost of consuming weight: lost density on the weight it uses\n    lost = (best_other - d) * w\n    # normalise by the total value still in play, so scale-free\n    scale = np.abs(lost).max()\n    scale = scale if scale > 0 else 1.0\n    return np.tanh(lost / scale)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Candidate value relative to the best value still reachable: how much taking it lowers the best remaining value-per-weight.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.731529488987578
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -6.7694
+    ],
+    [
+     -2.92455,
+     -0.1524
+    ],
+    [
+     0.877365,
+     -1.7323
+    ],
+    [
+     -0.877365,
+     -0.1524
+    ],
+    [
+     0.292455,
+     -0.3129
+    ],
+    [
+     -0.292455,
+     -0.1524
+    ]
+   ],
+   "best_probe": -0.1524,
+   "best_w": -2.92455,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f024",
+    "rho": 0.883,
+    "lib_r2": 0.6732
+   },
+   "error": "",
+   "calls": [
+    "c046"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "median_excess_with_residual_usability",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Excess value over what a candidate's weight would be worth at the pool's median (robust) density, expressed relative to the spread of candidate excesses, then blended with how close the candidate's weight is to the residual left after taking it.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n\n    dens = v / np.maximum(w, 1.0)\n    med = np.median(dens)\n    # robust pool density: value per weight at the median density\n    excess = v - med * w\n    # scale by the median absolute excess (robust, unlike max)\n    scale = np.median(np.abs(excess)) + 1e-9\n    z = np.tanh(excess / scale)\n\n    # residual after taking the candidate, as a share of remaining capacity\n    resid = np.clip((R - w) / R, 0.0, 1.0)\n    # how much the leftover residual can still be filled by the lightest item\n    smallest = np.min(w) + 1e-9\n    usable = np.tanh((R - w) / (smallest * 3.0))\n    # penalise candidates that leave a residual too small to fit anything else\n    gap_risk = np.where(R - w < smallest, 1.0 - resid, 0.0)\n\n    return z + 0.5 * usable - 0.75 * gap_risk\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Excess value over what a candidate's weight would be worth at the pool's median (robust) density, expressed relative to the spread of candidate excesses, then blended with how close the candidate's weight is to the residual left after taking it.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.3471252580194755
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 12.9486,
+   "best_w": null,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9981
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "shrunk_density_by_weight_reliability",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value-per-weight ratio shrunk toward the pool's density by a candidate-specific reliability factor (weight relative to remaining capacity): light items keep their raw ratio, heavy ones are pulled to the pool mean, so the ranking is not a monotone function of raw density.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    d = v / np.maximum(w, 1.0)\n    pool_w = w.sum()\n    pool_d = (v.sum() / pool_w) if pool_w > 0 else d.mean()\n    # reliability: light items are measured \"cleanly\", heavy ones are noisy w.r.t. residual\n    rel = R / (R + w)\n    shrunk = rel * d + (1.0 - rel) * pool_d\n    # centre on pool density and squash\n    excess = shrunk - pool_d\n    scale = np.abs(excess).max()\n    scale = scale if scale > 1e-12 else 1.0\n    return np.tanh(excess / scale)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value-per-weight ratio shrunk toward the pool's density by a candidate-specific reliability factor (weight relative to remaining capacity): light items keep their raw ratio, heavy ones are pulled to the pool mean, so the ranking is not a monotone function of raw density.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.00585594129181
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9995
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "residual_pair_packability",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Negative tanh of the residual left after the best two-item weight sum, scaled by mean candidate weight.\"\"\"\n    w = np.asarray(weights, dtype=float)\n    k = w.shape[0]\n    r = float(remaining) - w\n    mean_w = max(w.mean(), 1.0) if k > 0 else 1.0\n    if k < 2:\n        best = np.zeros(k, dtype=float)\n    else:\n        iu, ju = np.triu_indices(k, k=1)\n        P = np.sort(w[iu] + w[ju])\n        idx = np.searchsorted(P, r, side='right') - 1\n        best = np.where(idx >= 0, P[np.clip(idx, 0, P.shape[0] - 1)], 0.0)\n    return -np.tanh((r - best) / mean_w)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a13",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In strongly_correlated value = weight + 100, so almost any density feature is a monotone copy of 'smallest weight first'; the champion already fills to 100% (unused capacity 3) and loses only item count (134 vs 137). What density ranking cannot see is whether the residual it leaves can be closed *exactly* by the pool. Single-item closure (f026) was too weak; two-item closure is the strong form: prefer candidates whose residual is nearly achievable as a sum of two other items' weights.",
+    "feature": "v, w = float arrays (k,). r = remaining - w (per-candidate residual). Build all pairwise sums w_j + w_l for j < l (k(k-1)/2 values) and sort ascending into P. For each candidate, best_i = P[np.searchsorted(P, r_i, side='right') - 1] if that index >= 0 else 0.0. mean_w = max(w.mean(), 1.0). Return score = -np.tanh((r - best) / mean_w). (Pairs are not filtered for containing candidate i itself; a pair containing i must satisfy 2*w_i + w_j <= remaining, which is rare, and the effect is only a mild over-estimate of best_i.)",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f026",
+    "lesson": "f026 (largest single item fitting the residual, as a fraction) was rejected: one item is too coarse a test of whether a residual is closable. f001/f002/f007/f022 all move with w/remaining and are spent. This keeps the residual idea but demands a *sum* of two weights, which is a genuinely different, non-monotone-in-w quantity."
+   },
+   "coder_note": "This computes, per candidate, minus the tanh of (residual after taking it minus the largest two-item weight sum not exceeding that residual), scaled by the mean candidate weight; I read \"best_i\" as the largest pair sum \u2264 r_i (0.0 when none exists), and pairs are left unfiltered as instructed.",
+   "measures": "Negative tanh of the residual left after the best two-item weight sum, scaled by mean candidate weight.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    833.3453767800409
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -0.6825
+    ],
+    [
+     -2.92455,
+     -2.5091
+    ],
+    [
+     0.877365,
+     -0.5594
+    ],
+    [
+     -0.877365,
+     -2.0151
+    ],
+    [
+     0.292455,
+     -0.3633
+    ],
+    [
+     -0.292455,
+     -1.7647
+    ]
+   ],
+   "best_probe": -0.3633,
+   "best_w": 0.292455,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f039",
+    "rho": 0.7754,
+    "lib_r2": 0.004
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "residual_tiling_fit",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Residual after taking the candidate, modulo its own weight: +1 exact multiple, -1 just short.\"\"\"\n    w = np.asarray(weights, dtype=float)\n    r = float(remaining) - w\n    ww = np.maximum(w, 1.0)\n    score = 1.0 - 2.0 * np.mod(r, ww) / ww\n    return np.clip(score, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a03",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Capacity fill is not the champion's problem in the aggregate (fill 99.9-100%); the problem is that the last few weight units are unusable. An item whose weight tiles the residual (residual an exact multiple of its weight) means the leftover slot can in principle be consumed by identical-density items, so the greedy keeps a clean arithmetic structure to the end. This is the only capacity-fill quantity that is *not* monotone in weight, so it is not a copy of f005.",
+    "feature": "w = float array (k,), r = remaining - w. ww = np.maximum(w, 1.0). Return score = 1.0 - 2.0 * np.mod(r, ww) / ww, elementwise, clipped to [-1, 1]. (+1 when the residual left by the candidate is an exact multiple of its own weight; -1 when it is just short of one.)",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": "The capacity-fill group (f001, f002, f007, f022, f026) is spent because every member is a monotone function of the candidate's weight, i.e. a re-expression of density. Tiling is the one fill argument that depends on the *arithmetic relation* between the item's weight and the residual rather than on its size."
+   },
+   "coder_note": "This computes, for each candidate, how close the residual capacity left after taking it is to an exact multiple of the candidate's own weight (mapped to +1 at an exact multiple and \u22121 just short of one, clipped to [\u22121, 1]); I read `remaining` as the current free capacity and used `np.mod` on the fl\u2026",
+   "measures": "Residual after taking the candidate, modulo its own weight: +1 exact multiple, -1 just short.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.7374689955943148
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -0.302
+    ],
+    [
+     -2.92455,
+     -0.4918
+    ],
+    [
+     0.877365,
+     -0.0199
+    ],
+    [
+     -0.877365,
+     -0.1911
+    ],
+    [
+     0.292455,
+     -0.0267
+    ],
+    [
+     -0.292455,
+     -0.1153
+    ]
+   ],
+   "best_probe": -0.0199,
+   "best_w": 0.877365,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f011",
+    "rho": 0.02,
+    "lib_r2": 0.0007
+   },
+   "error": "",
+   "calls": [
+    "c051"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "two_item_alternative_regret",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"(v_i - best pair value with total weight <= w_i) / max(v.max(), 1), clipped to [-1, 1].\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    if k < 2:\n        # no pairs exist: alternative is 0.0 for every candidate\n        alt = np.zeros(k)\n    else:\n        j, l = np.triu_indices(k, k=1)\n        s = w[j] + w[l]\n        t = v[j] + v[l]\n        order = np.argsort(s, kind='stable')\n        s_sorted = s[order]\n        t_sorted = t[order]\n        cummax_t = np.maximum.accumulate(t_sorted)\n        idx = np.searchsorted(s_sorted, w, side='right') - 1\n        alt = np.where(idx >= 0, cummax_t[np.clip(idx, 0, None)], 0.0)\n    denom = max(v.max(), 1.0)\n    score = (v - alt) / denom\n    return np.clip(score, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a12",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Under value = weight + 100 the same weight spent on two items earns an extra +100 of constant, so a heavy item is dominated by any pair that covers its weight. f022 used a *fractional* density bound for the alternative, which erases exactly that count premium; measuring the best real pair instead makes the regret count-aware and should stop the champion taking the few slightly-heavy items that cost it 3 items in strongly_correlated.",
+    "feature": "v, w = float arrays (k,). Build all pairs j < l: s = w_j + w_l, t = v_j + v_l. Order pairs by s ascending (np.argsort), take the running maximum of t in that order (np.maximum.accumulate). For each candidate i, idx = np.searchsorted(s_sorted, w_i, side='right') - 1; alt_i = cummax_t[idx] where idx >= 0, else 0.0. Return score = (v - alt) / max(v.max(), 1.0), clipped to [-1, 1]: how much the candidate's own value beats the best two-item use of the same weight budget.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f022",
+    "lesson": "f022 (density-regret at the same weight cost) failed because a fractional bound at the best density has no item count in it; f027 (value minus the best single alternative fitting after the take) failed for the same reason, one item being too coarse. The pair-version keeps the count premium."
+   },
+   "coder_note": "This computes, for each candidate, how much its own value exceeds the best total value of any real two-item pair (drawn from the candidate pool, j < l) whose combined weight fits within the candidate's weight, normalised by the largest candidate value and clipped to [-1, 1]; when fewer than two can\u2026",
+   "measures": "(v_i - best pair value with total weight <= w_i) / max(v.max(), 1), clipped to [-1, 1].",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8515632014950354
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -0.2952
+    ],
+    [
+     -2.92455,
+     -0.5292
+    ],
+    [
+     0.877365,
+     -0.3302
+    ],
+    [
+     -0.877365,
+     -0.7323
+    ],
+    [
+     0.292455,
+     -0.119
+    ],
+    [
+     -0.292455,
+     -0.0927
+    ]
+   ],
+   "best_probe": -0.0927,
+   "best_w": -0.292455,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "strongly_correlated",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f028",
+    "rho": 0.5539,
+    "lib_r2": 0.2242
+   },
+   "error": "",
+   "calls": [
+    "c054"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "post_take_residual_match",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Negative tanh of the distance from each candidate's post-take residual to the nearest other available item's weight, scaled by mean weight.\"\"\"\n    w = np.asarray(weights, dtype=float)\n    k = w.shape[0]\n    r = float(remaining) - w\n    mean_w = max(w.mean(), 1.0) if k > 0 else 1.0\n    D = np.abs(w[None, :] - r[:, None])\n    np.fill_diagonal(D, np.inf)\n    d = D.min(axis=1)\n    d = np.where(np.isinf(d), mean_w, d)\n    return -np.tanh(d / mean_w)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a14",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "If the residual left after taking a candidate nearly equals the weight of some other still-available item, the pool can close the gap tightly with the next pick instead of drifting into dead capacity; if no weight in the whole pool is near the residual, that residual will be wasted. This is a post-take scarcity measure that depends on the *spacing* of the pool's weights, so it is non-monotone in the candidate's weight and is not a re-expression of density.",
+    "feature": "w = float array (k,). r = remaining - w (float). mean_w = max(w.mean(), 1.0). D = np.abs(w[None, :] - r[:, None]) (k x k: how far each other item's weight is from each candidate's residual). Set D[i, i] = np.inf for all i (a candidate cannot pair with itself). d = D.min(axis=1); where d is inf (k == 1) use mean_w. Return score = -np.tanh(d / mean_w), in (-1, 1]: highest when the residual is an exact weight match for some other available item.",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "shared_with_reference_pct",
+     "direction": "up"
+    },
+    "builds_on": "f026",
+    "lesson": "f026 measured only the largest item *below* the residual, which is nearly monotone in the residual and so nearly a density copy. Using the absolute distance to the nearest pool weight keeps the two-sided, non-monotone part of post-take scarcity."
+   },
+   "coder_note": "This computes, for each candidate, the negative tanh of the distance from its post-take residual (`remaining - weight`) to the nearest weight among the other available items, normalised by the pool's mean weight (floored at 1.0); when `k == 1` the single candidate's distance falls back to `mean_w` \u2026",
+   "measures": "Negative tanh of the distance from each candidate's post-take residual to the nearest other available item's weight, scaled by mean weight.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    15302.060344611826
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.92455,
+     -0.8023
+    ],
+    [
+     -2.92455,
+     -2.3869
+    ],
+    [
+     0.877365,
+     -0.6839
+    ],
+    [
+     -0.877365,
+     -2.172
+    ],
+    [
+     0.292455,
+     -0.6239
+    ],
+    [
+     -0.292455,
+     -2.0116
+    ]
+   ],
+   "best_probe": -0.6239,
+   "best_w": 0.292455,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "shared_with_reference_pct",
+    "family": "strongly_correlated",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f026",
+    "rho": 0.4588,
+    "lib_r2": 0.0112
+   },
+   "error": "",
+   "calls": [
+    "c052"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "pool_excess_capacity_weighted",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Excess of a candidate's value over the pool density times its weight, but measured against the density of the whole instance (value/weight totals) and normalised by remaining-capacity share, so it penalises items whose excess is only a small fraction of what the residual can still buy.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    C = float(capacity) if capacity else 1.0\n    R = max(R, 1.0)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    excess = v - density * w\n    # how much of the residual this item consumes\n    share = w / R\n    # remaining budget still available after taking the item, as a fraction of capacity\n    left = np.maximum(R - w, 0.0) / max(C, 1.0)\n    # scale by the total value still on the table (pool value), so excess is relative\n    scale = max(pool_v, 1.0) / max(C, 1.0) * R\n    scaled = excess / (scale + 1e-9)\n    # weight the excess by how much of the residual it uses (big useful items matter more)\n    # and by how well the leftover capacity stays usable\n    return np.tanh(scaled * (1.0 + share) * (0.5 + left))\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Excess of a candidate's value over the pool density times its weight, but measured against the density of the whole instance (value/weight totals) and normalised by remaining-capacity share, so it penalises items whose excess is only a small fraction of what the residual can still buy.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    71.31202870382478
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 12.9486,
+   "best_w": null,
+   "d_train": 12.9486,
+   "d_valid": 14.0504,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9996
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "density_vs_best_followup",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value density divided by the density of the best density achievable after taking this item: d / max(density of any candidate that fits after taking it).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    d = v / np.maximum(w, 1.0)\n    k = d.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    # residual capacity after taking each candidate\n    res = R - w\n    # for each candidate, what is the best density among items that would still fit after it\n    # build matrix: item j fits after i iff w[j] <= res[i]\n    fits = w[None, :] <= res[:, None]\n    # zero out infeasible entries by setting their density to -inf for max\n    masked = np.where(fits, d[None, :], -np.inf)\n    best_after = masked.max(axis=1)          # best density still reachable\n    # if nothing fits after (residual too small), best_after = -inf -> treat as 0 (= no follow-up)\n    best_after = np.where(np.isfinite(best_after), best_after, 0.0)\n    # candidate's own density relative to the follow-up density it would allow\n    ratio = d / (best_after + 1e-9)\n    # squash: taking an item that leaves a much better follow-up is penalised\n    return np.tanh(ratio - 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value density divided by the density of the best density achievable after taking this item: d / max(density of any candidate that fits after taking it).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.657071618996655
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9959
+   },
+   "error": "",
+   "calls": [
+    "c058"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "residual_pair_value_pack",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"For each candidate: the best total value of a *two-item* follow-up pack that still fits in the residual after taking it, divided by the best such pack available to any candidate (0 if none exists).\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.size\n    rem = max(float(remaining), 1.0)\n    vm = v.max() if k > 0 else 0.0\n    if vm <= 0.0 or k < 2:\n        return np.zeros(k)\n    r = rem - w                      # residual after taking candidate i\n    # pair sums v_j + v_l for all ordered pairs, and their total weight\n    pair_v = v[:, None] + v[None, :]           # (k, k)\n    pair_w = w[:, None] + w[None, :]           # (k, k)\n    # exclude pairs that reuse the candidate i as a follow-up\n    idx = np.arange(k)\n    pair_w = np.where((idx[:, None] == idx[None, :]), np.inf, pair_w)\n    # best pair value that fits in the residual r_i, for each i\n    fits = pair_w <= r[:, None]\n    best = np.where(fits, pair_v, 0.0).max(axis=1)\n    return np.clip(best / (2.0 * vm + 1e-9), -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a12",
+   "kind": "variant",
+   "parent": "f027",
+   "idea": {},
+   "coder_note": "",
+   "measures": "For each candidate: the best total value of a *two-item* follow-up pack that still fits in the residual after taking it, divided by the best such pack available to any candidate (0 if none exists).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    7.332677322006935
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.0011,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f011",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f011",
+    "rho": 0.9899
+   },
+   "error": "",
+   "calls": [
+    "c056"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "density_contrast_vs_lighter",
+   "code": "import numpy as np\nimport math\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Local density contrast: how much a candidate's density exceeds the best density among items it would crowd out by consuming weight.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = max(float(remaining), 1.0)\n    k = v.size\n    if k == 0:\n        return np.zeros(0)\n    dens = v / np.maximum(w, 1.0)\n    # For each candidate, look at items that are \"lighter and only fit once it's taken\"\n    # proxied by: the best density among strictly lighter items still in the pool.\n    # If a candidate is heavy, taking it removes budget that lighter items (with\n    # potentially higher density) could have used.\n    order = np.argsort(w)\n    sorted_dens = dens[order]\n    sorted_w = w[order]\n    # running max density among items strictly lighter than each candidate\n    # prefix max over sorted-by-weight ordering\n    pref_max = np.maximum.accumulate(sorted_dens)\n    # best density among strictly lighter items = prefix max up to previous weight\n    lighter_best = np.zeros(k)\n    lighter_best[order[1:]] = pref_max[:-1]\n    # weight penalty: how much of remaining capacity the item consumes\n    consume = w / R\n    # contrast: positive when candidate beats lighter alternatives, negative when\n    # a lighter item with higher density would be crowded out\n    contrast = dens - lighter_best\n    scale = np.abs(contrast).max()\n    scale = scale if scale > 0 else 1.0\n    return np.tanh(contrast / scale) * (1.0 - consume)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a17",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Local density contrast: how much a candidate's density exceeds the best density among items it would crowd out by consuming weight.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.6277853505010995
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.885824,
+     -0.1705
+    ],
+    [
+     -2.885824,
+     -0.1091
+    ],
+    [
+     0.865747,
+     -0.0827
+    ],
+    [
+     -0.865747,
+     -0.1004
+    ],
+    [
+     0.288582,
+     -0.0042
+    ],
+    [
+     -0.288582,
+     -0.2293
+    ]
+   ],
+   "best_probe": -0.0042,
+   "best_w": 0.288582,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.4955,
+    "lib_r2": 0.3701
+   },
+   "error": "",
+   "calls": [
+    "c059"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "residual_value_regret_packed",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Regret of a candidate against the best-value alternative that fits afterwards, weighted by how tightly the pair fills the remaining capacity: pairs that pack the residual are discounted.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    k = v.size\n    if k == 0:\n        return np.zeros(0)\n    rem = max(float(remaining), 1.0)\n    cap = max(float(capacity), 1.0)\n    vm = v.max() if k > 0 else 0.0\n    if vm <= 0.0:\n        return np.zeros(k)\n    r = np.clip(rem - w, 0.0, None)              # residual after taking i\n    F = (w[None, :] <= r[:, None])               # (k,k): j still fits after i\n    F[np.arange(k), np.arange(k)] = False        # exclude i itself\n    # how much of the residual a follow-up j would consume, in [0,1]\n    fill = np.clip(w[None, :] / np.maximum(r[:, None], 1.0), 0.0, 1.0)\n    # a follow-up that fills the residual well is a strong alternative: boost it\n    boost = 1.0 + 0.5 * fill * fill\n    alt = np.where(F, v[None, :] * boost, 0.0).max(axis=1)\n    # tie-break by the candidate's own residual share of the total capacity:\n    # slightly prefer candidates leaving a residual that is a \"nice\" fraction\n    own_fill = np.clip(w / rem, 0.0, 1.0)\n    return np.clip((v - alt) / vm, -1.0, 1.0) + 0.05 * own_fill\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a12",
+   "kind": "variant",
+   "parent": "f027",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Regret of a candidate against the best-value alternative that fits afterwards, weighted by how tightly the pair fills the remaining capacity: pairs that pack the residual are discounted.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.6496734169435956
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 7.1156,
+   "best_w": null,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f008",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f008",
+    "rho": 0.9986
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "pool_spread_gated_excess",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value excess over the pool density, but excess only counts when the item's weight is small enough to leave the pool still explorable; scaled by the pool's density spread.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    if v.size == 0:\n        return np.zeros(0)\n    R = max(R, 1.0)\n    # pool density (value per unit weight over the remaining candidates)\n    pool_w = w.sum()\n    pool_v = v.sum()\n    density = pool_v / pool_w if pool_w > 0 else 0.0\n    excess = v - density * w\n    # local density spread of the pool: how heterogeneous the pool is\n    dens = v / np.maximum(w, 1.0)\n    spread = dens.std() / (abs(dens.mean()) + 1e-9)\n    spread = min(spread, 1.0)\n    # how much of the remaining capacity this item would consume\n    fill = np.minimum(w / R, 1.0)\n    # when the pool is homogeneous (spread small), overweight the excess;\n    # when heterogeneous, penalise big fills so cheap-but-heavy items do not hog capacity\n    gate = (1.0 - spread) - spread * fill\n    return np.tanh(gate * excess / (np.abs(excess).max() + 1e-9))\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value excess over the pool density, but excess only counts when the item's weight is small enough to leave the pool still explorable; scaled by the pool's density spread.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.562083805852793
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.885824,
+     -0.1068
+    ],
+    [
+     -2.885824,
+     -9.0065
+    ],
+    [
+     0.865747,
+     -0.0982
+    ],
+    [
+     -0.865747,
+     -3.2719
+    ],
+    [
+     0.288582,
+     -0.0777
+    ],
+    [
+     -0.288582,
+     -1.0989
+    ]
+   ],
+   "best_probe": -0.0777,
+   "best_w": 0.288582,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.6476,
+    "lib_r2": 0.8125
+   },
+   "error": "",
+   "calls": [
+    "c060"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "density_target_residual_consistency",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value-per-weight ratio, but measured against the density the remaining capacity still needs to reach the global best rate: how much this item overshoots or undershoots the rate implied by the slack left over.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(max(remaining, 1.0))\n    C = float(capacity) if capacity else 1.0\n    d = v / np.maximum(w, 1.0)\n    # the best achievable rate in the pool: target density for filling the rest\n    target = d.max()\n    if target <= 0:\n        return np.zeros_like(d)\n    # implied rate if this item is taken: it consumes weight w at rate d; the\n    # leftover R-w must then be filled at whatever rate remains. A candidate is\n    # good when its own rate is high AND it does not force the residual to be\n    # filled far above the achievable target (i.e. it doesn't hog scarce capacity).\n    leftover = np.maximum(R - w, 0.0)\n    # required rate on the leftover to still hit \"target on the whole remainder\"\n    required = (target * R - v) / np.maximum(leftover, 1e-9)\n    # closeness of the required residual rate to the target, signed\n    gap = (target - required) / (abs(target) + 1e-9)\n    # blend with the plain relative density so high-rate items still lead\n    rel = d / (target + 1e-9)\n    return np.tanh(rel - 0.5 * np.tanh(gap))\n\nname: density_target_residual_consistency\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Value-per-weight ratio, but measured against the density the remaining capacity still needs to reach the global best rate: how much this item overshoots or undershoots the rate implied by the slack left over.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    5.466238896271018
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.885824,
+     -0.067
+    ],
+    [
+     -2.885824,
+     -0.2426
+    ],
+    [
+     0.865747,
+     -0.0585
+    ],
+    [
+     -0.865747,
+     -0.0985
+    ],
+    [
+     0.288582,
+     -0.0258
+    ],
+    [
+     -0.288582,
+     0.0148
+    ]
+   ],
+   "best_probe": 0.0148,
+   "best_w": -0.288582,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.8859,
+    "lib_r2": 0.9477
+   },
+   "error": "",
+   "calls": [
+    "c062"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "count_lookahead_premium_pack",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Value plus pool premium times the count of other items that greedily fit in the post-take residual, standardised.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    R = float(remaining)\n    k = v.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    prem = max(float(np.median(v - w)), 0.0)\n    order = np.argsort(w, kind='stable')\n    w_sorted = w[order]\n    P = np.concatenate(([0.0], np.cumsum(w_sorted)))\n    p = np.empty(k, dtype=float)\n    p[order] = np.arange(k, dtype=float)\n    B = R - w\n    m1 = np.searchsorted(P, B, side='right') - 1\n    m2 = np.searchsorted(P, B + w, side='right') - 2\n    cnt = np.clip(np.maximum(np.minimum(m1, p), m2), 0, k - 1)\n    score = v + prem * cnt\n    sd = score.std()\n    return (score - score.mean()) / (sd + 1e-9)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a15",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "strongly_correlated's whole 0.475% gap is 3 missing item slots (134 vs 137) with fill already at 100%: value = weight + 100, so 3 slots = exactly the 300 lost value. A one-step lookahead that adds the pool's per-item premium times the number of items the post-take residual can still hold estimates the realised value of taking i and then packing the residual count-first, so it should prefer items that do not cost an item slot.",
+    "feature": "v=values, w=weights, R=remaining, k=len(v). prem = max(median(v - w), 0.0). Sort indices by w ascending; P = concatenate([[0.0], cumsum(w_sorted)]); p = rank of each candidate in that order. B = R - w. m1 = searchsorted(P, B, side='right') - 1; m2 = searchsorted(P, B + w, side='right') - 2. cnt = clip(maximum(minimum(m1, p), m2), 0, k-1)  # exact count of other items that greedily fit in B. score = v + prem * cnt. Return (score - score.mean()) / (score.std() + 1e-9).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "items_taken",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": "strongly_correlated diagnostics: the loss is item count, not capacity (fill 100%, unused 3, 3 slots short); density-monotone features cannot repair a count deficit."
+   },
+   "coder_note": "This computes, per candidate, its value plus the pool's median premium (v\u2212w, floored at 0) times the exact count of other items that greedily fit in the residual after taking it, then standardises across candidates; I read `p` as each candidate's rank in the weight-ascending order and used a stable\u2026",
+   "measures": "Value plus pool premium times the count of other items that greedily fit in the post-take residual, standardised.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.0000000000037854
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 7.1156,
+   "best_w": null,
+   "d_train": 7.1156,
+   "d_valid": 8.3053,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f008",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f008",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c066",
+    "c069"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f048",
+   "name": "residual_fill_density_gap",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Density excess of each candidate over the capacity-weighted mean density of the other items fitting the post-take residual, scaled by residual fill fraction.\"\"\"\n    v = np.asarray(values, dtype=float)\n    w = np.asarray(weights, dtype=float)\n    d = v / np.maximum(w, 1.0)\n\n    order = np.argsort(w, kind='stable')\n    w_sorted = w[order]\n    d_sorted = d[order]\n\n    SW = np.concatenate(([0.0], np.cumsum(w_sorted)))\n    SD = np.concatenate(([0.0], np.cumsum((d_sorted * w_sorted))))\n\n    p = np.empty(w.shape[0], dtype=np.int64)\n    p[order] = np.arange(w.shape[0])\n\n    B = remaining - w\n    m = np.searchsorted(w_sorted, B, side='right')\n\n    incl = (p < m)\n    Wf = SW[m] - incl * w\n    Df = SD[m] - incl * d * w\n\n    d_mean = d.mean() if d.size > 0 else 0.0\n    Dfill = np.where(Wf > 0, Df / np.where(Wf > 0, Wf, 1.0), d_mean)\n\n    std = d.std()\n    excess = (d - Dfill) / (std + 1e-9)\n\n    # residual fill fraction: how much of the post-take residual the fitting pool can cover\n    cap = max(float(capacity), 1.0)\n    fill = np.clip(Wf / np.maximum(B, 1.0), 0.0, 1.0)\n\n    out = excess * fill\n    return np.clip(out, -3.0, 3.0)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The pool mean is a stale benchmark late in the build, when the pool is small and skewed; the capacity-weighted density of the items that actually fit in the post-take residual makes the density excess react to what is really left, sharpening the comparison exactly where the champion's endgame decisions are made.",
+    "feature": "d = v / maximum(w, 1.0). Sort indices by w ascending; SW = [0, cumsum(w_sorted)]; SD = [0, cumsum((d*w)_sorted)]; p = rank of each candidate. B = R - w; m = searchsorted(w_sorted, B, side='right')  # candidates with weight <= B. incl = (p < m). Wf = SW[m] - incl*w; Df = SD[m] - incl*d*w. Dfill = Df / Wf where Wf > 0, else d.mean(). Return clip((d - Dfill) / (d.std() + 1e-9), -3, 3).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f016 (a06 line) was kept but its strongly_correlated gap prediction did not hold; the pool mean is too coarse a benchmark once the pool has shrunk."
+   },
+   "coder_note": "This computes, for each candidate, its value density minus the capacity-weighted mean density of the *other* items that still fit in the residual capacity after taking it (falling back to the pool mean density when that residual set is empty), z-scored by the pool density standard deviation and cli\u2026",
+   "measures": "Density excess of each candidate over the capacity-weighted mean density of the other items fitting the post-take residual, scaled by residual fill fraction.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.0468017184468532
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 13.0875,
+   "best_w": null,
+   "d_train": 13.0875,
+   "d_valid": 14.3259,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.993
+   },
+   "error": "",
+   "calls": [
+    "c068",
+    "c071"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f049",
+   "name": "weight_crowding_substitutes",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Standardised count of near-substitute weights (Gaussian kernel, bandwidth 5% of mean weight) among the other candidates.\"\"\"\n    w = np.asarray(weights, dtype=float)\n    k = w.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    delta = max(1.0, 0.05 * w.mean())\n    diff = (w[:, None] - w[None, :]) / delta\n    kernel = np.exp(-(diff * diff))\n    np.fill_diagonal(kernel, 0.0)\n    crowd = kernel.sum(axis=1) / max(k - 1, 1)\n    std = crowd.std()\n    return (crowd - crowd.mean()) / (std + 1e-9)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a16",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Density-monotone features rank strongly_correlated identically (density = 1 + 100/w), so only pool-structural signals can reorder it. If a candidate's weight has many near-substitutes, taking it leaves the pool's weight profile nearly unchanged and the remaining fill stays completable; a unique weight removes a distinct value from the pool.",
+    "feature": "delta = max(1.0, 0.05 * w.mean()). crowd_i = sum over j != i of exp(-((w_j - w_i)/delta)^2), divided by max(k-1, 1). Return (crowd - crowd.mean()) / (crowd.std() + 1e-9).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "shared_with_reference_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": "the residual-arithmetic probes f036, f037, f039 were all rejected; this tests pool structure (weight replaceability) instead of residual arithmetic."
+   },
+   "coder_note": "This computes, for each candidate, the mean Gaussian-kernel similarity of its weight to all other candidates' weights (bandwidth = max(1, 5% of mean weight)), then standardises across candidates; I read \"sum over j != i\" as excluding the candidate itself via a zeroed diagonal, and used the populati\u2026",
+   "measures": "Standardised count of near-substitute weights (Gaussian kernel, bandwidth 5% of mean weight) among the other candidates.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0000000423703748
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     2.885824,
+     -2.1423
+    ],
+    [
+     -2.885824,
+     -1.5634
+    ],
+    [
+     0.865747,
+     -0.6695
+    ],
+    [
+     -0.865747,
+     -0.4107
+    ],
+    [
+     0.288582,
+     -0.2246
+    ],
+    [
+     -0.288582,
+     -0.1826
+    ]
+   ],
+   "best_probe": -0.1826,
+   "best_w": -0.288582,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "shared_with_reference_pct",
+    "family": "strongly_correlated",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f026",
+    "rho": 0.1944,
+    "lib_r2": 0.0325
+   },
+   "error": "",
+   "calls": [
+    "c065"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f050",
+   "name": "multi_item_alternative_regret",
+   "code": "import numpy as np\n\ndef feature(values, weights, remaining, capacity, taken):\n    \"\"\"Regret of taking each candidate: its value minus the fractional greedy density fill of the residual after taking it, z-scored across candidates.\"\"\"\n    values = np.asarray(values, dtype=float)\n    weights = np.asarray(weights, dtype=float)\n    k = values.shape[0]\n    if k == 0:\n        return np.zeros(0)\n    d = values / np.maximum(weights, 1.0)\n    order = np.argsort(-d, kind=\"stable\")\n    ds = d[order]\n    ws = weights[order]\n    vs = values[order]\n    PW = np.concatenate(([0.0], np.cumsum(ws)))\n    PV = np.concatenate(([0.0], np.cumsum(vs)))\n    B = remaining - weights  # residual capacity after taking each candidate\n    m = np.clip(np.searchsorted(PW, B, side=\"right\") - 1, 0, k - 1)\n    fill = PV[m] + ds[m] * (B - PW[m])\n    regret = values - fill\n    sd = regret.std() + 1e-9\n    return (regret - regret.mean()) / sd\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a12",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Previous regret features used a single item (f027) or a pair (f038) as the alternative, which understates what the residual can yield; the count-corrected alternative is the full greedy density fill of the post-take residual (fractional last item). If the regret signal is real, a multi-item alternative should finally make it bite on strongly_correlated, where the residual's packing potential is what the champion misjudges.",
+    "feature": "d = v / maximum(w, 1.0). Sort indices by d descending; ds, ws, vs in that order; PW = [0, cumsum(ws)]; PV = [0, cumsum(vs)]. B = R - w. m = clip(searchsorted(PW, B, side='right') - 1, 0, k-1). Fill = PV[m] + ds[m] * (B - PW[m])  # fractional greedy fill of the residual. regret = v - Fill. Return (regret - regret.mean()) / (regret.std() + 1e-9).",
+    "prediction": {
+     "family": "strongly_correlated",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f027",
+    "lesson": "f027 (kept, then retired) and f038 (rejected) show single-item and pair alternatives add nothing; this re-tests the vein with a count-corrected, multi-item alternative."
+   },
+   "coder_note": "This computes, for each candidate, its value minus the fractional greedy density fill of the residual capacity after taking it (sorted by density descending, with a fractional last item), then z-scores those regrets across candidates; I read \"R\" as `remaining` and used a stable descending sort so t\u2026",
+   "measures": "Regret of taking each candidate: its value minus the fractional greedy density fill of the residual after taking it, z-scored across candidates.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.0000000000028186
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.7731,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 0.9922
+   },
+   "error": "",
+   "calls": [
+    "c067",
+    "c070"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "value density",
+   "description": "Rank candidates by value/weight ratio, the classic fractional-knapsack greedy.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f005",
+    "f003",
+    "f004",
+    "f009",
+    "f010",
+    "f013",
+    "f019",
+    "f020",
+    "f021",
+    "f023",
+    "f024",
+    "f025",
+    "f030",
+    "f031",
+    "f034",
+    "f035",
+    "f033",
+    "f040",
+    "f041",
+    "f045",
+    "f046"
+   ],
+   "best_gain": 14.3259,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     14.3259
+    ],
+    [
+     2,
+     14.3259
+    ],
+    [
+     3,
+     14.3259
+    ],
+    [
+     4,
+     14.3259
+    ],
+    [
+     5,
+     0.0148
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a02",
+   "title": "weight penalty",
+   "description": "Rank by value minus a weight penalty scaled by remaining capacity, favouring lighter items when capacity is tight.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f006",
+    "f011",
+    "f029"
+   ],
+   "best_gain": 7.2283,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     7.2283
+    ],
+    [
+     2,
+     -0.0011
+    ],
+    [
+     3,
+     8.3053
+    ]
+   ],
+   "benched_gen": 3,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "capacity fill",
+   "description": "Rank by how well a candidate's weight fits the remaining capacity (prefer items that use leftover space efficiently).",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f001",
+    "f002",
+    "f022",
+    "f037"
+   ],
+   "best_gain": 4.0057,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     4.0057
+    ],
+    [
+     3,
+     -0.1239
+    ],
+    [
+     4,
+     -0.0199
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "absolute value",
+   "description": "Rank by raw value normalised, ignoring weight, to test whether value alone helps.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f008"
+   ],
+   "best_gain": 8.3053,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     8.3053
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "density times fit",
+   "description": "Combine value density with a factor rewarding items whose weight is small relative to remaining capacity.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f017"
+   ],
+   "best_gain": null,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     14.3259
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "density gap to pool mean",
+   "description": "Rank by value density minus the mean density of the remaining candidate pool, normalised, to break near-ties when densities are flat (strongly correlated).",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 2,
+   "features": [
+    "f016",
+    "f032",
+    "f048"
+   ],
+   "best_gain": 14.3259,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     14.3259
+    ],
+    [
+     4,
+     -0.1862
+    ],
+    [
+     5,
+     14.3259
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "density with end-game fill",
+   "description": "Value density scaled by a factor rewarding candidates whose weight leaves a small residual that other candidates can still fill.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f015"
+   ],
+   "best_gain": null,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     14.3259
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "value plus tightness penalty",
+   "description": "Combine raw value with a weight penalty that grows as remaining capacity shrinks, targeting the strong-correlation family.",
+   "parent": "a02",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f018"
+   ],
+   "best_gain": null,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     8.3053
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "wide find: share_smoothed_value_density",
+   "description": "Ranks candidates by how much value they contribute per unit of *scarcity-adjusted* weight: value / (weight + remaining/k), i.e. a density smoothed toward equal weight-sharing among the still-fitting \u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f014"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "residual complementarity",
+   "description": "Reward a candidate whose weight leaves a residual that some other remaining candidate can fill almost exactly, targeting the strong-correlation tie-breaking.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f026"
+   ],
+   "best_gain": -0.2586,
+   "last_gen": 3,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "argued": [
+      {
+       "feature": "f026",
+       "type": "none",
+       "argument": "f026 is a max-over-other-items fill ratio; not inert, not a monotone transform of f022, and not a linear combination of f005/f004/f016."
+      }
+     ],
+     "result": "not proven: stays at lower priority"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.2586
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "pool rank percentile",
+   "description": "Rank candidates by their position in the pool's value and weight order statistics (scale-free percentile blend), not by any ratio.",
+   "parent": "a04",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f028"
+   ],
+   "best_gain": 0.0132,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     0.0132
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "value minus best-alternative",
+   "description": "Score each candidate by its value minus the best value achievable by the items that would still fit after taking it, a regret-style lookahead under tight capacity.",
+   "parent": "a02",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 3,
+   "features": [
+    "f027",
+    "f038",
+    "f042",
+    "f044",
+    "f050"
+   ],
+   "best_gain": 8.3053,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     3,
+     8.3053
+    ],
+    [
+     4,
+     -0.0927
+    ],
+    [
+     5,
+     8.3053
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "residual exactness for flat densities",
+   "description": "When densities are near-equal (strong correlation), rank by how exactly the candidate's weight plus some other candidate's weight fills the residual, breaking density ties toward exact packing.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f036"
+   ],
+   "best_gain": -0.3633,
+   "last_gen": 4,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.3633
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "scarcity of post-take pool",
+   "description": "Score a candidate by the density of the best item that remains available after taking it, so items that do not starve the pool of good future picks are preferred.",
+   "parent": "a12",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f039"
+   ],
+   "best_gain": -0.6239,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.6239
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "premium-aware residual packing",
+   "description": "Candidate value plus the pool's per-item premium (median of v minus w, clipped at 0) times the maximum number of items the post-take residual can still hold, as an estimate of total realised value.",
+   "parent": "a12",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f047"
+   ],
+   "best_gain": null,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     8.3053
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "weight crowding substitutes",
+   "description": "Score candidates by how many remaining items have near-identical weight (crowdedness of their weight neighbourhood), preserving the pool's ability to complete a fill.",
+   "parent": "a14",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f049"
+   ],
+   "best_gain": -0.1826,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.1826
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "wide find: density_contrast_vs_lighter",
+   "description": "Local density contrast: how much a candidate's density exceeds the best density among items it would crowd out by consuming weight.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f043"
+   ],
+   "best_gain": -0.0042,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0042
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f005",
+  "f004",
+  "f016"
+ ],
+ "backlog": [
+  "f009",
+  "f046",
+  "f028",
+  "f024",
+  "f014",
+  "f011"
+ ]
+}

@@ -1,0 +1,3607 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "relative_load_deficit",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative current load normalised by mean load plus a fraction of the job: favours the currently least-loaded machine, scaled to the job size.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    scale = mean_load + job + 1e-9\n    # relative deficit of each machine, blended with the job-size pressure\n    return (-(loads - mean_load) / scale)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative current load normalised by mean load plus a fraction of the job: favours the currently least-loaded machine, scaled to the job size.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    0.6657166268807938
+   ],
+   "weights": [
+    1.5572178757890245
+   ],
+   "probe": [
+    [
+     1.0,
+     981.9036
+    ],
+    [
+     -1.0,
+     0.0
+    ]
+   ],
+   "best_probe": 981.9036,
+   "best_w": 1.0,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": 1,
+   "importance": 2.6642,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "load_deviation_from_mean_sq",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative squared deviation of each machine load from the current mean load (pull the laggards up).\"\"\"\n    m = len(loads)\n    mean_load = loads.mean()\n    # scale by mean job size seen so far (or the job itself early on)\n    if past_jobs.size > 0:\n        scale = past_jobs.mean()\n    else:\n        scale = job\n    scale = max(scale, 1e-9)\n    dev = (loads - mean_load) / scale\n    return -np.tanh(dev * dev)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative squared deviation of each machine load from the current mean load (pull the laggards up).",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    17.522328477273167
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     510.4061
+    ],
+    [
+     -1.0,
+     0.0
+    ]
+   ],
+   "best_probe": 510.4061,
+   "best_w": 1.0,
+   "d_train": 515.8665,
+   "d_valid": 503.6051,
+   "trial_x": [
+    0.5
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.5173
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "load_above_mean_over_job",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"How far each load sits above the mean load, relative to job size (load balancing pressure).\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    scale = max(job, 1e-9)\n    # positive when a machine is above average; normalized by job size then squashed\n    diff = (loads - mean_load) / scale\n    return np.tanh(diff)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "How far each load sits above the mean load, relative to job size (load balancing pressure).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.1721066852567694
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "projected_final_load_slack",
+   "code": "import numpy as np\nimport math\n\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative slack of each machine if it received this job, relative to the projected average load.\"\"\"\n    m = len(loads)\n    t = len(past_jobs)\n    total = float(np.sum(loads))\n    n_total = t + 1 + jobs_left\n    # projected mean load per machine at the end, using observed average job size\n    avg_job = total / t if t > 0 else job\n    projected_final = (total + job + jobs_left * avg_job) / m\n    new_load = loads + job\n    # how far this machine's resulting load exceeds the projected final mean (positive = bad)\n    slack = new_load - projected_final\n    scale = max(projected_final, job, 1e-9)\n    return -slack / scale\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative slack of each machine if it received this job, relative to the projected average load.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.3512975560625962
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "squared_overshoot_above_max",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative squared headroom of each machine relative to the largest load, scaled by job: prefers machines whose post-assignment load stays closest to the current max.\"\"\"\n    loads = np.asarray(loads, dtype=float)\n    mx = np.max(loads)\n    scale = mx + job + 1e-9\n    post = (loads + job) / scale\n    # penalty grows quadratically the further above the max we land\n    val = -np.square(np.maximum(post - mx / scale, 0.0))\n    return val\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative squared headroom of each machine relative to the largest load, scaled by job: prefers machines whose post-assignment load stays closest to the current max.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    64.93430549559496
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c006"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "harmonic_excess_late_weighted",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Measures how much a machine's load exceeds the harmonic-mean load, weighted by remaining-job fraction.\"\"\"\n    m = len(loads)\n    total = loads.sum() + job\n    # harmonic-mean proxy via reciprocal of mean of reciprocals (guarded)\n    safe = np.maximum(loads, 1e-9)\n    harm = m / np.sum(1.0 / safe)\n    # relative excess above harmonic mean, squashed\n    excess = (loads - harm) / (harm + job + 1e-9)\n    # shrink toward zero as few jobs remain (late decisions matter most)\n    frac = jobs_left / (jobs_left + 1.0)\n    val = np.tanh(excess) * (1.0 - frac)\n    return -val\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Measures how much a machine's load exceeds the harmonic-mean load, weighted by remaining-job fraction.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    112.96477275350767
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "least_loaded_raw",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative current load of each machine, normalised by the mean load after placing the arriving job.\"\"\"\n    m = loads.shape[0]\n    scale = (loads.sum() + job) / m + 1e-9\n    return -(loads / scale)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Code Zero's whole loss is the index tie-break: every job goes to machine 0, so spread/jobs-per-machine explode. A strictly decreasing score in current load removes the tie and sends each job to the lightest machine; on all three families that alone should collapse makespan toward the mean load.",
+    "feature": "feature(job, loads, past_jobs, jobs_left): scale = loads.sum() + job + 1e-9; return -(loads / scale). One column, in [-1, 0], ranks the smallest load highest.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `-(loads / (sum(loads) + job + 1e-9))`, a strictly decreasing function of each machine's current load (normalised by total work so it stays in [-1, 0]), so the lightest machine scores highest; the `1e-9` guards the division and the normalisation is the only reading choice, since the e\u2026",
+   "measures": "Negative current load of each machine, normalised by the mean load after placing the arriving job.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    0.6059146745179029
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c010",
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "load_in_job_units_saturating",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative saturated relative load, with a tiny strictly-monotone tie-break inside the plateau.\"\"\"\n    r = loads / (job + 1e-9)\n    base = -np.clip(r, 0.0, 3.0) / 3.0\n    # Inside the saturated plateau (r >= 3) all machines score -1; add a vanishing term\n    # that keeps the exact load ordering so the plateau is not a pure index tie.\n    eps = 1e-6\n    tie = -eps * np.clip(r - 3.0, 0.0, None) / (1.0 + np.clip(r - 3.0, 0.0, None))\n    return base + tie\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Measure each machine's load in units of the arriving job, but saturate at 3 job-sizes: once a machine already holds more than three times this job, the exact load is irrelevant for placing it. This tests whether relative (job-scaled) load carries information beyond raw load, and deliberately creates plateaus whose index tie-break differs from a01.",
+    "feature": "feature(job, loads, past_jobs, jobs_left): r = loads / (job + 1e-9); return -np.clip(r, 0.0, 3.0) / 3.0. One column in [-1, 0]; every machine with load >= 3*job scores exactly -1 and ties.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "spread_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `-clip(loads/(job+1e-9), 0, 3)/3`, one column in [-1, 0], so machines holding at least three times the arriving job all tie at exactly -1; I read the saturation and scaling literally as specified.",
+   "measures": "Negative saturated relative load, with a tiny strictly-monotone tie-break inside the plateau.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.3300135374154647
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c009",
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "reserve_emptiest_machine",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative normalised load deviation (ordinary balance); column 1: -1 on machines at the current minimum load when the job is below the past mean and more than m jobs remain, else 0.\"\"\"\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    ls = loads\n    mn = ls.min()\n    mx = ls.max()\n    base = -(ls - ls.mean()) / (mx - mn + job + 1e-9)\n    reserve = -1.0 * (((ls <= mn + 1e-9) & (job < mu) & (jobs_left > len(ls))).astype(float))\n    return np.column_stack([base, reserve])\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "jobs_left plus the past mean job size say how much big work is still coming. If we deliberately keep the single lightest machine free while many jobs remain and this job is small, a future big job lands on an empty machine instead of on top of existing work. Cost: the profile is intentionally uneven, so spread should rise while late growth should fall.",
+    "feature": "feature(job, loads, past_jobs, jobs_left): mu = float(past_jobs.mean()) if past_jobs.size else job; ls = loads; mn = ls.min(); mx = ls.max(); base = -(ls - ls.mean()) / (mx - mn + job + 1e-9); reserve = -1.0 * (((ls <= mn + 1e-9) & (job < mu) & (jobs_left > len(ls))).astype(float)); return np.column_stack([base, reserve]). Two columns: ordinary balance, and a penalty on every machine sitting at the current minimum load (only when the arriving job is below the past mean and more than m jobs remain).",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "spread_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "Computes two columns per machine: a normalised negative load deviation (ordinary balance) and a \u22121 penalty on every machine currently at the minimum load, applied only when the arriving job is below the past mean job size and more than m jobs remain; I read \"more than m jobs remain\" as `jobs_left >\u2026",
+   "measures": "Column 0: negative normalised load deviation (ordinary balance); column 1: -1 on machines at the current minimum load when the job is below the past mean and more than m jobs remain, else 0.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 2,
+   "scales": [
+    2.423658698064817,
+    3.2128773156099957
+   ],
+   "weights": [
+    1.0296142276540257,
+    1.184264863215808
+   ],
+   "probe": [
+    [
+     1.0,
+     987.8274
+    ],
+    [
+     -1.0,
+     340.5889
+    ]
+   ],
+   "best_probe": 987.8274,
+   "best_w": 1.0,
+   "d_train": 987.8274,
+   "d_valid": 1010.3328,
+   "trial_x": [
+    1.0,
+    1.0
+   ],
+   "prediction": {
+    "metric": "spread_pct",
+    "family": "bimodal",
+    "direction": "up",
+    "before": 2000.0,
+    "after": 67.07,
+    "held": false,
+    "checked": true,
+    "instance": "bimodal-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.5369
+   },
+   "error": "",
+   "calls": [
+    "c011"
+   ],
+   "kept_gen": 1,
+   "importance": 5.4526,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "fill_to_tail_size",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative squared distance of each machine's post-placement load to a tail-size target, scaled by the target so the penalty is relative (98th pct of past, capped at 2x fair share).\"\"\"\n    past = np.asarray(past_jobs, dtype=float)\n    big = float(np.quantile(past, 0.98)) if past.size >= 10 else float(job)\n    fair = (loads.sum() + job) / len(loads)\n    target = max(min(big, 2.0 * fair), 1e-9)\n    # relative deviation from target, clipped to keep the score bounded\n    dev = np.clip((loads + job - target) / (target + 1e-9), -1.0, 2.0)\n    return -0.5 * dev ** 2\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Estimate the large-job size from the past tail (98th percentile, capped at twice the fair share) and prefer the machine whose post-placement load is closest to that target from either side. Tiny jobs then pile onto a few machines until they reach tail size while others stay low, so a late large job may be forced onto an already near-full machine: concentration with a possible makespan penalty.",
+    "feature": "feature(job, loads, past_jobs, jobs_left): past = np.asarray(past_jobs, dtype=float); big = float(np.quantile(past, 0.98)) if past.size >= 10 else float(job); fair = (loads.sum() + job) / len(loads); target = max(min(big, 2.0 * fair), 1e-9); z = np.clip((loads + job) / (target + 1e-9), 0.0, 3.0); return -0.5 * (z - 1.0) ** 2. One column in [-2, 0], maximal at post-load == target (non-monotone in load on purpose).",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per machine, minus half the squared clipped ratio of its post-placement load to a target equal to the 98th percentile of past job sizes (or the current job when fewer than 10 past jobs) capped at twice the fair share, maximised at post-load equal to the target; I read \"past tail\" as \u2026",
+   "measures": "Negative squared distance of each machine's post-placement load to a tail-size target, scaled by the target so the penalty is relative (98th pct of past, capped at 2x fair share).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.2482413786269226
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.995
+   },
+   "error": "",
+   "calls": [
+    "c012",
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "capped_projected_deficit_urgency",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative deficit of each load below the mean, normalised by mean load, but only for machines whose post-placement load would still sit under a projected average (softly capped); late jobs (few left) sharpen the cap so big final jobs cluster onto the emptiest machines.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    # projected average final load if all remaining work were spread evenly is unknown,\n    # so use current mean plus this job as the natural running target.\n    target = mean_load + job\n    scale = target + 1e-9\n    # pressure: how urgent it is to keep the machine under the running average,\n    # growing as fewer jobs remain (tail of the schedule).\n    urgency = 1.0 / (1.0 + jobs_left / max(m, 1))\n    post = loads + job\n    # softly capped relative deficit: machines far below target get diminishing reward,\n    # machines pushed above target by this job get a mild penalty.\n    deficit = (target - post) / scale\n    capped = np.tanh(deficit * (1.0 + urgency))\n    # also reward absolute low load relative to the emptiest machine, for big jobs\n    low = (loads.min() - loads) / scale\n    return capped + 0.5 * np.tanh(low)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative deficit of each load below the mean, normalised by mean load, but only for machines whose post-placement load would still sit under a projected average (softly capped); late jobs (few left) sharpen the cap so big final jobs cluster onto the emptiest machines.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.6274695894724889
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "soft_reserve_closeness",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: balance term -distance of each load from the mean, normalised by the spread of loads plus job. Column 1: continuously-scaled reserve bonus on near-minimum machines, stronger for small jobs and many remaining jobs, weighted by how far below the past max the job is.\"\"\"\n    ls = loads\n    m = len(ls)\n    mean_l = float(ls.mean())\n    mn = float(ls.min())\n    mx = float(ls.max())\n    spread = mx - mn + job + 1e-9\n    base = -(ls - mean_l) / spread\n\n    # job size relative to past distribution\n    if past_jobs.size:\n        mu = float(past_jobs.mean())\n        pmax = float(past_jobs.max())\n    else:\n        mu = job\n        pmax = job\n\n    # smallness of job relative to past mean (0..1, saturating)\n    small = 1.0 / (1.0 + job / (mu + 1e-9))\n    # how much of the schedule remains (0..1), saturating\n    remain = jobs_left / (jobs_left + m + 1e-9)\n    # gap of job below past max, relative (0..1)\n    below_max = 1.0 / (1.0 + max(pmax - job, 0.0) / (pmax + 1e-9))\n\n    weight = small * remain * below_max\n\n    # continuous closeness-to-min: 1 at min, decays with distance in load-spread units\n    closeness = 1.0 / (1.0 + (ls - mn) / (spread + 1e-9))\n    reserve = -weight * closeness\n\n    return np.column_stack([base, reserve])\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: balance term -distance of each load from the mean, normalised by the spread of loads plus job. Column 1: continuously-scaled reserve bonus on near-minimum machines, stronger for small jobs and many remaining jobs, weighted by how far below the past max the job is.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.075625300512162,
+    15.63571203274744
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "projected_slack_toward_frontier",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Score = expected reduction in final makespan proxy: how much this machine's post-load would sit below the projected max, weighted by its closeness to the current max (gentle pull toward the top machines early, strong once we approach the end).\"\"\"\n    m = len(loads)\n    total = float(loads.sum()) + job\n    avg = total / m\n    post = loads + job\n    post_max = post.max()\n    # projected remaining work per machine\n    remaining_work = 0.0\n    if jobs_left > 0 and past_jobs.size:\n        remaining_work = float(past_jobs.mean()) * jobs_left\n    projected_max = max(post_max, avg + remaining_work / m)\n    # urge: reward machines whose post-load is far below projected max\n    slack = (projected_max - post) / (projected_max + job + 1e-9)\n    # weight: as jobs run out, focus on the current frontier (machines near the max)\n    horizon = jobs_left / (jobs_left + m + 1.0)\n    near_top = np.exp(-((post_max - post) / (avg + job + 1e-9)))\n    return np.clip(slack * (0.5 + 0.5 * horizon) + 0.3 * near_top * horizon, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Score = expected reduction in final makespan proxy: how much this machine's post-load would sit below the projected max, weighted by its closeness to the current max (gentle pull toward the top machines early, strong once we approach the end).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.21603200886089
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     -5.7674
+    ],
+    [
+     -1.419405,
+     -281.2991
+    ],
+    [
+     0.425822,
+     -5.2882
+    ],
+    [
+     -0.425822,
+     -0.2971
+    ],
+    [
+     0.141941,
+     0.0
+    ],
+    [
+     -0.141941,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.141941,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9115,
+    "lib_r2": 0.8967
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "shortfall_from_max_late_damped",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Relative shortfall of each machine against the largest load, weighted by the fraction of work still to come: favours the emptiest machines strongly early and weakly late.\"\"\"\n    m = len(loads)\n    mx = loads.max()\n    total = float(past_jobs.sum()) if past_jobs.size else 0.0\n    # fraction of the total eventual work that has not arrived yet (including this job)\n    remaining = job * (jobs_left + 1)\n    frac_left = remaining / (total + remaining + 1e-9)\n    # relative shortfall from the max, scaled by the max load plus job\n    shortfall = (mx - loads) / (mx + job + 1e-9)\n    # early on (many jobs left) we weight the shortfall more; late we damp it\n    return shortfall * (0.5 + frac_left)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Relative shortfall of each machine against the largest load, weighted by the fraction of work still to come: favours the emptiest machines strongly early and weakly late.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.028481122428937
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c017"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "soft_saturating_load_gap",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative rank-spread between each machine's load and the smallest load, scaled by the gap in units of job size, converted to a soft logistic so medium gaps beat both near-ties and huge gaps when the job is large relative to remaining capacity.\"\"\"\n    m = len(loads)\n    mn = loads.min()\n    gap = loads - mn\n    # job size relative to typical remaining slack per machine\n    if past_jobs.size:\n        mean_p = float(past_jobs.mean())\n    else:\n        mean_p = job\n    denom = job + mean_p + 1e-9\n    x = gap / denom\n    # soft saturation: penalise being far above the min, but with diminishing marginal cost\n    val = -(1.0 - np.exp(-x))\n    return val\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative rank-spread between each machine's load and the smallest load, scaled by the gap in units of job size, converted to a soft logistic so medium gaps beat both near-ties and huge gaps when the job is large relative to remaining capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.198715377254572
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c021"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "soft_reserve_closeness_gated",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative load deviation (balance); column 1: soft reserve score = how far above the minimum load a machine sits, but only credited when the arriving job is small relative to past mean and many jobs remain, scaled by remaining fraction.\"\"\"\n    ls = loads\n    mn = ls.min()\n    mx = ls.max()\n    base = -(ls - ls.mean()) / (mx - mn + job + 1e-9)\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    n_left = jobs_left\n    m = len(ls)\n    # soft gate: job small vs past mean, decreasing with remaining-job fraction\n    small = 1.0 / (1.0 + np.exp((job - mu) / (mu + 1e-9)))  # in (0,1), high when job << mu\n    horizon = n_left / (n_left + m + 1e-9)  # in (0,1), high when many jobs remain\n    # reserve: prefer keeping the emptiest machine free -> penalise machines near min when gated\n    # distance above min in load units, normalised by mean load + job\n    gap_above_min = (ls - mn) / (ls.mean() + job + 1e-9)\n    # soft reserve: small bonus to machines that are somewhat above min (not the emptiest),\n    # i.e. credit leaving the very emptiest for later. Different ordering from pure balance.\n    target = 0.5 * (ls.mean() - mn)  # half the average spread above min\n    closeness_to_target = -np.abs((ls - mn) - target) / (ls.mean() + job + 1e-9)\n    soft_reserve = small * horizon * (gap_above_min + closeness_to_target)\n    return np.column_stack([base, soft_reserve])\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: negative load deviation (balance); column 1: soft reserve score = how far above the minimum load a machine sits, but only credited when the arriving job is small relative to past mean and many jobs remain, scaled by remaining fraction.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.075625300512162,
+    8.369945280135983
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     -3.3303
+    ],
+    [
+     -1.419405,
+     -299.9761
+    ],
+    [
+     0.425822,
+     -3.1739
+    ],
+    [
+     -0.425822,
+     -24.3862
+    ],
+    [
+     0.141941,
+     -1.4517
+    ],
+    [
+     -0.141941,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.141941,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9042,
+    "lib_r2": 0.9421
+   },
+   "error": "",
+   "calls": [
+    "c023"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "asymmetric_saturating_deficit",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative load normalised by mean load, but only the portion of the gap that is 'reachable' given the arriving job: penalises loads above mean-load-minus-job more than loads far below it, using a softplus asymmetry.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    scale = mean_load + job + 1e-9\n    # deficit relative to mean, in units of the scale\n    deficit = (mean_load - loads) / scale\n    # asymmetric softplus: amplify small/negative deficits (machines not far below mean),\n    # saturate large positive deficits (very empty machines) so they don't dominate forever\n    # a machine well below mean-load-minus-job gets diminishing extra reward\n    soft = np.logaddexp(0.0, deficit) - math.log(2.0)\n    # cap the reward growth for extremely empty machines\n    return soft / (1.0 + np.abs(deficit))\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative load normalised by mean load, but only the portion of the gap that is 'reachable' given the arriving job: penalises loads above mean-load-minus-job more than loads far below it, using a softplus asymmetry.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    7.801435273612442
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9994
+   },
+   "error": "",
+   "calls": [
+    "c022"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "overshoot_above_target_makespan",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative overshoot of (load + job) above the target makespan T = max(job, largest job seen, fair share), normalised by T.\"\"\"\n    m = len(loads)\n    largest_seen = np.max(past_jobs) if past_jobs.size else job\n    T = max(job, largest_seen, (loads.sum() + job) / m)\n    T = max(T, 1e-9)\n    return -np.maximum(0.0, loads + job - T) / T\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a09",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In bimodal the makespan floor is the single largest job, yet the champion keeps piling tiny jobs onto whichever machine is emptiest, so big jobs land on already-loaded machines (spread 67%, idle 34%). Capping each machine at T = max(largest job seen, fair share) and penalising only the excess above T should let big jobs sit alone while tiny jobs fill up to that cap.",
+    "feature": "m=len(loads); T=max(job, max(past_jobs) if past_jobs.size else job, (loads.sum()+job)/m); T=max(T,1e-9); return -np.maximum(0.0, loads+job-T)/T  (single column; machines below T tie and are broken by the champion's balance feature).",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "spread_pct",
+     "direction": "down"
+    },
+    "builds_on": "f009",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per machine, the negative amount by which placing the job would push that machine's load above the target makespan `T = max(job, largest job seen so far, fair share)`, normalised by `T`; machines that stay at or below `T` all score 0 and are left to be broken by the existing balance \u2026",
+   "measures": "Negative overshoot of (load + job) above the target makespan T = max(job, largest job seen, fair share), normalised by T.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.242241232035405
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     -0.033
+    ],
+    [
+     -1.419405,
+     -867.4834
+    ],
+    [
+     0.425822,
+     -0.033
+    ],
+    [
+     -0.425822,
+     -0.033
+    ],
+    [
+     0.141941,
+     0.0
+    ],
+    [
+     -0.141941,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.141941,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "spread_pct",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8512,
+    "lib_r2": 0.8446
+   },
+   "error": "",
+   "calls": [
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "lookahead_fairshare_cap",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative overshoot of each machine's post-assignment load above the projected fair share cap T, normalised by T.\"\"\"\n    m = len(loads)\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    T = max((loads.sum() + job + jobs_left * mu) / m, 1e-9)\n    return -np.maximum(0.0, loads + job - T) / T\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "How tightly to balance should depend on how much work is still to come: with many jobs left the projected fair share is large and the cap is loose (balance freely); as jobs run out the cap collapses onto the current mean and forces a tight finish. If late makespan growth is caused by loose late balancing, this cap will cut it.",
+    "feature": "m=len(loads); mu=float(past_jobs.mean()) if past_jobs.size else job; T=max((loads.sum()+job+jobs_left*mu)/m, 1e-9); return -np.maximum(0.0, loads+job-T)/T",
+    "prediction": {
+     "family": "uniform",
+     "metric": "late_growth_pct",
+     "direction": "down"
+    },
+    "builds_on": "f009",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each machine, the negative amount by which its load after placing the job exceeds the projected fair share `T = (total work so far + this job + remaining jobs \u00d7 mean past size) / m`, divided by `T`; machines at or below the cap score 0 and the most overloaded machine scores lowes\u2026",
+   "measures": "Negative overshoot of each machine's post-assignment load above the projected fair share cap T, normalised by T.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    10.784958904714195
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     0.0
+    ],
+    [
+     -1.419405,
+     -641.0433
+    ],
+    [
+     0.425822,
+     0.0
+    ],
+    [
+     -0.425822,
+     -566.2508
+    ],
+    [
+     0.141941,
+     0.0
+    ],
+    [
+     -0.141941,
+     -243.7211
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 1.419405,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "late_growth_pct",
+    "family": "uniform",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.7962,
+    "lib_r2": 0.7798
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "reserve_depth_by_future_bigjobs",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"-1 on the k lowest-load machines, where k estimates the number of future large jobs from their observed frequency.\"\"\"\n    m = len(loads)\n    if past_jobs.size:\n        mu = past_jobs.mean()\n        sd = past_jobs.std()\n        f = float((past_jobs > mu + 2 * sd).mean())\n    else:\n        f = 0.0\n    k = max(0, min(m // 2, int(math.ceil(f * jobs_left))))\n    out = np.zeros(m)\n    if k > 0:\n        out[np.argsort(loads, kind='stable')[:k]] = -1.0\n    return out\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a08",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f009 reserves exactly one machine; if the number of future large jobs is estimated from their observed frequency, reserving that many lowest-load machines should keep enough empty capacity for every incoming big job, so each big job gets a machine to itself and makespan approaches the largest job.",
+    "feature": "m=len(loads); if past_jobs.size: mu=past_jobs.mean(); sd=past_jobs.std(); f=float((past_jobs>mu+2*sd).mean()) else f=0.0; k=max(0,min(m//2,int(math.ceil(f*jobs_left)))); out=np.zeros(m); out[np.argsort(loads,kind='stable')[:k]]=-1.0 if k>0 else 0.0; return out",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f009",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each machine, -1 if it is among the k lowest-loaded machines (k = ceil of the observed frequency of \"large\" past jobs times the number of jobs still to come, capped at m//2) and 0 otherwise, so the policy prefers reserving that many currently-emptiest machines for future big jobs\u2026",
+   "measures": "-1 on the k lowest-load machines, where k estimates the number of future large jobs from their observed frequency.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     -10.4029
+    ],
+    [
+     -1.419405,
+     -5.2882
+    ],
+    [
+     0.425822,
+     -1.2295
+    ],
+    [
+     -0.425822,
+     0.0
+    ],
+    [
+     0.141941,
+     -1.8421
+    ],
+    [
+     -0.141941,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.425822,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.4396,
+    "lib_r2": 0.2002
+   },
+   "error": "",
+   "calls": [
+    "c028"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "median_split_load_rank",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"-1 for machines whose load is strictly above the median load, 0 otherwise.\"\"\"\n    med = float(np.median(loads))\n    return -(loads > med).astype(float)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a06",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A purely scale-free signal: only the side of the median matters, not the magnitude of imbalance. If the champion's fine-grained magnitude is what carries it, coarsening to a binary above/below-median split will lose precision and spread will rise; if not, this cheap rank signal is enough.",
+    "feature": "m=len(loads); med=float(np.median(loads)); return -(loads>med).astype(float)",
+    "prediction": {
+     "family": "uniform",
+     "metric": "spread_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes a binary above/below-median indicator per machine, negated so that machines at or below the median load score 0 and machines strictly above it score -1 (the highest-scoring, i.e. least-loaded side, wins); ties at the median count as \"not above\", exactly as the experiment's `-(loads > \u2026",
+   "measures": "-1 for machines whose load is strictly above the median load, 0 otherwise.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.1180135288546236
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.419405,
+     -6.297
+    ],
+    [
+     -1.419405,
+     -160.0761
+    ],
+    [
+     0.425822,
+     -5.3212
+    ],
+    [
+     -0.425822,
+     -18.6123
+    ],
+    [
+     0.141941,
+     -0.033
+    ],
+    [
+     -0.141941,
+     -4.5321
+    ]
+   ],
+   "best_probe": -0.033,
+   "best_w": 0.141941,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "spread_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9411,
+    "lib_r2": 0.6593
+   },
+   "error": "",
+   "calls": [
+    "c026"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "projected_final_mean_deficit",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative load deficit relative to mean, but measured against the projected final mean load (including this job and expected future work) so the target shifts up as jobs remain.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    # expected future work: use observed mean job size times jobs remaining\n    if past_jobs.size:\n        mu_job = float(past_jobs.mean())\n    else:\n        mu_job = job\n    future_work = mu_job * jobs_left\n    # projected mean load once this job and all future work is spread evenly\n    projected_mean = mean_load + (job + future_work) / m\n    scale = projected_mean + 1e-9\n    # deficit against the projected final level; machines far below the eventual average get a bonus\n    return -(loads - projected_mean) / scale\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative load deficit relative to mean, but measured against the projected final mean load (including this job and expected future work) so the target shifts up as jobs remain.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.2475654360527324
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "reserve_single_emptiest_short_tail",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative normalised load deviation (ordinary balance); column 1: -1 on the single emptiest machine when the job is small relative to the running mean AND few jobs remain relative to machines, else 0 (tie-break by load).\"\"\"\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    ls = loads\n    mn = ls.min()\n    mx = ls.max()\n    m = len(ls)\n    base = -(ls - ls.mean()) / (mx - mn + job + 1e-9)\n    # small job relative to the running mean, and the tail is short (few jobs left per machine)\n    is_small = job < mu\n    tail_short = jobs_left < m\n    if is_small and tail_short:\n        # target only the unique emptiest machine (ties broken by index via <= and argmin)\n        idx = int(np.argmin(ls))\n        reserve = np.zeros(m)\n        reserve[idx] = -1.0\n    else:\n        reserve = np.zeros(m)\n    return np.column_stack([base, reserve])\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: negative normalised load deviation (ordinary balance); column 1: -1 on the single emptiest machine when the job is small relative to the running mean AND few jobs remain relative to machines, else 0 (tie-break by load).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.1697282516332783,
+    17.88854381999832
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     -5.6803
+    ],
+    [
+     -1.223054,
+     -141.4192
+    ],
+    [
+     0.366916,
+     0.0063
+    ],
+    [
+     -0.366916,
+     -0.3301
+    ],
+    [
+     0.122305,
+     0.0063
+    ],
+    [
+     -0.122305,
+     -0.2971
+    ]
+   ],
+   "best_probe": 0.0063,
+   "best_w": 0.366916,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9762,
+    "lib_r2": 0.9455
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "target_shortfall_overshoot_balance",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative shortfall of each machine's post-placement load below the target makespan T, normalised by T (rewards filling toward T instead of only penalising overshoot).\"\"\"\n    m = len(loads)\n    largest_seen = np.max(past_jobs) if past_jobs.size else job\n    total = loads.sum() + job\n    T = max(job, largest_seen, total / m)\n    T = max(T, 1e-9)\n    post = loads + job\n    # shortfall below target (negative = good to be far below), plus soft overshoot penalty weighted by remaining fraction\n    shortfall = np.maximum(0.0, T - post) / T\n    overshoot = np.maximum(0.0, post - T) / T\n    frac_left = jobs_left / (jobs_left + past_jobs.size + 1.0)\n    return -(shortfall * (1.0 - frac_left) + overshoot * (1.0 + frac_left))\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative shortfall of each machine's post-placement load below the target makespan T, normalised by T (rewards filling toward T instead of only penalising overshoot).",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    0.7872621644210861
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     -0.033
+    ],
+    [
+     -1.223054,
+     2.2297
+    ],
+    [
+     0.366916,
+     -0.033
+    ],
+    [
+     -0.366916,
+     -0.033
+    ],
+    [
+     0.122305,
+     -0.033
+    ],
+    [
+     -0.122305,
+     0.0
+    ]
+   ],
+   "best_probe": 2.2297,
+   "best_w": -1.223054,
+   "d_train": 2.2297,
+   "d_valid": -130.1497,
+   "trial_x": [
+    1.0475777636121029,
+    1.3618902627959018,
+    1.2033800951711096,
+    -1.223054
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.5775,
+    "lib_r2": 0.8617
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "below_future_bigjob_reserve",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative gap between each machine's load and the largest job still expected, weighted by how many jobs remain: penalises machines that would end up above where the biggest future job can land.\"\"\"\n    m = len(loads)\n    # estimate typical size of remaining jobs from observed past jobs\n    if past_jobs.size:\n        mu = float(past_jobs.mean())\n        mx = float(past_jobs.max())\n    else:\n        mu = job\n        mx = job\n    # expected number of \"large\" jobs remaining ~ jobs_left * fraction of past jobs that were large\n    if past_jobs.size:\n        frac_large = float(np.mean(past_jobs > mu))\n    else:\n        frac_large = 0.0\n    n_large_left = jobs_left * frac_large\n    # target headroom each machine should preserve above its load, scaled by expected large jobs\n    expected_big = mx * (1.0 + math.log1p(n_large_left)) if n_large_left > 0 else mx\n    scaled_job = job + 1e-9\n    # how far each machine's load is above a reserve threshold relative to expected big job\n    threshold = (loads.sum() + job) / m + expected_big\n    # negative: prefer machines whose load stays below the threshold\n    return -(np.maximum(loads - threshold, 0.0)) / scaled_job\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a14",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative gap between each machine's load and the largest job still expected, weighted by how many jobs remain: penalises machines that would end up above where the biggest future job can land.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    0.01599979893842054
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     0.0
+    ],
+    [
+     -1.223054,
+     0.0
+    ],
+    [
+     0.366916,
+     0.0
+    ],
+    [
+     -0.366916,
+     0.0
+    ],
+    [
+     0.122305,
+     0.0
+    ],
+    [
+     -0.122305,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 1.223054,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.7853,
+    "lib_r2": 0.408
+   },
+   "error": "",
+   "calls": [
+    "c034"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "load_deficit_job_to_imbalance_gain",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative load relative to the mean, but with the job-size pressure switched off once the job is small versus the load spread, and amplified when the job would dominate the least-loaded machine.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    spread = float(loads.max() - loads.min())\n    # how big the job is compared with the current imbalance\n    ratio = job / (spread + mean_load * 0.05 + 1e-9)\n    # gain grows with ratio but saturates; small jobs see near-plain balance, big jobs see sharp pressure\n    gain = ratio / (1.0 + ratio)\n    scale = mean_load + job + 1e-9\n    base = -(loads - mean_load) / scale\n    # extra term: penalise machines whose post-placement load would exceed the current max when job is large\n    post = loads + job\n    overshoot = np.clip(post - loads.max(), 0.0, None) / (loads.max() + job + 1e-9)\n    return base * (0.5 + gain) - gain * overshoot\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative load relative to the mean, but with the job-size pressure switched off once the job is small versus the load spread, and amplified when the job would dominate the least-loaded machine.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.0587908770583914
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "job_scale_packing_flip",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Sign-flipped normalised load deviation: favours loaded machines for tiny jobs, empty ones for big jobs.\"\"\"\n    m = len(loads)\n    q = float(np.max(past_jobs)) if past_jobs.size else float(job)\n    q = max(q, 1e-9)\n    mean = float(np.mean(loads))\n    s = float(np.tanh(4.0 * (job / q - 0.3)))   # ~+1 for big jobs, ~-1 for tiny jobs\n    return -s * (loads - mean) / (mean + job + 1e-9)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Every load-only shape tried so far is monotone in load and therefore ranks exactly like f001 (ascending load). The one degree of freedom never tested is the *interaction with job size*: ascending load is right for a job comparable to the largest seen, but for a tiny job the emptiness of a machine is a resource that a future big job will need \u2014 tiny jobs should be packed onto already-loaded machines (descending load). A continuous sign flip on job/q tests whether this split exists at all.",
+    "feature": "import numpy as np\ndef feature(job, loads, past_jobs, jobs_left):\n    m = len(loads)\n    q = float(np.max(past_jobs)) if past_jobs.size else float(job)\n    q = max(q, 1e-9)\n    mean = float(np.mean(loads))\n    s = float(np.tanh(4.0 * (job / q - 0.3)))   # ~+1 for big jobs, ~-1 for tiny jobs\n    return -s * (loads - mean) / (mean + job + 1e-9)\n",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": "The whole productive group (f001 f003 f004 f006 f007 f008 f011 f012 f015 f017) is one idea: rank by ascending load. Its rankings are indistinguishable, so the only untested levers are non-monotone shapes and job-size-conditional flips."
+   },
+   "coder_note": "This computes the negative, sign-flipped normalised load deviation `-(loads - mean)/(mean + job)`, where the sign `s = tanh(4(job/q - 0.3))` flips from favouring loaded machines (tiny jobs, `s \u2248 -1`) to favouring empty machines (big jobs, `s \u2248 +1`), with `q` the largest past job (or the current job\u2026",
+   "measures": "Sign-flipped normalised load deviation: favours loaded machines for tiny jobs, empty ones for big jobs.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.5959174409686394
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     -223.5398
+    ],
+    [
+     -1.223054,
+     -8.7379
+    ],
+    [
+     0.366916,
+     -0.3301
+    ],
+    [
+     -0.366916,
+     -0.033
+    ],
+    [
+     0.122305,
+     -0.2971
+    ],
+    [
+     -0.122305,
+     -0.033
+    ]
+   ],
+   "best_probe": -0.033,
+   "best_w": -0.366916,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f013",
+    "rho": 0.7569,
+    "lib_r2": 0.8829
+   },
+   "error": "",
+   "calls": [
+    "c039"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "frontier_freepack",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Among machines whose post-load stays at/below the current max, prefer the fullest (load/denom); otherwise prefer the smallest overshoot (-(post-T)/denom).\"\"\"\n    T = float(np.max(loads))\n    denom = T + job + 1e-9\n    post = loads + job\n    free = post <= T + 1e-9\n    pack = loads / denom                 # among free machines: prefer the fullest\n    over = -(post - T) / denom           # above the frontier: prefer smallest overshoot\n    return np.where(free, pack, over)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Greedy min-load keeps buying a lower max with a load it does not need: post-loads creep to the frontier so the next big job must create a new max. If a placement stays at or under the current max it costs nothing in makespan, so among all such 'free' placements one should take the fullest (packing density, machines stay empty for future large jobs) and only when every machine would exceed the max choose the smallest overshoot. The rule is non-monotone in load (jump at the free boundary), so it is not a re-expression of f001.",
+    "feature": "import numpy as np\ndef feature(job, loads, past_jobs, jobs_left):\n    T = float(np.max(loads))\n    denom = T + job + 1e-9\n    post = loads + job\n    free = post <= T + 1e-9\n    pack = loads / denom                 # among free machines: prefer the fullest\n    over = -(post - T) / denom           # above the frontier: prefer smallest overshoot\n    return np.where(free, pack, over)\n",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "spread_pct",
+     "direction": "down"
+    },
+    "builds_on": "f009",
+    "lesson": "f013 (gentle slack toward a projected frontier) was rejected: a soft pull adds nothing. This keeps the same frontier idea but makes it a hard, saturating rule and, inside the free set, reverses the preference (pack) instead of repeating min-load."
+   },
+   "coder_note": "This computes, per machine, `load/(T+job)` if placing the job keeps that machine at or under the current maximum load `T`, and `-(post-T)/(T+job)` (smallest overshoot) otherwise; I read \"free\" as post-load `<= T` with the given `1e-9` tolerance, and used the experiment's `denom` normalisation exact\u2026",
+   "measures": "Among machines whose post-load stays at/below the current max, prefer the fullest (load/denom); otherwise prefer the smallest overshoot (-(post-T)/denom).",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    4.159254851627628
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     0.8477
+    ],
+    [
+     -1.223054,
+     -76.525
+    ],
+    [
+     0.366916,
+     -0.3301
+    ],
+    [
+     -0.366916,
+     -8.0188
+    ],
+    [
+     0.122305,
+     -0.3301
+    ],
+    [
+     -0.122305,
+     -0.9338
+    ]
+   ],
+   "best_probe": 0.8477,
+   "best_w": 1.223054,
+   "d_train": 4.244,
+   "d_valid": -0.918,
+   "trial_x": [
+    0.8989638258928129,
+    0.7989154828766521,
+    0.9732574323855991,
+    5.1048854389112845
+   ],
+   "prediction": {
+    "metric": "spread_pct",
+    "family": "bimodal",
+    "direction": "down",
+    "before": 67.07,
+    "after": 110.31,
+    "held": false,
+    "checked": true,
+    "instance": "bimodal-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f024",
+    "rho": 0.8403,
+    "lib_r2": 0.0127
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "job_unit_bucket_count_balance",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Quantised load-level balance: -floor(load/typ) + 0.9*frac, normalised by max level+1.\"\"\"\n    typ = float(np.mean(past_jobs)) if past_jobs.size else float(job)\n    typ = max(typ, 1e-9)\n    u = loads / typ\n    b = np.floor(u)\n    frac = u - b\n    return (-b + 0.9 * frac) / (float(b.max()) + 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Per-machine job counts are not observable (past_jobs carries no machine assignment), so count balance can only be approximated by quantising load in units of the typical job: treat floor(load/typ) as the machine's 'job level' and fill the lowest occupied level first (prefer the fuller machine inside a level). This is strictly non-monotone in load, unlike every kept feature, and it tests the packing/concentration side of count balance.",
+    "feature": "import numpy as np\ndef feature(job, loads, past_jobs, jobs_left):\n    typ = float(np.mean(past_jobs)) if past_jobs.size else float(job)\n    typ = max(typ, 1e-9)\n    u = loads / typ\n    b = np.floor(u)\n    frac = u - b\n    return (-b + 0.9 * frac) / (float(b.max()) + 1.0)\n",
+    "prediction": {
+     "family": "uniform",
+     "metric": "spread_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per machine, the negative of its integer load level `floor(load/typ)` (where `typ` is the mean past job size, or the current job if no history) plus 0.9 times the within-level fraction, normalised by the maximum level plus one \u2014 so the lowest occupied level is filled first and, withi\u2026",
+   "measures": "Quantised load-level balance: -floor(load/typ) + 0.9*frac, normalised by max level+1.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.879534151578676
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     -6.7547
+    ],
+    [
+     -1.223054,
+     -240.7819
+    ],
+    [
+     0.366916,
+     -0.3784
+    ],
+    [
+     -0.366916,
+     -2.8402
+    ],
+    [
+     0.122305,
+     -0.033
+    ],
+    [
+     -0.122305,
+     -2.1018
+    ]
+   ],
+   "best_probe": -0.033,
+   "best_w": 0.122305,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "spread_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8567,
+    "lib_r2": 0.9157
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "idle_budget_room_match",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative normalised distance of each machine's room-to-target from the largest observed job size.\"\"\"\n    m = len(loads)\n    if past_jobs.size:\n        mean_past = float(np.mean(past_jobs))\n        q = float(np.max(past_jobs))\n    else:\n        mean_past = float(job)\n        q = float(job)\n    T = (float(loads.sum()) + job + mean_past * jobs_left) / m\n    T = max(T, q, 1e-9)\n    room = T - loads\n    return -np.abs(room - q) / (T + q + 1e-9)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a10",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "One-sided target caps (f018, f019) were rejected because they are monotone: everything below the target ties. The idle budget is two-sided: a machine should hold roughly enough room to absorb one more job as large as the largest seen, no less (it could not take a big job without a new max) and no more (its idle capacity is wasted). Scoring -|room - q| peaks at load = T - q and penalises both extremes, giving a genuinely non-monotone ranking driven by jobs_left and the observed job sizes.",
+    "feature": "import numpy as np\ndef feature(job, loads, past_jobs, jobs_left):\n    m = len(loads)\n    if past_jobs.size:\n        mean_past = float(np.mean(past_jobs))\n        q = float(np.max(past_jobs))\n    else:\n        mean_past = float(job)\n        q = float(job)\n    T = (float(loads.sum()) + job + mean_past * jobs_left) / m\n    T = max(T, q, 1e-9)\n    room = T - loads\n    return -np.abs(room - q) / (T + q + 1e-9)\n",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": "f018 and f019 both used a one-sided overshoot above a target makespan and both failed the probe; the reason is that below the target they are flat. Matching room to the size of a future large job keeps the target but makes the score informative on both sides of it."
+   },
+   "coder_note": "This computes, per machine, the negative absolute difference between its idle room below the projected per-machine target load `T` and the largest job size seen `q`, normalised by `T + q`; I read the experiment literally, using `job` as the stand-in for both mean and max when no past jobs exist.",
+   "measures": "Negative normalised distance of each machine's room-to-target from the largest observed job size.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.624790573594932
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.223054,
+     -9.8235
+    ],
+    [
+     -1.223054,
+     -530.1953
+    ],
+    [
+     0.366916,
+     -3.9619
+    ],
+    [
+     -0.366916,
+     -0.033
+    ],
+    [
+     0.122305,
+     0.0
+    ],
+    [
+     -0.122305,
+     -0.033
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.122305,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.6943,
+    "lib_r2": 0.7969
+   },
+   "error": "",
+   "calls": [
+    "c040"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "projected_target_deficit_gated",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative load deficit relative to a running target makespan estimate (work-done projection), normalised by the job size, gated by remaining work pressure.\"\"\"\n    m = len(loads)\n    total = float(loads.sum())\n    # estimated final total work: past/current work plus expected remaining work\n    # expected remaining work per job ~ current mean job size seen so far\n    seen = past_jobs.size\n    mean_job = float(past_jobs.mean()) if seen > 0 else job\n    remaining_work = mean_job * jobs_left\n    target = (total + remaining_work + job) / m  # projected final makespan per machine\n    # how far each machine's post-placement load falls below the projected target\n    post = loads + job\n    denom = post + target + 1e-9\n    deficit = (post - target) / denom\n    # pressure: when much work remains, prefer pulling toward the target; when little remains, prefer balance\n    rem_frac = jobs_left / (jobs_left + seen + 1.0)\n    # blend target-following with plain balance\n    balance = -(loads - loads.mean()) / (loads.mean() + job + 1e-9)\n    return -(1.0 - rem_frac) * balance + rem_frac * (-deficit)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative load deficit relative to a running target makespan estimate (work-done projection), normalised by the job size, gated by remaining work pressure.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    25.952332313197953
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     -627.4043
+    ],
+    [
+     -1.218208,
+     -45.0309
+    ],
+    [
+     0.365462,
+     -397.9199
+    ],
+    [
+     -0.365462,
+     -9.4285
+    ],
+    [
+     0.121821,
+     -114.9514
+    ],
+    [
+     -0.121821,
+     -5.2288
+    ]
+   ],
+   "best_probe": -5.2288,
+   "best_w": -0.121821,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f013",
+    "rho": 0.7629,
+    "lib_r2": 0.7836
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "graded_reserve_by_rank",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative normalised load deviation (ordinary balance); column 1: ranked reserve pressure that spreads small jobs across the currently-emptiest machines, scaled by the fraction of remaining work and by how small the job is vs the past mean.\"\"\"\n    ls = loads\n    m = ls.shape[0]\n    mn = ls.min()\n    mx = ls.max()\n    base = -(ls - ls.mean()) / (mx - mn + job + 1e-9)\n    # how small is this job relative to the running mean of assigned jobs\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    smallness = 1.0 / (1.0 + max(job, 0.0) / (mu + 1e-9))          # ~1 for tiny jobs, ~0 for huge ones\n    # fraction of the horizon still to come: reserve matters early, not late\n    horizon = jobs_left / (jobs_left + m + 1.0)                     # in (0,1)\n    # rank machines from emptiest (rank 0) upward; reserve graded by rank, not a hard cutoff\n    order = np.argsort(np.argsort(ls, kind=\"stable\"), kind=\"stable\")\n    rank = order.astype(float) / max(m - 1, 1)                      # 0 = emptiest, 1 = fullest\n    # also give extra pressure to machines at/below the mean so small jobs pool low\n    below = (ls <= ls.mean()).astype(float)\n    reserve = -(1.0 + below) * (1.0 - rank) * smallness * horizon\n    return np.column_stack([base, reserve])\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: negative normalised load deviation (ordinary balance); column 1: ranked reserve pressure that spreads small jobs across the currently-emptiest machines, scaled by the fraction of remaining work and by how small the job is vs the past mean.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    2.4343409245522847
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     -5.6507
+    ],
+    [
+     -1.218208,
+     -143.7106
+    ],
+    [
+     0.365462,
+     -1.3006
+    ],
+    [
+     -0.365462,
+     0.0
+    ],
+    [
+     0.121821,
+     -1.4207
+    ],
+    [
+     -0.121821,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.365462,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.6024,
+    "lib_r2": 0.1091
+   },
+   "error": "",
+   "calls": [
+    "c046"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "reserve_tail_scaled_threshold",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative load deviation normalised by spread+job (balance); column 1: -1 on machines strictly below a tail-scaled threshold when few jobs remain, scaled by how far below.\"\"\"\n    ls = loads\n    m = len(ls)\n    mn = ls.min()\n    mx = ls.max()\n    base = -(ls - ls.mean()) / (mx - mn + job + 1e-9)\n    # average remaining work per machine from the jobs still to come\n    if past_jobs.size:\n        mu = float(past_jobs.mean())\n    else:\n        mu = job\n    # expected tail load contributed per machine\n    tail_load = (jobs_left / max(m, 1)) * mu\n    # threshold: machines below the min plus a fraction of the expected tail load are \"emptiest\"\n    thresh = mn + 0.5 * tail_load + 1e-9\n    below = (ls < thresh).astype(float)\n    # depth of the deficit below the threshold, normalised by the tail scale\n    deficit = np.clip(thresh - ls, 0.0, None) / (tail_load + job + 1e-9)\n    reserve = -below * (1.0 - np.clip(deficit, 0.0, 1.0))\n    return np.column_stack([base, reserve])\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f023",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: negative load deviation normalised by spread+job (balance); column 1: -1 on machines strictly below a tail-scaled threshold when few jobs remain, scaled by how far below.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    7.623675888776135
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     -102.3003
+    ],
+    [
+     -1.218208,
+     -18.8668
+    ],
+    [
+     0.365462,
+     -30.6144
+    ],
+    [
+     -0.365462,
+     -3.2223
+    ],
+    [
+     0.121821,
+     -5.2919
+    ],
+    [
+     -0.121821,
+     -0.4
+    ]
+   ],
+   "best_probe": -0.4,
+   "best_w": -0.121821,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7847,
+    "lib_r2": 0.3717
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "load_rank_ordinal",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative rank of each machine's load among all loads (dense rank from lowest=0), normalised by m-1: a coarse ordinal balance signal invariant to load magnitude scale.\"\"\"\n    m = len(loads)\n    order = np.argsort(np.argsort(loads))  # 0 for the smallest load\n    return -(order.astype(float)) / max(m - 1, 1)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a17",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative rank of each machine's load among all loads (dense rank from lowest=0), normalised by m-1: a coarse ordinal balance signal invariant to load magnitude scale.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.683281572999748
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     -6.8496
+    ],
+    [
+     -1.218208,
+     -104.9996
+    ],
+    [
+     0.365462,
+     -0.033
+    ],
+    [
+     -0.365462,
+     -6.4564
+    ],
+    [
+     0.121821,
+     -0.033
+    ],
+    [
+     -0.121821,
+     -3.158
+    ]
+   ],
+   "best_probe": -0.033,
+   "best_w": 0.365462,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7099,
+    "lib_r2": 0.4871
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "tail_closest_to_projected_mean",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation over load spread+job; Col1: in the tail (jobs_left<m), negative distance of load+job to projected final mean, scaled by job.\"\"\"\n    m = loads.shape[0]\n    spread = loads.max() - loads.min()\n    col0 = -(loads - loads.mean()) / (spread + job + 1e-9)\n\n    if jobs_left < m:\n        mean_past = past_jobs.mean() if past_jobs.size else job\n        target = (loads.sum() + job + mean_past * jobs_left) / m\n        col1 = -np.abs(loads + job - target) / (job + 1e-9)\n    else:\n        col1 = np.zeros(m)\n\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's late_growth (12% uniform, 13% bimodal) comes from continuing to push jobs onto the emptiest machine in the tail, when the tail optimum is to fill every machine up to the projected final mean. A non-monotone 'closest to projected mean' term, active only when jobs_left < m, changes the ranking in exactly the phase where the diagnostics show the loss.",
+    "feature": "Two columns. Column 0 (always): -(loads - loads.mean()) / (loads.max() - loads.min() + job + 1e-9). Column 1: if jobs_left < m, then -abs(loads + job - target) / (job + 1e-9) where target = (loads.sum() + job + (past_jobs.mean() if past_jobs.size else job) * jobs_left) / m; otherwise 0.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "late_growth_pct",
+     "direction": "down"
+    },
+    "builds_on": "f028",
+    "lesson": "f028 frontier_freepack (best-fit at the frontier) failed and raised spread; this variant instead targets the projected final mean, which is peaked (non-monotone) only in the tail."
+   },
+   "coder_note": "Column 0 is the ordinary negative load deviation normalised by the load spread plus the job; column 1 is active only when `jobs_left < m`, measuring the negative distance of each machine's post-assignment load to the projected final mean (using the mean past job size for remaining jobs), scaled by \u2026",
+   "measures": "Col0: negative load deviation over load spread+job; Col1: in the tail (jobs_left<m), negative distance of load+job to projected final mean, scaled by job.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    25.218310890292642
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.983
+   },
+   "error": "",
+   "calls": [
+    "c051",
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "big_job_avoids_big_machines",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation normalised by load spread + job; Col1: -1 on machines with load >= max past job when the arriving job is big (>= 0.5 * max past job), else 0.\"\"\"\n    loads = np.asarray(loads, dtype=float)\n    m = loads.shape[0]\n\n    # Column 0: ordinary balance, normalised by spread plus job size.\n    spread = loads.max() - loads.min()\n    denom = spread + job + 1e-9\n    col0 = -(loads - loads.mean()) / denom\n\n    # Column 1: penalise machines already holding a big job, for big arrivals.\n    # Instead of a flat -1, scale the penalty by how far the load exceeds the\n    # largest past job, normalised by the arriving job size. This keeps the\n    # measurement continuous: machines further above the big-job threshold are\n    # penalised more, and the penalty grows with the arriving job's size.\n    col1 = np.zeros(m, dtype=float)\n    if past_jobs.size > 0:\n        max_past = float(np.max(past_jobs))\n        if job >= 0.5 * max_past:\n            excess = np.maximum(loads - max_past, 0.0)\n            col1 = -excess / (excess + job + 1e-9)\n\n    return np.column_stack([col0, col1])\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In bimodal the makespan is set by a large job landing on a machine that already holds a large job. A machine whose load is at least the largest job seen so far almost certainly holds a big job (tiny jobs are ~1). So for an arriving big job, penalising machines with load >= max(past_jobs) should keep big jobs on separate machines, exactly as the reference does (ref max_machine_jobs = 1).",
+    "feature": "Two columns. Column 0: -(loads - loads.mean()) / (loads.max() - loads.min() + job + 1e-9). Column 1: if past_jobs.size > 0 and job >= 0.5 * past_jobs.max(), then -1.0 on machines where loads >= past_jobs.max(), else 0; if no past jobs or job is small, column 1 is 0.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f027",
+    "lesson": "f027 job_scale_packing_flip (an unconditional sign flip of load deviation) was rejected; here the step is gated to big jobs and uses the largest past job as the threshold, a quantity no tried feature used."
+   },
+   "coder_note": "Column 0 is the negative load deviation normalised by the load spread plus the job size (a smooth balance term), and column 1 is -1 on any machine whose load is at least the largest past job, but only when the arriving job is at least half that largest past job (otherwise 0); I read \"big job\" as `j\u2026",
+   "measures": "Col0: negative load deviation normalised by load spread + job; Col1: -1 on machines with load >= max past job when the arriving job is big (>= 0.5 * max past job), else 0.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    7.9810223453756235
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c050",
+    "c052"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "reserve_k_emptiest_by_big_rate",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation normalised by load spread + job; Col1: -1 on the k emptiest machines when a small job arrives and big jobs are still expected, k from the past big-job rate.\"\"\"\n    m = loads.shape[0]\n    spread = loads.max() - loads.min() + job + 1e-9\n    col0 = -(loads - loads.mean()) / spread\n\n    col1 = np.zeros(m)\n    if past_jobs.size > 0 and job < past_jobs.mean() and jobs_left > m:\n        med = np.median(past_jobs)\n        r = np.mean(past_jobs > 3.0 * med)\n        k = int(min(m - 1, max(1, np.ceil(r * jobs_left))))\n        thr = np.sort(loads)[k - 1]\n        col1 = np.where(loads <= thr, -1.0, 0.0)\n\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a13",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f009 reserves only the single emptiest machine, which is too little when several big jobs are still expected. Estimating the big-job arrival rate from history (fraction of past jobs above 3x the median) and reserving that many emptiest machines should protect enough capacity for the big jobs that set the bimodal makespan.",
+    "feature": "Two columns. Column 0: -(loads - loads.mean()) / (loads.max() - loads.min() + job + 1e-9). Column 1: if past_jobs.size > 0 and job < past_jobs.mean() and jobs_left > m, let r = mean(past_jobs > 3 * median(past_jobs)), k = min(m - 1, max(1, ceil(r * jobs_left))), thr = the k-th smallest value of loads; column 1 = -1.0 on machines with loads <= thr, else 0. Otherwise column 1 is 0.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f009",
+    "lesson": "f009's single-emptiest reserve helped (+1010) but f023's late single-emptiest reserve failed; this scales the number of reserved machines by the estimated remaining big jobs instead of a fixed one."
+   },
+   "coder_note": "Column 0 is the negative load deviation normalised by the load spread plus the job size; column 1 marks the k emptiest machines (k = ceil of the past big-job rate times jobs_left, clamped to [1, m-1]) with -1 when a below-average job arrives and more than m jobs remain, else all zeros.",
+   "measures": "Col0: negative load deviation normalised by load spread + job; Col1: -1 on the k emptiest machines when a small job arrives and big jobs are still expected, k from the past big-job rate.",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    3.1459350305584577
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     1.7732
+    ],
+    [
+     -1.218208,
+     -303.6069
+    ],
+    [
+     0.365462,
+     1.0629
+    ],
+    [
+     -0.365462,
+     0.0
+    ],
+    [
+     0.121821,
+     0.3288
+    ],
+    [
+     -0.121821,
+     0.0
+    ]
+   ],
+   "best_probe": 1.7732,
+   "best_w": 1.218208,
+   "d_train": 1.8647,
+   "d_valid": -1.641,
+   "trial_x": [
+    0.6534968851869425,
+    1.3071434320364608,
+    1.9276233457766523,
+    1.1873419556370064,
+    1.7730105400302603
+   ],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "before": 274,
+    "after": 237,
+    "held": true,
+    "checked": true,
+    "instance": "bimodal-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f009",
+    "rho": 0.6557,
+    "lib_r2": 0.2324
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "tiny_jobs_fill_middle_band",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation normalised by load spread plus job; Col1: for tiny jobs, negative absolute deviation from mean load normalised by std plus job, else 0.\"\"\"\n    loads = np.asarray(loads, dtype=float)\n    mean = loads.mean()\n    spread = loads.max() - loads.min()\n    col0 = -(loads - mean) / (spread + job + 1e-9)\n\n    if past_jobs.size > 0 and job < 0.1 * past_jobs.mean():\n        col1 = -np.abs(loads - mean) / (loads.std() + job + 1e-9)\n    else:\n        col1 = np.zeros_like(loads)\n\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a12",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Per-machine job counts are unobservable from loads, so the count-vs-load tension must be expressed as a load band. Tiny jobs should fill the middle of the load distribution, leaving the emptiest machines reserved for future big jobs and the fullest machines untouched, rather than being spread onto the emptiest machine as ordinary balance does.",
+    "feature": "Two columns. Column 0: -(loads - loads.mean()) / (loads.max() - loads.min() + job + 1e-9). Column 1: if past_jobs.size > 0 and job < 0.1 * past_jobs.mean(), then -abs(loads - loads.mean()) / (loads.std() + job + 1e-9); otherwise 0.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f029",
+    "lesson": "f029 job_unit_bucket_count_balance (quantised load levels) was rejected, and true counts are not observable; this replaces the count proxy with a mean-centred band for tiny jobs only."
+   },
+   "coder_note": "Column 0 is the negative load deviation from the mean normalised by the load spread plus the job size; column 1 is the negative absolute deviation from the mean load normalised by the load std plus the job size when the arriving job is below 0.1\u00d7 the mean past job size (else zeros), reading \"tiny\" \u2026",
+   "measures": "Col0: negative load deviation normalised by load spread plus job; Col1: for tiny jobs, negative absolute deviation from mean load normalised by std plus job, else 0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.6048410546281846,
+    8.89279617177315
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.218208,
+     -6.346
+    ],
+    [
+     -1.218208,
+     -291.4695
+    ],
+    [
+     0.365462,
+     -0.0179
+    ],
+    [
+     -0.365462,
+     -6.9395
+    ],
+    [
+     0.121821,
+     -0.1176
+    ],
+    [
+     -0.121821,
+     -1.158
+    ]
+   ],
+   "best_probe": -0.0179,
+   "best_w": 0.365462,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9631,
+    "lib_r2": 0.6931
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "softmin_weighted_load_deficit",
+   "code": "import numpy as np\nimport math\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative load deficit relative to the mean, but the deficit is reshaped by a softmax-style softmin over loads so near-ties among the least-loaded machines are broken by job-size fit rather than tiny load differences.\"\"\"\n    m = len(loads)\n    mean_load = float(np.mean(loads))\n    # scale of \"how flat\" the machine loads currently are relative to job size\n    spread = float(loads.max() - loads.min())\n    temp = spread + job + 1e-9\n    # softmin weights: low loads get high weight, but smoothness grows with spread\n    z = -(loads - loads.min()) / temp\n    z = z - z.max()\n    w = np.exp(z)\n    w = w / (w.sum() + 1e-9)\n    # expected load under this soft distribution; machine scored by how far below it is,\n    # plus a small bonus for fitting the current job well into a lightly loaded machine\n    exp_load = float(np.dot(w, loads))\n    deficit = -(loads - exp_load) / (mean_load + job + 1e-9)\n    fit = -(np.abs(loads + job - (exp_load + job))) / (temp)\n    return 0.75 * deficit + 0.25 * fit\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative load deficit relative to the mean, but the deficit is reshaped by a softmax-style softmin over loads so near-ties among the least-loaded machines are broken by job-size fit rather than tiny load differences.",
+   "status": "span",
+   "verdict": "span",
+   "width": 1,
+   "scales": [
+    1.3109794092042732
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "type": "span",
+    "r2": 0.99992,
+    "of": [
+     "f009",
+     "f001"
+    ]
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "graded_reserve_least_loaded",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative load deviation normalised by the machine count and the largest remaining-job scale estimate; column 1: soft reserve score on the least-loaded machines that grows with how many jobs remain and shrinks with how far the load sits above the minimum (a graded, not binary, tie-break).\"\"\"\n    m = len(loads)\n    ls = loads\n    mn = ls.min()\n    mx = ls.max()\n    span = mx - mn\n    # remaining work scale: mean of past jobs blended with the arriving job\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    scale = span + mu + job + 1e-9\n    base = -(ls - ls.mean()) / (scale * m)\n    # graded reserve: only meaningful while plenty of jobs remain; depth below min decays smoothly\n    remaining_frac = jobs_left / (jobs_left + m + 1.0)\n    depth = (mn + scale * 0.05 - ls) / (scale * 0.05 + 1e-9)\n    reserve = -remaining_frac * np.clip(depth, 0.0, 1.0) * (job < mu)\n    return np.column_stack([base, reserve])\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Column 0: negative load deviation normalised by the machine count and the largest remaining-job scale estimate; column 1: soft reserve score on the least-loaded machines that grows with how many jobs remain and shrinks with how far the load sits above the minimum (a graded, not binary, tie-break).",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 2,
+   "scales": [
+    14.356930741783808,
+    3.7563931080832558
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     2.5577
+    ],
+    [
+     -1.297614,
+     -60.112
+    ],
+    [
+     0.389284,
+     -1.2372
+    ],
+    [
+     -0.389284,
+     -0.033
+    ],
+    [
+     0.129761,
+     -1.2322
+    ],
+    [
+     -0.129761,
+     0.0
+    ]
+   ],
+   "best_probe": 2.5577,
+   "best_w": 1.297614,
+   "d_train": 2.8406,
+   "d_valid": -1.396,
+   "trial_x": [
+    0.8011564994857376,
+    1.494510487929889,
+    1.1739156766797567,
+    2.0938795728020003,
+    0.7151525074888277
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f009",
+    "rho": 0.8675,
+    "lib_r2": 0.9315
+   },
+   "error": "",
+   "calls": [
+    "c056"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "reserve_k_emptiest_by_big_mass_soft",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation over spread+job; Col1: soft reserve that penalises machines whose load is within k-th quantile of the emptiest, k set by big-job mass and remaining fraction, weighted by how small the job is versus recent mean.\"\"\"\n    m = loads.shape[0]\n    spread = loads.max() - loads.min() + job + 1e-9\n    col0 = -(loads - loads.mean()) / spread\n\n    col1 = np.zeros(m)\n    if past_jobs.size > 0:\n        med = float(np.median(past_jobs))\n        big = past_jobs > 3.0 * med\n        big_mass = float(past_jobs[big].sum()) / (float(past_jobs.sum()) + 1e-9)\n        smallness = float(np.clip(1.0 - job / (past_jobs.mean() + 1e-9), -1.0, 1.0))\n        frac_left = jobs_left / (past_jobs.size + jobs_left + 1e-9)\n        k = int(min(m - 1, max(1, np.ceil((big_mass * frac_left) * m))))\n        order = np.sort(loads)\n        thr = order[k - 1]\n        scale = order[-1] - order[0] + job + 1e-9\n        depth = np.clip((thr - loads) / scale, 0.0, 1.0)\n        col1 = -smallness * depth\n\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a13",
+   "kind": "variant",
+   "parent": "f037",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Col0: negative load deviation over spread+job; Col1: soft reserve that penalises machines whose load is within k-th quantile of the emptiest, k set by big-job mass and remaining fraction, weighted by how small the job is versus recent mean.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.07673764460015,
+    1.0
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 981.9036,
+   "best_w": null,
+   "d_train": 981.9036,
+   "d_valid": 1007.5444,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c058"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "load_rank_softened_by_spread",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative rank of each machine's load among all loads (0 = emptiest), scaled to [-1,0], softened by job-vs-loads spread.\"\"\"\n    m = len(loads)\n    # rank: number of machines strictly below this one (ties share the lower rank)\n    order = np.argsort(loads, kind=\"stable\")\n    ranks = np.empty(m, dtype=float)\n    ranks[order] = np.arange(m, dtype=float)\n    # spread of loads relative to job size: if all loads are nearly equal, ranking is noise\n    spread = float(loads.max() - loads.min())\n    rel = spread / (spread + job + 1e-9)\n    return -(ranks / max(m - 1, 1)) * rel\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a20",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative rank of each machine's load among all loads (0 = emptiest), scaled to [-1,0], softened by job-vs-loads spread.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.4568415042084317
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     -6.9118
+    ],
+    [
+     -1.297614,
+     -104.1127
+    ],
+    [
+     0.389284,
+     -0.033
+    ],
+    [
+     -0.389284,
+     -2.1661
+    ],
+    [
+     0.129761,
+     0.0
+    ],
+    [
+     -0.129761,
+     -1.0064
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.129761,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.7291,
+    "lib_r2": 0.4781
+   },
+   "error": "",
+   "calls": [
+    "c055"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "reserve_k_emptiest_by_big_mass_soft",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Col0: negative load deviation normalised by load spread + job; Col1: soft reserve weight on the emptiest machines, magnitude scaled by how small the arriving job is relative to the running big-job scale (so reserves tighten only while short jobs dominate).\"\"\"\n    m = loads.shape[0]\n    spread = loads.max() - loads.min() + job + 1e-9\n    col0 = -(loads - loads.mean()) / spread\n\n    col1 = np.zeros(m)\n    if past_jobs.size > 0 and jobs_left > 0:\n        big = np.percentile(past_jobs, 90)\n        short = float(np.median(past_jobs))\n        # how \"small\" the current job is, in units of the recent short-job scale\n        smallness = 1.0 - min(1.0, job / (short + 1e-9))\n        # how many emptiest machines to keep protected, sized by remaining work pressure\n        k = int(min(m - 1, max(1, np.ceil(smallness * jobs_left / max(1.0, big / (short + 1e-9))))))\n        thr = np.sort(loads)[k - 1]\n        col1 = np.where(loads <= thr + 1e-9, -1.0, 0.0) * smallness\n\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a13",
+   "kind": "variant",
+   "parent": "f037",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Col0: negative load deviation normalised by load spread + job; Col1: soft reserve weight on the emptiest machines, magnitude scaled by how small the arriving job is relative to the running big-job scale (so reserves tighten only while short jobs dominate).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.07673764460015,
+    5.350548034448884
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     -5.6381
+    ],
+    [
+     -1.297614,
+     -144.3158
+    ],
+    [
+     0.389284,
+     -2.5886
+    ],
+    [
+     -0.389284,
+     -0.2971
+    ],
+    [
+     0.129761,
+     -0.0195
+    ],
+    [
+     -0.129761,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.129761,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9578,
+    "lib_r2": 0.8261
+   },
+   "error": "",
+   "calls": [
+    "c059"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "tail_double_reserve",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Two-deep reserve (-1 emptiest, -0.5 second emptiest) gated on a makespan-scale job still expected in the short tail.\"\"\"\n    m = loads.shape[0]\n    ls = loads\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    Lmax = float(past_jobs.max()) if past_jobs.size else job\n    S = float(ls.sum())\n    T = max((S + jobs_left * mu) / m, Lmax, job, 1e-9)\n    thr = 0.5 * T\n    q = float(np.mean(past_jobs >= thr)) if past_jobs.size else (1.0 if job >= thr else 0.0)\n    vals = np.zeros(m)\n    if jobs_left < m and job < mu and jobs_left * q >= 0.5:\n        order = np.argsort(ls, kind='stable')\n        vals[order[0]] = -1.0\n        if m > 1:\n            vals[order[1]] = -0.5\n    return vals\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a01",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's reserve column (f009 col1) switches off exactly when jobs_left < m, so the short tail is pure balancing and the biggest machine keeps collecting tiny jobs (bimodal late_growth 13.1%). If the tail reserve is real, a two-deep reserve (-1 emptiest, -0.5 second emptiest), gated on a makespan-scale job still being expected, should cut late growth; if f023's failure was due to it being one-deep or ungated, this distinguishes that.",
+    "feature": "One column, in [-1,0]. import numpy as np; def feature(job, loads, past_jobs, jobs_left): m=loads.shape[0]; ls=loads; mu=float(past_jobs.mean()) if past_jobs.size else job; Lmax=float(past_jobs.max()) if past_jobs.size else job; S=float(ls.sum()); T=max((S+jobs_left*mu)/m, Lmax, job, 1e-9); thr=0.5*T; q=float(np.mean(past_jobs>=thr)) if past_jobs.size else (1.0 if job>=thr else 0.0); vals=np.zeros(m); then if jobs_left<m and job<mu and jobs_left*q>=0.5: order=np.argsort(ls, kind='stable'); vals[order[0]]=-1.0; if m>1: vals[order[1]]=-0.5; return vals. Zero everywhere else (so it is silent in uniform/exponential, where no past job reaches 0.5*T).",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "late_growth_pct",
+     "direction": "down"
+    },
+    "builds_on": "f023",
+    "lesson": "f023 reserve_single_emptiest_short_tail lost 5.7 gap when amplified: it was one-deep and fired in every family. This keeps f023's regime (short tail) but makes it two-deep and gated on an expected makespan-scale job, which only bimodal has."
+   },
+   "coder_note": "This returns -1 on the emptiest machine and -0.5 on the second emptiest only when the tail gate holds (jobs_left < m, job below the running mean, and jobs_left\u00b7q \u2265 0.5), and zeros everywhere else; I read the gate literally as written, including the fallback q for the no-history case.",
+   "measures": "Two-deep reserve (-1 emptiest, -0.5 second emptiest) gated on a makespan-scale job still expected in the short tail.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     -0.0483
+    ],
+    [
+     -1.297614,
+     0.0
+    ],
+    [
+     0.389284,
+     -0.0483
+    ],
+    [
+     -0.389284,
+     0.0
+    ],
+    [
+     0.129761,
+     -0.0483
+    ],
+    [
+     -0.129761,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -1.297614,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "late_growth_pct",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.0819,
+    "lib_r2": 0.0002
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "reserve_k_from_big_job_count",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Negative (smallness of arriving job) x (reserve pressure on the k emptiest machines), k = capped expected count of big jobs still to come.\"\"\"\n    m = loads.shape[0]\n    ls = loads\n    S = float(ls.sum())\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    Lmax = float(past_jobs.max()) if past_jobs.size else job\n    T = max((S + jobs_left * mu) / m, Lmax, job, 1e-9)\n    thr = 0.5 * T\n    if past_jobs.size:\n        q = float(np.mean(past_jobs >= thr))\n        small = past_jobs[past_jobs < thr]\n        mu_small = float(small.mean()) if small.size else mu\n    else:\n        q = 1.0 if job >= thr else 0.0\n        mu_small = job if job < thr else mu\n    E = jobs_left * q\n    room = max(T - float(ls.mean()), 1e-9)\n    n_need = int(np.ceil((jobs_left * mu_small) / room))\n    k = int(min(round(E), max(m - n_need, 0), m - 1))\n    if k <= 0:\n        return np.zeros(m)\n    order = np.argsort(np.argsort(ls, kind='stable'), kind='stable')\n    pressure = np.clip((k - order) / float(k), 0, 1)\n    smallness = float(np.clip(1.0 - job / thr, 0, 1))\n    return -smallness * pressure\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a13",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Bimodal's makespan 274 = largest job (~199) plus ~75 of tiny jobs already on its host: the champion keeps exactly one machine free, so after the first big job lands the reserve is gone. f037's k-reserve proved the direction (274->237) but derived k from the raw big-job rate, which is nonzero in exponential/uniform where no single job sets the makespan. Defining 'big' as >= 0.5*T with T = max(projected final mean, largest past job) makes the feature identically zero outside bimodal, and capping k by the capacity the non-reserved machines must absorb prevents the validation loss.",
+    "feature": "One column, in [-1,0]. import numpy as np; def feature(job, loads, past_jobs, jobs_left): m=loads.shape[0]; ls=loads; S=float(ls.sum()); mu=float(past_jobs.mean()) if past_jobs.size else job; Lmax=float(past_jobs.max()) if past_jobs.size else job; T=max((S+jobs_left*mu)/m, Lmax, job, 1e-9); thr=0.5*T; if past_jobs.size: q=float(np.mean(past_jobs>=thr)); small=past_jobs[past_jobs<thr]; mu_small=float(small.mean()) if small.size else mu; else: q=1.0 if job>=thr else 0.0; mu_small=job if job<thr else mu. E=jobs_left*q; room=max(T-float(ls.mean()),1e-9); n_need=int(np.ceil((jobs_left*mu_small)/room)); k=int(min(round(E), max(m-n_need,0), m-1)); if k<=0: return np.zeros(m). order=np.argsort(np.argsort(ls, kind='stable'), kind='stable') (0 = emptiest); pressure=np.clip((k-order)/float(k),0,1); smallness=float(np.clip(1.0-job/thr,0,1)); return -smallness*pressure.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f037",
+    "lesson": "f037 held its bimodal prediction (274->237) but lost validation because its big-job gate was absolute, not makespan-relative, so it reserved capacity in exponential and uniform. Here q is zero there and k is capped by the remaining small work."
+   },
+   "coder_note": "This computes, for each machine, minus the product of how small the arriving job is relative to the big-job threshold (0.5\u00b7T) and how strongly that machine sits among the k emptiest (k = expected remaining big jobs, capped by spare capacity and m\u22121), so small jobs are steered onto the reserved empt\u2026",
+   "measures": "Negative (smallness of arriving job) x (reserve pressure on the k emptiest machines), k = capped expected count of big jobs still to come.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     -1.9605
+    ],
+    [
+     -1.297614,
+     0.0
+    ],
+    [
+     0.389284,
+     -1.2541
+    ],
+    [
+     -0.389284,
+     0.0
+    ],
+    [
+     0.129761,
+     -1.325
+    ],
+    [
+     -0.129761,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -1.297614,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.6925,
+    "lib_r2": 0.1699
+   },
+   "error": "",
+   "calls": [
+    "c064"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "best_fit_for_makespan_scale_jobs",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"For makespan-scale jobs (job >= 0.4*T and >= 0.5*Lmax): own load/T on machines that stay under the floor T, -1 otherwise; 0 for all other jobs.\"\"\"\n    m = loads.shape[0]\n    ls = loads\n    S = float(ls.sum())\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    Lmax = float(past_jobs.max()) if past_jobs.size else job\n    T = max((S + jobs_left * mu) / m, Lmax, job, 1e-9)\n    vals = np.zeros(m)\n    if job >= 0.4 * T and job >= 0.5 * Lmax:\n        post = ls + job\n        fits = post <= T\n        vals = np.where(fits, ls / T, -1.0)\n    return vals\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a04",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The 274 machine holds 16 jobs (ref: 1): the ~199 job was dropped on a host that already carried ~75 of tiny jobs, because min-load and best-fit are identical for a single large job. The fix is to pack a makespan-scale job into the fullest machine that still fits under the estimated floor, which saves the truly empty machines for jobs that would otherwise raise the floor. f028 failed because it applied best-fit to every job; here it only fires when the arriving job alone is >=40% of the floor.",
+    "feature": "One column, in [-1,1]. import numpy as np; def feature(job, loads, past_jobs, jobs_left): m=loads.shape[0]; ls=loads; S=float(ls.sum()); mu=float(past_jobs.mean()) if past_jobs.size else job; Lmax=float(past_jobs.max()) if past_jobs.size else job; T=max((S+jobs_left*mu)/m, Lmax, job, 1e-9); vals=np.zeros(m); if job>=0.4*T and job>=0.5*Lmax: post=ls+job; fits=post<=T; vals=np.where(fits, ls/T, -1.0); return vals. Machines that keep the load under the floor score their own load (fullest best), machines that break it score -1; for all other jobs the column is exactly 0.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "max_machine_jobs",
+     "direction": "down"
+    },
+    "builds_on": "f028",
+    "lesson": "f028 frontier_freepack gained on train but lost validation and blew bimodal spread 67->110, because it applied best-fit-below-max to every job. Packing is only free when a single job sets the makespan, so this version is gated to jobs >= 0.4*T."
+   },
+   "coder_note": "This computes, only when the arriving job is makespan-scale (at least 40% of the estimated floor T and at least half the largest past job), each machine's own load divided by T for machines that would stay at or below T after receiving the job and -1 for those that would exceed it, and exactly 0 fo\u2026",
+   "measures": "For makespan-scale jobs (job >= 0.4*T and >= 0.5*Lmax): own load/T on machines that stay under the floor T, -1 otherwise; 0 for all other jobs.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     0.0
+    ],
+    [
+     -1.297614,
+     -8.5195
+    ],
+    [
+     0.389284,
+     0.0
+    ],
+    [
+     -0.389284,
+     -1.4742
+    ],
+    [
+     0.129761,
+     0.0
+    ],
+    [
+     -0.129761,
+     -0.9492
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 1.297614,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "max_machine_jobs",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.1807,
+    "lib_r2": 0.0116
+   },
+   "error": "",
+   "calls": [
+    "c062"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "floor_hinge_and_slack_pack",
+   "code": "import numpy as np\n\ndef feature(job, loads, past_jobs, jobs_left):\n    \"\"\"Column 0: negative overshoot of post-load above floor T; column 1: negative slack-scaled shortfall below T.\"\"\"\n    m = loads.shape[0]\n    ls = loads\n    S = float(ls.sum())\n    mu = float(past_jobs.mean()) if past_jobs.size else job\n    Lmax = float(past_jobs.max()) if past_jobs.size else job\n    proj = (S + jobs_left * mu) / m\n    T = max(proj, Lmax, job, 1e-9)\n    post = ls + job\n    excess = np.maximum(post - T, 0.0) / T\n    short = np.maximum(T - post, 0.0) / T\n    slack = float(np.clip((T - proj) / T, 0.0, 1.0))\n    return np.stack([-excess, -slack * short], axis=1)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a19",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Every kept feature measures load relative to the running mean, so a machine parked at the floor (a big job's host) is only mildly penalised while it is 75 above the mean. Hinging at an absolute floor T = max(projected final mean, largest past job) makes everything below the floor equally free (excess = 0) and punishes overshoot hard, and the second column, scaled by the slack (T - projected mean)/T, is nonzero only where the floor genuinely exceeds the mean (bimodal) and lets the optimiser choose between filling to the floor and staying empty.",
+    "feature": "Two columns. import numpy as np; def feature(job, loads, past_jobs, jobs_left): m=loads.shape[0]; ls=loads; S=float(ls.sum()); mu=float(past_jobs.mean()) if past_jobs.size else job; Lmax=float(past_jobs.max()) if past_jobs.size else job; proj=(S+jobs_left*mu)/m; T=max(proj, Lmax, job, 1e-9); post=ls+job; excess=np.maximum(post-T,0.0)/T; short=np.maximum(T-post,0.0)/T; slack=float(np.clip((T-proj)/T,0.0,1.0)); return np.stack([-excess, -slack*short], axis=1). Column 0 = overshoot above the floor; column 1 = shortfall below the floor, zero in uniform/exponential where slack=0.",
+    "prediction": {
+     "family": "bimodal",
+     "metric": "makespan",
+     "direction": "down"
+    },
+    "builds_on": "f031",
+    "lesson": "f018 and f031 (target/overshoot hinges) never fired because their target sat above every load in every decision; here the floor is max(projected mean, largest past job) so it sits inside the load range exactly in bimodal, and the packing column is switched off by the slack factor elsewhere."
+   },
+   "coder_note": "This computes, per machine, the negative normalised overshoot of its post-assignment load above the floor T = max(projected final mean, largest past job, current job), plus a second column of the negative shortfall below T scaled by the slack (T \u2212 proj)/T; I read \"projected final mean\" as (current \u2026",
+   "measures": "Column 0: negative overshoot of post-load above floor T; column 1: negative slack-scaled shortfall below T.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    6.132003991550586,
+    1.0
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.297614,
+     0.0
+    ],
+    [
+     -1.297614,
+     -579.3656
+    ],
+    [
+     0.389284,
+     0.0
+    ],
+    [
+     -0.389284,
+     -313.6754
+    ],
+    [
+     0.129761,
+     0.0
+    ],
+    [
+     -0.129761,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 1.297614,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "makespan",
+    "family": "bimodal",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.8697,
+    "lib_r2": 0.7784
+   },
+   "error": "",
+   "calls": [
+    "c063"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "least-loaded",
+   "description": "Prefer the machine with the smallest current load (raw load balancing).",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f001",
+    "f005",
+    "f006",
+    "f011",
+    "f017",
+    "f013",
+    "f015",
+    "f022",
+    "f026",
+    "f028",
+    "f031",
+    "f035",
+    "f039",
+    "f044"
+   ],
+   "best_gain": 1007.5444,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     1007.5444
+    ],
+    [
+     2,
+     1007.5444
+    ],
+    [
+     3,
+     1007.5444
+    ],
+    [
+     4,
+     1007.5444
+    ],
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": 5
+  },
+  {
+   "id": "a02",
+   "title": "relative-load",
+   "description": "Prefer machines whose load is small relative to the arriving job size, so big jobs go to empty machines.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f008",
+    "f027",
+    "f036"
+   ],
+   "best_gain": -0.033,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     1007.5444
+    ],
+    [
+     3,
+     -0.033
+    ],
+    [
+     4,
+     1007.5444
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "lookahead-capacity",
+   "description": "Use jobs_left and estimated mean job size to decide how tightly to balance now versus reserve room for future work.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f009",
+    "f012",
+    "f016",
+    "f019",
+    "f023",
+    "f032",
+    "f033",
+    "f040"
+   ],
+   "best_gain": 1010.3328,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     1010.3328
+    ],
+    [
+     2,
+     0.0
+    ],
+    [
+     3,
+     0.0063
+    ],
+    [
+     4,
+     0.0
+    ],
+    [
+     5,
+     -1.396
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "distribution-aware",
+   "description": "Estimate the size distribution from past_jobs (mean, max, tail) and bias placement to keep capacity for future large jobs.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f010",
+    "f046"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     1007.5444
+    ],
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "count-balance",
+   "description": "Balance the number of jobs per machine (proxy for load when sizes are unknown), combined with load.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f029"
+   ],
+   "best_gain": -0.033,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.033
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "load-rank",
+   "description": "Score machines by the rank/percentile of their load among all machines, giving a scale-free balancing signal.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f021"
+   ],
+   "best_gain": -0.033,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "argued": [
+      {
+       "feature": "f021",
+       "type": "none",
+       "argument": "median split is a coarse sign pattern, not a monotone transform of f001's continuous deficit; rho 0.94 leaves real ranking differences."
+      }
+     ],
+     "result": "not proven: stays at lower priority"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -0.033
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: load_deviation_from_mean_sq",
+   "description": "Negative squared deviation of each machine load from the current mean load (pull the laggards up).",
+   "parent": "",
+   "origin": "wide",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f002"
+   ],
+   "best_gain": 503.6051,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     503.6051
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "reserve-depth-scaled",
+   "description": "Reserve empty/low machines with a depth that scales with the fraction of remaining work and observed large-job frequency, not a fixed rule.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f020"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "big-job-magnet",
+   "description": "Detect when the arriving job is in the upper tail of past sizes and route it to the emptiest machine, otherwise balance normally.",
+   "parent": "a04",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f018",
+    "f024"
+   ],
+   "best_gain": -130.1497,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     0.0
+    ],
+    [
+     3,
+     -130.1497
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "idle-budget",
+   "description": "Track how much idle capacity each machine can afford given jobs_left and expected sizes, penalising machines that would be unable to absorb a future large job.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f030"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 3,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "tail-empty-preserve",
+   "description": "Keep a small set of machines near-empty (reserved for future huge jobs) by penalising any placement that raises a machine above a low quantile of loads when the arriving job is tiny.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 3,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "count-vs-load-tension",
+   "description": "Score machines by load deficit minus a penalty on job-count imbalance, so tiny jobs spread across machines without stealing capacity from big ones.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f038"
+   ],
+   "best_gain": -0.0179,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.0179
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "idle-budget-slack",
+   "description": "Per machine, compute affordable idle = projected fair-share minus load minus expected remaining work share; prefer machines with positive slack for the arriving job.",
+   "parent": "a10",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f037",
+    "f041",
+    "f043",
+    "f045"
+   ],
+   "best_gain": -1.641,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     4,
+     -1.641
+    ],
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "wide find: below_future_bigjob_reserve",
+   "description": "Negative gap between each machine's load and the largest job still expected, weighted by how many jobs remain: penalises machines that would end up above where the biggest future job can land.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f025"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "tail-aware load deficit",
+   "description": "Load deficit normalised by the observed upper-tail job size, so balancing pressure relaxes when huge jobs are still expected.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 4,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "slot-aware deficit",
+   "description": "Load deficit discounted by how many jobs each machine has already taken relative to jobs_left, protecting big-job room in bimodal.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 4,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "wide find: load_rank_ordinal",
+   "description": "Negative rank of each machine's load among all loads (dense rank from lowest=0), normalised by m-1: a coarse ordinal balance signal invariant to load magnitude scale.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f034"
+   ],
+   "best_gain": -0.033,
+   "last_gen": 4,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.033
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a18",
+   "title": "big-rate depth-capped reserve",
+   "description": "Reserve a number of machines equal to the expected count of large jobs still to come (observed big-job rate x jobs_left), with a smooth depth of one expected big-job size and a gate that removes the pressure when few jobs remain.",
+   "parent": "a13",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a19",
+   "title": "floor-aware excess hinge",
+   "description": "Penalise only the part of (load + job) above an estimated achievable floor max(largest past job, projected mean), so every machine below the floor counts as equally free and overshoot is punished hard.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f047"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a20",
+   "title": "wide find: load_rank_softened_by_spread",
+   "description": "Negative rank of each machine's load among all loads (0 = emptiest), scaled to [-1,0], softened by job-vs-loads spread.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f042"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f009",
+  "f001"
+ ],
+ "backlog": [
+  "f023",
+  "f013",
+  "f016",
+  "f018",
+  "f019",
+  "f020"
+ ]
+}

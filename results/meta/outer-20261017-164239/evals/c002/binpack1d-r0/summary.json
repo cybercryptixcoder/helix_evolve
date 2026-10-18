@@ -1,0 +1,59 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.459275445606604,
+  "valid": 3.4590210930248206,
+  "progress": 38.37,
+  "valid_progress": 34.26,
+  "library": [
+   "f005"
+  ]
+ },
+ "test": {
+  "gap": 6.903681912666724,
+  "families": {
+   "weibull": 3.101559442066426,
+   "uniform": 3.338416793753174,
+   "small": 2.12871923398239,
+   "large": 6.281927620153664,
+   "bimodal": 22.85471054868384,
+   "scaled": 3.7167578373608516
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 10.6
+ },
+ "progress_curve": [
+  0.0,
+  38.37,
+  38.37,
+  38.37,
+  38.37,
+  38.37
+ ],
+ "valid_curve": [
+  0.0,
+  34.26,
+  34.26,
+  34.26,
+  34.26,
+  34.26
+ ],
+ "calls": 59,
+ "tokens_in": 136193,
+ "tokens_out": 333618,
+ "features_tried": 45,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "nice_remainder_fit",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792289773.245781
+}

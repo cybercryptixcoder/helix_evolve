@@ -1,0 +1,75 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 8.536835697316514,
+  "valid": 9.286461301980452,
+  "progress": 98.34,
+  "valid_progress": 98.19,
+  "library": [
+   "f004",
+   "f024",
+   "f021",
+   "f033"
+  ]
+ },
+ "test": {
+  "gap": 12.244000387802926,
+  "families": {
+   "uniform": 11.746277204073033,
+   "clustered": 20.743341981623345,
+   "grid": 7.699960679073488,
+   "mixed": 8.786421686441836
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.67
+ },
+ "progress_curve": [
+  0.0,
+  95.44,
+  95.44,
+  98.16,
+  98.34,
+  98.34
+ ],
+ "valid_curve": [
+  0.0,
+  95.84,
+  95.84,
+  98.4,
+  98.19,
+  98.19
+ ],
+ "calls": 59,
+ "tokens_in": 164565,
+ "tokens_out": 190635,
+ "features_tried": 44,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "multi_signal_tsp_step",
+   "origin": "wide"
+  },
+  {
+   "id": "f024",
+   "name": "ray_occlusion_and_periphery_priority",
+   "origin": "wide"
+  },
+  {
+   "id": "f021",
+   "name": "late_closing_detour_ratio_gated",
+   "origin": "wide"
+  },
+  {
+   "id": "f033",
+   "name": "endgame_exact_completion",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792288945.4198377
+}

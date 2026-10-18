@@ -1,0 +1,63 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 13.616203956267439,
+  "valid": 20.621443317612876,
+  "progress": 98.64,
+  "valid_progress": 97.99,
+  "library": [
+   "f004",
+   "f039"
+  ]
+ },
+ "test": {
+  "gap": 17.25278252500096,
+  "families": {
+   "uniform": 2.805872190132041,
+   "exponential": 7.552063260689586,
+   "bimodal": 44.855080348718865,
+   "lognormal": 13.798114300463354
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 98.07
+ },
+ "progress_curve": [
+  0.0,
+  98.21,
+  98.21,
+  98.21,
+  98.64,
+  98.64
+ ],
+ "valid_curve": [
+  0.0,
+  97.99,
+  97.99,
+  97.99,
+  97.99,
+  97.99
+ ],
+ "calls": 74,
+ "tokens_in": 158008,
+ "tokens_out": 314868,
+ "features_tried": 52,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "post_placement_excess_over_mean",
+   "origin": "wide"
+  },
+  {
+   "id": "f039",
+   "name": "gated_k_emptiest_reservation_step",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792276608.7146313
+}

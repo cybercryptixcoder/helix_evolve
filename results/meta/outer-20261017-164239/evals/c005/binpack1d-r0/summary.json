@@ -1,0 +1,77 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.4165773570980047,
+  "valid": 3.3774384571221354,
+  "progress": 39.4,
+  "valid_progress": 36.07,
+  "library": [
+   "f001",
+   "f010",
+   "f012",
+   "f022"
+  ]
+ },
+ "test": {
+  "gap": 6.095855371093504,
+  "families": {
+   "weibull": 3.438000853197831,
+   "uniform": 3.3400835020875577,
+   "small": 1.7013688066319643,
+   "large": 4.407669188294057,
+   "bimodal": 20.311388359024587,
+   "scaled": 3.376621517325029
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 28.69
+ },
+ "progress_curve": [
+  0.0,
+  19.27,
+  29.4,
+  39.4,
+  39.4,
+  39.4
+ ],
+ "valid_curve": [
+  0.0,
+  13.5,
+  27.57,
+  36.07,
+  36.07,
+  36.07
+ ],
+ "calls": 60,
+ "tokens_in": 130739,
+ "tokens_out": 210071,
+ "features_tried": 45,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "residual_fraction_after_placement",
+   "origin": "wide"
+  },
+  {
+   "id": "f010",
+   "name": "gated_residual_tightness",
+   "origin": "wide"
+  },
+  {
+   "id": "f012",
+   "name": "tight_fit_gated_residual",
+   "origin": "wide"
+  },
+  {
+   "id": "f022",
+   "name": "complete_midfull_bins",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792278121.9693086
+}

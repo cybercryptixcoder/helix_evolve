@@ -1,0 +1,70 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.2638476088146833,
+  "valid": 0.12176458857945568,
+  "progress": 98.02,
+  "valid_progress": 99.17,
+  "library": [
+   "f005",
+   "f004",
+   "f016"
+  ]
+ },
+ "test": {
+  "gap": 0.492934011771203,
+  "families": {
+   "uncorrelated": 0.16426484762579463,
+   "weakly_correlated": 0.09512373791243182,
+   "strongly_correlated": 1.0719864102600507,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 1.1276940149962833
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 96.06
+ },
+ "progress_curve": [
+  0.0,
+  98.24,
+  98.87,
+  98.02,
+  98.02,
+  98.02
+ ],
+ "valid_curve": [
+  0.0,
+  98.28,
+  98.39,
+  99.17,
+  99.17,
+  99.17
+ ],
+ "calls": 72,
+ "tokens_in": 158239,
+ "tokens_out": 136998,
+ "features_tried": 50,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "value_density_ratio",
+   "origin": "deep"
+  },
+  {
+   "id": "f004",
+   "name": "density_excess_value",
+   "origin": "wide"
+  },
+  {
+   "id": "f016",
+   "name": "density_gap_adaptive_fill",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792276062.318576
+}

@@ -1,0 +1,70 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.0418591891743462,
+  "valid": 0.04408165885020261,
+  "progress": 99.69,
+  "valid_progress": 99.7,
+  "library": [
+   "f002",
+   "f018",
+   "f032"
+  ]
+ },
+ "test": {
+  "gap": 0.12469349672147598,
+  "families": {
+   "uncorrelated": 0.058162871180407937,
+   "weakly_correlated": 0.08534978107017643,
+   "strongly_correlated": 0.17048492506637203,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.3038688582289691
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.0
+ },
+ "progress_curve": [
+  0.0,
+  98.24,
+  99.07,
+  99.67,
+  99.69,
+  99.69
+ ],
+ "valid_curve": [
+  0.0,
+  98.14,
+  98.86,
+  99.49,
+  99.7,
+  99.7
+ ],
+ "calls": 67,
+ "tokens_in": 145781,
+ "tokens_out": 101488,
+ "features_tried": 52,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "relative_density_log_ratio",
+   "origin": "wide"
+  },
+  {
+   "id": "f018",
+   "name": "stranded_leftover_indicator",
+   "origin": "deep"
+  },
+  {
+   "id": "f032",
+   "name": "smooth_exact_fill_bonus",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792270384.7919316
+}

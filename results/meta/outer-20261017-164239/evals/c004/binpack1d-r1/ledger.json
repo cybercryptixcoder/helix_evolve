@@ -1,0 +1,3662 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "fit_tightness_ratio",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit tightness: room left after placing the item, relative to the item, signed to favour snug fits.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    # fraction of the bin that would remain free after placing the item\n    waste = after / np.maximum(room, 1.0)\n    # how much of the item the bin's free space covers beyond fitting\n    tight = item / np.maximum(room, 1.0)\n    # combine: prefer bins where the leftover is small and the item fills them\n    val = (0.5 - waste) + 0.5 * (tight - 1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit tightness: room left after placing the item, relative to the item, signed to favour snug fits.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.8564790223951038
+   ],
+   "weights": [
+    0.6977372553795316
+   ],
+   "probe": [
+    [
+     1.0,
+     0.8018
+    ],
+    [
+     -1.0,
+     -229.7292
+    ]
+   ],
+   "best_probe": 0.8018,
+   "best_w": 1.0,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.1675
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": 1,
+   "importance": 16.0005,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "fill_density_increment",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fill ratio of each bin after placing the item, minus the bin's own current fill ratio (centred).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    remaining_after = b - float(item)\n    fits = remaining_after >= -1e-9\n    # fill ratio after placement\n    after = np.clip(1.0 - remaining_after / cap, 0.0, 1.0)\n    # bin fill ratio before placement\n    before = np.clip(1.0 - b / cap, 0.0, 1.0)\n    # change in fill density: large for tight fits, small for loose ones\n    delta = after - before\n    # zero out infeasible candidates so they rank low\n    delta = np.where(fits, delta, 0.0)\n    return np.clip(delta, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fill ratio of each bin after placing the item, minus the bin's own current fill ratio (centred).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     0.0
+    ],
+    [
+     -1.0,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "tight_fit_contrast",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual room after placing the item, relative to capacity, for each bin (empty bin -> negative).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    # residual if item is placed: b - item; positive = slack left, negative = overflow (only for the new bin case)\n    residual = (b - float(item)) / cap\n    # compress into [-1, 1] with a soft saturating map\n    return np.tanh(3.0 * residual)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Residual room after placing the item, relative to capacity, for each bin (empty bin -> negative).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.202931473362683
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "minimal_leftover_fraction",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual slack left in a bin after placing item, signed toward exact-fit, normalised by capacity.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    residual = b - float(item)\n    # Negative residuals (item doesn't fit) get a strong penalty signal; exact fit -> 0 -> best.\n    val = residual / float(capacity)\n    # Emphasise small positive residuals: exact fits and near-fits rank highest.\n    val = np.where(residual >= 0, 1.0 - np.exp(-np.clip(val, 0, None) * 4.0), -val * 2.0 - 1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Residual slack left in a bin after placing item, signed toward exact-fit, normalised by capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.408385560164612
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "squared_leftover_regret",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Squared relative leftover after placing the item, minus the best achievable such leftover among all candidates (squared-residual regret).\"\"\"\n    cap = float(capacity)\n    rem = np.asarray(bins, dtype=float) / cap\n    after = np.clip(rem - item / cap, 0.0, 1.0)\n    sq = after * after\n    best = np.min(sq) if sq.size else 0.0\n    return np.clip(sq - best, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Squared relative leftover after placing the item, minus the best achievable such leftover among all candidates (squared-residual regret).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.036236438320272
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c006"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "soft_exponential_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Measures the leftover room a bin would keep relative to the item, penalising near-exact fittings less than perfect ones by using a soft exponential match.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    capacity = float(capacity)\n    item = float(item)\n    leftover = bins - item\n    # soft exponential \"how well does leftover match zero\" plus penalty for wasted space\n    matched = np.exp(-leftover / (0.15 * capacity + 1e-9))\n    waste = leftover / (capacity + 1e-9)\n    return matched - 0.5 * waste\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Measures the leftover room a bin would keep relative to the item, penalising near-exact fittings less than perfect ones by using a soft exponential match.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.4342756766276112
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "best_fit_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual room after placing, (item - bins)/capacity, scaled by how full the bin becomes: (item/bins) * (item - bins)/capacity.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    safe = np.where(b > 0, b, 1.0)\n    fill = np.clip(item / safe, 0.0, 1.0)          # fraction of remaining room the item consumes\n    residual = (item - b) / capacity                # in [-1, 0]\n    return fill * residual\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Code Zero takes the oldest fitting bin; its 50-80% bins and one-item bins in `large` come from leaving large residuals that later items cannot use. Rewarding the smallest residual (room after placing) should close bins tightly and cut the single-item bins and the 44 half-empty bins seen in large-000.",
+    "feature": "feature = (item - bins) / capacity  -> one value per candidate, in [-1, 0]; the new empty bin (last) scores near -1 - item/capacity, so it is chosen only when nothing fits better.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `(item - bins) / capacity` for every candidate, giving 0 for an exactly-filled bin down to about `-1 - item/capacity` for the new empty bin; I read the formula literally as stated (no extra clipping or smoothing).",
+   "measures": "Residual room after placing, (item - bins)/capacity, scaled by how full the bin becomes: (item/bins) * (item - bins)/capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    16.6495001720344
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c010",
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "residual_ratio",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fraction of each candidate bin's remaining room the item consumes, times the bin's fill fraction (1 - room/capacity), clipped to [0, 1].\"\"\"\n    room = np.maximum(bins, 1).astype(float)\n    ratio = np.clip(item / room, 0.0, 1.0)\n    fill = np.clip(1.0 - room / float(capacity), 0.0, 1.0)\n    return np.clip(ratio * fill, 0.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a02",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Raw residual is dominated by capacity scale; the fraction of a bin's room the item consumes is scale-free, so it should behave consistently across capacities and, more than a01, refuse bins where the item is a poor fill (small item into huge room) - the likely cause of uniform-000's one-item and <50% bins.",
+    "feature": "feature = np.clip(item / np.maximum(bins, 1), 0.0, 1.0)  -> one value per candidate in (0, 1]; the new empty bin scores item/capacity, i.e. lowest for small items.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `item / max(remaining_room, 1)` per candidate, clipped to [0, 1] \u2014 the fraction of a bin's room the item fills (the new empty bin yields `item/capacity`, lowest for small items); I read \"clip to [0,1]\" literally and used `max(bins,1)` as the guarded denominator exactly as specified.",
+   "measures": "Fraction of each candidate bin's remaining room the item consumes, times the bin's fill fraction (1 - room/capacity), clipped to [0, 1].",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.284718533592655
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c012",
+    "c016"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "exact_fit_peak",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Sharp peak (width 5% of capacity) at room == item, scaled by how full the bin becomes (item/capacity).\"\"\"\n    width = 0.05 * capacity\n    if width <= 0:\n        return np.zeros_like(bins, dtype=float)\n    peak = np.exp(-np.abs(bins - item) / width)\n    # weight the peak by the fraction of capacity the item fills: exact closure of a big item counts more\n    fill = item / capacity if capacity > 0 else 0.0\n    return peak * fill\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "If closing bins perfectly is what matters, a narrow peak at room == item should beat a smooth residual: only near-exact fits get a bonus, everything else ties and falls back to oldest-first. The probe exaggerates the aspect sharply (width 5% of capacity) so a null result falsifies 'exact closure matters' rather than just 'residual matters'.",
+    "feature": "feature = np.exp(-np.abs(bins - item) / (0.05 * capacity))  -> in [0, 1], peak 1.0 only where the item exactly fills the bin, decaying to ~0 within about 5% of capacity.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `exp(-|bins - item| / (0.05 * capacity))`, peaking at 1.0 where a bin's remaining room exactly equals the item size and decaying to near 0 within about 5% of capacity; I guard the width against a zero capacity by returning zeros.",
+   "measures": "Sharp peak (width 5% of capacity) at room == item, scaled by how full the bin becomes (item/capacity).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    14.774114255423749
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c011",
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "worst_fit_spread",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Remaining-room fraction of each candidate bin (bins / capacity), in [0, 1].\"\"\"\n    return np.asarray(bins, dtype=float) / float(capacity)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a06",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The opposite extreme: always taking the emptiest bin concentrates all items into one growing bin, leaving every other bin empty, so bins never reach high fill and many items land in fresh bins. If large items need big contiguous free space, this could instead help; the probe decides between these two mechanisms.",
+    "feature": "feature = bins / capacity  -> the remaining-room fraction of each candidate in [0, 1]; the empty new bin scores 1.0, the fullest bin the smallest value.",
+    "prediction": {
+     "family": "large",
+     "metric": "full_bins_pct",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's remaining-room fraction `bins / capacity` (the empty new bin scores 1.0, the fullest bin the smallest value); I read the experiment literally as a single column with no extra scaling, since the value is already in [0, 1].",
+   "measures": "Remaining-room fraction of each candidate bin (bins / capacity), in [0, 1].",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.08558941100629
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c009",
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "concave_snug_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Leftover room after placing the item, relative to item AND to bin's prior free space, ranked by a concave (sqrt) transform to favour snug fits without rewarding near-empty bins.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    # relative leftover w.r.t. the item: 0 at exact fit, grows as the bin is roomier\n    rel_item = after / np.maximum(item, 1.0)\n    # relative leftover w.r.t. the bin's own free space (0..1)\n    rel_room = after / np.maximum(room, 1.0)\n    # concave squash: strongly penalises big leftovers, gently distinguishes near-exact fits\n    val = -(np.sqrt(np.maximum(rel_item, 0.0)) + rel_room)\n    return np.clip(0.5 * val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Leftover room after placing the item, relative to item AND to bin's prior free space, ranked by a concave (sqrt) transform to favour snug fits without rewarding near-empty bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.272133774777147
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     0.0
+    ],
+    [
+     -0.838414,
+     -1.3565
+    ],
+    [
+     0.251524,
+     0.0
+    ],
+    [
+     -0.251524,
+     0.0
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.838414,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9644,
+    "lib_r2": 0.9532
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "density_gain_amplified",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Change in fill density scaled by post-placement fill: tight fits in already-full bins get extra weight.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    remaining_after = b - it\n    fits = remaining_after >= -1e-9\n    after = np.clip(1.0 - remaining_after / cap, 0.0, 1.0)\n    before = np.clip(1.0 - b / cap, 0.0, 1.0)\n    delta = after - before\n    # amplify the density gain where the bin ends up dense: a tight fit into a nearly full bin\n    # is much more valuable than the same delta into an empty one\n    amplified = delta * (0.5 + after)\n    # empty bin candidate: neutral small negative so it loses to any real tight fit but beats\n    # leaving room is handled by the amplification itself; just keep it feasible\n    val = np.where(fits, amplified, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Change in fill density scaled by post-placement fill: tight fits in already-full bins get extra weight.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    15.950450305740004
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "size_fill_interaction",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Item size relative to capacity, interacted with each bin's fill: large items penalise topping up partially filled bins.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    fill = 1.0 - room / cap                      # current fill fraction of each bin\n    big = item / cap                             # how large the item is relative to capacity\n    # for large items, prefer less-filled (fresher) bins; for small items, prefer fuller bins\n    val = (big - 0.5) * (0.5 - fill)             # in [-0.25, 0.25]\n    return np.clip(2.0 * val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Item size relative to capacity, interacted with each bin's fill: large items penalise topping up partially filled bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.574489868470308
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     0.0
+    ],
+    [
+     -0.838414,
+     -135.301
+    ],
+    [
+     0.251524,
+     0.0
+    ],
+    [
+     -0.251524,
+     -21.0034
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     -0.2137
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.838414,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9671,
+    "lib_r2": 0.5619
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "age_weighted_emptiness_pressure",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Age-weighted fit: emptiness pressure \u2014 how empty the bin is times how well the item fits, favouring new bins when old bins are nearly full and old bins when they still have lots of room.\"\"\"\n    room = bins.astype(float)\n    k = len(room)\n    # normalised position: 0 for oldest bin, ~1 for the brand-new empty bin\n    age = np.linspace(0.0, 1.0, k) if k > 1 else np.zeros(k)\n    # fill fraction of the bin before placing (1 = empty, 0 = full)\n    fill = np.clip(room / capacity, 0.0, 1.0)\n    # does the item fit, and how comfortably (relative slack before placement)\n    fits = (room >= item).astype(float)\n    slack = np.clip((room - item) / np.maximum(room, 1.0), 0.0, 1.0)\n    # combine: older bins preferred when they are empty (spread load), new bins only when old bins are tight\n    val = (1.0 - age) * fill * fits * (0.5 + 0.5 * slack) - age * (1.0 - fill)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a11",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Age-weighted fit: emptiness pressure \u2014 how empty the bin is times how well the item fits, favouring new bins when old bins are nearly full and old bins when they still have lots of room.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.84307626318833
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     -0.6774
+    ],
+    [
+     -0.838414,
+     -4.0008
+    ],
+    [
+     0.251524,
+     -0.28
+    ],
+    [
+     -0.251524,
+     -2.3343
+    ],
+    [
+     0.083841,
+     -0.0233
+    ],
+    [
+     -0.083841,
+     -1.0202
+    ]
+   ],
+   "best_probe": -0.0233,
+   "best_w": 0.083841,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.3366,
+    "lib_r2": 0.0117
+   },
+   "error": "",
+   "calls": [
+    "c021"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "density_increment_weighted_by_emptiness",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Change in fill density per unit of the bin's remaining room fraction: (item/room)/(item) effect scaled by how empty the bin is.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    room = np.maximum(b, 1e-9)\n    fits = (b - it) >= -1e-9\n    # fraction of current free room consumed by the item\n    frac_consumed = np.clip(it / room, 0.0, 1.0)\n    # how empty the bin currently is (weight): emptier bins get more weight on their fractional consumption\n    emptiness = np.clip(b / cap, 0.0, 1.0)\n    # density increment is item/cap regardless of bin; multiply by emptiness to break ties toward fuller bins\n    val = (it / cap) * (1.0 - emptiness) - 0.5 * (1.0 - frac_consumed)\n    val = np.where(fits, val, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Change in fill density per unit of the bin's remaining room fraction: (item/room)/(item) effect scaled by how empty the bin is.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.660879594342942
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c022"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "stranded_residual_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Penalises residual room after placement strictly inside (0, 0.30*capacity) with a bump peaking at -1 mid-band, zero at 0 and at/above 0.30*capacity.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    cap = float(capacity)\n    s = 0.30 * cap\n    x = np.clip(after / s, 0.0, 1.0)\n    bump = -4.0 * x * (1.0 - x)\n    return np.where((after > 0.0) & (after < s), bump, 0.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Best-fit only minimises leftover; it is indifferent between leftover 0 (perfect) and leftover 25 (dead: no item of 30-70 or 20-100 can ever enter). A non-monotone bump that penalises only residual-after-placement in (0, 0.30*capacity) and leaves 0 and large residuals at zero tests whether the stranding band, not the mere snugness, is what costs bins in `large` (35 bins at 50-80% fill, 35 single-item bins).",
+    "feature": "room=bins.astype(float); after=room-item; cap=float(capacity); s=0.30*cap; x=np.clip(after/s,0.0,1.0); bump=-4.0*x*(1.0-x); return np.where((after>0.0)&(after<s), bump, 0.0). Zero at after=0, zero for after>=0.30*capacity, -1 in the middle of the dead band.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": ""
+   },
+   "coder_note": "This computes a non-monotone penalty on the post-placement residual: zero when the bin is exactly filled or has \u226530% of capacity left, and a smooth bump reaching \u22121 at half the band width, applied only to residuals strictly inside (0, 0.30\u00b7capacity); I read \"dead band\" as the open interval (0, s) e\u2026",
+   "measures": "Penalises residual room after placement strictly inside (0, 0.30*capacity) with a bump peaking at -1 mid-band, zero at 0 and at/above 0.30*capacity.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    3.0602703460608893
+   ],
+   "weights": [
+    0.513966920018275
+   ],
+   "probe": [
+    [
+     0.838414,
+     0.3809
+    ],
+    [
+     -0.838414,
+     -4.8734
+    ],
+    [
+     0.251524,
+     0.001
+    ],
+    [
+     -0.251524,
+     -0.2316
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     0.0
+    ]
+   ],
+   "best_probe": 0.3809,
+   "best_w": 0.838414,
+   "d_train": 0.5715,
+   "d_valid": 0.5654,
+   "trial_x": [
+    0.8703892245025249,
+    0.6488233280525495
+   ],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "before": 35,
+    "after": 31,
+    "held": true,
+    "checked": true,
+    "instance": "large-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f017",
+    "rho": 0.3651,
+    "lib_r2": 0.0064
+   },
+   "error": "",
+   "calls": [
+    "c026"
+   ],
+   "kept_gen": 2,
+   "importance": 0.6747,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "snug_or_roomy",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Max of a snug ramp (after~0) and a triangular band peaking at after=1.5*item.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    cap = float(capacity)\n    it = float(max(item, 1))\n    snug = np.clip(1.0 - after / (0.15 * cap), -1, 1)\n    roomy = np.clip(1.0 - np.abs(after - 1.5 * it) / (0.75 * it), -1, 1)\n    return np.maximum(snug, roomy)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a08",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Two residual states are good for a bin: nearly closed (after~0) and holding a clean extra slot for another item of the current size (after~1-2 item sizes). Everything between is waste. Scoring the max of a snug ramp and a triangular band centred at 1.5*item converts the champion's single monotone preference into this two-peaked one, so the optimiser can pick bins that stay usable instead of the merely tightest.",
+    "feature": "room=bins.astype(float); after=room-item; cap=float(capacity); it=float(max(item,1)); snug=np.clip(1.0-after/(0.15*cap),-1,1); roomy=np.clip(1.0-np.abs(after-1.5*it)/(0.75*it),-1,1); return np.maximum(snug,roomy). Both terms in [-1,1]; roomy peaks at after=1.5*item, is -1 at after=0 and at after>=3*item.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": "Champion best-fit leaves 35 one-item bins and 35 bins at 50-80% fill in large: tightness alone has no notion of a residual being reusable."
+   },
+   "coder_note": "This computes, per candidate bin, the larger of a snug ramp (favouring bins left nearly full, `after\u22480`) and a triangular band peaking at `after=1.5*item` and reaching \u22121 at `after=0` and `after\u22653*item`; I read `item` as clamped to at least 1 for the `roomy` width to keep divisions finite, and norm\u2026",
+   "measures": "Max of a snug ramp (after~0) and a triangular band peaking at after=1.5*item.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.7985655489220334
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     -0.1737
+    ],
+    [
+     -0.838414,
+     -7.2415
+    ],
+    [
+     0.251524,
+     0.0
+    ],
+    [
+     -0.251524,
+     -1.0595
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.251524,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8306,
+    "lib_r2": 0.5783
+   },
+   "error": "",
+   "calls": [
+    "c025"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "item_multiple_headroom",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Signed modularity of the post-placement residual in units of the item size: +1 at exact multiples, -1 at half multiples.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    it = float(max(item, 1))\n    q = after / it\n    frac = q - np.floor(q)\n    return 1.0 - 2.0 * np.minimum(frac, 1.0 - frac)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a09",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Scale the residual by the arriving item's own size instead of capacity: a bin whose leftover is an exact multiple of the item size can be closed later without waste, one at a half multiple wastes half a slot. This is a modular (waste-at-item-scale) quantity, not a copy of tightness, and it asks whether the size regime of the item is the right yardstick for headroom in `large`.",
+    "feature": "room=bins.astype(float); after=room-item; it=float(max(item,1)); q=after/it; frac=q-np.floor(q); return 1.0-2.0*np.minimum(frac,1.0-frac). Equals +1 when the residual is an exact multiple of the item size (incl. after=0), -1 at half multiples.",
+    "prediction": {
+     "family": "large",
+     "metric": "mean_fill_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each candidate bin, the fractional part of the leftover room divided by the arriving item's size, mapped so that exact multiples of the item size give +1 and half multiples give \u22121; I read \"residual\" as the room left after placing the item (`bins - item`), and guard the divisor w\u2026",
+   "measures": "Signed modularity of the post-placement residual in units of the item size: +1 at exact multiples, -1 at half multiples.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.367946571099963
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     -0.2612
+    ],
+    [
+     -0.838414,
+     -5.4495
+    ],
+    [
+     0.251524,
+     0.0194
+    ],
+    [
+     -0.251524,
+     0.0
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0194,
+   "best_w": 0.251524,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "mean_fill_pct",
+    "family": "large",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f011",
+    "rho": 0.573,
+    "lib_r2": 0.1253
+   },
+   "error": "",
+   "calls": [
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "fill_concentration_ramp",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Saturating ramp of bin fill: -1 at <=60% full, +1 at >=80% full, linear between.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    fill = 1.0 - room / cap\n    return np.clip((fill - 0.6) / 0.2, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Concentration may be a threshold effect rather than a smooth preference: filling a bin from 60% to 80% may matter, filling from 85% to 90% may not. A saturating ramp on (capacity-room)/capacity - flat at -1 below 60% fill and +1 above 80% - tests whether the champion's benefit saturates, and differs from f001 by tying all very-empty candidates rather than ordering them.",
+    "feature": "room=bins.astype(float); cap=float(capacity); fill=1.0-room/cap; return np.clip((fill-0.6)/0.2,-1.0,1.0). -1 for bins <=60% full, +1 for >=80% full, linear between.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f001",
+    "lesson": ""
+   },
+   "coder_note": "This computes a clipped linear ramp of each candidate bin's fill fraction (1 \u2212 remaining room \u00f7 capacity), flat at \u22121 for bins \u226460% full and +1 for bins \u226580% full, linear in between; I read the experiment literally, using the given formula with no extra scaling.",
+   "measures": "Saturating ramp of bin fill: -1 at <=60% full, +1 at >=80% full, linear between.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.7107185050191156
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.838414,
+     0.0
+    ],
+    [
+     -0.838414,
+     0.0162
+    ],
+    [
+     0.251524,
+     0.0
+    ],
+    [
+     -0.251524,
+     0.0
+    ],
+    [
+     0.083841,
+     0.0
+    ],
+    [
+     -0.083841,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0162,
+   "best_w": -0.838414,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9238,
+    "lib_r2": 0.7405
+   },
+   "error": "",
+   "calls": [
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "load_gated_tightness",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit tightness gated by how full the bin already is: snug fits rewarded, but only when the bin is already substantially loaded.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # snugness: leftover after placing, relative to capacity (0 = perfect fit)\n    snug = -np.clip(after / cap, -1.0, 1.0)\n    # how loaded the bin already is (empty new bin -> 0)\n    load = np.clip(1.0 - room / cap, 0.0, 1.0)\n    # gate: rewards tight packing into already-loaded bins, mildly favours fresh bins otherwise\n    gate = load * load\n    val = snug * (0.3 + 0.7 * gate) + 0.3 * (1.0 - load) * np.sign(snug)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit tightness gated by how full the bin already is: snug fits rewarded, but only when the bin is already substantially loaded.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    7.1065010743044175
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "item_scaled_residual_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Penalises residual room after placement in a band whose width scales with the item (0 to 0.35*item), peaking mid-band; wider items tolerate more slack.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # band width grows with the item size but is capped by capacity\n    s = np.clip(0.35 * item, 0.10 * cap, 0.50 * cap)\n    x = np.clip(after / s, 0.0, 1.0)\n    bump = -4.0 * x * (1.0 - x)\n    return np.where((after > 0.0) & (after < s), bump, 0.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a05",
+   "kind": "variant",
+   "parent": "f016",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Penalises residual room after placement in a band whose width scales with the item (0 to 0.35*item), peaking mid-band; wider items tolerate more slack.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.3790113599794673
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.565976,
+     -1.5916
+    ],
+    [
+     -0.565976,
+     -0.7983
+    ],
+    [
+     0.169793,
+     -0.2334
+    ],
+    [
+     -0.169793,
+     -0.2055
+    ],
+    [
+     0.056598,
+     -0.0769
+    ],
+    [
+     -0.056598,
+     -0.2013
+    ]
+   ],
+   "best_probe": -0.0769,
+   "best_w": 0.056598,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.5934,
+    "lib_r2": 0.222
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "item_multiple_headroom_phased",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual as a fraction of capacity, shaped by a cosine that rewards residuals near integer multiples of the item size and shifts phase with bin fill.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    it = float(max(item, 1))\n    cap = float(capacity)\n    # residual in item units\n    q = after / it\n    # phase-shift the cosine by how full the bin becomes (item/capacity), so the\n    # preferred multiple changes for tighter vs looser fits\n    phase = np.pi * (item / cap)\n    val = np.cos(2.0 * np.pi * q - phase)\n    # weight by how much of the bin is used, empty bins score ~0\n    fill = np.clip(item / np.maximum(room, 1.0), 0.0, 1.0)\n    # scale residual magnitude: exact fits (after==0) should be strongly positive\n    val = val * (0.25 + 0.75 * fill)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement residual as a fraction of capacity, shaped by a cosine that rewards residuals near integer multiples of the item size and shifts phase with bin fill.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.7069191879887797
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.565976,
+     -0.8253
+    ],
+    [
+     -0.565976,
+     -0.5094
+    ],
+    [
+     0.169793,
+     -0.277
+    ],
+    [
+     -0.169793,
+     -0.1431
+    ],
+    [
+     0.056598,
+     -0.2153
+    ],
+    [
+     -0.056598,
+     0.0726
+    ]
+   ],
+   "best_probe": 0.0726,
+   "best_w": -0.056598,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.3466,
+    "lib_r2": 0.2544
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "blocked_bin_crowding",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Number of open bins whose remaining room is smaller than the item, i.e. bins the item cannot use, as a fraction of all candidates (crowding pressure).\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    # a candidate bin is \"blocked\" for this item if it cannot hold it (excluding the fresh bin, which always can)\n    blocked = (room < item).astype(float)\n    # only count non-fresh bins; the last entry is the fresh empty bin\n    blocked[-1] = 0.0\n    n_open = max(len(room) - 1, 1)\n    frac = blocked.sum() / n_open\n    # broadcast the same crowding signal to all candidates, modulated by how much room each has:\n    # candidates with more room are relatively more attractive when crowding is high\n    rel_room = np.clip(room / cap, 0.0, 1.0)\n    val = frac * (rel_room - 0.5)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a15",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Number of open bins whose remaining room is smaller than the item, i.e. bins the item cannot use, as a fraction of all candidates (crowding pressure).",
+   "status": "inert",
+   "verdict": "inert",
+   "width": 1,
+   "scales": [
+    1.0
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "type": "inert",
+    "why": "ranks every candidate equally in every sampled decision"
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "local_band_snugness",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Snug fit judged relative to the local band of available bin rooms: leftover after placing divided by the spread of rooms among candidates that fit.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # reference band: rooms of bins that can take the item (including the empty bin)\n    fits = room >= item\n    ref = np.where(fits, room, np.nan)\n    hi = np.nanmax(ref) if np.any(fits) else cap\n    lo = np.nanmin(ref) if np.any(fits) else 0.0\n    spread = max(hi - lo, 0.05 * cap)\n    # leftover scaled by the available spread, not by the item or capacity\n    val = 1.0 - 2.0 * np.clip(after / spread, 0.0, 1.0)\n    # bins that cannot fit (only relevant for degenerate cases) get worst score\n    return np.where(fits, val, -1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Snug fit judged relative to the local band of available bin rooms: leftover after placing divided by the spread of rooms among candidates that fit.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.4407848946615198
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9889
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "gated_stranded_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"f016 stranded-residual bump gated by item size: 0 for item <= 0.15*cap, full for item >= 0.30*cap.\"\"\"\n    cap = float(capacity)\n    b = np.asarray(bins, dtype=float)\n    after = b - float(item)\n    gate = np.clip((float(item) / cap - 0.15) / 0.15, 0.0, 1.0)\n    u = np.clip(after / (0.30 * cap), 0.0, 1.0)\n    bump = 4.0 * u * (1.0 - u)\n    return np.clip(-gate * bump, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a05",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f016's dead band (0, 0.30*capacity) is right for large items but wrong for small ones: in the `small` family a residual of 10 still holds items, so penalising it pushes the policy away from good snug fits. Gating the bump by the arriving item's size keeps the penalty where it bites (large items) and switches it off where residuals stay usable.",
+    "feature": "def feature(item, bins, capacity):\n    cap = float(capacity)\n    b = np.asarray(bins, dtype=float)\n    after = b - float(item)\n    gate = np.clip((float(item) / cap - 0.15) / 0.15, 0.0, 1.0)\n    u = np.clip(after / (0.30 * cap), 0.0, 1.0)\n    bump = 4.0 * u * (1.0 - u)\n    return np.clip(-gate * bump, -1.0, 1.0)\n# same as f016 but multiplied by gate, which is 0 when item <= 0.15*capacity and 1 when item >= 0.30*capacity.",
+    "prediction": {
+     "family": "small",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f016 was kept and its prediction held (large/bins_with_one_item 35 -> 31), but its \u00d70 probe is only -0.613: it is a narrow, conditional win \u2014 worth conditioning rather than widening."
+   },
+   "coder_note": "This computes the f016 stranded-residual bump (peaking at -1 when the post-placement residual is mid-band, zero at 0 and at/above 0.30*capacity) multiplied by a size gate that is 0 for items at or below 0.15*capacity and ramps linearly to 1 at 0.30*capacity; I read the gate exactly as specified, wi\u2026",
+   "measures": "f016 stranded-residual bump gated by item size: 0 for item <= 0.15*cap, full for item >= 0.30*cap.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.3283358477540173
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.565976,
+     -1.2548
+    ],
+    [
+     -0.565976,
+     -0.6963
+    ],
+    [
+     0.169793,
+     -0.1357
+    ],
+    [
+     -0.169793,
+     -0.3256
+    ],
+    [
+     0.056598,
+     0.0083
+    ],
+    [
+     -0.056598,
+     -0.2837
+    ]
+   ],
+   "best_probe": 0.0083,
+   "best_w": 0.056598,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "small",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.9001,
+    "lib_r2": 0.7616
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "item_scaled_dead_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual in units of the item, bumped to -1 mid dead band (0, item).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    it = max(float(item), 1.0)\n    u = (b - float(item)) / it          # post-placement residual in units of the item\n    inside = (u > 0.0) & (u < 1.0)\n    v = np.where(inside, -4.0 * u * (1.0 - u), 0.0)\n    return np.clip(v, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a12",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A residual is dead when it is smaller than the item that would have to fill it, not when it is smaller than a fixed 30% of capacity. Scaling the band by the arriving item's own size makes the same shape adapt across families (weibull items ~40, small ~15), and being zero both at an exact fit and at after >= item separates 'bin still usable for a like item' from 'sliver'.",
+    "feature": "def feature(item, bins, capacity):\n    b = np.asarray(bins, dtype=float)\n    it = max(float(item), 1.0)\n    u = (b - float(item)) / it          # post-placement residual in units of the item\n    inside = (u > 0.0) & (u < 1.0)\n    v = np.where(inside, -4.0 * u * (1.0 - u), 0.0)\n    return np.clip(v, -1.0, 1.0)\n# zero when the residual is zero (exact fit) or at least one item-size (still usable); -1 in the middle of the dead band.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f016",
+    "lesson": "Every monotone-in-residual variant (f001 group, f011) adds nothing; only non-monotone shapes have ever gained. f016's fixed 0.30*capacity threshold is the one that worked, and it is a crude stand-in for 'cannot hold another item'."
+   },
+   "coder_note": "This computes, for each candidate bin, the room left after placing the item expressed in units of the item's size, mapped to a bump that is 0 at an exact fit and at residuals of one item or more and reaches -1 at half an item; I read the experiment literally and kept the item size floored at 1.0 to\u2026",
+   "measures": "Post-placement residual in units of the item, bumped to -1 mid dead band (0, item).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8695735545344276
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.565976,
+     -0.9242
+    ],
+    [
+     -0.565976,
+     -0.6525
+    ],
+    [
+     0.169793,
+     -0.0674
+    ],
+    [
+     -0.169793,
+     -0.4584
+    ],
+    [
+     0.056598,
+     -0.1165
+    ],
+    [
+     -0.056598,
+     -0.119
+    ]
+   ],
+   "best_probe": -0.0674,
+   "best_w": 0.169793,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "weibull",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f025",
+    "rho": 0.8536,
+    "lib_r2": 0.6209
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "large_item_usable_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"For large items, +1 if residual is an exact fit or >= item size, -1 for the sliver between, gated by item size, fresh bin neutral.\"\"\"\n    cap = float(capacity)\n    b = np.asarray(bins, dtype=float)\n    after = b - float(item)\n    gate = np.clip((float(item) / cap - 0.25) / 0.15, 0.0, 1.0)   # 0 for small items, 1 for items >= 0.40*capacity\n    usable = (after >= float(item) - 1e-9) | (after <= 0.02 * cap)\n    val = np.where(usable, 1.0, -1.0) * gate\n    val[-1] = 0.0   # the brand-new empty bin is neutral, not rewarded\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a13",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "In the `large` family (items 30-70, capacity 100) a residual between 0 and the item's own size is permanent waste, while a residual of at least one item-size keeps the bin pairable \u2014 that is why 31 one-item bins survive. For large items only, reward the two usable outcomes (exact fit, or room for another like item) and penalise the sliver between; the fresh bin is scored neutral so the feature never pays for opening a bin.",
+    "feature": "def feature(item, bins, capacity):\n    cap = float(capacity)\n    b = np.asarray(bins, dtype=float)\n    after = b - float(item)\n    gate = np.clip((float(item) / cap - 0.25) / 0.15, 0.0, 1.0)   # 0 for small items, 1 for items >= 0.40*capacity\n    usable = (after >= float(item) - 1e-9) | (after <= 0.02 * cap)\n    val = np.where(usable, 1.0, -1.0) * gate\n    val[-1] = 0.0   # the brand-new empty bin is neutral, not rewarded\n    return np.clip(val, -1.0, 1.0)\n",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f017 and f018 both died because they were unconditional strong shapes; the large family (floor 3.58%, champion 6.23%) is where the residual of a large item decides whether the bin is ever used again."
+   },
+   "coder_note": "This computes, per candidate bin, a size-gated \u00b11 signal that rewards an exact fit or a residual large enough for another like-sized item and penalises the unusable sliver in between, with the fresh empty bin forced neutral; I read \"usable\" exactly as the experiment's two conditions and applied the\u2026",
+   "measures": "For large items, +1 if residual is an exact fit or >= item size, -1 for the sliver between, gated by item size, fresh bin neutral.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.3949355960751997
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.565976,
+     -1.3977
+    ],
+    [
+     -0.565976,
+     -1.5123
+    ],
+    [
+     0.169793,
+     -0.1434
+    ],
+    [
+     -0.169793,
+     -0.2829
+    ],
+    [
+     0.056598,
+     -0.033
+    ],
+    [
+     -0.056598,
+     -0.1174
+    ]
+   ],
+   "best_probe": -0.033,
+   "best_w": 0.056598,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f025",
+    "rho": 0.6371,
+    "lib_r2": 0.3525
+   },
+   "error": "",
+   "calls": [
+    "c039"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "snug_ratio_hinge",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Saturating hinge on item/room, centred on the item's own size scale: -1 well below 60% room use, +1 at full use, flat outside.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    t = max(float(item), 1.0) / np.maximum(b, 1.0)   # fraction of the bin's room the item consumes\n    # Shift the hinge centre by the item's relative size so that, for large items,\n    # the transition band sits higher (large items rarely reach 60% of a big room),\n    # and for small items it sits lower. Keeps the same saturating shape and range.\n    centre = 0.6 + 0.2 * (max(float(item), 1.0) / max(float(capacity), 1.0) - 0.5)\n    return np.clip((t - centre) / 0.4, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's snugness term is linear in the residual, so it keeps caring about the exact size of large residuals (a bin with half its room free vs two thirds). If only 'the item consumes most of this bin's room' matters, a saturating hinge on item/room reproduces the whole benefit and the far tail of the ratio is noise.",
+    "feature": "def feature(item, bins, capacity):\n    b = np.asarray(bins, dtype=float)\n    t = max(float(item), 1.0) / np.maximum(b, 1.0)   # fraction of the bin's room the item consumes\n    return np.clip((t - 0.6) / 0.4, -1.0, 1.0)\n# -1 while the item uses well under 60% of the room, +1 once it uses all of it; flat outside.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f008",
+    "lesson": "f008 (ratio \u00d7 fill) was a duplicate of f001 because both are monotone in the residual; a pure ratio cannot add anything, so this probe tests whether the ratio's *shape* (saturation) can."
+   },
+   "coder_note": "This computes the clipped linear hinge `(item/room - 0.6)/0.4` in [-1, 1], saturating at -1 for room use below 60% and at +1 for full use; I read the new-bin entry (room = capacity) as just another candidate, so it gets the same ratio treatment.",
+   "measures": "Saturating hinge on item/room, centred on the item's own size scale: -1 well below 60% room use, +1 at full use, flat outside.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.044610467501461
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9952
+   },
+   "error": "",
+   "calls": [
+    "c036",
+    "c040"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "fit_tightness_band_gate",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit tightness gated by absolute residual band: snug-fit preference only rewarded when the leftover lands in a specific narrow absolute window; elsewhere flat.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # snug-fit signal from the parent, but only meaningful when the item actually fits\n    waste = after / np.maximum(room, 1.0)\n    tight = item / np.maximum(room, 1.0)\n    snug = (0.5 - waste) + 0.5 * (tight - 1.0)\n    # absolute residual after placement, in capacity units\n    r = after / cap\n    # band-pass: reward residuals near a small target fraction, punish mid/high residuals\n    target = 0.12\n    width = 0.10\n    band = np.exp(-((r - target) / width) ** 2)  # 1 at target, decays away\n    # gate: near-zero residual counts as good too (exact fill), but only mildly\n    exact = np.exp(-(r / (0.02)) ** 2)\n    shape = np.maximum(band, 0.6 * exact)\n    # sign: snug fit + good residual band => high; overfull bins get pushed down hard\n    val = shape * np.sign(snug) * np.minimum(np.abs(snug), 1.0)\n    val = np.where(after < 0.0, -1.0, val)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit tightness gated by absolute residual band: snug-fit preference only rewarded when the leftover lands in a specific narrow absolute window; elsewhere flat.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    12.28628334193106
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -0.7978
+    ],
+    [
+     -0.534507,
+     -10.4558
+    ],
+    [
+     0.160352,
+     -0.1634
+    ],
+    [
+     -0.160352,
+     -0.4314
+    ],
+    [
+     0.053451,
+     -0.2489
+    ],
+    [
+     -0.053451,
+     -0.3029
+    ]
+   ],
+   "best_probe": -0.1634,
+   "best_w": 0.160352,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f011",
+    "rho": 0.3664,
+    "lib_r2": 0.5792
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "adaptive_scale_stranded_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Penalises residual room after placement in (0, s) with a bump peaking at -1 mid-band, but s adapts to the arriving item's size (s = 0.15*cap + 0.6*item) so small items avoid stranding small holes and large items avoid stranding big holes.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    cap = float(capacity)\n    s = 0.15 * cap + 0.6 * float(item)\n    s = np.maximum(s, 1e-6)\n    x = np.clip(after / s, 0.0, 1.0)\n    bump = -4.0 * x * (1.0 - x)\n    return np.where((after > 0.0) & (after < s), bump, 0.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a05",
+   "kind": "variant",
+   "parent": "f016",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Penalises residual room after placement in (0, s) with a bump peaking at -1 mid-band, but s adapts to the arriving item's size (s = 0.15*cap + 0.6*item) so small items avoid stranding small holes and large items avoid stranding big holes.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8369784954530064
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -1.6493
+    ],
+    [
+     -0.534507,
+     -0.6525
+    ],
+    [
+     0.160352,
+     -0.4348
+    ],
+    [
+     -0.160352,
+     -0.7326
+    ],
+    [
+     0.053451,
+     -0.1418
+    ],
+    [
+     -0.053451,
+     -0.281
+    ]
+   ],
+   "best_probe": -0.1418,
+   "best_w": 0.053451,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.9238,
+    "lib_r2": 0.8795
+   },
+   "error": "",
+   "calls": [
+    "c042"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "size_scaled_stranded_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Stranded-residual penalty whose bad band widens with item size: residual room after placing, scaled by a size-dependent threshold, peaking mid-band.\"\"\"\n    cap = float(capacity)\n    b = np.asarray(bins, dtype=float)\n    after = b - float(item)\n    # Bigger items leave more meaningful stranded holes: band widens from 0.20 to 0.45 of capacity.\n    frac = np.clip(float(item) / cap, 0.0, 1.0)\n    s = (0.20 + 0.25 * frac) * cap\n    x = np.clip(after / s, 0.0, 1.0)\n    bump = -4.0 * x * (1.0 - x)\n    # scale the penalty by how much of the bin the item filled (small fills -> less regret)\n    fill = np.clip(float(item) / np.maximum(b, 1.0), 0.0, 1.0)\n    val = bump * (0.5 + 0.5 * fill)\n    return np.where((after > 0.0) & (after < s), np.clip(val, -1.0, 1.0), 0.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a05",
+   "kind": "variant",
+   "parent": "f025",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Stranded-residual penalty whose bad band widens with item size: residual room after placing, scaled by a size-dependent threshold, peaking mid-band.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.286053109569278
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -1.9504
+    ],
+    [
+     -0.534507,
+     -0.6525
+    ],
+    [
+     0.160352,
+     -0.441
+    ],
+    [
+     -0.160352,
+     -0.699
+    ],
+    [
+     0.053451,
+     -0.2679
+    ],
+    [
+     -0.053451,
+     -0.3658
+    ]
+   ],
+   "best_probe": -0.2679,
+   "best_w": 0.053451,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.9371,
+    "lib_r2": 0.8919
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "remaining_room_rank",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Relative rank of each candidate's remaining room among all candidates, signed so larger rooms rank higher; empty bin always ranks top.\"\"\"\n    room = bins.astype(float)\n    k = len(room)\n    # rank each bin's remaining room (0 = smallest). Empty bin (room == capacity) tends to be largest.\n    order = np.argsort(np.argsort(room, kind=\"stable\"), kind=\"stable\").astype(float)\n    # normalise to [-1, 1]; guard k == 1\n    if k <= 1:\n        return np.zeros(k)\n    return 2.0 * order / (k - 1) - 1.0\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Relative rank of each candidate's remaining room among all candidates, signed so larger rooms rank higher; empty bin always ranks top.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.2488737705661943
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9857
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "residual_room_local_density",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Local density of open bins around each candidate's post-placement room, relative to capacity: how crowded the room spectrum is near this bin's resulting fill level.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item  # residual room if item placed here\n    # normalised post-placement room for all candidates\n    r = after / cap\n    k = len(bins)\n    if k <= 1:\n        return np.zeros(k)\n    # pairwise distance in residual-room space\n    diff = np.abs(r[:, None] - r[None, :])\n    # kernel bandwidth: fraction of capacity, adapts to capacity\n    h = 0.08\n    # exclude self-distance (zero) so density reflects neighbours only\n    kern = np.exp(-(diff / h) ** 2)\n    np.fill_diagonal(kern, 0.0)\n    density = kern.sum(axis=1) / max(k - 1, 1)\n    # prefer candidates sitting in sparse regions (less future contention)\n    return np.clip(1.0 - 2.0 * density, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a19",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Local density of open bins around each candidate's post-placement room, relative to capacity: how crowded the room spectrum is near this bin's resulting fill level.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.224939282255247
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -62.0972
+    ],
+    [
+     -0.534507,
+     -0.349
+    ],
+    [
+     0.160352,
+     -11.8512
+    ],
+    [
+     -0.160352,
+     -0.3577
+    ],
+    [
+     0.053451,
+     -0.4558
+    ],
+    [
+     -0.053451,
+     -0.2837
+    ]
+   ],
+   "best_probe": -0.2837,
+   "best_w": -0.053451,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f021",
+    "rho": 0.4248,
+    "lib_r2": 0.4706
+   },
+   "error": "",
+   "calls": [
+    "c046"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "usable_gate_with_snug_order",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Positive gate for usable post-placement residuals (<=0.02*cap or >=0.25*cap) minus 0.5*normalised residual, so usable bins outrank unusable ones and snugness orders within the usable set.\"\"\"\n    cap = float(capacity)\n    after = bins.astype(float) - float(item)\n    u = after / cap\n    usable = (after <= 0.02 * cap) | (after >= 0.25 * cap)\n    return 0.75 * usable.astype(float) - 0.5 * u\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a17",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f001 picks the tightest fit, which on the large family often strands a sliver; f016 only shaves that sliver with a bump, and f027's gated +-1 sliver flag hurt at every weight because it fires as a penalty with no ordering inside the usable side. Here the gate is a positive offset (usable bins always outrank unusable ones) and snugness orders only within the usable set, so the decision becomes: among bins whose post-placement residual is either near-exact or >= 0.25*cap, take the tightest.",
+    "feature": "cap=float(capacity); after=bins.astype(float)-item; u=after/cap; usable=(after<=0.02*cap)|(after>=0.25*cap); return 0.75*usable.astype(float) - 0.5*u  # exact fit 0.75, residual 0.3cap 0.60, fresh bin ~0.5, sliver ~-0.05",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f027",
+    "lesson": "f027 large_item_usable_residual was rejected (-1.40 at w+0.566): a gated penalty with no continuous ordering inside the usable set is not enough; keep the gate but make it an offset and let snugness order inside."
+   },
+   "coder_note": "This computes `0.75 * usable \u2212 0.5 * (after/cap)`, where `usable` flags bins whose post-placement residual is at most `0.02*capacity` or at least `0.25*capacity`; I read \"usable\" exactly as the experiment's boolean and applied the gate as a positive offset so usable bins always outrank unusable one\u2026",
+   "measures": "Positive gate for usable post-placement residuals (<=0.02*cap or >=0.25*cap) minus 0.5*normalised residual, so usable bins outrank unusable ones and snugness orders within the usable set.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.9051915643545754
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -1.3831
+    ],
+    [
+     -0.534507,
+     -67.7866
+    ],
+    [
+     0.160352,
+     -0.1205
+    ],
+    [
+     -0.160352,
+     -0.7543
+    ],
+    [
+     0.053451,
+     -0.2689
+    ],
+    [
+     -0.053451,
+     -0.4079
+    ]
+   ],
+   "best_probe": -0.1205,
+   "best_w": 0.160352,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f030",
+    "rho": 0.6829,
+    "lib_r2": 0.6414
+   },
+   "error": "",
+   "calls": [
+    "c050"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "usable_residual_reward_neutral_fresh",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Reward usable residual room after placement: +0.6 for near-exact fits (u<=0.02), else ramp 3*(u-0.12) clipped to [-1,1], with the fresh bin held at 0.\"\"\"\n    cap = float(capacity)\n    after = bins.astype(float) - item\n    u = after / cap\n    val = np.where(u <= 0.02, 0.6, np.clip(3.0 * (u - 0.12), -1.0, 1.0))\n    val[-1] = 0.0\n    return val\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a16",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f016 only subtracts inside (0,0.30cap) and is silent elsewhere, so the optimiser cannot express 'this leftover is still worth something'. This probe fixes the exact-fit window at +0.6, ramps -1 -> +1 across residual 0.02cap -> 0.45cap, and holds the last (fresh) candidate at 0 so the feature purely arbitrates among open bins. If a reward side matters, full bins and closures should rise.",
+    "feature": "cap=float(capacity); after=bins.astype(float)-item; u=after/cap; val=np.where(u<=0.02, 0.6, np.clip(3.0*(u-0.12), -1.0, 1.0)); val[-1]=0.0; return val",
+    "prediction": {
+     "family": "uniform",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f016",
+    "lesson": "f026 item_scaled_dead_band and f025 gated_stranded_bump both failed as pure bumps in item units; this keeps the bump in capacity units but adds a positive reward side and a neutral fresh bin."
+   },
+   "coder_note": "This computes, per candidate, the residual room after placement normalised by capacity: a flat +0.6 for near-exact fits (u \u2264 0.02), otherwise a linear ramp 3\u00b7(u \u2212 0.12) clipped to [\u22121, 1], with the last (fresh) candidate forced to 0; I read \"the last (fresh) candidate\" literally as `bins[-1]` and a\u2026",
+   "measures": "Reward usable residual room after placement: +0.6 for near-exact fits (u<=0.02), else ramp 3*(u-0.12) clipped to [-1,1], with the fresh bin held at 0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.810799941355248
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     0.0484
+    ],
+    [
+     -0.534507,
+     -166.463
+    ],
+    [
+     0.160352,
+     -0.0322
+    ],
+    [
+     -0.160352,
+     -141.349
+    ],
+    [
+     0.053451,
+     -0.1941
+    ],
+    [
+     -0.053451,
+     -46.0384
+    ]
+   ],
+   "best_probe": 0.0484,
+   "best_w": 0.534507,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f037",
+    "rho": 0.5517,
+    "lib_r2": 0.2003
+   },
+   "error": "",
+   "calls": [
+    "c051"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "same_size_room_peak",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian peak at post-placement residual equal to the item's own size, minus a penalty for residuals above 0.6*capacity; new bin set to 0.\"\"\"\n    cap = float(capacity)\n    after = bins.astype(float) - item\n    u = after / cap\n    t = item / cap\n    val = np.exp(-((u - t) / 0.15) ** 2) - 0.6 * np.clip((u - 0.6) / 0.4, 0.0, 1.0)\n    val[-1] = 0.0\n    return val\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a14",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Large items end alone because best fit leaves a sliver that no later item can use. A peak at post-placement residual equal to the arriving item's own size (u = item/cap) selects the bin that could still take a twin item, and heavily discounts residuals above 0.6cap so an almost-empty bin is not squandered on a small item. This is a non-monotone shape, unlike every residual family member tried.",
+    "feature": "cap=float(capacity); after=bins.astype(float)-item; u=after/cap; t=item/cap; val=np.exp(-((u-t)/0.15)**2) - 0.6*np.clip((u-0.6)/0.4, 0.0, 1.0); val[-1]=0.0; return val",
+    "prediction": {
+     "family": "large",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f010",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate bin, a Gaussian bump peaked where the residual room after placement equals the arriving item's size (normalised by capacity), minus a linear penalty for residuals above 0.6\u00b7capacity, with the new-bin candidate forced to 0; I read the experiment literally and applied the\u2026",
+   "measures": "Gaussian peak at post-placement residual equal to the item's own size, minus a penalty for residuals above 0.6*capacity; new bin set to 0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.063336657800196
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -9.6074
+    ],
+    [
+     -0.534507,
+     -9.1995
+    ],
+    [
+     0.160352,
+     -5.6568
+    ],
+    [
+     -0.160352,
+     -0.1513
+    ],
+    [
+     0.053451,
+     -1.0562
+    ],
+    [
+     -0.053451,
+     -0.1655
+    ]
+   ],
+   "best_probe": -0.1513,
+   "best_w": -0.160352,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.8388,
+    "lib_r2": 0.3263
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "exact_fit_retires_oldest_bin",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Exact-fit indicator (residual within 2% of capacity) weighted by bin age, favouring closing older bins.\"\"\"\n    cap = float(capacity)\n    after = bins.astype(float) - item\n    k = bins.shape[0]\n    rank = np.arange(k) / max(k - 1, 1)\n    hit = (np.abs(after) <= 0.02 * cap).astype(float)\n    return hit * (1.0 - 0.5 * rank)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A plain exact-fit peak is monotone in residual and therefore ranks like f001 (f009 was discarded as a duplicate). Adding an age factor makes it a different question: when several bins can be closed exactly, close the oldest, so old half-used bins retire instead of lingering. Cheap probe of whether closure order matters at all.",
+    "feature": "cap=float(capacity); after=bins.astype(float)-item; k=bins.shape[0]; rank=np.arange(k)/max(k-1,1); hit=(np.abs(after)<=0.02*cap).astype(float); return hit*(1.0-0.5*rank)",
+    "prediction": {
+     "family": "uniform",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f009",
+    "lesson": "f009 exact_fit_peak was a duplicate of f001 because it varies monotonically with room; the age multiplier (and zeros elsewhere) breaks that."
+   },
+   "coder_note": "This computes, for each candidate bin, an exact-fit indicator (residual room after placing the item within 2% of capacity) multiplied by an age weight `1 - 0.5*rank` that is 1 for the oldest bin and 0.5 for the newest, so among exact fits the oldest bin is preferred; I read \"rank\" as the normalised\u2026",
+   "measures": "Exact-fit indicator (residual within 2% of capacity) weighted by bin age, favouring closing older bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.8328915382607525
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.534507,
+     -0.1477
+    ],
+    [
+     -0.534507,
+     -3.6106
+    ],
+    [
+     0.160352,
+     -0.0411
+    ],
+    [
+     -0.160352,
+     -0.1495
+    ],
+    [
+     0.053451,
+     0.0
+    ],
+    [
+     -0.053451,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.053451,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f027",
+    "rho": 0.6911,
+    "lib_r2": 0.5666
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "item_relative_stranded_bump",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Like the stranded bump, but the residual band scales with the item size and is asymmetric: penalise small unusable leftovers after placement relative to item, zero if the leftover is >= item or bin becomes empty.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # band ceiling: leftover smaller than a fraction of the item means the space is likely stranded\n    s = np.clip(0.6 * item + 0.10 * cap, 1e-6, cap)\n    x = np.clip(after / s, 0.0, 1.0)\n    bump = -4.0 * x * (1.0 - x)\n    # additionally weight by how tight the bin was (fuller bin stranded leftover hurts)\n    fill = 1.0 - room / cap\n    return np.where((after > 0.0) & (after < s), bump * (0.5 + 0.5 * fill), 0.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a05",
+   "kind": "variant",
+   "parent": "f016",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Like the stranded bump, but the residual band scales with the item size and is asymmetric: penalise small unusable leftovers after placement relative to item, zero if the leftover is >= item or bin becomes empty.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.839136707443651
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.9843
+    ],
+    [
+     -0.317751,
+     -0.8407
+    ],
+    [
+     0.095325,
+     -0.295
+    ],
+    [
+     -0.095325,
+     -0.2843
+    ],
+    [
+     0.031775,
+     -0.2268
+    ],
+    [
+     -0.031775,
+     -0.0823
+    ]
+   ],
+   "best_probe": -0.0823,
+   "best_w": -0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f031",
+    "rho": 0.9527,
+    "lib_r2": 0.7662
+   },
+   "error": "",
+   "calls": [
+    "c054"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "snug_fit_gated_by_fill",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Snug-fit preference only when the bin is already fairly full: snugness gated by fill, so early/sparse bins are not chased.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # snugness: 1 for exact fit, 0 for a bin with room = item + capacity/2, negative when very loose\n    snug = 1.0 - np.clip(after / (0.5 * cap), -1.0, 1.0)\n    # gate: only care about snugness when bin is reasonably full already (small remaining room)\n    fill_gate = np.clip(1.0 - room / cap, 0.0, 1.0)\n    val = snug * fill_gate - 0.5 * np.clip(after / cap, 0.0, 1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Snug-fit preference only when the bin is already fairly full: snugness gated by fill, so early/sparse bins are not chased.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.3679291367692583
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c055"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "usable_residual_reward_neutral_fresh",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Signed preference for leaving a residual that is either near-zero or comfortably large, suppressing the mid-band: tanh(6*(u-0.18)) with a near-exact spike, scaled by how full the bin becomes, fresh bin neutral.\"\"\"\n    cap = float(capacity)\n    room = bins.astype(float)\n    after = room - item\n    u = np.clip(after / cap, -1.0, 1.0)\n    # smooth preference: penalise mid-band residuals, reward either snug or roomy\n    base = np.tanh(6.0 * (u - 0.18))\n    # sharp bonus for near-exact fits\n    spike = 0.6 * np.exp(-((after / cap) / 0.02) ** 2)\n    # weight by how full the bin becomes (item fills more -> more meaningful)\n    fill = np.clip(item / np.maximum(room, 1.0), 0.0, 1.0)\n    val = (base + spike) * (0.5 + 0.5 * fill)\n    val = np.clip(val, -1.0, 1.0)\n    val[-1] = 0.0\n    return val\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a16",
+   "kind": "variant",
+   "parent": "f035",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Signed preference for leaving a residual that is either near-zero or comfortably large, suppressing the mid-band: tanh(6*(u-0.18)) with a near-exact spike, scaled by how full the bin becomes, fresh bin neutral.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.6693695452607034
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.8936
+    ],
+    [
+     -0.317751,
+     -143.528
+    ],
+    [
+     0.095325,
+     -0.5386
+    ],
+    [
+     -0.095325,
+     -34.3176
+    ],
+    [
+     0.031775,
+     -0.3118
+    ],
+    [
+     -0.031775,
+     -0.9418
+    ]
+   ],
+   "best_probe": -0.3118,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f021",
+    "rho": 0.6978,
+    "lib_r2": 0.3856
+   },
+   "error": "",
+   "calls": [
+    "c056"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "room_rank_spread",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Rank of each candidate's remaining room among all candidates, normalised to [-1, 1] (oldest-lowest wins).\"\"\"\n    room = bins.astype(float)\n    k = len(room)\n    if k <= 1:\n        return np.zeros(k)\n    order = np.argsort(np.argsort(room, kind=\"stable\"), kind=\"stable\").astype(float)\n    val = 1.0 - 2.0 * order / max(k - 1, 1)\n    return val\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Rank of each candidate's remaining room among all candidates, normalised to [-1, 1] (oldest-lowest wins).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.2702747724626962
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 0.9832
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "isolated_room_fit_island",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Relative position of each bin's remaining room within the sorted room profile, weighted by how close the item is to filling it: favours bins whose room is a local island amid smaller rooms.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    k = len(room)\n    if k == 0:\n        return np.zeros(0)\n    # gap to the nearest other candidate's room (how isolated this room is)\n    order = np.argsort(room)\n    sorted_room = room[order]\n    gaps = np.empty(k)\n    if k == 1:\n        gaps[:] = 0.0\n    else:\n        d_prev = np.empty(k)\n        d_next = np.empty(k)\n        d_prev[0] = np.inf\n        d_prev[1:] = sorted_room[1:] - sorted_room[:-1]\n        d_next[-1] = np.inf\n        d_next[:-1] = sorted_room[1:] - sorted_room[:-1]\n        nearest = np.minimum(d_prev, d_next)\n        nearest[~np.isfinite(nearest)] = cap\n        gaps[order] = nearest\n    # isolation scaled by capacity\n    isolation = np.clip(gaps / cap, 0.0, 1.0)\n    # fit quality: how snugly the item fills (0 if it doesn't fit at all)\n    after = room - item\n    fits = after >= 0.0\n    snug = np.where(fits, item / np.maximum(room, 1.0), 0.0)\n    # combine: isolated rooms that the item would nearly fill are attractive\n    val = isolation * (2.0 * snug - 1.0)\n    val = np.where(fits, val, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a23",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Relative position of each bin's remaining room within the sorted room profile, weighted by how close the item is to filling it: favours bins whose room is a local island amid smaller rooms.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    9.72712792912328
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.2977
+    ],
+    [
+     -0.317751,
+     -1.2061
+    ],
+    [
+     0.095325,
+     -0.2683
+    ],
+    [
+     -0.095325,
+     -0.5457
+    ],
+    [
+     0.031775,
+     -0.0912
+    ],
+    [
+     -0.031775,
+     -0.2336
+    ]
+   ],
+   "best_probe": -0.0912,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.5557,
+    "lib_r2": 0.5872
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "snug_fit_gated_by_fill",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Snug-fit value of placing the item, but only rewarded when the bin is already at least half full; empty/light bins get a constant neutral score so the choice among them is driven by fit alone.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = room - item\n    # snugness: how little room is left relative to the item (1 = exact fit, 0 = item tiny vs room)\n    snug = item / np.maximum(room, 1.0)\n    # fill level of the bin BEFORE placing (empty bin -> 0)\n    fill_before = 1.0 - room / cap\n    # gate: 0 for nearly-empty bins, ramping to 1 for bins already well filled\n    gate = np.clip((fill_before - 0.25) / 0.5, 0.0, 1.0)\n    # leftover penalty only matters when the bin is worth keeping (gated)\n    leftover = after / cap\n    val = gate * (snug - 1.0) - 0.5 * gate * np.maximum(leftover, 0.0)\n    # brand-new empty bin gets a mild negative so it loses to decent snug fits\n    val = np.where(room >= cap - 1e-9, -0.1, val)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Snug-fit value of placing the item, but only rewarded when the bin is already at least half full; empty/light bins get a constant neutral score so the choice among them is driven by fit alone.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    12.4882697349038
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -16.2372
+    ],
+    [
+     -0.317751,
+     -43.204
+    ],
+    [
+     0.095325,
+     -2.3781
+    ],
+    [
+     -0.095325,
+     -5.2127
+    ],
+    [
+     0.031775,
+     -0.0897
+    ],
+    [
+     -0.031775,
+     -0.7711
+    ]
+   ],
+   "best_probe": -0.0897,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f034",
+    "rho": 0.6311,
+    "lib_r2": 0.403
+   },
+   "error": "",
+   "calls": [
+    "c058"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "rank_window_oldest_first",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Age bonus (oldest=1, newest=0) for candidates whose post-placement residual ranks in the tightest ~30%, else 0; fresh bin forced to 0.\"\"\"\n    room = bins.astype(float)\n    k = room.shape[0]\n    if k == 1:\n        return np.zeros(k)\n    after = room - item\n    rank = np.argsort(np.argsort(after))\n    m = max(2, int(np.ceil(0.3 * k)))\n    idx = np.arange(k)\n    denom = max(k - 1, 1)\n    age = np.clip(1.0 - idx / denom, 0.0, 1.0)\n    values = np.where(rank < m, age, 0.0)\n    values[k - 1] = 0.0\n    return values\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a20",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Best fit is knife-edge: it commits to the single tightest bin even when several bins are practically interchangeable, which retires bins at 90-95% fill and leaves dead scraps. If the tightest ~30% of candidates are treated as tied and the tie is broken towards the oldest bin, placements concentrate, bins retire in age order and fewer half-used bins survive. The window is rank-based (not residual-based) so it always contains at least two candidates and inverts f001's ordering inside the window, which makes its ranking genuinely different from a step copy of f001.",
+    "feature": "room = bins.astype(float); k = room.shape[0]; after = room - item. If k == 1 return zeros(k). rank = np.argsort(np.argsort(after)) (rank 0 = smallest residual after placement). m = max(2, int(np.ceil(0.3*k))). idx = np.arange(k); denom = max(k-1, 1); age = np.clip(1.0 - idx/denom, 0.0, 1.0) (oldest bin = 1, newest open bin ~0, fresh bin = 0). values = np.where(rank < m, age, 0.0); then force values[k-1] = 0.0 (the fresh bin never gets the age bonus).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f037",
+    "lesson": "f037 (exact-fit indicator x bin age) was rejected, but it only fired on exact fits, which are rare; the age idea needs a window, not a spike."
+   },
+   "coder_note": "It computes, for each candidate bin, an age score (oldest open bin = 1, newest open bin \u2248 0) restricted to the tightest ~30% of candidates by post-placement residual (rank 0 = smallest residual), with the fresh empty bin always set to 0; I read \"rank < m\" as the m smallest residuals and kept the fr\u2026",
+   "measures": "Age bonus (oldest=1, newest=0) for candidates whose post-placement residual ranks in the tightest ~30%, else 0; fresh bin forced to 0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.462426720806988
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.6827
+    ],
+    [
+     -0.317751,
+     -0.5469
+    ],
+    [
+     0.095325,
+     -0.2505
+    ],
+    [
+     -0.095325,
+     -0.3827
+    ],
+    [
+     0.031775,
+     -0.2359
+    ],
+    [
+     -0.031775,
+     -0.351
+    ]
+   ],
+   "best_probe": -0.2359,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8123,
+    "lib_r2": 0.377
+   },
+   "error": "",
+   "calls": [
+    "c063"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "decile_residual_plus_age",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual bucketed into capacity deciles, plus a small oldest-first age term.\"\"\"\n    room = bins.astype(float)\n    k = room.shape[0]\n    after = np.maximum(room - item, 0.0)\n    after = np.where(after <= 0.02 * capacity, 0.0, after)\n    bucket = np.clip(np.floor(after / (0.10 * capacity)), 0.0, 9.0)\n    idx = np.arange(k)\n    denom = max(k - 1, 1)\n    age = np.clip(1.0 - idx / denom, 0.0, 1.0)\n    values = -0.10 * bucket + 0.05 * age\n    return values\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a21",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Snugness below one decile of capacity is noise that f001 nonetheless ranks on, so the policy keeps switching between bins whose residuals differ by a few units and spreads placements instead of finishing bins. Bucketing the post-placement residual into capacity deciles makes near-equal fits tie at one value, and a small oldest-first age term inside the tie concentrates packing and retires old bins first.",
+    "feature": "room = bins.astype(float); k = room.shape[0]; after = np.maximum(room - item, 0.0); after = np.where(after <= 0.02*capacity, 0.0, after) (tiny residuals clamped into the tightest bucket). bucket = np.clip(np.floor(after/(0.10*capacity)), 0.0, 9.0). idx = np.arange(k); denom = max(k-1, 1); age = np.clip(1.0 - idx/denom, 0.0, 1.0) (oldest = 1). values = -0.10*bucket + 0.05*age (range about [-0.9, 0.05]).",
+    "prediction": {
+     "family": "uniform",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f014",
+    "lesson": "f014 combined age with emptiness pressure and was rejected; here age is only a tie-break inside a coarse snugness bucket, which is the opposite pairing."
+   },
+   "coder_note": "This computes, per candidate, a decile bucket of the room left after placing the item (residuals \u2264 2% of capacity clamped to bucket 0) scaled by \u22120.10, plus an oldest-first age term (oldest = 1, newest = 0) scaled by 0.05; I read \"oldest = 1\" as applying to the age term only, and the new empty bin \u2026",
+   "measures": "Post-placement residual bucketed into capacity deciles, plus a small oldest-first age term.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.237955554519196
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.4209
+    ],
+    [
+     -0.317751,
+     -41.838
+    ],
+    [
+     0.095325,
+     -0.4081
+    ],
+    [
+     -0.095325,
+     -0.6758
+    ],
+    [
+     0.031775,
+     -0.0842
+    ],
+    [
+     -0.031775,
+     -0.3091
+    ]
+   ],
+   "best_probe": -0.0842,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.744,
+    "lib_r2": 0.8435
+   },
+   "error": "",
+   "calls": [
+    "c060"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "barely_usable_residual_tail",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Shallow bump penalising residual room in (0.30, 0.50)*capacity, peaking at 0.40*capacity.\"\"\"\n    room = bins.astype(float)\n    after = room - item\n    c = float(capacity)\n    lo = 0.30 * c\n    hi = 0.50 * c\n    x = (after - lo) / (hi - lo)\n    band = (after >= lo) & (after < hi)\n    values = np.where(band, -4.0 * np.clip(x, 0.0, 1.0) * (1.0 - np.clip(x, 0.0, 1.0)), 0.0)\n    values[-1] = 0.0\n    return values\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a05",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f016 stops exactly at 0.30*capacity, but in the large family (items 30-70, capacity 100) a residual of 30-45 is only reachable by the narrow 30-45 slice of items and strands in practice: the 32 bins sitting at 50-80% fill are exactly those. Adding a shallow second bump over (0.30, 0.50)*capacity, continuous with f016 at 0.30 and peaking at 0.40, pushes the policy to either close a bin (residual ~0) or leave a comfortably usable residual instead of a barely usable one. It is a shape change on the same quantity, not another band-width rescaling.",
+    "feature": "room = bins.astype(float); after = room - item; c = float(capacity). lo = 0.30*c; hi = 0.50*c; x = (after - lo)/(hi - lo); band = (after >= lo) & (after < hi). values = np.where(band, -4.0*np.clip(x,0.0,1.0)*(1.0-np.clip(x,0.0,1.0)), 0.0) (0 at both edges, -1 at after = 0.40*c). Then force values[-1] = 0.0 so the fresh empty bin is never penalised by this term.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f030/f031 widened f016 by scaling the band with the item size and were rejected; the band width was never the problem, the missing piece is that f016 returns to zero over the 0.30-0.50 range that the large family's 50-80% bins occupy."
+   },
+   "coder_note": "This computes a second, shallower bump (0 at both edges, -1 at a residual of 0.40*capacity) over residuals in (0.30, 0.50)*capacity, continuous with f016 at 0.30, with the fresh empty bin forced to 0; I read the \"0 at both edges\" as the parabola vanishing at lo and hi, and applied the empty-bin ove\u2026",
+   "measures": "Shallow bump penalising residual room in (0.30, 0.50)*capacity, peaking at 0.40*capacity.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    8.243796779044956
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.614
+    ],
+    [
+     -0.317751,
+     -0.9654
+    ],
+    [
+     0.095325,
+     -0.5025
+    ],
+    [
+     -0.095325,
+     -0.2328
+    ],
+    [
+     0.031775,
+     -0.1653
+    ],
+    [
+     -0.031775,
+     -0.3872
+    ]
+   ],
+   "best_probe": -0.1653,
+   "best_w": 0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f040",
+    "rho": 0.3022,
+    "lib_r2": 0.0358
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "same_size_headroom_bands",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Band score: +0.6 for exact closure, -0.6 for leftover shorter than the item, +0.6 for leftover holding one more same-size item (capped below 0.55*capacity).\"\"\"\n    room = bins.astype(float)\n    after = np.maximum(room - item, 0.0)\n    s = float(max(item, 1))\n    c = float(capacity)\n    exact = after <= 0.02 * c\n    short = (after > 0.02 * c) & (after < s)\n    fits = (after >= s) & (after < 2.0 * s) & (after < 0.55 * c)\n    values = 0.6 * exact.astype(float) - 0.6 * short.astype(float) + 0.6 * fits.astype(float)\n    return values\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a09",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A leftover is only useful if it can still hold another item of the size currently arriving. Scoring exact closures and leftovers that hold exactly one more same-size item positively, and non-zero leftovers shorter than the item negatively, tests whether headroom measured in the current item's size class carries signal; the band is capped below 0.55*capacity so the rule cannot fire for oversized leftovers and degenerate into worst-fit.",
+    "feature": "room = bins.astype(float); after = np.maximum(room - item, 0.0); s = float(max(item, 1)); c = float(capacity). exact = after <= 0.02*c; short = (after > 0.02*c) & (after < s); fits = (after >= s) & (after < 2.0*s) & (after < 0.55*c). values = 0.6*exact.astype(float) - 0.6*short.astype(float) + 0.6*fits.astype(float); all other candidates (including the fresh bin, whose after = c - item) get 0 unless they fall in one of the three bands.",
+    "prediction": {
+     "family": "large",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f036",
+    "lesson": "f036 (Gaussian peak at residual = item size) and f018 (modularity in item units) were both rejected, so this is the flattest, most conservative version of the same harmony idea, with an explicit cap that disables it for large items."
+   },
+   "coder_note": "This computes the three-band headroom score exactly as specified: +0.6 when placing the item closes the bin (leftover \u2264 0.02\u00b7capacity), \u22120.6 when the leftover is non-zero but shorter than the item, and +0.6 when the leftover can hold exactly one more item of the current size (\u2265 item and < 2\u00b7item, c\u2026",
+   "measures": "Band score: +0.6 for exact closure, -0.6 for leftover shorter than the item, +0.6 for leftover holding one more same-size item (capped below 0.55*capacity).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.417249254047247
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.317751,
+     -0.7805
+    ],
+    [
+     -0.317751,
+     -0.7103
+    ],
+    [
+     0.095325,
+     -0.4176
+    ],
+    [
+     -0.095325,
+     -0.3247
+    ],
+    [
+     0.031775,
+     -0.2679
+    ],
+    [
+     -0.031775,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.031775,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "large",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f027",
+    "rho": 0.7916,
+    "lib_r2": 0.3911
+   },
+   "error": "",
+   "calls": [
+    "c062"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "best-fit residual",
+   "description": "Prefer the bin whose remaining room after placing the item is smallest, i.e. minimise (room - item)/capacity.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f001",
+    "f005",
+    "f006",
+    "f011",
+    "f013",
+    "f020",
+    "f024",
+    "f029",
+    "f039",
+    "f043"
+   ],
+   "best_gain": 0.6093,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     0.8018
+    ],
+    [
+     2,
+     0.0
+    ],
+    [
+     3,
+     0.6093
+    ],
+    [
+     4,
+     -0.1634
+    ],
+    [
+     5,
+     -0.0897
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": 5
+  },
+  {
+   "id": "a02",
+   "title": "residual ratio",
+   "description": "Score by the fraction of the bin's room the item consumes, item/room, rewarding bins the item nearly fills.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "pruned",
+   "created_gen": 1,
+   "features": [
+    "f008",
+    "f028"
+   ],
+   "best_gain": null,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [
+    {
+     "feature": "f008",
+     "type": "duplicate",
+     "of": "f001",
+     "rho": 1.0
+    },
+    {
+     "feature": "f028",
+     "type": "duplicate",
+     "of": "f001",
+     "rho": 0.9952
+    }
+   ],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     3,
+     0.6093
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "current fill fraction",
+   "description": "Prefer bins that are already well filled, (capacity - room)/capacity, to concentrate packing.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f019"
+   ],
+   "best_gain": 0.0162,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0162
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "exact-fit bonus",
+   "description": "Sharp peak when room equals item (residual zero), decaying with |room - item|/capacity, to close bins perfectly.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f009",
+    "f037"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     4,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "strandedness penalty",
+   "description": "Penalise leaving a residual too small to hold typical items, e.g. a bump for residuals below a size threshold.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f016",
+    "f021",
+    "f025",
+    "f030",
+    "f031",
+    "f038",
+    "f046"
+   ],
+   "best_gain": 0.5654,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     2,
+     0.5654
+    ],
+    [
+     3,
+     0.0083
+    ],
+    [
+     4,
+     -0.1418
+    ],
+    [
+     5,
+     -0.0823
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "worst-fit spread",
+   "description": "Prefer the emptiest bin (largest room/capacity), the opposite extreme, to keep big free spaces available for large items.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f010"
+   ],
+   "best_gain": null,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     0.6093
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: fill_density_increment",
+   "description": "Fill ratio of each bin after placing the item, minus the bin's own current fill ratio (centred).",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f002",
+    "f012",
+    "f015"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     0.0
+    ],
+    [
+     2,
+     0.6093
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "residual plus strandedness",
+   "description": "Prefer snug fits but penalise leaving a residual too small to hold a typical item, combining best-fit with a future-usability term.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f017"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "size-aware headroom",
+   "description": "Score bins by whether their remaining room can still accommodate items near the current item's size, favouring bins whose room is a good match for the size regime.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 2,
+   "features": [
+    "f018",
+    "f022",
+    "f047"
+   ],
+   "best_gain": 0.0726,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     2,
+     0.0194
+    ],
+    [
+     3,
+     0.0726
+    ],
+    [
+     5,
+     0.0
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "fill concentration",
+   "description": "Prefer the bin that maximises the increase in its own fill fraction, so packing concentrates into fewer, fuller bins.",
+   "parent": "a03",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 2,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "wide find: age_weighted_emptiness_pressure",
+   "description": "Age-weighted fit: emptiness pressure \u2014 how empty the bin is times how well the item fits, favouring new bins when old bins are nearly full and old bins when they still have lots of room.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f014"
+   ],
+   "best_gain": -0.0233,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -0.0233
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "size-scaled strandedness",
+   "description": "Penalise residuals too small to hold a typical item, with the threshold scaled by the current item's size rather than a fixed fraction of capacity.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f026"
+   ],
+   "best_gain": -0.0674,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.0674
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "large-item reserve",
+   "description": "When the item is large relative to capacity, prefer placing it in already-full bins and keep roomy bins free, so big items are not stranded with one item per bin.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f027"
+   ],
+   "best_gain": -0.033,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.033
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "two-sided leftover band",
+   "description": "Penalise both a near-zero residual and a very large leftover after placement, favouring a mid-band residual around a fraction of the item size.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f036"
+   ],
+   "best_gain": -0.1513,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.1513
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "wide find: blocked_bin_crowding",
+   "description": "Number of open bins whose remaining room is smaller than the item, i.e. bins the item cannot use, as a fraction of all candidates (crowding pressure).",
+   "parent": "",
+   "origin": "wide",
+   "state": "pruned",
+   "created_gen": 3,
+   "features": [
+    "f023"
+   ],
+   "best_gain": null,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [
+    {
+     "feature": "f023",
+     "type": "inert",
+     "why": "ranks every candidate equally in every sampled decision"
+    }
+   ],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     null
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "usable leftover reward",
+   "description": "Reward bins whose post-placement residual is either near zero or large enough to hold a typical item, penalising only the unusable sliver band.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f035",
+    "f040"
+   ],
+   "best_gain": 0.0484,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     4,
+     0.0484
+    ],
+    [
+     5,
+     -0.3118
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "conditional best-fit",
+   "description": "Snug fit preference applied only among bins whose residual stays usable; fall back to plain tightness otherwise.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f034"
+   ],
+   "best_gain": -0.1205,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.1205
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a18",
+   "title": "large-item pairing",
+   "description": "For large items, prefer the bin whose residual best complements the item so the pair nearly fills the bin.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 4,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a19",
+   "title": "wide find: residual_room_local_density",
+   "description": "Local density of open bins around each candidate's post-placement room, relative to capacity: how crowded the room spectrum is near this bin's resulting fill level.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f033"
+   ],
+   "best_gain": -0.2837,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.2837
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a20",
+   "title": "age-window best fit",
+   "description": "Add an explicit normalised bin-age term (index/(k-1), older ranks higher) so fits within a tolerance of the tightest tie to the oldest bin and bins retire in order.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f044"
+   ],
+   "best_gain": -0.2359,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.2359
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a21",
+   "title": "bucketed residual",
+   "description": "Score the post-placement residual after bucketing it into deciles of capacity (tiny residuals clamped to zero), so near-equal fits tie and the oldest-first tie-break concentrates packing.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f045"
+   ],
+   "best_gain": -0.0842,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0842
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a22",
+   "title": "scale-adaptive dead band",
+   "description": "Strandedness bump whose dead-band threshold scales with the observed room scale (e.g. 0.15 x median candidate room) instead of capacity, so it stops penalising usable slivers in the small-items family.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a23",
+   "title": "wide find: isolated_room_fit_island",
+   "description": "Relative position of each bin's remaining room within the sorted room profile, weighted by how close the item is to filling it: favours bins whose room is a local island amid smaller rooms.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f042"
+   ],
+   "best_gain": -0.0912,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0912
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f001",
+  "f016"
+ ],
+ "backlog": [
+  "f022",
+  "f035",
+  "f018",
+  "f019",
+  "f025",
+  "f002"
+ ]
+}

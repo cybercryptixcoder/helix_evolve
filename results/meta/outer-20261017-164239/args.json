@@ -1,0 +1,1 @@
+{"strategy": "/home/ubuntu/helix_evolve_run/helix3/strategy", "problems": "binpack1d,knapsack,tsp,scheduling", "held_out": "coloring", "inner_generations": 5, "repeats": 2, "outer_generations": 99, "deep": 2, "wide": 2, "parallel": 4, "workers": null, "margin": 1.0, "timeout": 3600, "hours": 4.0, "out": "meta_runs/outer-20261017-164239", "fake_inner": false}

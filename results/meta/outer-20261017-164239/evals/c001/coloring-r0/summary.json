@@ -1,0 +1,64 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 20.072843822843826,
+  "valid": 20.830419580419576,
+  "progress": 65.16,
+  "valid_progress": 63.64,
+  "library": [
+   "f004",
+   "f012"
+  ]
+ },
+ "test": {
+  "gap": 28.814814814814817,
+  "families": {
+   "sparse": 13.33333333333333,
+   "dense": 16.666666666666675,
+   "geometric": 0.0,
+   "planted": 88.88888888888887,
+   "medium": 25.185185185185187
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 49.68
+ },
+ "progress_curve": [
+  0.0,
+  52.76,
+  65.16,
+  65.16,
+  65.16,
+  65.16
+ ],
+ "valid_curve": [
+  0.0,
+  49.97,
+  63.64,
+  63.64,
+  63.64,
+  63.64
+ ],
+ "calls": 53,
+ "tokens_in": 126932,
+ "tokens_out": 103338,
+ "features_tried": 40,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "saturation_with_new_color_flag",
+   "origin": "wide"
+  },
+  {
+   "id": "f012",
+   "name": "forced_new_colour_neighbour_pressure",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792271382.1361232
+}

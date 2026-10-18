@@ -1,0 +1,69 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 13.827633719987872,
+  "valid": 15.411935340219879,
+  "progress": 98.62,
+  "valid_progress": 98.5,
+  "library": [
+   "f002",
+   "f005",
+   "f039"
+  ]
+ },
+ "test": {
+  "gap": 13.040848958284544,
+  "families": {
+   "uniform": 2.6418248164752356,
+   "exponential": 10.07449433615622,
+   "bimodal": 27.372769067567976,
+   "lognormal": 12.074307612938744
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 98.54
+ },
+ "progress_curve": [
+  0.0,
+  98.61,
+  98.61,
+  98.61,
+  98.62,
+  98.62
+ ],
+ "valid_curve": [
+  0.0,
+  98.48,
+  98.48,
+  98.48,
+  98.5,
+  98.5
+ ],
+ "calls": 74,
+ "tokens_in": 173769,
+ "tokens_out": 189905,
+ "features_tried": 55,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "projected_finish_relative_to_mean",
+   "origin": "wide"
+  },
+  {
+   "id": "f005",
+   "name": "load_rank_blended_with_remaining_work_deficit",
+   "origin": "wide"
+  },
+  {
+   "id": "f039",
+   "name": "size_gated_slack_decay_penalty",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792272536.9280162
+}

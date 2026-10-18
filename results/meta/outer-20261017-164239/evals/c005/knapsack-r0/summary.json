@@ -1,0 +1,82 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.0329423849259621,
+  "valid": 0.04043622071706794,
+  "progress": 99.75,
+  "valid_progress": 99.72,
+  "library": [
+   "f004",
+   "f001",
+   "f014",
+   "f013",
+   "f010"
+  ]
+ },
+ "test": {
+  "gap": 0.09816379595114573,
+  "families": {
+   "uncorrelated": 0.13473718304497875,
+   "weakly_correlated": 0.16026520206311087,
+   "strongly_correlated": 0.05123367104601373,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.13898187554017097
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.22
+ },
+ "progress_curve": [
+  0.0,
+  98.24,
+  99.04,
+  99.71,
+  99.75,
+  99.75
+ ],
+ "valid_curve": [
+  0.0,
+  98.26,
+  99.23,
+  99.68,
+  99.72,
+  99.72
+ ],
+ "calls": 69,
+ "tokens_in": 151249,
+ "tokens_out": 123300,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "greedy_density_ratio",
+   "origin": "deep"
+  },
+  {
+   "id": "f001",
+   "name": "density_fit_pressure",
+   "origin": "wide"
+  },
+  {
+   "id": "f014",
+   "name": "density_plus_fill_bonus",
+   "origin": "deep"
+  },
+  {
+   "id": "f013",
+   "name": "density_vs_postpick_opportunity",
+   "origin": "wide"
+  },
+  {
+   "id": "f010",
+   "name": "density_median_size_gate",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792277307.964195
+}

@@ -1,0 +1,65 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.921149043022986,
+  "valid": 3.917081142065668,
+  "progress": 27.27,
+  "valid_progress": 24.11,
+  "library": [
+   "f005",
+   "f004"
+  ]
+ },
+ "test": {
+  "gap": 6.520511393734211,
+  "families": {
+   "weibull": 4.243826724191553,
+   "uniform": 4.174271023442255,
+   "small": 0.8354218880534633,
+   "large": 6.150213720018708,
+   "bimodal": 19.16077426723402,
+   "scaled": 4.55856073946527
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 19.18
+ },
+ "progress_curve": [
+  0.0,
+  27.27,
+  27.27,
+  27.27,
+  27.27,
+  27.27
+ ],
+ "valid_curve": [
+  0.0,
+  24.11,
+  24.11,
+  24.11,
+  24.11,
+  24.11
+ ],
+ "calls": 64,
+ "tokens_in": 140369,
+ "tokens_out": 132026,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "residual_gap_class_flexibility",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "squared_residual_slack_after_placement",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792273966.920102
+}

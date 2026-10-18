@@ -1,0 +1,3616 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "fractional_fit_cosine",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Fractional fit: how much of the leftover room the item would use, sharpened around half-full bins.\"\"\"\n    room = np.asarray(bins, dtype=float) / float(capacity)\n    x = float(item) / float(capacity)\n    gap_after = np.clip(room - x, 0.0, 1.0)\n    # prefer bins that end up nearly full (small gap_after) but not exactly full-tight extremes\n    score = np.cos(math.pi * gap_after)\n    # also encourage moderate utilisation: penalise near-empty ends\n    score = score * (1.0 - np.abs(gap_after - 0.5))\n    return np.tanh(score)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fractional fit: how much of the leftover room the item would use, sharpened around half-full bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.860620354503962
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -5.2712
+    ],
+    [
+     -1.0,
+     -184.5632
+    ]
+   ],
+   "best_probe": -5.2712,
+   "best_w": 1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.1397
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "smooth_best_fit_fullness",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Absolute deviation of remaining room from a full bin, plus a saturating fit-tightness term relative to item size.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    c = float(capacity)\n    # Normalised remaining room in [0,1]\n    r = np.clip(b / max(c, 1e-9), 0.0, 1.0)\n    # How tightly the item fits: leftover after placing = room - item, scaled by capacity\n    leftover = b - float(item)\n    tight = np.clip(leftover / max(c, 1e-9), -1.0, 1.0)\n    # Prefer near-full bins (best-fit flavor) but saturating: use a smooth curve\n    fullness = r * r * (3.0 - 2.0 * r)  # smoothstep, monotone in r\n    # Combine: strong preference for small leftover (tight fit), moderate for fullness\n    return 0.6 * (-tight) + 0.4 * fullness\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Absolute deviation of remaining room from a full bin, plus a saturating fit-tightness term relative to item size.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    22.656137309832964
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "neg_squared_residual_fraction",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual room after placing item, relative to capacity, for best-fit vs worst-fit balance.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    rem = b - float(item)\n    # residual fraction after placement; -1 for bins that can't fit (guarded)\n    frac = np.where(b >= item, rem / cap, -1.0)\n    # score favours nearly-full (small residual) but with a mild concavity\n    # use negative squared residual fraction so empty bins are strongly penalised\n    return -np.square(frac)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Residual room after placing item, relative to capacity, for best-fit vs worst-fit balance.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.8931870934685
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "squared_residual_slack_after_placement",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Squared relative slack of each bin after placing the item, scaled so a perfect fit is 0 and an empty bin is 1.\"\"\"\n    room = bins.astype(float)\n    cap = float(capacity)\n    after = (room - item) / cap\n    after = np.clip(after, 0.0, 1.0)\n    # bins that cannot fit the item are less relevant; mark them with the current slack\n    fits = room >= item\n    val = after * after\n    val = np.where(fits, val, 1.0)\n    return val\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Squared relative slack of each bin after placing the item, scaled so a perfect fit is 0 and an empty bin is 1.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    4.8931870934685
+   ],
+   "weights": [
+    -0.3876743672659803
+   ],
+   "probe": [
+    [
+     1.0,
+     -229.7292
+    ],
+    [
+     -1.0,
+     0.8018
+    ]
+   ],
+   "best_probe": 0.8018,
+   "best_w": -1.0,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": 1,
+   "importance": 0.2875,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "residual_gap_class_flexibility",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit slack after placing, ranked by how many distinct residual 'gap classes' the bin can still accept (finer residual = more future flexibility).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    rem = b - float(item)\n    fits = rem >= 0\n    # residual fraction after placement\n    r = np.where(fits, rem / cap, 0.0)\n    # count how many of the item's own size could still fit: large residual => coarse packing potential\n    # treat the residual as an approximate number of \"average items\" left; use log to spread classes\n    n_left = np.where(fits, rem / max(float(item), 1.0), 0.0)\n    # flexibility: prefer bins whose residual is NOT an exact multiple-ish of item (avoids stranding small holes)\n    frac = np.abs(n_left - np.round(n_left))\n    val = np.where(fits, -np.abs(frac - 0.5) * 2.0 + r, -2.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a09",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit slack after placing, ranked by how many distinct residual 'gap classes' the bin can still accept (finer residual = more future flexibility).",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.638839522185364
+   ],
+   "weights": [
+    -1.5156396574962432
+   ],
+   "probe": [
+    [
+     1.0,
+     -62.711
+    ],
+    [
+     -1.0,
+     0.8431
+    ]
+   ],
+   "best_probe": 0.8431,
+   "best_w": -1.0,
+   "d_train": 0.8431,
+   "d_valid": 0.8004,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8293
+   },
+   "error": "",
+   "calls": [
+    "c006"
+   ],
+   "kept_gen": 1,
+   "importance": 0.4786,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "consumption_ratio_with_fill_target",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Ratio of the item's size to the candidate's free room, plus a mild term rewarding near-exact fits over much larger rooms.\"\"\"\n    room = np.asarray(bins, dtype=float) / float(capacity)\n    x = float(item) / float(capacity)\n    # fraction of free room consumed by the item, in (0, 1]\n    used_frac = x / np.maximum(room, 1e-9)\n    # leftover after placement, normalised\n    left = np.clip(room - x, 0.0, None)\n    # penalise both very tight and very loose fits: prefer using a bin that ends up moderately full\n    # (quadratic distance of resulting fill from 1.0, i.e. leftover near zero is good but scaled mildly)\n    score = used_frac - 0.5 * (1.0 - left) ** 2\n    return np.clip(score, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a08",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Ratio of the item's size to the candidate's free room, plus a mild term rewarding near-exact fits over much larger rooms.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    9.684546674700993
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -134.4979
+    ],
+    [
+     -1.0,
+     -54.0743
+    ]
+   ],
+   "best_probe": -54.0743,
+   "best_w": -1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.7161
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "best_fit_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Negative post-placement residual (bins - item) normalised by capacity, with a smooth tie-break that rewards leaving a small slack relative to the item size.\"\"\"\n    rem = bins - item\n    # Primary: tightest residual (smaller rem = better fit).\n    primary = -rem / capacity\n    # Smooth secondary term: relative slack rem/item, so that among equal residuals\n    # (or near-equal) the bin whose leftover is small compared to the item is preferred.\n    # Guard item and rem.\n    item_safe = max(item, 1)\n    rel = rem / (item_safe * capacity)  # in [0, ~1]\n    # Combine: primary dominates, secondary breaks ties smoothly.\n    return primary - 0.5 * rel\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion never compares candidates, so it wastes room by first-fit. Choosing the bin whose remaining room after placement is smallest (tightest residual) packs tightly and reduces the awkward mid-fill bins seen in weibull/uniform.",
+    "feature": "rem = bins - item  (non-negative: every open-bin candidate fits the item; the last entry is the empty bin). Return -(rem) / capacity, shape (k,). Larger priority = smaller post-placement residual = tightest fit; the empty bin naturally has the largest residual so is last resort.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `-(bins - item) / capacity` for each candidate, so the tightest-fitting bin (smallest remaining room after placement) gets the highest priority and the empty bin is naturally last resort; I read \"rem\" as the post-placement residual `bins - item` and normalised by capacity as instructe\u2026",
+   "measures": "Negative post-placement residual (bins - item) normalised by capacity, with a smooth tie-break that rewards leaving a small slack relative to the item size.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.886279196791584
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c010",
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "exact_fit_bonus_probe",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two columns: sharp indicator that residual <= 2% of capacity (scaled by how close to exact), and soft -residual/capacity.\"\"\"\n    rem = bins - item\n    cap = float(capacity) if capacity else 1.0\n    # Sharp near-exact bonus: 1 at rem==0, tapering linearly to 0 at rem==2% capacity,\n    # 0 beyond. Keeps the \"exactness\" signal but orders within the tight band.\n    thresh = 0.02 * cap\n    col0 = np.clip(1.0 - rem / thresh, 0.0, 1.0)\n    # Soft monotone tiebreak, but only meaningful for non-negative residual;\n    # negative residual (item doesn't fit) is impossible here, guard anyway.\n    col1 = -np.maximum(rem, 0.0) / cap\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "If the gain from tight fitting comes from landing on (near-)exact fills rather than from monotone tightness, then a sharp indicator for residual <= 2% capacity, layered over a soft -residual column, should beat pure monotone best fit: it tells us whether exactness is the mechanism or just a by-product of ordering.",
+    "feature": "rem = bins - item. Two columns, shape (k,2): col0 = 1.0 where rem <= 0.02*capacity else 0.0 (sharp near-exact bonus); col1 = -rem / capacity (soft monotone tiebreak).",
+    "prediction": {
+     "family": "weibull",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate bin, a sharp 0/1 bonus when the leftover room after placing the item is at most 2% of capacity (col0) plus a soft monotone term equal to minus the leftover room normalised by capacity (col1); I read \"rem = bins - item\" literally as the residual room after placement, and\u2026",
+   "measures": "Two columns: sharp indicator that residual <= 2% of capacity (scaled by how close to exact), and soft -residual/capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    3.6999544278896996,
+    3.9858629643589074
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c012",
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "fill_with_fragment_guard",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Col0 = current fill fraction (capacity - bins)/capacity; col1 = -max(0, 0.15*capacity - rem)/capacity, rem = bins - item.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    rem = bins - float(item)\n    fill = (cap - bins) / cap\n    frag = -np.maximum(0.0, 0.15 * cap - rem) / cap\n    return np.stack([fill, frag], axis=1)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Pure fill-fraction preference is the same ordering as best fit, so instead measure fill together with the fragmentation cost it hides: the large family has 43 one-item bins, i.e. scraps too small to reuse. Penalising post-placement residuals in (0, 15% of capacity] keeps fuller bins preferred while refusing to create dead scraps.",
+    "feature": "rem = bins - item. Two columns, shape (k,2): col0 = (capacity - bins) / capacity (current fill fraction; the empty bin scores 0); col1 = -maximum(0, 0.15*capacity - rem) / capacity (fragment penalty, 0 when the bin ends exact or with a usable gap).",
+    "prediction": {
+     "family": "large",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "It computes, per candidate, the current fill fraction and a negative penalty for post-placement residuals in (0, 15% of capacity]; I read \"rem = bins - item\" literally as the residual after placing the item, and the empty bin naturally gets fill 0 and no penalty since its residual is large.",
+   "measures": "Col0 = current fill fraction (capacity - bins)/capacity; col1 = -max(0, 0.15*capacity - rem)/capacity, rem = bins - item.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    3.9858629643589074,
+    21.302144832417454
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -12.5931
+    ],
+    [
+     -1.0,
+     -167.668
+    ]
+   ],
+   "best_probe": -12.5931,
+   "best_w": 1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.6959
+   },
+   "error": "",
+   "calls": [
+    "c009"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "new_bin_price_with_room_preference",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"col0 = 1.0 only for the last (new empty) bin, else 0.0; col1 = (bins - mean(bins)) / capacity, with the mean taken over open bins only (excluding the new empty bin).\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    k = bins.shape[0]\n    col0 = np.zeros(k, dtype=float)\n    if k > 0:\n        col0[-1] = 1.0\n    # Mean room over the existing open bins only; the brand-new bin is priced by col0,\n    # so it should not drag the reference room upward.\n    if k > 1:\n        mean_room = bins[:-1].mean()\n    elif k == 1:\n        mean_room = bins[0]\n    else:\n        mean_room = 0.0\n    col1 = (bins - mean_room) / float(capacity)\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a05",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "An explicit empty-bin column only earns its keep paired with a feature that would otherwise dump every item into the empty bin. Room-preferring (worst-fit-like) placement guarded by a priced new bin should leave usable large gaps instead of the many 50-80% single-item bins seen in the large family.",
+    "feature": "Two columns, shape (k,2): col0 = 0.0 for every entry except 1.0 for the last entry (the brand-new empty bin, whose room equals capacity); col1 = (bins - mean(bins)) / capacity, the bin's room relative to the candidates' average room (prefers emptier bins).",
+    "prediction": {
+     "family": "large",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This returns two columns per candidate: an indicator that is 1.0 only for the brand-new empty bin (last entry) and 0.0 elsewhere, and the bin's remaining room minus the mean remaining room over all candidates, divided by capacity; I read \"the last entry is the brand-new empty bin\" literally as inde\u2026",
+   "measures": "col0 = 1.0 only for the last (new empty) bin, else 0.0; col1 = (bins - mean(bins)) / capacity, with the mean taken over open bins only (excluding the new empty bin).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    2.453324487195682,
+    3.9858629643589074
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c011",
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "item_scaled_convex_slack",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Convex slack after placement (power p set by item/capacity ratio): sharp for small items, lenient for large, empty bin priced at 1.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    s = np.clip(float(item) / cap, 0.0, 1.0)\n    # small items -> penalise slack hard (p small exponent on slack means big gap); large items -> flatten\n    after = np.clip((room - float(item)) / cap, 0.0, 1.0)\n    # exponent grows with item size: near-exact fits dominate for small items, large items prefer tight fill too\n    p = 1.0 + 3.0 * s\n    val = np.power(after, p)\n    fits = room >= float(item)\n    val = np.where(fits, val, 1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Convex slack after placement (power p set by item/capacity ratio): sharp for small items, lenient for large, empty bin priced at 1.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.538860156051589
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "weighted_multiple_alignment_residual",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit slack after placing, ranked by distance of the residual to the nearest multiple of the item size, but measured in absolute capacity units and made conditional on the residual being large enough to matter (small residuals left as-is, big gaps scored for coarse usability).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = b - it\n    fits = rem >= 0\n    rem_safe = np.where(fits, rem, 0.0)\n    # relative residual fraction\n    r = rem_safe / cap\n    # how many more items of this size fit exactly; distance to nearest integer multiple, scaled by item/cap\n    n_left = rem_safe / it\n    frac = np.abs(n_left - np.round(n_left))\n    # weight the multiple-alignment term by how much residual space remains (in cap units),\n    # so tiny holes aren't penalised for being non-multiples, while big open gaps are\n    weight = np.clip(r * 2.0, 0.0, 1.0)\n    align = (0.5 - frac) * 2.0 * weight\n    # also reward usable coarse capacity directly: log-scaled number of items that still fit\n    usable = np.log1p(n_left) / math.log(1.0 + cap / it + 1.0) if it < cap else np.zeros_like(n_left)\n    val = np.where(fits, align + 0.5 * usable - r, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit slack after placing, ranked by distance of the residual to the nearest multiple of the item size, but measured in absolute capacity units and made conditional on the residual being large enough to matter (small residuals left as-is, big gaps scored for coarse usability).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    5.906664965978955
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -7.8641
+    ],
+    [
+     -1.745585,
+     -1.6723
+    ],
+    [
+     0.523676,
+     -0.3073
+    ],
+    [
+     -0.523676,
+     -0.2055
+    ],
+    [
+     0.174559,
+     -0.2933
+    ],
+    [
+     -0.174559,
+     -0.3563
+    ]
+   ],
+   "best_probe": -0.2055,
+   "best_w": -0.523676,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.4697,
+    "lib_r2": 0.1217
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "fill_after_with_item_scaled_fragment_guard",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Col0: fill fraction after placing (cap - (bins - item))/cap; col1: soft fragment penalty rem/cap when residual below a data-relative threshold; col2: -rem/cap smooth tightness.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    rem = bins - it\n    fits = rem >= 0.0\n    rem_c = np.where(fits, rem, 0.0)\n    # fill after placement (empty new bin -> item/cap, nearly empty)\n    fill_after = (cap - rem_c) / cap\n    # relative fragment threshold scaled by item size: leftovers smaller than half the item are risky\n    thr = 0.5 * it\n    frag = -np.maximum(0.0, thr - rem_c) / cap\n    frag = np.where(fits, frag, -1.0)\n    tight = -rem_c / cap\n    tight = np.where(fits, tight, -1.0)\n    return np.stack([fill_after, frag, tight], axis=1)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Col0: fill fraction after placing (cap - (bins - item))/cap; col1: soft fragment penalty rem/cap when residual below a data-relative threshold; col2: -rem/cap smooth tightness.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 3,
+   "scales": [
+    3.8796132245707726,
+    20.48340020770959,
+    3.8796132245707717
+   ],
+   "weights": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c017"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "repeat_item_fit_probe",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"How well the post-placement residual matches the item size, as a 'would this hole fit another item like me' probe: small positive when residual is just under item size (tight fit for repeat items), negative when residual is much larger.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = b - it\n    fits = rem >= 0.0\n    # ratio of residual to item size: ~0 means hole too small for another like-me, ~1 means exactly room for one more\n    ratio = np.where(fits, rem / it, 0.0)\n    # reward residual just below item size (poor fit for repeat) is bad; reward residual in [0.9,1.1] (fits one more)\n    val = np.where(fits, -np.abs(ratio - 1.0), -2.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a12",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "How well the post-placement residual matches the item size, as a 'would this hole fit another item like me' probe: small positive when residual is just under item size (tight fit for repeat items), negative when residual is much larger.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.5737892948284307
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -9.325
+    ],
+    [
+     -1.745585,
+     -0.6246
+    ],
+    [
+     0.523676,
+     -0.8615
+    ],
+    [
+     -0.523676,
+     0.0006
+    ],
+    [
+     0.174559,
+     -0.1647
+    ],
+    [
+     -0.174559,
+     -0.2057
+    ]
+   ],
+   "best_probe": 0.0006,
+   "best_w": -0.523676,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.6265,
+    "lib_r2": 0.2322
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "item_scaled_residual_band_reserve",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"col0 = residual after placing relative to item size (rem/item, capped), col1 = signed distance of residual from a small-item reserve band scaled by capacity.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    rem = bins - it\n    fits = rem >= 0.0\n    # col0: residual expressed in units of the item's own size; caps at 1 for large residuals\n    scaled = np.where(fits, rem / max(it, 1.0), 0.0)\n    col0 = np.clip(1.0 - np.minimum(scaled, 1.0), 0.0, 1.0)  # 1 = tight fit, 0 = loose\n    col0 = np.where(fits, col0, 0.0)\n    # col1: prefer residuals near a reserve band (small items may still need room), measured\n    # relative to the item size rather than a fixed capacity fraction\n    band = 0.5 * it\n    col1 = np.where(fits, -(np.abs(rem - band) / max(it, 1.0)), -2.0)\n    col1 = np.clip(col1, -1.0, 1.0)\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a03",
+   "kind": "variant",
+   "parent": "f009",
+   "idea": {},
+   "coder_note": "",
+   "measures": "col0 = residual after placing relative to item size (rem/item, capped), col1 = signed distance of residual from a small-item reserve band scaled by capacity.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    2.873422429412532,
+    3.371910301149977
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -0.3741
+    ],
+    [
+     -1.745585,
+     -28.933
+    ],
+    [
+     0.523676,
+     -0.2478
+    ],
+    [
+     -0.523676,
+     -0.6909
+    ],
+    [
+     0.174559,
+     -0.2494
+    ],
+    [
+     -0.174559,
+     -0.1428
+    ]
+   ],
+   "best_probe": -0.1428,
+   "best_w": -0.174559,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.6403,
+    "lib_r2": 0.5545
+   },
+   "error": "",
+   "calls": [
+    "c021"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "item_unit_convex_slack",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Convex slack after placement measured against the item's own size, not capacity: bins where the leftover room is a near-multiple of the item score low (fragmenting), gaps that are 'off-grid' score high for reuse.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = room - it\n    fits = rem >= 0.0\n    # residual expressed in units of the item size: how many more identical items would fit\n    units = np.where(fits, rem / it, 0.0)\n    # convex penalty: bins that leave an exact whole number of items worth of room are 'on-grid'\n    # (their leftover is fully addressable by this item type), so they get a low value;\n    # off-grid leftovers strand space and get a high value.\n    frac = np.abs(units - np.round(units))\n    val = frac * frac\n    # scale by remaining room relative to capacity so tiny bins with noisy fractions rank near zero,\n    # and keep the empty-bin candidate near 0 (frac=0 for capacity/item after clipping is arbitrary)\n    scale = np.clip(rem / cap, 0.0, 1.0)\n    val = val * scale\n    # bins that do not fit are all equivalent and worse than any fitting bin\n    val = np.where(fits, val, 2.0)\n    # neutralise the new empty bin: its 'units' is a capacity artefact, not a real fit decision\n    if val.shape[0] > 0:\n        val[-1] = np.where(room[-1] >= it, 0.0, val[-1])\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Convex slack after placement measured against the item's own size, not capacity: bins where the leftover room is a near-multiple of the item score low (fragmenting), gaps that are 'off-grid' score high for reuse.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    79.48709866966173
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -2.2234
+    ],
+    [
+     -1.745585,
+     -0.6354
+    ],
+    [
+     0.523676,
+     -0.0805
+    ],
+    [
+     -0.523676,
+     -0.4479
+    ],
+    [
+     0.174559,
+     -0.0148
+    ],
+    [
+     -0.174559,
+     -0.3767
+    ]
+   ],
+   "best_probe": -0.0148,
+   "best_w": 0.174559,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7824,
+    "lib_r2": 0.2298
+   },
+   "error": "",
+   "calls": [
+    "c022"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "rung_balance_reusability",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Non-monotone reusability of the leftover: -1 for dead rungs (0.05/0.10/0.15), +1 for reusable rungs (0.20/0.30/0.40/0.50).\"\"\"\n    r = (bins - item) / capacity\n    neg = ((r >= 0.05).astype(float) + (r >= 0.10) + (r >= 0.15)) / 3.0\n    pos = ((r >= 0.20).astype(float) + (r >= 0.30) + (r >= 0.40) + (r >= 0.50)) / 4.0\n    val = -neg + pos\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a10",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Any monotone function of (room - item) ranks candidates exactly as the champion's f004, so 'how many sizes still fit' only carries new information if it is NOT monotone: a leftover in [0.02, 0.18] of capacity is dead (no typical item fits, the exact fit is missed), while a leftover of 0 or >= 0.5 is reusable. Summing +1 for rungs 0.20/0.30/0.40/0.50 and -1 for rungs 0.05/0.10/0.15 makes the response fall then rise, which is the hypothesis under test.",
+    "feature": "r = (bins - item) / capacity (float). val = -( (r>=0.05)+(r>=0.10)+(r>=0.15) )/3 + ( (r>=0.20)+(r>=0.30)+(r>=0.40)+(r>=0.50) )/4. Clip to [-1,1]. Bins that cannot fit the item (r<0) get all indicators 0, i.e. 0.0. One column.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": "f009 fill_with_fragment_guard was rejected by the probe (-12.59 with w+1, -167.67 with w-1) because its columns were monotone re-expressions of residual, which f004 already spans. This probe changes the shape of the residual response, not the quantity."
+   },
+   "coder_note": "This computes, per candidate, the negative fraction of dead leftover rungs (0.05/0.10/0.15 of capacity) plus the positive fraction of reusable rungs (0.20/0.30/0.40/0.50), clipped to [-1, 1]; bins that cannot fit the item (r < 0) naturally score 0.0 since all indicators are 0, and I read \"clip to [\u2026",
+   "measures": "Non-monotone reusability of the leftover: -1 for dead rungs (0.05/0.10/0.15), +1 for reusable rungs (0.20/0.30/0.40/0.50).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.370947412641656
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -0.5378
+    ],
+    [
+     -1.745585,
+     -5.7311
+    ],
+    [
+     0.523676,
+     -0.2462
+    ],
+    [
+     -0.523676,
+     -0.6581
+    ],
+    [
+     0.174559,
+     -0.2304
+    ],
+    [
+     -0.174559,
+     -0.0834
+    ]
+   ],
+   "best_probe": -0.0834,
+   "best_w": -0.174559,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7046,
+    "lib_r2": 0.3315
+   },
+   "error": "",
+   "calls": [
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "worst_fit_open_room_neutral_new",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Remaining room of each candidate bin (normalised by capacity), with the new empty bin pinned to the mean room of the open bins.\"\"\"\n    room = bins.astype(float) / float(capacity)\n    val = room.copy()\n    if bins.shape[0] > 1:\n        val[-1] = np.mean(room[:-1])\n    else:\n        val[-1] = 0.5\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The genuinely opposite signal to the champion: rank open bins by remaining room (spread load, keep bins reusable) instead of by tightness. Raw room cannot be used because the last candidate is the empty bin and would always win, so the new bin is pinned to the mean room of the open bins, isolating the spread-vs-tight axis.",
+    "feature": "room = bins / capacity (float). val = room.copy(); val[-1] = mean(room[:-1]) if there is at least one open bin else 0.5 (mean over open bins only, excluding the new empty bin). Clip to [-1,1]. One column.",
+    "prediction": {
+     "family": "large",
+     "metric": "mean_fill_pct",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's remaining room divided by capacity, replacing the last (new empty bin) entry with the mean room of the open bins (or 0.5 when there are no open bins), clipped to [-1, 1]; I read \"at least one open bin\" as `k > 1` since the last entry is always the new bin.",
+   "measures": "Remaining room of each candidate bin (normalised by capacity), with the new empty bin pinned to the mean room of the open bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    11.02374681581858
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -3.1371
+    ],
+    [
+     -1.745585,
+     -0.2489
+    ],
+    [
+     0.523676,
+     -0.4665
+    ],
+    [
+     -0.523676,
+     -0.2278
+    ],
+    [
+     0.174559,
+     0.0008
+    ],
+    [
+     -0.174559,
+     -0.1252
+    ]
+   ],
+   "best_probe": 0.0008,
+   "best_w": 0.174559,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "mean_fill_pct",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f006",
+    "rho": 0.7646,
+    "lib_r2": 0.1682
+   },
+   "error": "",
+   "calls": [
+    "c025"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "ratio_two_peak_twin_room",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Peak at item/room ratio 1 (exact fit) and 0.5 (room for a twin), plus a small ratio bonus.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    x = float(item)\n    cap = float(capacity)\n    ratio = np.clip(x / np.maximum(b, 1e-9), 0.0, 1.0)\n    val = np.maximum(-np.abs(ratio - 1.0), -np.abs(ratio - 0.5)) + 0.15 * ratio\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "For the large family (items 30-70, capacity 100) the loss is 35 single-item bins: an item dropped into a room leaving a dead 5 is wasted, while leaving a leftover about the item's own size lets a twin fill the bin. Expressed as item-to-room ratio, the response should peak at ratio 1 (exact fit) and ratio 0.5 (room for a twin) and dip in between; the plain ratio alone is a monotone copy of f004, so both peaks are needed.",
+    "feature": "b = bins (float), x = item, cap = capacity. ratio = clip(x / maximum(b, 1e-9), 0.0, 1.0). val = maximum(-abs(ratio - 1.0), -abs(ratio - 0.5)) + 0.15 * ratio. Clip to [-1,1]. One column; the new empty bin gets ratio = x/cap.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": "f001 fractional_fit_cosine and f009 both failed because they stayed monotone in residual; here the peak at ratio 0.5 is a real second basin, making the ranking non-monotone."
+   },
+   "coder_note": "This computes, per candidate bin, the better of two triangular peaks (at item/room ratio 1 for an exact fit and 0.5 for room for a twin) plus a small 0.15\u00b7ratio bonus, clipped to [-1, 1]; the new empty bin naturally gets ratio = item/capacity since its room equals capacity.",
+   "measures": "Peak at item/room ratio 1 (exact fit) and 0.5 (room for a twin), plus a small ratio bonus.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    8.898630092645533
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -0.001
+    ],
+    [
+     -1.745585,
+     -6.0315
+    ],
+    [
+     0.523676,
+     -0.0826
+    ],
+    [
+     -0.523676,
+     -0.5466
+    ],
+    [
+     0.174559,
+     -0.2723
+    ],
+    [
+     -0.174559,
+     -0.3757
+    ]
+   ],
+   "best_probe": -0.001,
+   "best_w": 1.745585,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8159,
+    "lib_r2": 0.6673
+   },
+   "error": "",
+   "calls": [
+    "c026"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "new_bin_indicator_only",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"1.0 for the brand-new empty bin (last candidate), 0.0 for every open bin.\"\"\"\n    val = np.zeros_like(bins, dtype=float)\n    val[-1] = 1.0\n    return val\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The large family uses 267 bins against a provable 258, i.e. it opens bins it could have avoided. f010 failed because its second column was a monotone room term that dominated the ranking; an indicator alone gives the optimiser an explicit, refittable price for opening a bin, which no kept feature can express.",
+    "feature": "val = zeros_like(bins, float); val[-1] = 1.0 (1.0 only for the last, brand-new empty bin, 0.0 for every open bin). One column.",
+    "prediction": {
+     "family": "large",
+     "metric": "nearly_empty_bins",
+     "direction": "down"
+    },
+    "builds_on": "f010",
+    "lesson": "f010 new_bin_price_with_room_preference was discarded as a duplicate of f004 because its room column dictated the ranking; this strips it to the indicator."
+   },
+   "coder_note": "This returns a pure new-bin indicator: 1.0 for the last (always empty) candidate and 0.0 for all open bins, exactly as specified, with no extra room term.",
+   "measures": "1.0 for the brand-new empty bin (last candidate), 0.0 for every open bin.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.357602626690027
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.745585,
+     -67.8933
+    ],
+    [
+     -1.745585,
+     -0.0146
+    ],
+    [
+     0.523676,
+     -0.1831
+    ],
+    [
+     -0.523676,
+     -0.0146
+    ],
+    [
+     0.174559,
+     -0.0823
+    ],
+    [
+     -0.174559,
+     -0.1665
+    ]
+   ],
+   "best_probe": -0.0146,
+   "best_w": -1.745585,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "nearly_empty_bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f009",
+    "rho": 0.7538,
+    "lib_r2": 0.7751
+   },
+   "error": "",
+   "calls": [
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "item_scaled_slack_squared",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement slack relative to the item size (not capacity), squared and clipped; empty bin priced at its full ratio.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = room - it\n    fits = rem >= 0.0\n    # slack measured in units of the arriving item: small items => slack looks huge (favors tight fits),\n    # large items => slack looks modest (more tolerant). Different geometry from capacity-normalised.\n    ratio = rem / it\n    val = np.clip(ratio, 0.0, 4.0) ** 2 / 16.0\n    # empty bin: rem = cap - item, so its ratio is (cap/item - 1); keep as is but bounded\n    val = np.where(fits, val, 1.0)\n    return np.clip(val, 0.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement slack relative to the item size (not capacity), squared and clipped; empty bin priced at its full ratio.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.8132145821545587
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -1.7554
+    ],
+    [
+     -1.611411,
+     -0.4586
+    ],
+    [
+     0.483423,
+     -0.2553
+    ],
+    [
+     -0.483423,
+     -0.2076
+    ],
+    [
+     0.161141,
+     -0.0823
+    ],
+    [
+     -0.161141,
+     -0.0842
+    ]
+   ],
+   "best_probe": -0.0823,
+   "best_w": 0.161141,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.979,
+    "lib_r2": 0.6755
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "residual_whole_slot_flexibility",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual scored by how many standard-size items (cap/5) still fit, with an offset that favours leaving a whole number of them.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    rem = b - float(item)\n    fits = rem >= 0\n    r = np.where(fits, rem / cap, 0.0)\n    # unit = typical slot size; count how many such slots the residual can still hold\n    unit = cap / 5.0\n    n_units = np.where(fits, rem / unit, 0.0)\n    frac = np.abs(n_units - np.round(n_units))\n    # reward residuals that split into whole slots AND are large enough to be reusable\n    val = np.where(fits, (0.5 - frac) + 0.5 * r, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement residual scored by how many standard-size items (cap/5) still fit, with an offset that favours leaving a whole number of them.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.40463596281148
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -1.1935
+    ],
+    [
+     -1.611411,
+     -4.1518
+    ],
+    [
+     0.483423,
+     0.0026
+    ],
+    [
+     -0.483423,
+     -0.5602
+    ],
+    [
+     0.161141,
+     -0.0431
+    ],
+    [
+     -0.161141,
+     -0.2725
+    ]
+   ],
+   "best_probe": 0.0026,
+   "best_w": 0.483423,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7512,
+    "lib_r2": 0.4546
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "relative_open_room_with_item_damped_new_bin",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Room of each open bin relative to the mean open-bin room (centered), with the new empty bin set to the item's own scale so it competes on equal footing.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    k = b.shape[0]\n    if k <= 1:\n        return np.zeros(k)\n    open_rooms = b[:-1]\n    mean_room = float(np.mean(open_rooms))\n    scale = max(mean_room, 1.0)\n    centered = (open_rooms - mean_room) / scale\n    # new bin: how the empty bin's room compares to the mean, but damped by item size\n    # so small items don't over-prefer fresh bins and large items don't avoid them\n    item_frac = float(item) / cap\n    new_val = (cap - mean_room) / scale * (1.0 - item_frac)\n    val = np.concatenate([centered, [new_val]])\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a02",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Room of each open bin relative to the mean open-bin room (centered), with the new empty bin set to the item's own scale so it competes on equal footing.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.3032065126649077
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9978
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "bin_room_rank_vs_lineup",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Counts how many already-open bins (excluding the new one) are strictly larger than this candidate, i.e. how 'leftover-tight' the choice is relative to the current lineup.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    k = len(b)\n    # only open bins matter for the comparison pool; the new bin is last\n    open_bins = b[:-1] if k > 1 else b[:0]\n    if open_bins.size == 0:\n        # only the new bin exists: nothing to compare\n        return np.zeros(k)\n    # pairwise: for each candidate, count bins with more remaining room than it\n    # shape (k, n_open)\n    diff = b[:, None] - open_bins[None, :]\n    # a bin with more room than the candidate (and not itself)\n    larger = (diff < -1e-9).astype(float)\n    # exclude self-comparison when candidate is an open bin\n    counts = larger.sum(axis=1)\n    # normalise by number of open bins, in [-1, 1]\n    val = counts / max(open_bins.size, 1)\n    # new empty bin has max room: count of strictly larger = 0, that's fine\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a02",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Counts how many already-open bins (excluding the new one) are strictly larger than this candidate, i.e. how 'leftover-tight' the choice is relative to the current lineup.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.315104953434431
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -0.3949
+    ],
+    [
+     -1.611411,
+     -5.6377
+    ],
+    [
+     0.483423,
+     -0.1655
+    ],
+    [
+     -0.483423,
+     -1.3278
+    ],
+    [
+     0.161141,
+     -0.1673
+    ],
+    [
+     -0.161141,
+     -0.3721
+    ]
+   ],
+   "best_probe": -0.1655,
+   "best_w": 0.483423,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.9186,
+    "lib_r2": 0.4741
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "log_item_multiplicity_with_median_new_bin",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Room left after placing the item, measured relative to the item size (how many more items like this fit), with the empty bin pinned to the median post-placement capacity of open bins.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1e-9)\n    after = b - it\n    fits = after >= 0.0\n    # number of additional items of this size that fit, log-compressed\n    n_more = np.where(fits, after / it, 0.0)\n    val = np.where(fits, np.log1p(n_more) / np.log1p(cap / it + 1.0), -1.0)\n    if b.shape[0] > 1:\n        open_after = np.clip(b[:-1] - it, 0.0, None) / cap\n        val[-1] = float(np.median(open_after))\n    else:\n        val[-1] = 0.5\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a02",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Room left after placing the item, measured relative to the item size (how many more items like this fit), with the empty bin pinned to the median post-placement capacity of open bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.553317474565394
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -3.2836
+    ],
+    [
+     -1.611411,
+     -0.6098
+    ],
+    [
+     0.483423,
+     -0.4325
+    ],
+    [
+     -0.483423,
+     -0.107
+    ],
+    [
+     0.161141,
+     -0.2933
+    ],
+    [
+     -0.161141,
+     -0.1655
+    ]
+   ],
+   "best_probe": -0.107,
+   "best_w": -0.483423,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.834,
+    "lib_r2": 0.1667
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "residual_class_density",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Mean over other open bins of a Gaussian kernel in the post-placement residual of each candidate, measuring local density of the residual distribution.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    r = np.clip((room - it) / cap, 0.0, 1.0)\n    roomf = room / cap\n    tol = np.clip(0.5 * it / cap, 0.03, 0.20)\n    d = (roomf[None, :] - r[:, None]) / tol\n    w = np.exp(-d * d)\n    np.fill_diagonal(w, 0.0)\n    k = room.shape[0]\n    val = w.sum(axis=1) / max(k - 1, 1)\n    return val\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a09",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f005 kept a *count* of gap classes a bin can still accept, which is a per-bin quantity. The complementary cross-candidate quantity is the density of the residual classes actually present: if the item leaves a residual that duplicates an existing bin's residual, the configuration loses variety (two bins that can only serve the same future item sizes) while concentrating the useful sizes in fewer bins. This feature measures, for each candidate, how many *other* open bins already sit within half an item's size of the residual it would leave. It ranks candidates by the local density of the residual distribution, not by residual magnitude, so it is not a re-expression of f004/f005.",
+    "feature": "room = np.asarray(bins, dtype=float); cap = float(capacity); it = max(float(item), 1.0). r = np.clip((room - it)/cap, 0.0, 1.0) (post-placement residual fraction per candidate). roomf = room/cap. tol = clip(0.5*it/cap, 0.03, 0.20). Build the (k,k) matrix d = (roomf[None,:] - r[:,None])/tol, w = exp(-d*d), set the diagonal of w to 0 (a bin is not compared with its own current room), and return val = w.sum(axis=1)/max(k-1, 1). One column, in [0,1]: high = this placement leaves a residual already duplicated by other bins.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": "f012 (multiple alignment in absolute units) and f016 (item-unit convex slack) both failed: re-shaping residual *magnitude* is spent. This keeps the residual but asks a different question - how crowded the residual distribution is."
+   },
+   "coder_note": "This computes, for each candidate bin, the average Gaussian-kernel similarity between the residual fraction it would leave after placing the item and the current room fractions of all other open bins (diagonal zeroed, normalised by k\u22121), so high values mean the placement duplicates a residual alrea\u2026",
+   "measures": "Mean over other open bins of a Gaussian kernel in the post-placement residual of each candidate, measuring local density of the residual distribution.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.742486052012787
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -31.2259
+    ],
+    [
+     -1.611411,
+     -0.2897
+    ],
+    [
+     0.483423,
+     -0.4844
+    ],
+    [
+     -0.483423,
+     -0.1242
+    ],
+    [
+     0.161141,
+     -0.2341
+    ],
+    [
+     -0.161141,
+     -0.1665
+    ]
+   ],
+   "best_probe": -0.1242,
+   "best_w": -0.483423,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "uniform",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.6912,
+    "lib_r2": 0.0634
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "item_relative_dead_censor",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Censored best-fit: residual after placement, dead band (below half the item) priced worst, exact fit best.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    r = np.clip((room - it) / cap, 0.0, 1.0)\n    tau = np.clip(0.5 * it / cap, 0.03, 0.30)\n    val = np.where(r < tau, 1.0, r)\n    val = np.where(r <= 0.005, 0.0, val)\n    val = np.where(room >= it, val, 1.0)\n    return val\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion is a pure best-fit: it prefers residual 5 over residual 30 after placement, even though a residual of 5 is dead (smaller than the smallest likely next item) while 30 is usable. This is the visible loss in the diagnostics (many bins closed at 90-95% fill). The fix keeps best-fit's ordering among *usable* residuals but censors the dead band, with the band measured against the item itself (a residual below half the current item can only serve items half its size, i.e. is likely unusable), and does not demote an exact fit.",
+    "feature": "room = np.asarray(bins, dtype=float); cap = float(capacity); it = float(item). r = np.clip((room - it)/cap, 0.0, 1.0). tau = np.clip(0.5*it/cap, 0.03, 0.30). val = np.where(r < tau, 1.0, r) (dead residuals priced at the worst usable level and above); then val = np.where(r <= 0.005, 0.0, val) (exact / near-exact fit kept at the very best); then val = np.where(room >= it, val, 1.0). One column in [0,1]; with the fitted negative sign: exact fit best, usable residuals ordered tightest-first, dead residuals worst.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f007/f008/f011/f013 all collapsed to f004: they only *re-scaled* the slack, so they order candidates exactly as the champion does. Here the ordering among small residuals is inverted for the dead band, which is a different ranking, not a different scale."
+   },
+   "coder_note": "This computes, per candidate, the post-placement residual (normalised by capacity) with residuals below the item-relative dead band `tau` (half the item, clipped to [0.03, 0.30]) censored to 1.0, exact/near-exact fits (residual \u2264 0.005) forced to 0.0, and bins that cannot fit the item forced to 1.0\u2026",
+   "measures": "Censored best-fit: residual after placement, dead band (below half the item) priced worst, exact fit best.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.929451228259274
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -1.2267
+    ],
+    [
+     -1.611411,
+     -0.4611
+    ],
+    [
+     0.483423,
+     -0.8493
+    ],
+    [
+     -0.483423,
+     -0.0095
+    ],
+    [
+     0.161141,
+     -0.3223
+    ],
+    [
+     -0.161141,
+     -0.1894
+    ]
+   ],
+   "best_probe": -0.0095,
+   "best_w": -0.483423,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "weibull",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f028",
+    "rho": 0.5378,
+    "lib_r2": 0.0672
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "dead_fragment_valley_probe",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Smooth valley on post-placement residual fraction r=(room-item)/cap, peaking at r=0.06 and zero at r=0 and r>=0.12; infeasible bins set to 1.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    r = (room - item) / cap\n    u = np.clip(r / 0.12, 0.0, 1.0)\n    val = 4.0 * u * (1.0 - u)\n    val = np.where(room >= item, val, 1.0)\n    return val\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a11",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Dead slivers are the specific waste: a bin closed with 3-12% of capacity left can never be used again. If that is the mechanism, a smooth valley that is neutral at an exact fit and neutral at generous room, but strongly discourages residuals peaked around 6% of capacity, should move the solution toward fuller bins. The probe is deliberately capacity-fixed (tau = 0.12) to test the mechanism without mixing in the item-relative version.",
+    "feature": "room = np.asarray(bins, dtype=float); cap = float(capacity); r = (room - item)/cap. u = np.clip(r/0.12, 0.0, 1.0); val = 4.0*u*(1.0 - u) (0 at r=0 and at r>=0.12, 1 at r=0.06); val = np.where(room >= item, val, 1.0). One column in [0,1]; the optimiser fits the sign (negative = avoid the dead band).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": "f017 (fixed rungs 0.05-0.50, +1/-1 step) was rejected, but it lumped 0.10-0.50 into one 'good' bucket, so it could not express 'small is best until it is dead'. This is a smooth valley confined to the small-residual region only."
+   },
+   "coder_note": "This computes, per candidate bin, the tent-shaped \"dead fragment\" valley `4u(1-u)` on the normalised post-placement residual `r=(room-item)/capacity` clipped to `[0, 0.12]` (0 at an exact fit and at \u226512% room, 1 at 6%), with infeasible bins forced to 1; I read \"capacity-fixed tau=0.12\" literally as\u2026",
+   "measures": "Smooth valley on post-placement residual fraction r=(room-item)/cap, peaking at r=0.06 and zero at r=0 and r>=0.12; infeasible bins set to 1.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.979749872919388
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -2.5977
+    ],
+    [
+     -1.611411,
+     -0.8104
+    ],
+    [
+     0.483423,
+     -1.1577
+    ],
+    [
+     -0.483423,
+     -0.1813
+    ],
+    [
+     0.161141,
+     -0.1875
+    ],
+    [
+     -0.161141,
+     -0.0413
+    ]
+   ],
+   "best_probe": -0.0413,
+   "best_w": -0.161141,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f022",
+    "rho": 0.5603,
+    "lib_r2": 0.1479
+   },
+   "error": "",
+   "calls": [
+    "c036"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "near_exact_indicator_only",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"1.0 if the bin fits the item and its post-placement residual is at most 3% of capacity, else 0.0.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    r = (room - item) / float(capacity)\n    return np.where(room >= item, (r <= 0.03).astype(float), 0.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "All previous post-placement-slack attempts were duplicates of f004 because they carried a soft -residual term alongside any sharp one (f008). Stripping the soft part leaves a pure sharp indicator: does the policy gain from treating near-exact fits (residual <= 3% of capacity) as a discrete prize on top of whatever best-fit already does? If exactness matters, full bins should rise; if the gain was only ever the soft ordering, this feature adds nothing.",
+    "feature": "room = np.asarray(bins, dtype=float); r = (room - item)/float(capacity). val = np.where(room >= item, (r <= 0.03).astype(float), 0.0). One column, exactly 0.0 or 1.0: 1.0 only for candidates whose post-placement residual is at most 3% of capacity (the new empty bin almost never qualifies).",
+    "prediction": {
+     "family": "weibull",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f008",
+    "lesson": "f008 was a duplicate of f004 because of its soft -residual column; f019/f014 showed peaked item-relative shapes buy nothing. This probe keeps only the discrete part so the answer is unambiguous."
+   },
+   "coder_note": "This returns a single sharp 0/1 column that is 1.0 exactly for candidates that fit the item and leave a residual of at most 3% of capacity (0.0 otherwise, including the empty bin unless it somehow qualifies); I read \"fits\" as `room >= item` and the threshold as inclusive (`r <= 0.03`), exactly as s\u2026",
+   "measures": "1.0 if the bin fits the item and its post-placement residual is at most 3% of capacity, else 0.0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.670744793586188
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.611411,
+     -0.0831
+    ],
+    [
+     -1.611411,
+     -5.1188
+    ],
+    [
+     0.483423,
+     -0.0831
+    ],
+    [
+     -0.483423,
+     -1.4358
+    ],
+    [
+     0.161141,
+     -0.0831
+    ],
+    [
+     -0.161141,
+     -0.3765
+    ]
+   ],
+   "best_probe": -0.0831,
+   "best_w": 1.611411,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "weibull",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f024",
+    "rho": 0.7514,
+    "lib_r2": 0.3912
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "small_item_multiple_residual_cleanliness",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual measured against the bin's own history: prefers bins whose leftover can still host a typical past item size, penalising tight fits that strand a hole smaller than a small item.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    rem = b - it\n    fits = rem >= 0\n    # typical \"small item\" scale relative to capacity (small family peak ~ cap/4)\n    small = 0.15 * cap\n    # residual fraction after placement\n    r = np.where(fits, rem / cap, 0.0)\n    # how many small items could still fit in the leftover\n    n_small = np.where(fits, rem / max(small, 1e-9), 0.0)\n    # fractional part: a leftover that is NOT an integer number of small items strands a sliver\n    frac = np.abs(n_small - np.round(n_small))\n    # reward being near a whole multiple of small items (clean leftover), penalise stranded slivers\n    clean = 1.0 - 2.0 * frac  # in [-1, 1]\n    # also reward larger residuals mildly (more room to work with), but not empty-bin dominance\n    room_term = np.log1p(np.where(fits, rem, 0.0)) / np.log1p(cap)\n    val = np.where(fits, 0.5 * clean + room_term, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement residual measured against the bin's own history: prefers bins whose leftover can still host a typical past item size, penalising tight fits that strand a hole smaller than a small item.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.040551278857083
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -10.4426
+    ],
+    [
+     -1.691728,
+     -0.2817
+    ],
+    [
+     0.507518,
+     -0.4057
+    ],
+    [
+     -0.507518,
+     -0.0833
+    ],
+    [
+     0.169173,
+     -0.2333
+    ],
+    [
+     -0.169173,
+     -0.0002
+    ]
+   ],
+   "best_probe": -0.0002,
+   "best_w": -0.169173,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f021",
+    "rho": 0.618,
+    "lib_r2": 0.6093
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "squared_slack_with_mid_residual_penalty",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement slack squared but reweighted by how close the item+bin fill is to a full bin, penalising medium slack more than large slack.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    after = (room - item) / cap\n    fits = room >= item\n    # base squared slack\n    base = np.clip(after, 0.0, 1.0) ** 2\n    # convex reweighting: medium slacks (around 0.3-0.5) hurt more than either tiny or large slack\n    # weight = 4*x*(1-x) peaks at x=0.5 and is 0 at extremes -> penalise \"wasted middle\" residuals\n    x = np.clip(after, 0.0, 1.0)\n    mid_weight = 4.0 * x * (1.0 - x)\n    val = base + 0.5 * mid_weight\n    val = np.where(fits, val, 1.0)\n    return np.clip(val, 0.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement slack squared but reweighted by how close the item+bin fill is to a full bin, penalising medium slack more than large slack.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.252406982819954
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c041"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "residual_self_slot_flexibility",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual scored by how cleanly it splits into the arriving item's own size (a self-similarity slot count), rewarding residuals that are near a whole number of item-sized slots and large enough to be reusable.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = b - it\n    fits = rem >= 0\n    r = np.where(fits, rem / cap, 0.0)\n    # how many more items of exactly this size fit in the residual\n    n_self = np.where(fits, rem / it, 0.0)\n    frac = np.abs(n_self - np.round(n_self))\n    # reward whole-number self-slots (full self-packing) and bigger residuals\n    whole = 0.5 - frac\n    # also weight by whether residual is large enough to hold at least one more of this item\n    usable = np.where(fits & (rem >= it), 1.0, 0.0)\n    val = np.where(fits, whole * (0.5 + 0.5 * usable) + 0.5 * r, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f022",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Post-placement residual scored by how cleanly it splits into the arriving item's own size (a self-similarity slot count), rewarding residuals that are near a whole number of item-sized slots and large enough to be reusable.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    5.6176908890895225
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -3.9828
+    ],
+    [
+     -1.691728,
+     -0.2068
+    ],
+    [
+     0.507518,
+     -0.5293
+    ],
+    [
+     -0.507518,
+     -0.2074
+    ],
+    [
+     0.169173,
+     -0.3354
+    ],
+    [
+     -0.169173,
+     -0.2313
+    ]
+   ],
+   "best_probe": -0.2068,
+   "best_w": -1.691728,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8321,
+    "lib_r2": 0.8009
+   },
+   "error": "",
+   "calls": [
+    "c042"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "item_multiple_tail_penalty",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"How much the bin's remaining room after placement falls just above a multiple of the item (wasted tail of repeat placements).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(max(item, 1))\n    rem = b - it\n    fits = rem >= 0\n    # number of full items that still fit in the residual after placing\n    n = np.where(fits, rem / it, 0.0)\n    # leftover fraction of an item after packing as many as possible: small = tight repeat-fit, near 1 = wasted tail\n    tail = np.abs(n - np.round(n))\n    # scale tail to [-1,1] with preference for small tail (tight multiples)\n    val = np.where(fits, 1.0 - 2.0 * tail, -1.0)\n    return np.clip(val, -1.0, 1.0)\n\nname: item_multiple_tail_penalty\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a15",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "How much the bin's remaining room after placement falls just above a multiple of the item (wasted tail of repeat placements).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.323739396224186
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -0.1293
+    ],
+    [
+     -1.691728,
+     -6.0094
+    ],
+    [
+     0.507518,
+     -0.0386
+    ],
+    [
+     -0.507518,
+     -0.1637
+    ],
+    [
+     0.169173,
+     -0.0834
+    ],
+    [
+     -0.169173,
+     -0.2313
+    ]
+   ],
+   "best_probe": -0.0386,
+   "best_w": 0.507518,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7344,
+    "lib_r2": 0.9647
+   },
+   "error": "",
+   "calls": [
+    "c040"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "fragment_zone_depth_penalty",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Squared relative slack after placement, but only counted when the residual drops below a capacity-relative fragment threshold; large residuals are neutral (0).\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    fits = room >= item\n    after = np.clip((room - item) / cap, 0.0, 1.0)\n    # fragment threshold: residuals below this fraction of capacity are \"holes\" we want to avoid creating\n    thr = 0.15\n    # how far inside the fragment zone the residual lands (0 at threshold, 1 at empty)\n    depth = np.clip((thr - after) / thr, 0.0, 1.0)\n    # penalise creating a small hole: deep inside zone -> strong penalty; large residual -> 0\n    val = depth * depth\n    # non-fitting bins are irrelevant but should not win: neutral-ish positive\n    val = np.where(fits, val, 1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Squared relative slack after placement, but only counted when the residual drops below a capacity-relative fragment threshold; large residuals are neutral (0).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.4268118254710878
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -0.1236
+    ],
+    [
+     -1.691728,
+     -10.2705
+    ],
+    [
+     0.507518,
+     -0.0431
+    ],
+    [
+     -0.507518,
+     -0.9955
+    ],
+    [
+     0.169173,
+     -0.0842
+    ],
+    [
+     -0.169173,
+     -0.2286
+    ]
+   ],
+   "best_probe": -0.0431,
+   "best_w": 0.507518,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f021",
+    "rho": 0.909,
+    "lib_r2": 0.6328
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "twin_multiplicity_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Twin multiplicity: capped count of identical items the residual can still hold, minus a small slack penalty.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    it = float(max(item, 1))\n    cap = float(max(capacity, 1))\n    rem = b - it\n    fits = rem >= 0.0\n    copies = np.where(fits, np.minimum(np.floor(np.where(fits, rem, 0.0) / it), 4.0), 0.0)\n    values = np.where(fits, copies / 4.0 - 0.05 * (rem / cap), -1.0)\n    return values\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a13",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "For large items (30-70, cap 100) the waste is single-item bins whose residual never gets a partner. A coarse count of how many more identical items the residual can hold (floor(rem/item), capped) is a step function that ranks candidates differently from f004's continuous squared slack, and should steer large items into bins that can host a twin.",
+    "feature": "b = bins as float; it = max(item,1); rem = b - it; fits = rem >= 0; copies = min(floor(rem/it), 4) where fits else 0; value = where(fits, copies/4 - 0.05*(rem/capacity), -1.0). One number per candidate; empty bin (last) gets rem=capacity-item, copies=floor((cap-item)/item).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f014",
+    "lesson": "f014 (repeat_item_fit_probe, 'would another like-me fit') was rejected; that asked a yes/no match, this asks the graded multiplicity."
+   },
+   "coder_note": "This computes, per candidate bin, `min(floor((remaining_room - item)/item), 4)/4 - 0.05*((remaining_room - item)/capacity)` when the item fits (and `-1.0` otherwise), so bins whose residual can host more identical twins rank higher with a slight preference for tighter fits; the empty bin is handled\u2026",
+   "measures": "Twin multiplicity: capped count of identical items the residual can still hold, minus a small slack penalty.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.167853855701779
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -2.636
+    ],
+    [
+     -1.691728,
+     -0.2897
+    ],
+    [
+     0.507518,
+     -0.3328
+    ],
+    [
+     -0.507518,
+     -0.1244
+    ],
+    [
+     0.169173,
+     -0.3365
+    ],
+    [
+     -0.169173,
+     -0.1226
+    ]
+   ],
+   "best_probe": -0.1226,
+   "best_w": -0.169173,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f032",
+    "rho": 0.7964,
+    "lib_r2": 0.706
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "item_relative_dead_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual slack after placement plus a Gaussian penalty for residuals in a dead band around 10% of capacity.\"\"\"\n    b = bins.astype(float)\n    it = float(max(item, 1))\n    cap = float(max(capacity, 1))\n    rem = b - it\n    fits = rem >= 0.0\n    r = np.where(fits, rem / cap, 0.0)\n    band = np.exp(-(((r - 0.10) / 0.035) ** 2))\n    values = np.where(fits, r + 0.5 * band, 1.0)\n    return values\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a14",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A residual of 5-15% of capacity is too small to host a typical item but too large to count as a full bin: a dead band. Pricing that band worst (on top of plain best-fit slack) should stop the policy from parking large items so as to leave a dead residual.",
+    "feature": "b = bins as float; it = max(item,1); rem = b - it; fits = rem >= 0; r = where(fits, rem/capacity, 0); band = exp(-((r-0.10)/0.035)**2); value = where(fits, r + 0.5*band, 1.0). Empty bin (last) gets r=(cap-item)/cap, band accordingly.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f028",
+    "lesson": "f028 (dead valley at 0.06*cap, approach a11) was rejected; this tests a different band centre (0.10*cap) and a wider Gaussian."
+   },
+   "coder_note": "This computes, per candidate, the relative residual slack `rem/capacity` after placing the item plus half a Gaussian bump centred at 10% residual (width 3.5%), with non-fitting bins set to 1.0; I read \"empty bin gets r=(cap-item)/cap\" as simply the same formula applied to the last entry, which alre\u2026",
+   "measures": "Residual slack after placement plus a Gaussian penalty for residuals in a dead band around 10% of capacity.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.138487669458592
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -8.3807
+    ],
+    [
+     -1.691728,
+     -0.1655
+    ],
+    [
+     0.507518,
+     -0.2454
+    ],
+    [
+     -0.507518,
+     -0.1242
+    ],
+    [
+     0.169173,
+     -0.1655
+    ],
+    [
+     -0.169173,
+     -0.1655
+    ]
+   ],
+   "best_probe": -0.1242,
+   "best_w": -0.507518,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.926,
+    "lib_r2": 0.7777
+   },
+   "error": "",
+   "calls": [
+    "c047"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "residual_item_multiple_utilization",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"For each bin, after placing the item: k/max(rem/it, eps) where k=floor(rem/it), if rem>=0 and k>=1, else 0; -1 if it doesn't fit.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    it = float(max(item, 1))\n    rem = b - it\n    fits = rem >= 0.0\n    ratio = np.where(fits, rem / it, 0.0)\n    k = np.floor(ratio)\n    util = np.where(fits & (k >= 1.0), k / np.maximum(ratio, 1e-9), 0.0)\n    return np.where(fits, util, -1.0)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a09",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f005 rewards residuals by how many distinct gap classes a bin can still serve, but never checks whether the residual is *cleanly* addressable. Rewarding residuals that are close to an exact multiple of the arriving item (high k*item/rem) pushes toward item-multiple reuse, the direction a09 names, using a ratio rather than a distance.",
+    "feature": "b = bins as float; it = max(item,1); rem = b - it; fits = rem >= 0; ratio = where(fits, rem/it, 0); k = floor(ratio); util = where(fits & (k>=1), k/max(ratio,1e-9), 0.0); value = where(fits, util, -1.0). Empty bin (last): ratio=(cap-item)/item, same formula.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f012",
+    "lesson": "f012/f016/f021 (distance-to-multiple / item-scaled slack) were rejected; this uses a bounded utilization ratio, not a distance, so it ranks differently."
+   },
+   "coder_note": "This computes, per candidate bin, the fraction `floor(rem/it) / (rem/it)` of the post-placement residual that is cleanly addressable by whole copies of the arriving item (0 when fewer than one copy fits, \u22121 when the item doesn't fit); I read \"empty bin (last)\" as simply following the same formula w\u2026",
+   "measures": "For each bin, after placing the item: k/max(rem/it, eps) where k=floor(rem/it), if rem>=0 and k>=1, else 0; -1 if it doesn't fit.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8648392920828742
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.691728,
+     -3.7275
+    ],
+    [
+     -1.691728,
+     -0.2055
+    ],
+    [
+     0.507518,
+     -0.4647
+    ],
+    [
+     -0.507518,
+     -0.2084
+    ],
+    [
+     0.169173,
+     -0.2286
+    ],
+    [
+     -0.169173,
+     -0.1665
+    ]
+   ],
+   "best_probe": -0.1665,
+   "best_w": -0.169173,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.7836,
+    "lib_r2": 0.5485
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "item_relative_slack_dead_zone",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Item-relative residual slack after placement, plus a 0.6 penalty when the residual is strictly below the item size (dead zone), normalised by capacity.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(max(capacity, 1))\n    it = float(max(item, 1))\n    rem = b - it\n    fits = rem >= 0.0\n    ratio = np.where(fits, rem / it, 0.0)\n    dead = np.where(fits & (rem < it), 1.0 - ratio, 0.0)\n    value = np.where(fits, ratio + 0.6 * dead, 1.0)\n    # Normalise into roughly [-1, 1]: ratio can reach (cap-it)/it, so divide by that scale.\n    scale = max((cap - it) / it, 1.0)\n    return value / scale\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Best-fit (f004) cannot tell residual 2 from residual 0.9*item: both are 'small'. But a residual just below the item size is dead for twins while a near-zero residual is a full bin. Adding a penalty only for residuals strictly below the item size makes the slack item-relative and non-monotone.",
+    "feature": "b = bins as float; it = max(item,1); rem = b - it; fits = rem >= 0; ratio = where(fits, rem/it, 0); dead = where(fits & (rem < it), 1.0 - ratio, 0.0); value = where(fits, ratio + 0.6*dead, 1.0). Empty bin (last): rem=cap-item, ratio=(cap-item)/item, dead=0 since rem>=it for cap>=2*item.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f027",
+    "lesson": "f027 (dead band below half the item) was rejected; this moves the threshold to the full item size, where twin reuse actually dies."
+   },
+   "coder_note": "This computes, per candidate bin, the residual room after placing the item divided by the item size, plus a 0.6\u00b7(1 \u2212 ratio) penalty when that residual is strictly smaller than the item (the \"dead zone\" for future twins), with non-fitting bins set to 1.0; I read \"fits\" as rem \u2265 0 exactly as specifie\u2026",
+   "measures": "Item-relative residual slack after placement, plus a 0.6 penalty when the residual is strictly below the item size (dead zone), normalised by capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.6994048855983026
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c046",
+    "c050"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "fill_weighted_slack_with_tight_exact_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two columns: squared relative residual after placement, but only counted when the bin is already partially filled; plus a sharp exact-fit bonus that grows with the bin's current fill, so tight bins are closed off exactly rather than left with crumbs.\"\"\"\n    room = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    after = (room - it) / cap\n    fits = room >= it\n    # current fill fraction of the candidate bin (empty new bin -> 0)\n    fill = np.clip((cap - room) / cap, 0.0, 1.0)\n    # squared slack, but damped for nearly-empty bins (they are cheap to keep open anyway)\n    slack = np.clip(after, 0.0, 1.0) ** 2\n    col0 = np.where(fits, slack * fill, 1.0)\n    # sharp exact-fit indicator: residual within 3% of capacity, weighted by how full the bin already is\n    near = np.where(fits, np.clip(1.0 - np.abs(after) / 0.03, 0.0, 1.0), 0.0)\n    col1 = near * fill\n    return np.column_stack([np.clip(col0, -1.0, 1.0), np.clip(col1, -1.0, 1.0)])\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Two columns: squared relative residual after placement, but only counted when the bin is already partially filled; plus a sharp exact-fit bonus that grows with the bin's current fill, so tight bins are closed off exactly rather than left with crumbs.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    65.1495198956988,
+    6.370535928810319
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.614879,
+     -0.0631
+    ],
+    [
+     -1.614879,
+     -64.3041
+    ],
+    [
+     0.484464,
+     0.0823
+    ],
+    [
+     -0.484464,
+     -2.6207
+    ],
+    [
+     0.161488,
+     -0.0831
+    ],
+    [
+     -0.161488,
+     -0.444
+    ]
+   ],
+   "best_probe": 0.0823,
+   "best_w": 0.484464,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f036",
+    "rho": 0.6667,
+    "lib_r2": 0.3505
+   },
+   "error": "",
+   "calls": [
+    "c054"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "residual_lattice_consumption_weighted",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two columns: (0) fit slack after placing scaled by residual class-compatibility with the item's fraction, (1) signed distance of residual to the item-size lattice (how cleanly the leftover tiles into copies of the item).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    rem = b - it\n    fits = rem >= 0\n\n    rf = np.where(fits, rem / cap, 0.0)          # residual fraction after placement\n    left = np.where(fits, rem / it, 0.0)         # how many whole items fit in residual\n    frac = np.abs(left - np.round(left))         # distance to nearest integer multiple\n    # thread kept: prefer residuals that are NOT near-integer multiples of the item (avoid stranding holes\n    # that only this exact item size can fill); but now sharpened into a signed lattice-distance term.\n    lattice = np.where(fits, 1.0 - 2.0 * np.abs(frac - 0.5), -1.0)  # +1 mid-lattice, -1 at clean multiple\n\n    # new bold part: modulate by how much of the bin's original capacity the item consumed -> large items\n    # have fewer future partners, so lattice effects matter more; small items can slot almost anywhere.\n    consume = it / cap\n    weight = 1.0 - consume                          # big item => low weight on the lattice term\n\n    col0 = np.where(fits, rf * lattice, -1.0)\n    col1 = np.where(fits, weight * (0.5 - frac) * 2.0, -1.0)\n    return np.clip(np.stack([col0, col1], axis=1), -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a09",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Two columns: (0) fit slack after placing scaled by residual class-compatibility with the item's fraction, (1) signed distance of residual to the item-size lattice (how cleanly the leftover tiles into copies of the item).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    7.027360242897293,
+    6.233816500627163
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.614879,
+     -0.0517
+    ],
+    [
+     -1.614879,
+     -1.1819
+    ],
+    [
+     0.484464,
+     -0.3233
+    ],
+    [
+     -0.484464,
+     -0.1661
+    ],
+    [
+     0.161488,
+     -0.3992
+    ],
+    [
+     -0.161488,
+     -0.124
+    ]
+   ],
+   "best_probe": -0.0517,
+   "best_w": 1.614879,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.9293,
+    "lib_r2": 0.7135
+   },
+   "error": "",
+   "calls": [
+    "c055"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "residual_vs_lineup_median_centrality",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Rank of each candidate's post-placement residual within the lineup, as a signed centrality: how far the residual sits from the median residual of all candidates (including the new bin).\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    k = len(b)\n    if k == 0:\n        return np.zeros(0)\n    rem = b - float(item)\n    fits = rem >= 0.0\n    # post-placement residual fraction; infeasible bins get the empty-bin value so they don't distort the median\n    res = np.where(fits, rem / cap, 1.0)\n    med = float(np.median(res))\n    # signed distance from the lineup median, bounded to [-1, 1]\n    dev = res - med\n    val = np.where(fits, np.tanh(3.0 * dev), -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a02",
+   "kind": "variant",
+   "parent": "f024",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Rank of each candidate's post-placement residual within the lineup, as a signed centrality: how far the residual sits from the median residual of all candidates (including the new bin).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.9506788334567922
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c052"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "item_multiplicity_saturating_room_score",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Ratio of room to item for each fitting bin, squashed by a saturating map that rewards loose bins mildly but caps the reward for huge rooms.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = max(float(item), 1.0)\n    fits = b >= item\n    # how many copies of the item fit in this bin's room\n    ratio = b / it\n    # saturating map: 1-exp(-(ratio-1)) -> 0 at exact-ish fit, approaches 1 for large rooms\n    sat = 1.0 - np.exp(-np.clip(ratio - 1.0, 0.0, 50.0))\n    # gated by room fraction so it never rewards a bin whose room is tiny relative to capacity\n    room_frac = np.clip(b / cap, 0.0, 1.0)\n    val = sat * room_frac\n    val = np.where(fits, val, -1.0)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Ratio of room to item for each fitting bin, squashed by a saturating map that rewards loose bins mildly but caps the reward for huge rooms.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.185415950737984
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "ruined_open_bins_opportunity_cost",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"How many open bins would be 'ruined' (left with a residual smaller than this item) if the item is placed elsewhere: an opportunity cost of the lineup, computed per candidate as the count of other open bins whose residual would fall below item after subtracting item from them.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    k = len(b)\n    if k <= 1:\n        # only the new bin: no open bins can be ruined\n        return np.zeros(k)\n    open_bins = b[:-1]\n    n_open = open_bins.size\n    # For each candidate c, consider ruining every OTHER open bin o != c:\n    # bin o is ruined if placing item in c leaves o with residual < item, i.e. b[o] - item < item\n    # (the item arriving now could have used o later-with-fill... use o's own current room)\n    # ruin_o = 1 if (b[o] - it) < it  -> b[o] < 2*it  (independent of candidate!)\n    ruin = (open_bins - it < it).astype(float)  # shape (n_open,)\n    total_ruin = ruin.sum()\n    # For an open-bin candidate c: it consumes itself, so exclude its own ruin contribution.\n    # For the new-bin candidate: all open bins remain available, so include all.\n    # self mask: candidate i < n_open is open bin i\n    self_ruin = np.concatenate([ruin, [0.0]])  # new bin has no self\n    counts = total_ruin - self_ruin\n    val = counts / max(n_open, 1)\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a02",
+   "kind": "variant",
+   "parent": "f024",
+   "idea": {},
+   "coder_note": "",
+   "measures": "How many open bins would be 'ruined' (left with a residual smaller than this item) if the item is placed elsewhere: an opportunity cost of the lineup, computed per candidate as the count of other open bins whose residual would fall below item after subtracting item from them.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.129524063079045
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.614879,
+     -0.1037
+    ],
+    [
+     -1.614879,
+     -0.1669
+    ],
+    [
+     0.484464,
+     -0.1426
+    ],
+    [
+     -0.484464,
+     -0.125
+    ],
+    [
+     0.161488,
+     -0.0403
+    ],
+    [
+     -0.161488,
+     -0.0829
+    ]
+   ],
+   "best_probe": -0.0403,
+   "best_w": 0.161488,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f037",
+    "rho": 0.9136,
+    "lib_r2": 0.3232
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "medium_slot_multiplicity",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Rank bins by how many copies of a *typical* residual item (a fixed fraction of capacity) still fit alongside the item, rewarding bins whose leftover splits into many medium slots rather than one rigid block.\"\"\"\n    b = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    rem = b - float(item)\n    fits = rem >= 0\n    # quantum = a \"medium\" item, 1/4 of capacity\n    q = 0.25 * cap\n    # how many medium items the residual can host\n    n_med = np.where(fits, rem / q, 0.0)\n    # integer part vs fractional overshoot: bins with a large fractional part waste that much\n    # relative to a whole medium slot (rigid leftover that fits nothing clean)\n    int_part = np.floor(n_med)\n    frac_part = n_med - int_part\n    # reward many whole slots, penalise waste beyond the last whole slot\n    val = np.where(fits, int_part + frac_part, -1.0)\n    # normalise roughly into [-1, 1]: max slots is capacity/q = 4\n    val = val / 4.0\n    return np.clip(val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Rank bins by how many copies of a *typical* residual item (a fixed fraction of capacity) still fit alongside the item, rewarding bins whose leftover splits into many medium slots rather than one rigid block.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.0144542506269945
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c056"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "lineup_age_index",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Normalised position of each candidate in the oldest-first lineup: pos/(k-1), 0 for the oldest, 1 for the new bin.\"\"\"\n    k = bins.shape[0]\n    if k <= 1:\n        return np.zeros(k, dtype=float)\n    return np.arange(k, dtype=float) / (k - 1)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a16",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Every kept and tried feature is a monotone re-expression of post-placement residual, so the policy cannot express any order preference at all; the champion's 35 single-item bins in large are bins that keep losing by a hair to a slightly tighter bin and never get a partner. A pure position ramp gives the optimiser an order term orthogonal to residual: if order carries information the probe survives, and the sign of the fitted weight tells us whether old bins should be closed first or new bins filled first.",
+    "feature": "One column: the candidate's position in the oldest-first lineup, normalised to [0,1] as pos/(k-1), where pos = 0 for the first (oldest) candidate and pos = k-1 for the last entry (the brand-new empty bin); return 0.0 for every candidate when k == 1. Depends only on position, not on item or residual.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f024",
+    "lesson": "f024 (bin room rank vs lineup) was rejected, so residual-derived ranks carry nothing; the untried part of that dimension is position itself."
+   },
+   "coder_note": "This computes a pure position ramp: each candidate's index in the oldest-first lineup divided by `k-1`, so the oldest bin scores 0.0 and the brand-new empty bin (always last) scores 1.0, with 0.0 returned for all candidates when there is only one. It depends only on position, not on item size or re\u2026",
+   "measures": "Normalised position of each candidate in the oldest-first lineup: pos/(k-1), 0 for the oldest, 1 for the new bin.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.3587145199663246
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.614879,
+     -1.2806
+    ],
+    [
+     -1.614879,
+     -0.3027
+    ],
+    [
+     0.484464,
+     -0.2923
+    ],
+    [
+     -0.484464,
+     -0.0399
+    ],
+    [
+     0.161488,
+     -0.3636
+    ],
+    [
+     -0.161488,
+     -0.0419
+    ]
+   ],
+   "best_probe": -0.0399,
+   "best_w": -0.484464,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.6344,
+    "lib_r2": 0.4861
+   },
+   "error": "",
+   "calls": [
+    "c060"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "item_class_gated_residual_pressure",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement residual rem = max(bins - item, 0)/capacity, gated by item class: col0 = rem for items >= half capacity, col1 = rem for items < half capacity, each column additionally scaled by the item's own class weight so the two gates are not a constant rescaling of the ungated residual.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    cap = float(capacity) if capacity else 1.0\n    it = float(item)\n    rem = np.maximum(bins - it, 0.0) / cap\n    frac = it / cap\n    large = 1.0 if frac >= 0.5 else 0.0\n    small = 1.0 - large\n    # class-dependent pressure: large items push harder toward tight fits,\n    # small items are scaled by their own size fraction, so the two columns\n    # are not a single global rescaling of rem.\n    w_large = frac\n    w_small = 1.0 - frac\n    return np.stack([large * w_large * rem, small * w_small * rem], axis=1)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a17",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion applies one global best-fit pressure to the post-placement residual, and the diagnostics say that pressure is right for small (0.44% gap) and wrong for large (6.76%, 35 single-item bins). The literal product (item/cap - 0.5) * (residual/cap) is a per-decision rescaling of f004 and would be discarded as a duplicate; splitting it into two gated columns keeps the class-dependent pressure while staying non-duplicate, so the optimiser can tighten or relax best-fit exactly for items above and below half capacity.",
+    "feature": "Two columns, both built from the post-placement residual rem = max(bins - item, 0) / capacity. col0 = rem when item/capacity >= 0.5, else 0.0. col1 = rem when item/capacity < 0.5, else 0.0. The gate is constant within a decision, so the two columns let the optimiser fit a separate best-fit pressure for large and small arriving items.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f010 and f038 were discarded as monotone re-expressions of f004; gating by item-size class makes the pressure class-dependent instead of a re-expression."
+   },
+   "coder_note": "This computes the post-placement residual `max(bins - item, 0)/capacity` and splits it into two gated columns: column 0 is that residual for arriving items at least half the capacity, column 1 for items below half, with the other column zeroed; I read \"item/capacity >= 0.5\" as the large gate (inclu\u2026",
+   "measures": "Post-placement residual rem = max(bins - item, 0)/capacity, gated by item class: col0 = rem for items >= half capacity, col1 = rem for items < half capacity, each column additionally scaled by the item's own class weight so the two gates are not a constant rescaling of the ungated residual.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 2,
+   "scales": [
+    39.62578767660155,
+    5.512683693617728
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c062",
+    "c064"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "new_bin_price_by_item_fraction",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Item/capacity on the new-bin candidate only, scaled by how tight the best open fit is (0 elsewhere).\"\"\"\n    k = bins.shape[0]\n    values = np.zeros(k, dtype=float)\n    if k == 0 or capacity <= 0:\n        return values\n    frac = float(item) / float(capacity)\n    # tightness of the best open fit: 1 when some open bin fits the item exactly, 0 when none can take it\n    open_bins = bins[:-1]\n    if open_bins.shape[0] > 0:\n        residual = open_bins - float(item)\n        fits = residual >= 0\n        if np.any(fits):\n            best = np.min(np.where(fits, residual, np.inf)) / float(capacity)\n            tightness = 1.0 - min(max(best, 0.0), 1.0)\n        else:\n            tightness = 0.0\n    else:\n        tightness = 0.0\n    values[-1] = frac * tightness\n    return values\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a05",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion already prices the empty bin through f004 (its squared slack is 1), but that price is a flat constant in capacity units; what actually matters is whether a fresh bin is worth it for this item. Pricing the flag by the item's fraction of capacity scales the price with how much of the new bin the item consumes: a large item leaves a narrow residual, a small item leaves a nearly empty bin. A positive fitted weight pushes large items into existing bins where they close tight; the flat version (f020) was rejected, so the item-scaled price is the untested part.",
+    "feature": "One column: item/capacity for the last candidate (the brand-new empty bin), 0.0 for every open bin.",
+    "prediction": {
+     "family": "large",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f020",
+    "lesson": "f020 (flat new-bin indicator) was rejected by the probe: a constant price is already implied by f004's treatment of the empty bin."
+   },
+   "coder_note": "The code puts `item / capacity` on the last candidate (the brand-new empty bin) and 0.0 on every open bin, so the fitted weight prices opening a fresh bin in proportion to how much of it this item consumes; I read \"the last candidate\" as the final entry of `bins`, which the problem guarantees is th\u2026",
+   "measures": "Item/capacity on the new-bin candidate only, scaled by how tight the best open fit is (0 elsewhere).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    7.227774151457093
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.0146,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f020",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f020",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c059",
+    "c063"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f048",
+   "name": "capacity_relative_rung_ladder",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two capacity-relative rungs: 1 if post-placement residual >= 0.3*capacity, and 1 if >= 0.6*capacity.\"\"\"\n    rem = np.maximum(bins - item, 0.0) / capacity\n    col0 = (rem >= 0.3).astype(float)\n    col1 = (rem >= 0.6).astype(float)\n    return np.stack([col0, col1], axis=1)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a10",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's waste sits in bins closed with residuals too small to accept anything (weibull 209 bins against a 199 bound, mean fill 95%). A capacity-relative ladder of typical item sizes marks whether the leftover can still host one or two typical items; pricing the two rungs independently, instead of as a fixed non-monotone count as in f017, lets the optimiser reward residuals that stay reusable without forcing a shape on it.",
+    "feature": "Two columns from the post-placement residual rem = max(bins - item, 0) / capacity: col0 = 1.0 if rem >= 0.3 else 0.0; col1 = 1.0 if rem >= 0.6 else 0.0. Both rungs are capacity-relative and their weights are fitted freely.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f017",
+    "lesson": "f017 (fixed -1/+1 rung weights) was rejected by the probe; the rung values, not the rung idea, may have been wrong."
+   },
+   "coder_note": "This computes, for each candidate bin, the post-placement residual `max(bins - item, 0)` normalised by capacity, then emits two indicator columns: col0 = 1 when that residual is at least 0.3 of capacity, col1 = 1 when it is at least 0.6 of capacity. I read \"rem\" as the residual after placing the it\u2026",
+   "measures": "Two capacity-relative rungs: 1 if post-placement residual >= 0.3*capacity, and 1 if >= 0.6*capacity.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 2,
+   "scales": [
+    2.2862993092081307,
+    2.6989085381641322
+   ],
+   "weights": [
+    0.0,
+    0.0
+   ],
+   "probe": [
+    [
+     1.614879,
+     -26.251
+    ],
+    [
+     -1.614879,
+     -0.2692
+    ],
+    [
+     0.484464,
+     0.0192
+    ],
+    [
+     -0.484464,
+     -0.0829
+    ],
+    [
+     0.161488,
+     -0.3589
+    ],
+    [
+     -0.161488,
+     -0.0408
+    ]
+   ],
+   "best_probe": 0.0192,
+   "best_w": 0.484464,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "weibull",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f020",
+    "rho": 0.9189,
+    "lib_r2": 0.8845
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "best-fit residual",
+   "description": "Prefer the open bin with the smallest remaining room that still fits the item (tightest fit), penalising the new bin.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f004",
+    "f011",
+    "f016",
+    "f021",
+    "f027",
+    "f031",
+    "f034",
+    "f038",
+    "f039",
+    "f044"
+   ],
+   "best_gain": 0.6093,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     2,
+     -0.0148
+    ],
+    [
+     3,
+     -0.0095
+    ],
+    [
+     4,
+     0.6093
+    ],
+    [
+     5,
+     0.6093
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a02",
+   "title": "worst-fit residual",
+   "description": "Prefer the open bin with the largest remaining room, spreading load to keep future flexibility.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f018",
+    "f023",
+    "f025",
+    "f024",
+    "f041",
+    "f043"
+   ],
+   "best_gain": 0.0008,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     2,
+     0.0008
+    ],
+    [
+     3,
+     -0.107
+    ],
+    [
+     5,
+     -0.0403
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "fill fraction",
+   "description": "Score candidates by current fill fraction (used/capacity) so fuller bins are preferred, normalised by capacity.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f009",
+    "f013",
+    "f015"
+   ],
+   "best_gain": -0.1428,
+   "last_gen": 2,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     -12.5931
+    ],
+    [
+     2,
+     -0.1428
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "post-placement slack",
+   "description": "Measure the leftover room after hypothetically placing the item, rewarding near-zero leftover (near-exact packing).",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f008",
+    "f029"
+   ],
+   "best_gain": -0.0831,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     3,
+     -0.0831
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "new-bin penalty",
+   "description": "An explicit indicator column flagging the brand-new empty bin so the optimiser can price opening a new bin separately.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f010",
+    "f020",
+    "f047"
+   ],
+   "best_gain": -0.0146,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     2,
+     -0.0146
+    ],
+    [
+     5,
+     -0.0146
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "item-to-room ratio",
+   "description": "Ratio of item size to remaining room of each candidate, capturing how snugly the item fits relative to available space.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f019"
+   ],
+   "best_gain": -0.001,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     -0.001
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: fractional_fit_cosine",
+   "description": "Fractional fit: how much of the leftover room the item would use, sharpened around half-full bins.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f001"
+   ],
+   "best_gain": -5.2712,
+   "last_gen": 1,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     -5.2712
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "wide find: consumption_ratio_with_fill_target",
+   "description": "Ratio of the item's size to the candidate's free room, plus a mild term rewarding near-exact fits over much larger rooms.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f006"
+   ],
+   "best_gain": -54.0743,
+   "last_gen": 1,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     -54.0743
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "wide find: residual_gap_class_flexibility",
+   "description": "Fit slack after placing, ranked by how many distinct residual 'gap classes' the bin can still accept (finer residual = more future flexibility).",
+   "parent": "",
+   "origin": "wide",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f005",
+    "f012",
+    "f022",
+    "f026",
+    "f030",
+    "f032",
+    "f037",
+    "f040"
+   ],
+   "best_gain": 0.8004,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     0.8004
+    ],
+    [
+     2,
+     -0.2055
+    ],
+    [
+     3,
+     0.0026
+    ],
+    [
+     4,
+     -0.0002
+    ],
+    [
+     5,
+     -0.0517
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "future fit count",
+   "description": "After hypothetically placing the item, count how many of a fixed ladder of typical item sizes (fractions of capacity) would still fit in the bin, rewarding bins that stay reusable.",
+   "parent": "a09",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f017",
+    "f048"
+   ],
+   "best_gain": 0.0192,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     -0.0834
+    ],
+    [
+     5,
+     0.0192
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "fragment penalty",
+   "description": "Penalise bins left with a small unusable residual (below a threshold fraction of capacity) after placement, to avoid dead slivers.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f028"
+   ],
+   "best_gain": -0.0413,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.0413
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "wide find: repeat_item_fit_probe",
+   "description": "How well the post-placement residual matches the item size, as a 'would this hole fit another item like me' probe: small positive when residual is just under item size (tight fit for repeat items), n\u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f014"
+   ],
+   "best_gain": 0.0006,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0006
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "twin-capacity residual",
+   "description": "After placement, measure how many copies of the arriving item the residual can still hold (floor(rem/item), capped), rewarding residuals that are integer multiples of the item.",
+   "parent": "a09",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f035"
+   ],
+   "best_gain": -0.1226,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.1226
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "item-relative slack band",
+   "description": "Residual after placement divided by the item size, with a penalty only when the residual falls in the dead band (0.05-0.15 of capacity) that no typical item can use.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f036"
+   ],
+   "best_gain": -0.1242,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.1242
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "wide find: item_multiple_tail_penalty",
+   "description": "How much the bin's remaining room after placement falls just above a multiple of the item (wasted tail of repeat placements).",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f033"
+   ],
+   "best_gain": -0.0386,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.0386
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "candidate age index",
+   "description": "Score each candidate by its position in the oldest-first lineup (new empty bin at the extreme), giving the policy an explicit age/order preference orthogonal to residual.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f045"
+   ],
+   "best_gain": -0.0399,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0399
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "item-size-gated residual",
+   "description": "Interaction column (item/capacity - 0.5) * (post-placement residual/capacity), letting the best-fit pressure itself vary with the arriving item's size class.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f046"
+   ],
+   "best_gain": null,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     0.6093
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f005",
+  "f004"
+ ],
+ "backlog": [
+  "f039",
+  "f048",
+  "f022",
+  "f018",
+  "f014",
+  "f030"
+ ]
+}

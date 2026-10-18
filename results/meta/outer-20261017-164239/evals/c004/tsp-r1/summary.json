@@ -1,0 +1,75 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 9.47204994243035,
+  "valid": 12.724579616092347,
+  "progress": 98.16,
+  "valid_progress": 97.51,
+  "library": [
+   "f004",
+   "f001",
+   "f005",
+   "f027"
+  ]
+ },
+ "test": {
+  "gap": 11.818507713789328,
+  "families": {
+   "uniform": 16.748766492364293,
+   "clustered": 11.487836536154171,
+   "grid": 7.693567711752114,
+   "mixed": 11.343860114886729
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.76
+ },
+ "progress_curve": [
+  0.0,
+  97.63,
+  97.6,
+  98.16,
+  98.16,
+  98.16
+ ],
+ "valid_curve": [
+  0.0,
+  97.08,
+  97.25,
+  97.51,
+  97.51,
+  97.51
+ ],
+ "calls": 65,
+ "tokens_in": 148067,
+ "tokens_out": 76353,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "start_closing_balance",
+   "origin": "wide"
+  },
+  {
+   "id": "f001",
+   "name": "return_leg_minus_step",
+   "origin": "wide"
+  },
+  {
+   "id": "f005",
+   "name": "nearest_neighbour_distance",
+   "origin": "deep"
+  },
+  {
+   "id": "f027",
+   "name": "homesick_vs_isolation_ratio",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792273671.434352
+}

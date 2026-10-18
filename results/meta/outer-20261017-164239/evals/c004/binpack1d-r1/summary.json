@@ -1,0 +1,65 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.600608553737313,
+  "valid": 3.720943080896209,
+  "progress": 34.98,
+  "valid_progress": 28.46,
+  "library": [
+   "f001",
+   "f016"
+  ]
+ },
+ "test": {
+  "gap": 8.880236072158096,
+  "families": {
+   "weibull": 3.5966089470169216,
+   "uniform": 4.338441794378197,
+   "small": 1.6595977122292844,
+   "large": 5.616323370485669,
+   "bimodal": 34.35453275222313,
+   "scaled": 3.71591185661538
+  },
+  "code_zero": 7.376614077127708,
+  "progress": -33.69
+ },
+ "progress_curve": [
+  0.0,
+  19.27,
+  34.01,
+  34.01,
+  34.98,
+  34.98
+ ],
+ "valid_curve": [
+  0.0,
+  13.5,
+  25.14,
+  25.14,
+  28.46,
+  28.46
+ ],
+ "calls": 63,
+ "tokens_in": 133906,
+ "tokens_out": 127432,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "fit_tightness_ratio",
+   "origin": "wide"
+  },
+  {
+   "id": "f016",
+   "name": "stranded_residual_bump",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792273258.282652
+}
