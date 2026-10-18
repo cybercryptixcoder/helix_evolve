@@ -227,3 +227,26 @@ doesn't move past ~29%, the plateau is documented as the current limit (escape c
 of the reference solution, checked in the prompts): 98.2 → 99.0 → 99.0 → 99.4 → 99.4 → 99.4 → 99.8% train, 99.7%
 valid, 99.0% test, against 100% / 100% / 99.95% with the statistics shown (10 generations). Same trajectory, and it
 found the same endgame idea (exact residual fit) on its own: the reference statistics are not what drives it.
+
+**Round 6** (stall signal + full-train search, binpack2d, 15 generations): 22.7 → 28.6 (generation 2), flat
+through 6, **30.2** at generation 7 (`item_caused_stranding_large`), 29.7 with validation up to 26.3 at 10, then
+**35.1% train, 29.3% validation** at generation 14 (`large_both_dim_dead_band`). Held-out test: **−5.910**
+(progress 33.7%), against the previous best's −6.001 (October 12 engine, 25 generations), on the same test
+instances. The plateau broke the way the October 12 run's did: with features that switch on only for large items.
+With one run per configuration I can't say how much the stall signal and the larger search split contributed
+versus chance; repeating round 6's configuration (the cloud job list does this) would tell.
+
+## Where this leaves things (end of October 17)
+
+- **Done against the original requests**: the evolver does what was intended (traced and fixed over six review
+  rounds); the 9-problem suite, where Helix beats every textbook rule on unseen instances; the meta loop, robust for
+  long unattended runs; the dashboard; speed (generations 4-5x faster); thinking modes (bounded, with breakthrough
+  generations); the search-space vision (streams, benching and revival, momentum, perturbation, stall response);
+  the records beaten on 2D bin packing; leakage checked by ablation.
+- **Known limits**: runs plateau after 5-6 generations and break out only occasionally (one breakout in four
+  long binpack2d runs); job shop over-fits its training families (86% train, 76% test); perturbation generations
+  have never been adopted; generations are bound by the Researcher's thinking time (30-85 s) plus CPU.
+- **Next, in order of expected value**: (1) repeated runs of the round-6 configuration to separate the method from
+  luck; (2) the meta loop's results (Shreyas's cloud run) and what it changes; (3) a population of champions
+  (islands) so a plateau in one doesn't stall the search; (4) drop perturbation generations unless they start
+  paying off; (5) held-out families inside validation, against over-fitting to training families.

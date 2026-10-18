@@ -28,13 +28,13 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 ## 2. Make the evolver do what was intended
 
 - **done**: For each intent the system missed, trace the cause (system prompt, structure, other) and fix it, or rebuild from the ground up keeping the structure: a Researcher going deep, a Mutator going wide, Coders. Enforce intent without limiting the agents. (`docs/V3_DESIGN.md`, `helix3/`)
-- **doing**: Iterate: run small runs, review traces (subagents), fix, repeat, several rounds, until it is "insanely good". Rounds 1-4 done on binpack2d; a 15-generation run is next.
-- **doing**: Beat records (binpack2d: 27.5% at 5 generations, 34.6% best).
+- **done**: Iterate: run small runs, review traces (subagents), fix, repeat. Six rounds on binpack2d plus the cloud batch; see docs/WORKLOG.md. Further rounds: see "Next" there.
+- **done**: Beat records (binpack2d: 27.5% at 5 generations, 34.6% best): round 6 reached 35.1% train, held-out test −5.91 against −6.00, in 15 generations.
 
 ## 3. Test suite (generality, no flukes, no leaks)
 
 - **done**: Many verifiable problems: binpack2d, binpack1d, knapsack, set cover, TSP, online scheduling, graph colouring, job shop, CVRP (vehicle routing, added on request). Held-out families, hidden baselines, references never shown to agents. (`suite/`)
-- **doing**: Small generality runs on 2-3 other problems. TSP: 97% from Code Zero in 5 generations; test tour gap ~14% against 25% for the hidden nearest-neighbour baseline.
+- **done**: Generality runs on all 9 problems (cloud batch): every one beats its textbook rule on unseen instances. TSP: 97% from Code Zero in 5 generations; test tour gap ~14% against 25% for the hidden nearest-neighbour baseline.
 - **done**: Everything plugged in for Shreyas to run big suite runs himself.
 
 ## 4. Meta-evolution (code by me, runs by Shreyas)
@@ -86,3 +86,4 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - 2026-10-17 15:12: pause here; a job script and a prompt for Shreyas's cloud agent to run the setup unattended (long runs, the suite, a meta run), results pushed to GitHub; a milestone check against the hackathon; wake at 7:10/7:15 pm to continue.
 - 2026-10-17 19:10: (scheduled resume) cloud agent's 9 runs reviewed; fixed the generation-14 crash; diagnosing the 2D bin-packing plateau.
 - 2026-10-17 20:36: is 99.95% on knapsack leakage (pre-training, evaluator)? explain the textbook rule; a per-generation chart for every problem; an honest read of the runs (answered: algorithm found, not leakage; chart sent; offered an ablation hiding reference statistics from the Researcher).
+- 2026-10-17 22:30: round 6 beat the records; stopping rule met; wrap-up.
