@@ -1,0 +1,111 @@
+{
+ "problem": "binpack2d",
+ "label": "v3r6",
+ "generations": 15,
+ "code_zero": {
+  "train": 9.181256761017401,
+  "valid": 9.276251965192097
+ },
+ "champion": {
+  "train": 6.114747017829867,
+  "valid": 6.5544479080764235,
+  "progress": 35.12,
+  "valid_progress": 29.34,
+  "library": [
+   "f008",
+   "f010",
+   "f016",
+   "f049",
+   "f080",
+   "f117"
+  ]
+ },
+ "test": {
+  "gap": 5.909556467927624,
+  "families": {
+   "uniform": 5.082375315838349,
+   "correlated": 3.724004031697222,
+   "anticorr": 10.238975058834287,
+   "small": 1.875257545039477,
+   "large": 10.994136237936686,
+   "bimodal": 6.735657194892982,
+   "lognormal": 3.931908287286564,
+   "wide": 4.694138071895426
+  },
+  "code_zero": 8.909349167213218,
+  "progress": 33.67
+ },
+ "progress_curve": [
+  0.0,
+  22.74,
+  28.56,
+  28.56,
+  28.56,
+  28.56,
+  28.56,
+  30.17,
+  30.17,
+  30.17,
+  29.68,
+  29.68,
+  29.68,
+  29.68,
+  35.12,
+  35.12
+ ],
+ "valid_curve": [
+  0.0,
+  19.59,
+  24.75,
+  24.75,
+  24.75,
+  24.75,
+  24.75,
+  24.7,
+  24.7,
+  24.7,
+  26.3,
+  26.3,
+  26.3,
+  26.3,
+  29.34,
+  29.34
+ ],
+ "calls": 169,
+ "tokens_in": 523629,
+ "tokens_out": 330502,
+ "features_tried": 126,
+ "kept": [
+  {
+   "id": "f008",
+   "name": "stranded_risk_penalty",
+   "origin": "deep"
+  },
+  {
+   "id": "f010",
+   "name": "worst_relative_leftover_after_placement",
+   "origin": "wide"
+  },
+  {
+   "id": "f016",
+   "name": "bolder_stranding_magnitude",
+   "origin": "deep"
+  },
+  {
+   "id": "f049",
+   "name": "item_caused_stranding_large",
+   "origin": "deep"
+  },
+  {
+   "id": "f080",
+   "name": "item_bin_harmonic_residual",
+   "origin": "wide"
+  },
+  {
+   "id": "f117",
+   "name": "large_both_dim_dead_band",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792290512.0944471
+}
