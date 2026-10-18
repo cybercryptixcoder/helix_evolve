@@ -3,7 +3,7 @@
     python -m ui                 # http://localhost:8765
     python -m ui --port 9000
 
-It reads run folders (runs/, results/v3/), meta runs (meta_runs/, results/meta/) and the problem suite, and can
+It reads run folders (runs/, results/v3/, results/open/), meta runs (meta_runs/, results/meta/) and the problem suite, and can
 start new runs. Nothing to build or install: standard library only.
 """
 from __future__ import annotations
@@ -23,7 +23,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = Path(__file__).resolve().parent / "static"
-RUN_ROOTS = [ROOT / "runs", ROOT / "results" / "v3"]
+RUN_ROOTS = [ROOT / "runs", ROOT / "results" / "v3", ROOT / "results" / "open"]
 META_ROOTS = [ROOT / "meta_runs", ROOT / "results" / "meta"]
 sys.path.insert(0, str(ROOT))
 
@@ -69,8 +69,8 @@ def list_runs():
     for root in RUN_ROOTS:
         if not root.exists():
             continue
-        for d in root.glob("*/*"):
-            if not (d / "trace.jsonl").exists():
+        for d in sorted(set(root.glob("*")) | set(root.glob("*/*"))):     # runs/<problem>/<run> and results/<x>/<job>
+            if not d.is_dir() or not (d / "trace.jsonl").exists():
                 continue
             try:
                 st = json.loads((d / "status.json").read_text()) if (d / "status.json").exists() else {}
