@@ -1,0 +1,83 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.414747463963761,
+  "valid": 3.32738568587496,
+  "progress": 39.44,
+  "valid_progress": 37.18,
+  "library": [
+   "f002",
+   "f018",
+   "f035",
+   "f040",
+   "f044"
+  ]
+ },
+ "test": {
+  "gap": 5.7672991156158355,
+  "families": {
+   "weibull": 2.9445691570870367,
+   "uniform": 3.505920981357861,
+   "small": 0.8354218880534633,
+   "large": 5.348568479119961,
+   "bimodal": 18.760196858356363,
+   "scaled": 3.209117329720334
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 36.05
+ },
+ "progress_curve": [
+  0.0,
+  19.27,
+  27.43,
+  27.43,
+  37.65,
+  39.44
+ ],
+ "valid_curve": [
+  0.0,
+  13.5,
+  21.25,
+  21.25,
+  30.89,
+  37.18
+ ],
+ "calls": 66,
+ "tokens_in": 131249,
+ "tokens_out": 105692,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "exp_fit_matching",
+   "origin": "wide"
+  },
+  {
+   "id": "f018",
+   "name": "headroom_band_50",
+   "origin": "deep"
+  },
+  {
+   "id": "f035",
+   "name": "exact_or_twin_fit",
+   "origin": "deep"
+  },
+  {
+   "id": "f040",
+   "name": "resonant_multifit_pairs",
+   "origin": "wide"
+  },
+  {
+   "id": "f044",
+   "name": "periodic_multiple_match",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792277254.8983808
+}

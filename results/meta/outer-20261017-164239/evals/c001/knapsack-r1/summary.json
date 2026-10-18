@@ -1,0 +1,76 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.025485411121473994,
+  "valid": 0.1385075225892022,
+  "progress": 99.81,
+  "valid_progress": 99.05,
+  "library": [
+   "f004",
+   "f001",
+   "f016",
+   "f024"
+  ]
+ },
+ "test": {
+  "gap": 0.05383066465255141,
+  "families": {
+   "uncorrelated": 0.16426484762579463,
+   "weakly_correlated": 0.05026021179193411,
+   "strongly_correlated": 0.0100579810432914,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.03896923474028258
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.57
+ },
+ "progress_curve": [
+  0.0,
+  98.29,
+  98.89,
+  99.81,
+  99.81,
+  99.81
+ ],
+ "valid_curve": [
+  0.0,
+  98.33,
+  98.43,
+  99.05,
+  99.05,
+  99.05
+ ],
+ "calls": 71,
+ "tokens_in": 165160,
+ "tokens_out": 93866,
+ "features_tried": 51,
+ "kept": [
+  {
+   "id": "f004",
+   "name": "relative_density_to_best",
+   "origin": "wide"
+  },
+  {
+   "id": "f001",
+   "name": "density_residual_bite",
+   "origin": "wide"
+  },
+  {
+   "id": "f016",
+   "name": "late_exact_fit_slack_close",
+   "origin": "deep"
+  },
+  {
+   "id": "f024",
+   "name": "displaced_best_density_regret_ratio",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792270246.0473905
+}

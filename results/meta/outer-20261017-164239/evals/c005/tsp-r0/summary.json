@@ -1,0 +1,69 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 12.059066236733779,
+  "valid": 11.187924651276298,
+  "progress": 97.66,
+  "valid_progress": 97.81,
+  "library": [
+   "f003",
+   "f008",
+   "f012"
+  ]
+ },
+ "test": {
+  "gap": 15.526664292725853,
+  "families": {
+   "uniform": 18.800327850814263,
+   "clustered": 23.015283540602358,
+   "grid": 8.90711837674972,
+   "mixed": 11.383927402737067
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.05
+ },
+ "progress_curve": [
+  0.0,
+  97.26,
+  97.66,
+  97.66,
+  97.66,
+  97.66
+ ],
+ "valid_curve": [
+  0.0,
+  97.61,
+  97.81,
+  97.81,
+  97.81,
+  97.81
+ ],
+ "calls": 59,
+ "tokens_in": 122729,
+ "tokens_out": 121664,
+ "features_tried": 41,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "edge_vs_centroid_balance",
+   "origin": "wide"
+  },
+  {
+   "id": "f008",
+   "name": "candidate_density",
+   "origin": "deep"
+  },
+  {
+   "id": "f012",
+   "name": "nearest_neighbour_plus_return_span",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792278621.1355543
+}

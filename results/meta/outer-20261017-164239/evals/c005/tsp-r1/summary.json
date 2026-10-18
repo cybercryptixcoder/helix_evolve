@@ -1,0 +1,87 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 9.677312711078512,
+  "valid": 12.58884010208387,
+  "progress": 98.12,
+  "valid_progress": 97.54,
+  "library": [
+   "f002",
+   "f023",
+   "f021",
+   "f026",
+   "f031",
+   "f037"
+  ]
+ },
+ "test": {
+  "gap": 11.760608995799027,
+  "families": {
+   "uniform": 9.275880441554586,
+   "clustered": 16.856988404130178,
+   "grid": 7.88977157576997,
+   "mixed": 13.019795561741375
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.77
+ },
+ "progress_curve": [
+  0.0,
+  95.13,
+  95.13,
+  97.08,
+  97.71,
+  98.12
+ ],
+ "valid_curve": [
+  0.0,
+  95.71,
+  95.71,
+  96.41,
+  97.68,
+  97.54
+ ],
+ "calls": 57,
+ "tokens_in": 135528,
+ "tokens_out": 108297,
+ "features_tried": 41,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "skip_regret",
+   "origin": "wide"
+  },
+  {
+   "id": "f023",
+   "name": "closing_aware_regret",
+   "origin": "deep"
+  },
+  {
+   "id": "f021",
+   "name": "start_weighted_savings",
+   "origin": "deep"
+  },
+  {
+   "id": "f026",
+   "name": "ratio_anchor_regret_isolation",
+   "origin": "wide"
+  },
+  {
+   "id": "f031",
+   "name": "endgame_greedy_closing_chain",
+   "origin": "deep"
+  },
+  {
+   "id": "f037",
+   "name": "leg_passby_intrusion_penalty",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792277884.7622695
+}

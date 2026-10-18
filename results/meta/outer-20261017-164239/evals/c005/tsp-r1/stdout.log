@@ -1,0 +1,50 @@
+Helix v3 · Travelling salesman: build the tour city by city · 5 generations → meta_runs/outer-20261017-164239/evals/c005/tsp-r1
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 514.745% train, 511.723% valid
+── generation 1: champion gap 514.745% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['skip_regret'] → gap 25.082% progress 95.1% (valid 95.7%) | 46s, 11 calls
+── generation 2: champion gap 25.082% (progress 95.1%), 1 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 25.082% progress 95.1% (valid 95.7%) | 56s, 22 calls
+── generation 3: champion gap 25.082% (progress 95.1%), 1 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['closing_aware_regret', 'closing_distance_to_start_gated', 'start_weighted_savings'] → gap 15.010% progress 97.1% (valid 96.4%) | 102s, 35 calls
+── generation 4: champion gap 15.010% (progress 97.1%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   perturbation: 3 restarts, best 14.564% vs 15.010%
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['ratio_anchor_regret_isolation', 'endgame_greedy_closing_chain'] → gap 11.764% progress 97.7% (valid 97.7%) | 86s, 46 calls
+── generation 5: champion gap 11.764% (progress 97.7%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['leg_passby_intrusion_penalty'] → gap 9.677% progress 98.1% (valid 97.5%) | 285s, 57 calls
+done: progress 98.12% train, 97.54% valid, test 97.77% | 57 calls
+
+--- stderr ---
+/home/ubuntu/helix_evolve_run/.venv/lib/python3.11/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+<feature>:41: RuntimeWarning: invalid value encountered in divide
+<feature>:41: RuntimeWarning: invalid value encountered in divide
+<feature>:41: RuntimeWarning: invalid value encountered in divide
+<feature>:27: RuntimeWarning: invalid value encountered in divide
+<feature>:27: RuntimeWarning: invalid value encountered in divide
+<feature>:27: RuntimeWarning: invalid value encountered in divide

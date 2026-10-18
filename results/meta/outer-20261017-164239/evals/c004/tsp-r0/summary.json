@@ -1,0 +1,69 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 10.644904236220029,
+  "valid": 10.553343260643167,
+  "progress": 97.93,
+  "valid_progress": 97.94,
+  "library": [
+   "f001",
+   "f004",
+   "f013"
+  ]
+ },
+ "test": {
+  "gap": 14.241735558998725,
+  "families": {
+   "uniform": 15.502591637642999,
+   "clustered": 21.893249459976165,
+   "grid": 9.411312572656247,
+   "mixed": 10.159788565719486
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.29
+ },
+ "progress_curve": [
+  0.0,
+  95.87,
+  97.8,
+  97.8,
+  97.93,
+  97.93
+ ],
+ "valid_curve": [
+  0.0,
+  95.86,
+  97.91,
+  97.91,
+  97.94,
+  97.94
+ ],
+ "calls": 53,
+ "tokens_in": 124247,
+ "tokens_out": 75669,
+ "features_tried": 41,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "halfplane_sweep_fraction",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "two_opt_savings_via_nearest_unvisited",
+   "origin": "wide"
+  },
+  {
+   "id": "f013",
+   "name": "hull_radial_extremity",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792273669.9396036
+}

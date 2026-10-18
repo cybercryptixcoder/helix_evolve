@@ -1,0 +1,63 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 10.963794374440639,
+  "valid": 15.24688154179647,
+  "progress": 98.9,
+  "valid_progress": 98.52,
+  "library": [
+   "f009",
+   "f001"
+  ]
+ },
+ "test": {
+  "gap": 16.245809893785886,
+  "families": {
+   "uniform": 2.859322205484941,
+   "exponential": 6.7294270404105,
+   "bimodal": 41.13570508368473,
+   "lognormal": 14.258785245563367
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 98.18
+ },
+ "progress_curve": [
+  0.0,
+  98.9,
+  98.9,
+  98.9,
+  98.9,
+  98.9
+ ],
+ "valid_curve": [
+  0.0,
+  98.52,
+  98.52,
+  98.52,
+  98.52,
+  98.52
+ ],
+ "calls": 64,
+ "tokens_in": 140715,
+ "tokens_out": 159393,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f009",
+   "name": "reserve_emptiest_machine",
+   "origin": "deep"
+  },
+  {
+   "id": "f001",
+   "name": "relative_load_deficit",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792274786.1350038
+}

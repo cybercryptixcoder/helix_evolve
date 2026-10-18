@@ -1,0 +1,70 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.027610528462280553,
+  "valid": 0.10504532177176748,
+  "progress": 99.79,
+  "valid_progress": 99.28,
+  "library": [
+   "f007",
+   "f005",
+   "f015"
+  ]
+ },
+ "test": {
+  "gap": 0.05209895676911991,
+  "families": {
+   "uncorrelated": 0.09198091634371834,
+   "weakly_correlated": 0.0757840586542972,
+   "strongly_correlated": 0.06830033688679515,
+   "inverse_strongly_correlated": 0.0,
+   "almost_strongly_correlated": 0.024429471960788856
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.58
+ },
+ "progress_curve": [
+  0.0,
+  99.4,
+  99.79,
+  99.79,
+  99.79,
+  99.79
+ ],
+ "valid_curve": [
+  0.0,
+  98.97,
+  99.28,
+  99.28,
+  99.28,
+  99.28
+ ],
+ "calls": 64,
+ "tokens_in": 170287,
+ "tokens_out": 292266,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f007",
+   "name": "residual_density_lookahead",
+   "origin": "deep"
+  },
+  {
+   "id": "f005",
+   "name": "density_fill_mix",
+   "origin": "wide"
+  },
+  {
+   "id": "f015",
+   "name": "stranded_capacity_pair_fit",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792288263.8871987
+}

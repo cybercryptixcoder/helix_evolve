@@ -1,0 +1,10 @@
+── outer generation 0: evaluating the starting strategy
+   evaluating c001 (starting strategy)
+── outer generation 1: incumbent c001 score 27.64
+   evaluating c004 (negative_probe_margin_admits_trial)
+   evaluating c005 (shift_one_mutator_slot_to_researcher)
+   evaluating c002 (sharper_deep_fresh_wide)
+   evaluating c002 (sharper_deep_fresh_wide)
+   promoted c005 (+10.59); the outer loop now runs on it
+── time budget used up: stopping before outer generation 2
+done: incumbent c005, score 38.23

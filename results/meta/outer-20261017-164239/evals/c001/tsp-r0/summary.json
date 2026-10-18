@@ -1,0 +1,69 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 12.71323132029673,
+  "valid": 12.785724338289077,
+  "progress": 97.53,
+  "valid_progress": 97.5,
+  "library": [
+   "f006",
+   "f002",
+   "f004"
+  ]
+ },
+ "test": {
+  "gap": 16.361276374782854,
+  "families": {
+   "uniform": 9.009417301686193,
+   "clustered": 28.90430216137608,
+   "grid": 11.479948175411735,
+   "mixed": 16.051437860657405
+  },
+  "code_zero": 526.464221542033,
+  "progress": 96.89
+ },
+ "progress_curve": [
+  0.0,
+  97.53,
+  97.53,
+  97.53,
+  97.53,
+  97.53
+ ],
+ "valid_curve": [
+  0.0,
+  97.5,
+  97.5,
+  97.5,
+  97.5,
+  97.5
+ ],
+ "calls": 61,
+ "tokens_in": 135761,
+ "tokens_out": 82473,
+ "features_tried": 44,
+ "kept": [
+  {
+   "id": "f006",
+   "name": "neg_dist_from_current",
+   "origin": "deep"
+  },
+  {
+   "id": "f002",
+   "name": "distance_to_start_normalized",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "last_leg_saving",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792270659.7182944
+}

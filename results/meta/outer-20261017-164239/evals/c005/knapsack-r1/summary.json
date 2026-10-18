@@ -1,0 +1,82 @@
+{
+ "problem": "knapsack",
+ "label": "meta-knapsack-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 13.322461383777737,
+  "valid": 14.596890692230355
+ },
+ "champion": {
+  "train": 0.020370012851613405,
+  "valid": 0.037392129359338964,
+  "progress": 99.85,
+  "valid_progress": 99.74,
+  "library": [
+   "f001",
+   "f002",
+   "f013",
+   "f027",
+   "f043"
+  ]
+ },
+ "test": {
+  "gap": 0.024163872626833765,
+  "families": {
+   "uncorrelated": 0.058162871180407937,
+   "weakly_correlated": 0.01654937508572818,
+   "strongly_correlated": 0.018140533755850452,
+   "inverse_strongly_correlated": 0.005601048061454339,
+   "almost_strongly_correlated": 0.022365535050727914
+  },
+  "code_zero": 12.52257718045531,
+  "progress": 99.81
+ },
+ "progress_curve": [
+  0.0,
+  98.43,
+  98.76,
+  98.88,
+  98.9,
+  99.85
+ ],
+ "valid_curve": [
+  0.0,
+  98.15,
+  98.7,
+  98.99,
+  99.02,
+  99.74
+ ],
+ "calls": 68,
+ "tokens_in": 141975,
+ "tokens_out": 133060,
+ "features_tried": 47,
+ "kept": [
+  {
+   "id": "f001",
+   "name": "relative_density_fit_slack",
+   "origin": "wide"
+  },
+  {
+   "id": "f002",
+   "name": "value_over_weight_plus_remaining",
+   "origin": "wide"
+  },
+  {
+   "id": "f013",
+   "name": "value_over_shrunk_weight_budget",
+   "origin": "wide"
+  },
+  {
+   "id": "f027",
+   "name": "density_blocking_cost",
+   "origin": "deep"
+  },
+  {
+   "id": "f043",
+   "name": "one_step_fill_value_lookahead",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792277578.041913
+}

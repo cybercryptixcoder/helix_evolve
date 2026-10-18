@@ -1,0 +1,81 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 8.177432894689668,
+  "valid": 8.541146698152458,
+  "progress": 98.41,
+  "valid_progress": 98.33,
+  "library": [
+   "f007",
+   "f002",
+   "f021",
+   "f037",
+   "f043"
+  ]
+ },
+ "test": {
+  "gap": 12.47460347138555,
+  "families": {
+   "uniform": 12.595102320546843,
+   "clustered": 18.18492863007418,
+   "grid": 6.6928611226454215,
+   "mixed": 12.425521812275756
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.63
+ },
+ "progress_curve": [
+  0.0,
+  97.46,
+  97.46,
+  97.76,
+  98.35,
+  98.41
+ ],
+ "valid_curve": [
+  0.0,
+  96.74,
+  96.74,
+  98.21,
+  98.16,
+  98.33
+ ],
+ "calls": 65,
+ "tokens_in": 162982,
+ "tokens_out": 227506,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f007",
+   "name": "nearest_neighbour_distance",
+   "origin": "deep"
+  },
+  {
+   "id": "f002",
+   "name": "nearest_gap_savings",
+   "origin": "wide"
+  },
+  {
+   "id": "f021",
+   "name": "mean_isolation_savings",
+   "origin": "wide"
+  },
+  {
+   "id": "f037",
+   "name": "gated_home_contrast_endgame",
+   "origin": "deep"
+  },
+  {
+   "id": "f043",
+   "name": "path_clearance_outward",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792289051.0548577
+}

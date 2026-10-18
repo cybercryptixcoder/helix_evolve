@@ -1,0 +1,76 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 13.320707070707073,
+  "valid": 22.156177156177158,
+  "progress": 76.88,
+  "valid_progress": 61.33,
+  "library": [
+   "f003",
+   "f005",
+   "f007",
+   "f022"
+  ]
+ },
+ "test": {
+  "gap": 18.994708994708994,
+  "families": {
+   "sparse": 13.33333333333333,
+   "dense": 22.222222222222225,
+   "geometric": 2.38095238095238,
+   "planted": 38.888888888888886,
+   "medium": 18.148148148148156
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 66.83
+ },
+ "progress_curve": [
+  0.0,
+  54.07,
+  54.07,
+  76.88,
+  76.88,
+  76.88
+ ],
+ "valid_curve": [
+  0.0,
+  56.96,
+  56.96,
+  61.33,
+  61.33,
+  61.33
+ ],
+ "calls": 54,
+ "tokens_in": 139425,
+ "tokens_out": 109264,
+ "features_tried": 42,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "saturation_scarcity_mix",
+   "origin": "wide"
+  },
+  {
+   "id": "f005",
+   "name": "dsatur_distinct_neighbor_colors",
+   "origin": "deep"
+  },
+  {
+   "id": "f007",
+   "name": "colored_neighbor_fraction",
+   "origin": "deep"
+  },
+  {
+   "id": "f022",
+   "name": "would_take_colour_neighbour_block_share",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792274653.882672
+}

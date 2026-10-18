@@ -1,0 +1,44 @@
+Helix v3 · Graph colouring: choose the order to colour vertices · 5 generations → meta_runs/outer-20261017-164239/evals/c001/coloring-r0
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 57.619% train, 57.290% valid
+── generation 1: champion gap 57.619% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['saturation_with_new_color_flag', 'neighbour_colour_concentration'] → gap 27.219% progress 52.8% (valid 50.0%) | 48s, 10 calls
+── generation 2: champion gap 27.219% (progress 52.8%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['forced_new_colour_neighbour_pressure'] → gap 20.073% progress 65.2% (valid 63.6%) | 83s, 21 calls
+── generation 3: champion gap 20.073% (progress 65.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 20.073% progress 65.2% (valid 63.6%) | 72s, 32 calls
+── generation 4: champion gap 20.073% (progress 65.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   perturbation: 3 restarts, best 16.503% vs 20.073%
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 20.073% progress 65.2% (valid 63.6%) | 79s, 43 calls
+── generation 5: champion gap 20.073% (progress 65.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 20.073% progress 65.2% (valid 63.6%) | 261s, 53 calls
+done: progress 65.16% train, 63.64% valid, test 49.68% | 53 calls
+
+--- stderr ---
+/home/ubuntu/helix_evolve_run/.venv/lib/python3.11/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'

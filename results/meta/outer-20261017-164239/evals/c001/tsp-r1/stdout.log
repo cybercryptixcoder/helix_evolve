@@ -1,0 +1,44 @@
+Helix v3 · Travelling salesman: build the tour city by city · 5 generations → meta_runs/outer-20261017-164239/evals/c001/tsp-r1
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 514.745% train, 511.723% valid
+── generation 1: champion gap 514.745% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['nearest_neighbour_negdist', 'dist_to_start_normalized'] → gap 14.231% progress 97.2% (valid 97.0%) | 32s, 11 calls
+── generation 2: champion gap 14.231% (progress 97.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['local_spacing_neg', 'near_and_outward'] → gap 15.751% progress 96.9% (valid 97.8%) | 47s, 22 calls
+── generation 3: champion gap 15.751% (progress 96.9%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 15.751% progress 96.9% (valid 97.8%) | 87s, 32 calls
+── generation 4: champion gap 15.751% (progress 96.9%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   perturbation: 3 restarts, best 10.433% vs 11.552%
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['abs_turn_soft_straight'] → gap 10.895% progress 97.9% (valid 98.0%) | 44s, 44 calls
+── generation 5: champion gap 10.895% (progress 97.9%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 10.895% progress 97.9% (valid 98.0%) | 242s, 56 calls
+done: progress 97.88% train, 98.01% valid, test 97.36% | 56 calls
+
+--- stderr ---
+/home/ubuntu/helix_evolve_run/.venv/lib/python3.11/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'

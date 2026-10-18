@@ -1,0 +1,81 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 12.723794890077096,
+  "valid": 15.246949872463409,
+  "progress": 98.73,
+  "valid_progress": 98.52,
+  "library": [
+   "f006",
+   "f012",
+   "f025",
+   "f036",
+   "f042"
+  ]
+ },
+ "test": {
+  "gap": 17.369762771550384,
+  "families": {
+   "uniform": 2.7354628801436647,
+   "exponential": 6.939281964536992,
+   "bimodal": 46.75079247162035,
+   "lognormal": 13.053513769900535
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 98.06
+ },
+ "progress_curve": [
+  0.0,
+  98.21,
+  98.52,
+  98.67,
+  98.7,
+  98.73
+ ],
+ "valid_curve": [
+  0.0,
+  97.99,
+  98.47,
+  98.47,
+  98.5,
+  98.52
+ ],
+ "calls": 68,
+ "tokens_in": 156597,
+ "tokens_out": 143740,
+ "features_tried": 50,
+ "kept": [
+  {
+   "id": "f006",
+   "name": "load_rank_signed",
+   "origin": "wide"
+  },
+  {
+   "id": "f012",
+   "name": "dispersion_weighted_median_fit",
+   "origin": "wide"
+  },
+  {
+   "id": "f025",
+   "name": "post_top_heaviness_penalty",
+   "origin": "wide"
+  },
+  {
+   "id": "f036",
+   "name": "giant_band_asymmetric_hinge",
+   "origin": "wide"
+  },
+  {
+   "id": "f042",
+   "name": "asymmetric_median_best_fit",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792272220.5047297
+}

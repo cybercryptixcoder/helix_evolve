@@ -1,0 +1,75 @@
+{
+ "problem": "scheduling",
+ "label": "meta-scheduling-r0",
+ "generations": 5,
+ "code_zero": {
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617
+ },
+ "champion": {
+  "train": 11.655014946177197,
+  "valid": 16.480449964700053,
+  "progress": 98.83,
+  "valid_progress": 98.4,
+  "library": [
+   "f003",
+   "f013",
+   "f023",
+   "f032"
+  ]
+ },
+ "test": {
+  "gap": 13.889498025001684,
+  "families": {
+   "uniform": 2.66403668346488,
+   "exponential": 5.699106537969567,
+   "bimodal": 33.90672948227277,
+   "lognormal": 13.288119396299516
+  },
+  "code_zero": 893.9017746162477,
+  "progress": 98.45
+ },
+ "progress_curve": [
+  0.0,
+  98.21,
+  98.34,
+  98.56,
+  98.83,
+  98.83
+ ],
+ "valid_curve": [
+  0.0,
+  97.99,
+  98.09,
+  98.26,
+  98.4,
+  98.4
+ ],
+ "calls": 68,
+ "tokens_in": 150006,
+ "tokens_out": 207706,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "equalizing_slack_ratio",
+   "origin": "wide"
+  },
+  {
+   "id": "f013",
+   "name": "rank_tilted_slack",
+   "origin": "wide"
+  },
+  {
+   "id": "f023",
+   "name": "top_two_spread_delta",
+   "origin": "wide"
+  },
+  {
+   "id": "f032",
+   "name": "leader_isolation_margin",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792279946.3969638
+}

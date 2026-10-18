@@ -1,0 +1,3562 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "return_leg_minus_step",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Distance from each candidate to the start city, minus its distance to the current city (return-leg anticipation).\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    span = 0.5 * np.sqrt(2.0)\n    return (d_cur - d_start) / span\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Distance from each candidate to the start city, minus its distance to the current city (return-leg anticipation).",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.320450315867439
+   ],
+   "weights": [
+    -1.272468212259461
+   ],
+   "probe": [
+    [
+     1.0,
+     -76.2789
+    ],
+    [
+     -1.0,
+     491.6076
+    ]
+   ],
+   "best_probe": 491.6076,
+   "best_w": -1.0,
+   "d_train": 491.6076,
+   "d_valid": 489.2056,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.5874
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": 1,
+   "importance": 9.5659,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "insertion_savings_to_start",
+   "code": "import numpy as np\nimport math\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Savings of inserting each candidate between current and start (closing-edge proxy), normalised.\"\"\"\n    # Distance from current to candidate\n    d_cur = np.linalg.norm(candidates - current, axis=1)\n    # Distance from candidate back to start\n    d_start = np.linalg.norm(candidates - start, axis=1)\n    # Current leg from current back to start (would be replaced)\n    d_close = np.linalg.norm(current - start)\n    # Savings of routing current -> candidate -> start instead of current -> start\n    savings = d_close - (d_cur + d_start)\n    scale = np.maximum(d_cur + d_start + d_close, 1e-9)\n    return savings / scale\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a08",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Savings of inserting each candidate between current and start (closing-edge proxy), normalised.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    6.371052264485178
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     465.3667
+    ],
+    [
+     -1.0,
+     -145.9535
+    ]
+   ],
+   "best_probe": 465.3667,
+   "best_w": 1.0,
+   "d_train": 465.3667,
+   "d_valid": 469.0076,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.6906
+   },
+   "error": "",
+   "calls": [
+    "c005"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "start_proximity_delta",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Distance from each candidate to the start, minus distance of current to start: a closure-aware nearest-neighbour measure.\"\"\"\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    d_cur_start = np.linalg.norm(current - start)\n    return -(d_start - d_cur_start)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a02",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Distance from each candidate to the start, minus distance of current to start: a closure-aware nearest-neighbour measure.",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    3.921391485032952
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     221.3085
+    ],
+    [
+     -1.0,
+     221.3085
+    ]
+   ],
+   "best_probe": 221.3085,
+   "best_w": 1.0,
+   "d_train": 221.3085,
+   "d_valid": 253.075,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "start_closing_balance",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Measures how much closer a candidate's insertion into the remaining-start link helps: distance from candidate to start minus distance from current to candidate.\"\"\"\n    # Euclidean distance from each candidate to the start (closing leg potential)\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    # Euclidean distance from current to each candidate\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    # Candidates closer to start are preferred, but only after accounting for travel cost\n    return (from_current - to_start) / (from_current + to_start + 1e-9)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Measures how much closer a candidate's insertion into the remaining-start link helps: distance from candidate to start minus distance from current to candidate.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    2.720918842679941
+   ],
+   "weights": [
+    -0.5705877071912422
+   ],
+   "probe": [
+    [
+     1.0,
+     -41.8185
+    ],
+    [
+     -1.0,
+     492.1389
+    ]
+   ],
+   "best_probe": 492.1389,
+   "best_w": -1.0,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [
+    -1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9406
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": 1,
+   "importance": 2.3437,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "nearest_neighbour_distance",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative Euclidean distance from the current city to each candidate, scaled by 1/sqrt(2).\"\"\"\n    return -np.linalg.norm(candidates - current, axis=1) / np.sqrt(2.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Code Zero jumps to whatever city has the smallest index, producing enormous edges and hundreds of crossings. Preferring the geometrically closest unvisited city should collapse the long-edge and crossing counts, which is the dominant source of the gap.",
+    "feature": "values = -np.linalg.norm(candidates - current, axis=1) / np.sqrt(2.0). One column; higher (less negative) = closer to current.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes the negated Euclidean distance from the current city to each candidate (divided by \u221a2, the max possible distance in the unit square, so values fall in [-1, 0]); higher means closer, exactly as the experiment specifies.",
+   "measures": "Negative Euclidean distance from the current city to each candidate, scaled by 1/sqrt(2).",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    6.257743680255306
+   ],
+   "weights": [
+    0.5962454384981977
+   ],
+   "probe": [
+    [
+     1.0,
+     493.6783
+    ],
+    [
+     -1.0,
+     -257.6334
+    ]
+   ],
+   "best_probe": 493.6783,
+   "best_w": 1.0,
+   "d_train": 493.6783,
+   "d_valid": 488.003,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "crossings",
+    "family": "uniform",
+    "direction": "down",
+    "before": 325,
+    "after": 4,
+    "held": true,
+    "checked": true,
+    "instance": "uniform-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.6758
+   },
+   "error": "",
+   "calls": [
+    "c007"
+   ],
+   "kept_gen": 1,
+   "importance": 0.7138,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "distance_to_start_penalty",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative distance from each candidate to the start, scaled by how far the tour has already strayed from start.\"\"\"\n    d_start = np.linalg.norm(candidates - start, axis=1) / np.sqrt(2.0)\n    # how far the current position is from start, normalised by the max possible distance\n    stray = np.linalg.norm(current - start) / np.sqrt(2.0)\n    # weight the start-proximity signal by the remaining \"return pressure\":\n    # early in the tour (near start) the closing leg is cheap, so start-proximity matters less;\n    # late in the tour it matters more. stray grows as the tour wanders away.\n    return -d_start * (0.5 + 0.5 * stray)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The closing leg is currently 0.2-1.5% of tour length but the reference sits higher, and a greedy NN tour tends to strand far cities last, inflating the return to start. Penalising distance from the start city should specifically shrink the closing leg; this isolates whether start-proximity is a usable signal on its own.",
+    "feature": "values = -np.linalg.norm(candidates - start, axis=1) / np.sqrt(2.0). One column; higher = closer to the start city.",
+    "prediction": {
+     "family": "clustered",
+     "metric": "closing_edge_pct",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes the negated distance from each unvisited candidate to the start city, divided by \u221a2 (the max possible distance in the unit square) so values fall in roughly [-1, 0]; higher means closer to the start, exactly as the experiment specifies.",
+   "measures": "Negative distance from each candidate to the start, scaled by how far the tour has already strayed from start.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    8.188037437748894
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 221.3085,
+   "best_w": null,
+   "d_train": 221.3085,
+   "d_valid": 253.075,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f003",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f003",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c008",
+    "c011"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "insertion_detour_cost",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative cheapest-insertion detour: for each candidate, the minimum over all existing tour edges (including the closing edge back to start) of d(a,c)+d(c,b)-d(a,b), scaled by sqrt(2).\"\"\"\n    # Build the closed tour edges: consecutive pairs in tour, plus closing edge tour[-1] -> start.\n    if tour.shape[0] >= 2:\n        edges_a = tour[:-1]                      # (e, 2)\n        edges_b = tour[1:]                       # (e, 2)\n    else:\n        edges_a = tour[:0]                       # empty (0, 2)\n        edges_b = tour[:0]\n    # closing edge from last visited city back to start\n    edges_a = np.vstack([edges_a, tour[-1:].reshape(1, 2)])   # (e+1, 2)\n    edges_b = np.vstack([edges_b, start.reshape(1, 2)])       # (e+1, 2)\n\n    # pairwise distances: candidates (k,2) vs edge endpoints (e+1,2)\n    d_a = np.linalg.norm(candidates[:, None, :] - edges_a[None, :, :], axis=2)  # (k, e+1)\n    d_b = np.linalg.norm(candidates[:, None, :] - edges_b[None, :, :], axis=2)  # (k, e+1)\n    d_ab = np.linalg.norm(edges_a - edges_b, axis=1)                             # (e+1,)\n\n    detour = d_a + d_b - d_ab[None, :]          # (k, e+1)\n    best = np.min(detour, axis=1)               # (k,)\n    return -best / np.sqrt(2.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Greedy NN ignores the cost of the edge it leaves behind. Scoring the detour of splicing the candidate between the current city and the start (d(cur,c)+d(c,start)-d(cur,start)) favours cheap insertions and should reduce both crossings and length beyond plain NN.",
+    "feature": "d_cur = np.linalg.norm(candidates - current, axis=1); d_start = np.linalg.norm(candidates - start, axis=1); base = np.linalg.norm(current - start); values = -(d_cur + d_start - base) / np.sqrt(2.0). One column.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "length",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes the negated detour cost `d(cur,c) + d(c,start) - d(cur,start)` for each candidate, divided by \u221a2 (the max possible edge length in the unit square) to normalise into roughly [-1, 1]; the negation makes cheaper insertions score higher, and I read the single-column spec literally with no\u2026",
+   "measures": "Negative cheapest-insertion detour: for each candidate, the minimum over all existing tour edges (including the closing edge back to start) of d(a,c)+d(c,b)-d(a,b), scaled by sqrt(2).",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    8.225340830674966
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     427.0946
+    ],
+    [
+     -1.0,
+     1.6376
+    ]
+   ],
+   "best_probe": 427.0946,
+   "best_w": 1.0,
+   "d_train": 427.0946,
+   "d_valid": 440.7481,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "length",
+    "family": "uniform",
+    "direction": "down",
+    "before": 28.6704,
+    "after": 10.1426,
+    "held": true,
+    "checked": true,
+    "instance": "uniform-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.4608
+   },
+   "error": "",
+   "calls": [
+    "c010",
+    "c012",
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "turn_angle_continuation",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Cosine between the incoming travel direction and the step to each candidate (higher = straighter continuation).\"\"\"\n    if tour.shape[0] < 2:\n        return np.zeros(candidates.shape[0])\n    dir = current - tour[-2]\n    v = candidates - current\n    nv = np.linalg.norm(v, axis=1)\n    nd = np.linalg.norm(dir)\n    cos = (v @ dir) / np.maximum(nv * nd, 1e-9)\n    return np.clip(cos, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Zigzag tours come from reversing direction at each step, which forces crossings. Preferring the candidate that best continues the current direction of travel (largest cosine between incoming direction and the step to the candidate) should cut crossings where NN alone still zigzags.",
+    "feature": "if tour.shape[0] < 2: return np.zeros(candidates.shape[0]). Else dir = current - tour[-2]; v = candidates - current; nv = np.linalg.norm(v, axis=1); nd = np.linalg.norm(dir); cos = (v @ dir) / np.maximum(nv * nd, 1e-9); values = np.clip(cos, -1.0, 1.0). One column; higher = straighter continuation.",
+    "prediction": {
+     "family": "grid",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each unvisited candidate, the cosine of the angle between the incoming direction of travel (`current - tour[-2]`) and the step to that candidate, clipped to [-1, 1], returning zeros at the first decision when no incoming direction exists.",
+   "measures": "Cosine between the incoming travel direction and the step to each candidate (higher = straighter continuation).",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    2.0246598734134897
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     341.5882
+    ],
+    [
+     -1.0,
+     15.5148
+    ]
+   ],
+   "best_probe": 341.5882,
+   "best_w": 1.0,
+   "d_train": 341.5882,
+   "d_valid": 326.384,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {
+    "metric": "crossings",
+    "family": "grid",
+    "direction": "down",
+    "before": 1117,
+    "after": 16,
+    "held": true,
+    "checked": true,
+    "instance": "grid-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.2428
+   },
+   "error": "",
+   "calls": [
+    "c009"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "progress_gated_return_leg",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation gated by tour progress: (d_cur - d_start) scaled by how far the remaining tour still has to go, so the closure bias only kicks in late.\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    # progress signal: remaining cities relative to total (m + k); early -> small, late -> large\n    m = tour.shape[0]\n    k = candidates.shape[0]\n    total = m + k\n    progress = (total - k) / max(total - 1, 1)  # 0 at first decision, ->1 near end\n    span = 0.5 * np.sqrt(2.0)\n    gate = progress ** 2\n    return gate * (d_cur - d_start) / span\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation gated by tour progress: (d_cur - d_start) scaled by how far the remaining tour still has to go, so the closure bias only kicks in late.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    10.39634460924884
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 491.6076,
+   "best_w": null,
+   "d_train": 491.6076,
+   "d_valid": 489.2056,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c016"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "closure_pressure_balance",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Balance of the closing link: compares the candidate-to-start distance against the candidate's cost to the current tour end, gated by how far the tour has already strayed from start (closure pressure grows along the tour).\"\"\"\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    # how far the current position has strayed from start, normalised to [0,1]\n    stray = np.linalg.norm(current - start) / (np.sqrt(2.0) + 1e-9)\n    # symmetric balance, then amplify closure preference as the tour strays from start\n    balance = (from_current - to_start) / (from_current + to_start + 1e-9)\n    return balance * (0.5 + stray)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Balance of the closing link: compares the candidate-to-start distance against the candidate's cost to the current tour end, gated by how far the tour has already strayed from start (closure pressure grows along the tour).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.0190019932372434
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "directed_nearest_neighbour",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Nearest-neighbour distance to current, but shrunk when the candidate lies near the straight 'highway' from current toward the unvisited centroid, i.e. prefer steps that advance the frontier rather than double back.\"\"\"\n    d_cur = np.linalg.norm(candidates - current, axis=1)\n    # direction from current to the centroid of the remaining candidates\n    centroid = candidates.mean(axis=0)\n    fwd = centroid - current\n    nf = np.linalg.norm(fwd)\n    if nf < 1e-9:\n        return -d_cur / np.sqrt(2.0)\n    fwd = fwd / nf\n    # projection of each candidate step onto the forward direction, clipped to [0, inf)\n    rel = candidates - current\n    along = rel @ fwd\n    # alignment in [0,1]: how much the step points toward the unvisited frontier\n    align = np.clip(along / (d_cur + 1e-9), -1.0, 1.0)\n    # effective distance: penalise backward steps by stretching their distance\n    eff = d_cur * (1.0 + 0.5 * (1.0 - align))\n    return -eff / np.sqrt(2.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Nearest-neighbour distance to current, but shrunk when the candidate lies near the straight 'highway' from current toward the unvisited centroid, i.e. prefer steps that advance the frontier rather than double back.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.353703470594315
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     -6.1767
+    ],
+    [
+     -1.313053,
+     -70.7941
+    ],
+    [
+     0.393916,
+     -4.5733
+    ],
+    [
+     -0.393916,
+     -6.3129
+    ],
+    [
+     0.131305,
+     -2.6883
+    ],
+    [
+     -0.131305,
+     -3.0886
+    ]
+   ],
+   "best_probe": -2.6883,
+   "best_w": 0.131305,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.9528,
+    "lib_r2": 0.9424
+   },
+   "error": "",
+   "calls": [
+    "c017"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "min_insertion_detour_normalised",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative detour cost of inserting each candidate into the cheapest edge of the already-built tour, normalised by tour diameter.\"\"\"\n    m = len(tour)\n    if m < 2:\n        # No real edges yet: fall back to distance from current\n        return -np.linalg.norm(candidates - current[None, :], axis=1) / np.sqrt(2.0)\n    # Tour edges between consecutive visited cities\n    edges_a = tour[:-1]           # (m-1, 2)\n    edges_b = tour[1:]            # (m-1, 2)\n    edge_len = np.linalg.norm(edges_b - edges_a, axis=1)  # (m-1,)\n    # For each candidate, distance to each edge endpoint -> insertion cost = d(a,c)+d(c,b)-d(a,b)\n    d_a = np.linalg.norm(candidates[:, None, :] - edges_a[None, :, :], axis=2)  # (k, m-1)\n    d_b = np.linalg.norm(candidates[:, None, :] - edges_b[None, :, :], axis=2)  # (k, m-1)\n    cost = d_a + d_b - edge_len[None, :]  # (k, m-1)\n    min_cost = cost.min(axis=1)  # (k,)\n    # Normalise by tour diameter-ish scale\n    span = np.linalg.norm(tour.max(axis=0) - tour.min(axis=0)) + 1e-9\n    scale = max(span, 0.05)\n    return -min_cost / scale\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a03",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative detour cost of inserting each candidate into the cheapest edge of the already-built tour, normalised by tour diameter.",
+   "status": "retired",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    0.44038194750940524
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     -1.2827
+    ],
+    [
+     -1.313053,
+     -10.7064
+    ],
+    [
+     0.393916,
+     -0.185
+    ],
+    [
+     -0.393916,
+     -8.843
+    ],
+    [
+     0.131305,
+     0.1879
+    ],
+    [
+     -0.131305,
+     -2.4028
+    ]
+   ],
+   "best_probe": 0.1879,
+   "best_w": 0.131305,
+   "d_train": 0.1879,
+   "d_valid": 0.778,
+   "trial_x": [
+    -0.5056814113866396,
+    -1.1205195452905847,
+    0.4400214237386545,
+    0.131305
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f007",
+    "rho": 0.8182,
+    "lib_r2": 0.1477
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": 2,
+   "importance": -0.1722,
+   "retired_gen": 2
+  },
+  {
+   "id": "f013",
+   "name": "closure_pressure_balance",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Closure-aware balance that scales each candidate's pull toward start by how much of the tour remains: (d_cur - d_start) weighted by remaining-fraction, so late decisions favour returning home.\"\"\"\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    # fraction of cities still unchosen: larger early, small near the end\n    total = len(tour) + len(candidates)\n    remaining_frac = len(candidates) / float(total)\n    # distance travelled so far relative to a unit-square diagonal, saturating\n    travelled = np.sqrt(((tour - tour[0]) ** 2).sum(axis=1)) if len(tour) > 1 else np.array([0.0])\n    path_extent = np.sqrt(((tour[-1] - start) ** 2).sum())\n    stray = np.clip(path_extent, 0.0, 1.0)\n    # how strongly to prioritize closing: grows with stray and with remaining fraction\n    weight = 0.5 + 0.5 * (1.0 - remaining_frac) + 0.5 * stray\n    return weight * (from_current - to_start) / (from_current + to_start + 1e-9)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Closure-aware balance that scales each candidate's pull toward start by how much of the tour remains: (d_cur - d_start) weighted by remaining-fraction, so late decisions favour returning home.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.822372921137112
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "gated_return_leg_centroid",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation, but measured against the centroid of the unvisited set: a candidate that both keeps it close to start and shrinks the remaining spread is preferred.\"\"\"\n    # distance from each candidate to start, minus distance from current to candidate\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    # centroid of remaining candidates (including candidate itself)\n    centroid = candidates.mean(axis=0)\n    d_cent = np.linalg.norm(candidates - centroid[None, :], axis=1)\n    span = 0.5 * np.sqrt(2.0)\n    # prefer candidates that reduce the balanced return/step gap, weighted by how central they are\n    core = (d_cur - d_start) / span\n    centrality = 1.0 - d_cent / (d_cent.max() + 1e-9)\n    return core * (0.5 + 0.5 * centrality)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation, but measured against the centroid of the unvisited set: a candidate that both keeps it close to start and shrinks the remaining spread is preferred.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.4921564330991863
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     -2.486
+    ],
+    [
+     -1.313053,
+     -4.3561
+    ],
+    [
+     0.393916,
+     -1.2844
+    ],
+    [
+     -0.393916,
+     -0.5937
+    ],
+    [
+     0.131305,
+     -1.5341
+    ],
+    [
+     -0.131305,
+     -0.064
+    ]
+   ],
+   "best_probe": -0.064,
+   "best_w": -0.131305,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9797,
+    "lib_r2": 0.9824
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "two_step_lookahead_nn",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative (step distance to candidate plus nearest-neighbour distance from that candidate into the remaining candidates), scaled by 1/(2*sqrt(2)), with the lookahead term weighted by the fraction of cities still unvisited so it fades as the tour fills up.\"\"\"\n    k = candidates.shape[0]\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    if k > 1:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        dmat = np.sqrt(np.sum(diff * diff, axis=2))\n        np.fill_diagonal(dmat, np.inf)\n        nn_after = np.min(dmat, axis=1)\n    else:\n        nn_after = np.zeros(k)\n    # fraction of the instance still unvisited: m visited so far, k remaining\n    m = tour.shape[0]\n    total = m + k\n    frac = k / float(total) if total > 0 else 0.0\n    return -(d_cur + frac * nn_after) / (2.0 * np.sqrt(2.0))\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a06",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Greedy NN strands cities: it takes the nearest now even when that city is far from every remaining city, forcing a long jump later. Scoring a candidate by the step cost PLUS the nearest-neighbour distance from it into the rest penalises dead-end picks. If stranding is the mechanism behind clustered's 12 long edges (ref 7), this probe cuts them.",
+    "feature": "d_cur = Euclidean distance from current to each candidate. Build dmat[i,j] = distance between candidate i and candidate j, set its diagonal to +inf. nn_after[i] = min_j dmat[i,j] if k>1 else 0. Return -(d_cur + nn_after) / (2*sqrt(2)).",
+    "prediction": {
+     "family": "clustered",
+     "metric": "long_edges",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate, the negative of (distance from current to the candidate plus the candidate's nearest-neighbour distance among the other remaining candidates), normalised by 1/(2\u221a2); when only one candidate remains the lookahead term is 0, and the diagonal is set to +inf so a candidate\u2026",
+   "measures": "Negative (step distance to candidate plus nearest-neighbour distance from that candidate into the remaining candidates), scaled by 1/(2*sqrt(2)), with the lookahead term weighted by the fraction of cities still unvisited so it fades as the tour fills up.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    12.756394952574002
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 493.6783,
+   "best_w": null,
+   "d_train": 493.6783,
+   "d_valid": 488.003,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f005",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f005",
+    "rho": 0.9942
+   },
+   "error": "",
+   "calls": [
+    "c022",
+    "c026"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "hull_vertex_resultant",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Length of the mean unit vector from each candidate to all other remaining candidates (hull-vertex proxy).\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    k = candidates.shape[0]\n    if k < 3:\n        return np.zeros(k)\n\n    diff = candidates[None, :, :] - candidates[:, None, :]  # diff[i,j] = candidates[j]-candidates[i]\n    d = np.sqrt(np.sum(diff * diff, axis=2))\n    np.fill_diagonal(d, np.inf)\n    u = diff / d[:, :, None]  # self term -> 0 since diff diagonal is 0\n    resultant = np.sqrt(np.sum(np.sum(u, axis=1) ** 2, axis=1)) / (k - 1)\n    return np.clip(resultant, 0.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Crossings in clustered come from the tour wandering between groups in an unstructured order. A vectorised convex-hull proxy: sum the unit vectors from a candidate to every other remaining candidate; if all others lie on one side (hull vertex) the resultant is long, inside the blob it cancels. Preferring high resultant = peel the outer boundary first, so later steps stay inside and don't cut across outer edges.",
+    "feature": "k = number of candidates. If k<3 return zeros(k). diff[i,j] = candidates[j]-candidates[i]; d[i,j]=|diff[i,j]| with diagonal set to +inf so u[i,j]=diff[i,j]/d[i,j] (self term -> 0). Return clip( |sum_j u[i,j]| / (k-1), 0, 1 ) per candidate i.",
+    "prediction": {
+     "family": "clustered",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate, the magnitude of the mean unit vector pointing to all other remaining candidates (divided by k-1, clipped to [0,1]), returning zeros when fewer than 3 candidates remain; the self term is zeroed via the infinite diagonal.",
+   "measures": "Length of the mean unit vector from each candidate to all other remaining candidates (hull-vertex proxy).",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    5.072408510180759
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     -13.4391
+    ],
+    [
+     -1.313053,
+     -59.0164
+    ],
+    [
+     0.393916,
+     -2.1519
+    ],
+    [
+     -0.393916,
+     -13.7484
+    ],
+    [
+     0.131305,
+     0.5559
+    ],
+    [
+     -0.131305,
+     -6.3849
+    ]
+   ],
+   "best_probe": 0.5559,
+   "best_w": 0.131305,
+   "d_train": 0.5559,
+   "d_valid": 0.4853,
+   "trial_x": [
+    -0.5056814113866396,
+    -1.1205195452905847,
+    0.4400214237386545,
+    0.131305
+   ],
+   "prediction": {
+    "metric": "crossings",
+    "family": "clustered",
+    "direction": "down",
+    "before": 7,
+    "after": 4,
+    "held": true,
+    "checked": true,
+    "instance": "clustered-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f007",
+    "rho": 0.4872,
+    "lib_r2": 0.1359
+   },
+   "error": "",
+   "calls": [
+    "c023"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "exact_tail_completion",
+   "code": "import numpy as np\nimport math\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative exact optimal completion cost from each candidate (last few decisions only).\"\"\"\n    k = candidates.shape[0]\n    if k == 1 or k > 5:\n        return np.zeros(k)\n    cur = np.asarray(current, dtype=float)\n    cand = np.asarray(candidates, dtype=float)\n    st = np.asarray(start, dtype=float)\n    scale = math.sqrt(2.0) * (k + 1)\n    if scale <= 0:\n        return np.zeros(k)\n    values = np.empty(k, dtype=float)\n    for i in range(k):\n        d_cur_i = float(np.hypot(*(cand[i] - cur)))\n        others = [j for j in range(k) if j != i]\n        if len(others) == 0:\n            best = d_cur_i + float(np.hypot(*(st - cand[i])))\n        else:\n            best = math.inf\n            # enumerate permutations of `others` without itertools\n            n = len(others)\n            idx = list(range(n))\n            # Heap's algorithm style: generate all permutations iteratively\n            c = [0] * n\n            perm = list(others)\n            # first permutation\n            cost = d_cur_i\n            prev = i\n            for j in perm:\n                cost += float(np.hypot(*(cand[j] - cand[prev])))\n                prev = j\n            cost += float(np.hypot(*(st - cand[prev])))\n            if cost < best:\n                best = cost\n            p = 0\n            while p < n:\n                if c[p] < p:\n                    if p % 2 == 0:\n                        perm[0], perm[p] = perm[p], perm[0]\n                    else:\n                        perm[c[p]], perm[p] = perm[p], perm[c[p]]\n                    cost = d_cur_i\n                    prev = i\n                    for j in perm:\n                        cost += float(np.hypot(*(cand[j] - cand[prev])))\n                        prev = j\n                    cost += float(np.hypot(*(st - cand[prev])))\n                    if cost < best:\n                        best = cost\n                    c[p] += 1\n                    p = 0\n                else:\n                    c[p] = 0\n                    p += 1\n        values[i] = -best / scale\n    return values\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a07",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The kept pair f001/f004 is a near-duplicate closure signal; a bolded closure must act where closure actually costs - the last few decisions, where the greedy step creates the closing/longest edge (grid longest_edge_pct 2.89 vs ref 1.54). For the final few candidates, score each by the exact optimal cost of finishing the tour from it (visit all remaining, then back to start).",
+    "feature": "k = number of candidates. If k==1 or k>5 return zeros(k). For each candidate i, enumerate all orderings of the other k-1 candidates (<=4! orders) and take the minimum over orderings of the path cost d(current,i)+sum of consecutive legs among the ordered others+d(last,start); set value_i = -that_min/(sqrt(2)*(k+1)). Return the k values.",
+    "prediction": {
+     "family": "grid",
+     "metric": "longest_edge_pct",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f004 and f001 are near-duplicates, both only a smooth start-distance gradient; the sharp version of closure is an exact endgame, not another gradient."
+   },
+   "coder_note": "This computes, for each candidate when 2\u20135 remain, the negative exact optimal cost of finishing the tour (current\u2192candidate, then all other remaining cities in the best order, then back to start), normalised by sqrt(2)\u00b7(k+1); for k=1 or k>5 it returns zeros as specified.",
+   "measures": "Negative exact optimal completion cost from each candidate (last few decisions only).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    243.13265864576792
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     0.0161
+    ],
+    [
+     -1.313053,
+     -7.5844
+    ],
+    [
+     0.393916,
+     0.0
+    ],
+    [
+     -0.393916,
+     -6.6495
+    ],
+    [
+     0.131305,
+     0.0
+    ],
+    [
+     -0.131305,
+     -0.8337
+    ]
+   ],
+   "best_probe": 0.0161,
+   "best_w": 1.313053,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "longest_edge_pct",
+    "family": "grid",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f014",
+    "rho": 0.0604,
+    "lib_r2": 0.0034
+   },
+   "error": "",
+   "calls": [
+    "c025",
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "insertion_ratio_open_chain",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative min over existing open-chain edges of the relative insertion stretch (d(a,c)+d(c,b))/|b-a|, clipped to [0,3] and scaled by -1/3.\"\"\"\n    k = candidates.shape[0]\n    if tour.shape[0] < 2:\n        return np.zeros(k)\n    a = tour[:-1]          # (E, 2)\n    b = tour[1:]           # (E, 2)\n    edge_len = np.linalg.norm(b - a, axis=1)          # (E,)\n    edge_len = np.maximum(edge_len, 1e-9)\n    # distances candidate -> a and candidate -> b\n    d_ca = np.linalg.norm(candidates[:, None, :] - a[None, :, :], axis=2)  # (k, E)\n    d_cb = np.linalg.norm(candidates[:, None, :] - b[None, :, :], axis=2)  # (k, E)\n    stretch = (d_ca + d_cb) / edge_len[None, :]        # (k, E)\n    val = np.clip(np.min(stretch, axis=1), 0.0, 3.0)   # (k,)\n    return -val / 3.0\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The additive insertion detour (f007) was redundant because it merely tracks d(cur,c)+d(c,edge). The relative stretch (d(a,c)+d(c,b))/d(a,b) ranks differently: it favours candidates that barely lengthen the chain they join rather than absolute cheap edges. Excluding the closing edge keeps it distinct from the kept closure pair; if it is redundant too, insertion is fully explained by the existing features.",
+    "feature": "If tour has fewer than 2 cities return zeros(k). Let a=tour[:-1], b=tour[1:] be the existing edges EXCLUDING the closing edge to start; edge_len=|b-a|. For each candidate i compute d_ca[i,e]=|cand_i-a_e|, d_cb[i,e]=|cand_i-b_e|, stretch[i,e]=(d_ca+d_cb)/max(edge_len,1e-9). val[i]=clip(min_e stretch[i,e],0,3). Return -val/3.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "length",
+     "direction": "down"
+    },
+    "builds_on": "f007",
+    "lesson": "f007 held its length prediction but was redundant as an additive detour; the multiplicative stretch form is the cheapest way to test whether insertion geometry has anything left beyond the kept features."
+   },
+   "coder_note": "This computes, for each candidate, the smallest relative insertion stretch over the existing open-chain edges (excluding the closing edge to start), clipped to [0,3] and negated/scaled by 1/3; I read \"existing edges\" as consecutive pairs in `tour` only (no closing edge), and return zeros when fewer\u2026",
+   "measures": "Negative min over existing open-chain edges of the relative insertion stretch (d(a,c)+d(c,b))/|b-a|, clipped to [0,3] and scaled by -1/3.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.93112508634764
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.313053,
+     -21.3388
+    ],
+    [
+     -1.313053,
+     -49.2525
+    ],
+    [
+     0.393916,
+     -5.0531
+    ],
+    [
+     -0.393916,
+     -20.7715
+    ],
+    [
+     0.131305,
+     -0.2449
+    ],
+    [
+     -0.131305,
+     -5.943
+    ]
+   ],
+   "best_probe": -0.2449,
+   "best_w": 0.131305,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "length",
+    "family": "uniform",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f012",
+    "rho": 0.8599,
+    "lib_r2": 0.0459
+   },
+   "error": "",
+   "calls": [
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "alignment_shrunk_nearest_neighbour",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative distance to current shrunk toward the unvisited-centroid direction: penalise candidates that are far in the centroid direction but reward near ones aligned with a cheap sweep around the centroid.\"\"\"\n    d_cur = np.linalg.norm(candidates - current, axis=1) + 1e-9\n    centroid = candidates.mean(axis=0)\n    to_c = centroid - current\n    nc = np.linalg.norm(to_c) + 1e-9\n    # alignment of each candidate direction from current with the direction to the unvisited centroid\n    vec = candidates - current\n    align = (vec @ to_c) / (d_cur * nc + 1e-9)  # in [-1, 1]\n    # radial spread of the unvisited set: candidates far out along the centroid direction leave stragglers behind\n    spread = np.linalg.norm(candidates - centroid, axis=1)\n    spread_n = spread / (spread.max() + 1e-9)\n    # effective distance: far candidates that lead further out are penalised, aligned near ones rewarded\n    eff = d_cur * (1.0 + 0.5 * spread_n * (1.0 - align)) / (1.0 + 0.5 * align)\n    return -eff / np.sqrt(2.0)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f005",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative distance to current shrunk toward the unvisited-centroid direction: penalise candidates that are far in the centroid direction but reward near ones aligned with a cheap sweep around the centroid.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    8.433951422143075
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -19.0155
+    ],
+    [
+     -1.506212,
+     -79.9579
+    ],
+    [
+     0.451863,
+     -6.1552
+    ],
+    [
+     -0.451863,
+     -4.6491
+    ],
+    [
+     0.150621,
+     -4.2418
+    ],
+    [
+     -0.150621,
+     -0.9471
+    ]
+   ],
+   "best_probe": -0.9471,
+   "best_w": -0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f011",
+    "rho": 0.9397,
+    "lib_r2": 0.5972
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "return_leg_visited_congruence",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation relative to the nearest tour city already visited: penalise candidates far from start and far from the visited set (closing-link congruence), scaled by 1/sqrt(2).\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if len(tour) > 1:\n        # distance from each candidate to the nearest already-visited city\n        d_visited = np.min(np.linalg.norm(candidates[:, None, :] - tour[None, :, :], axis=2), axis=1)\n    else:\n        d_visited = d_start\n    span = 0.5 * np.sqrt(2.0)\n    # prefer candidates that are near start AND near the visited path (tight closure)\n    closure = d_start + d_visited - d_cur\n    return closure / span\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation relative to the nearest tour city already visited: penalise candidates far from start and far from the visited set (closing-link congruence), scaled by 1/sqrt(2).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.9073404795891438
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -8.4795
+    ],
+    [
+     -1.506212,
+     -6.9781
+    ],
+    [
+     0.451863,
+     -3.8566
+    ],
+    [
+     -0.451863,
+     -4.5652
+    ],
+    [
+     0.150621,
+     -1.0683
+    ],
+    [
+     -0.150621,
+     -2.8215
+    ]
+   ],
+   "best_probe": -1.0683,
+   "best_w": 0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.8773,
+    "lib_r2": 0.8977
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "remaining_work_gated_closing_balance",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Balance of candidate-to-start against candidate-to-current, weighted by how much the remaining unvisited set still must travel to close the loop.\"\"\"\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    base = (from_current - to_start) / (from_current + to_start + 1e-9)\n    # Remaining work: distance from current through unvisited mass toward start\n    centroid = candidates.mean(axis=0)\n    remaining = np.linalg.norm(centroid - start) + np.linalg.norm(current - centroid)\n    # Gate: when little remains, closure matters more; scale base by a bounded factor\n    gate = remaining / (remaining + 1e-9 + 0.5)\n    return base * (1.0 - gate) + base * gate * 0.5\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Balance of candidate-to-start against candidate-to-current, weighted by how much the remaining unvisited set still must travel to close the loop.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.0935337945862385
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "closure_bias_progress_modulated_spread",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Relative savings of inserting the candidate next versus it being reached later: (d_cur - d_start) normalized by the unvisited-set scale, gated by remaining count to modulate closure bias late in the tour.\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    k = len(candidates)\n    m = len(tour)\n    total = k + m\n    # remaining fraction: small early, large late; modulate the start-pull\n    remain = k / max(total, 1)\n    # scale by typical spread of unvisited set\n    if k > 1:\n        spread = np.std(candidates, axis=0).sum() + 1e-9\n    else:\n        spread = 1.0\n    raw = (d_cur - d_start) / (spread + 1e-9)\n    return raw * (1.0 - remain) - raw * remain\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a14",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Relative savings of inserting the candidate next versus it being reached later: (d_cur - d_start) normalized by the unvisited-set scale, gated by remaining count to modulate closure bias late in the tour.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.8036236432021395
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -48.0096
+    ],
+    [
+     -1.506212,
+     -9.604
+    ],
+    [
+     0.451863,
+     -7.0192
+    ],
+    [
+     -0.451863,
+     -1.2065
+    ],
+    [
+     0.150621,
+     -0.6441
+    ],
+    [
+     -0.150621,
+     -1.1114
+    ]
+   ],
+   "best_probe": -0.6441,
+   "best_w": 0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.4444,
+    "lib_r2": 0.3294
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "closing_balance_with_residual_compactness",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Closing-balance term that also credits candidates which leave the unvisited set compact and near the start: normalised (d_cur - d_start) blended with the candidate's mean distance to the other remaining cities.\"\"\"\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    base = (from_current - to_start) / (from_current + to_start + 1e-9)\n    # mean distance from each candidate to all other unvisited cities (compactness of what remains)\n    diff = candidates[:, None, :] - candidates[None, :, :]\n    dist = np.sqrt((diff ** 2).sum(axis=2))\n    k = len(candidates)\n    if k > 1:\n        # exclude self-distance\n        np.fill_diagonal(dist, 0.0)\n        spread = dist.sum(axis=1) / (k - 1)\n    else:\n        spread = np.zeros(k)\n    # candidates whose removal leaves a tight, start-near remainder score better\n    residual = spread / (to_start + 1e-9)\n    return base - 0.5 * residual / (1.0 + residual)\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Closing-balance term that also credits candidates which leave the unvisited set compact and near the start: normalised (d_cur - d_start) blended with the candidate's mean distance to the other remaining cities.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.2942385130155354
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -209.119
+    ],
+    [
+     -1.506212,
+     -3.1872
+    ],
+    [
+     0.451863,
+     -1.9357
+    ],
+    [
+     -0.451863,
+     -2.0622
+    ],
+    [
+     0.150621,
+     -1.096
+    ],
+    [
+     -0.150621,
+     -2.4299
+    ]
+   ],
+   "best_probe": -1.096,
+   "best_w": 0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.9564,
+    "lib_r2": 0.9916
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "crossing_penalty_open_and_closing",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative (open-edge crossings + closing-edge crossings) per candidate, normalised by (E+1).\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    k = candidates.shape[0]\n    tour = np.asarray(tour, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n\n    if tour.shape[0] < 2:\n        return np.zeros(k)\n\n    P = tour[:-1]  # (E,2)\n    Q = tour[1:]   # (E,2)\n    E = P.shape[0]\n\n    def orient(a, b, c):\n        # a: (...,2), b: (...,2), c: (...,2) broadcast\n        return (b[..., 0] - a[..., 0]) * (c[..., 1] - a[..., 1]) - \\\n               (b[..., 1] - a[..., 1]) * (c[..., 0] - a[..., 0])\n\n    def count_crossings(A, B):\n        # A, B: (k,2). Count crossings of segment (A_i, B_i) vs each edge (P_j, Q_j).\n        # Broadcast to (k, E, 2)\n        A_ = A[:, None, :]\n        B_ = B[:, None, :]\n        P_ = P[None, :, :]\n        Q_ = Q[None, :, :]\n        o1 = orient(A_, B_, P_)\n        o2 = orient(A_, B_, Q_)\n        o3 = orient(P_, Q_, A_)\n        o4 = orient(P_, Q_, B_)\n        cross = (o1 * o2 < 0) & (o3 * o4 < 0)\n        return cross.sum(axis=1).astype(float)\n\n    n_open = count_crossings(current[None, :].repeat(k, axis=0), candidates)\n    n_close = count_crossings(candidates, start[None, :].repeat(k, axis=0))\n\n    return -(n_open + n_close) / (E + 1)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a12",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's clustered tours have 7 crossings vs ref 0 because the return-leg features only see the closing leg, not the constraint that a new edge must not cut an existing one. Penalising candidates whose edge current->candidate (and whose eventual closing edge candidate->start) geometrically crosses an already-drawn tour edge should remove the long crossing edges that inflate clustered gap.",
+    "feature": "Build the E = len(tour)-1 open-chain edges P = tour[:-1], Q = tour[1:] (E,2 each; if len(tour) < 2 use E = 0). For every candidate i, count crossings of segment (current, candidates[i]) against every edge (P[j], Q[j]), and separately crossings of segment (candidates[i], start) against every edge (P[j], Q[j]). A crossing is strict: orient(a,b,p)*orient(a,b,q) < 0 AND orient(p,q,a)*orient(p,q,b) < 0, where orient(a,b,c) = (b0-a0)*(c1-a1) - (b1-a1)*(c0-a0) computed with numpy broadcasting over the k x E grid (edges sharing an endpoint give a zero orientation and therefore score 0 = no crossing). Return values = -(n_open + n_close) / (E + 1), shape (k,), finite (return zeros when E == 0).",
+    "prediction": {
+     "family": "clustered",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f016 hull_vertex_resultant was redundant for gap yet its prediction clustered/crossings 7 -> 4 held: the crossing count is genuinely movable, so test the signal directly rather than through a hull proxy."
+   },
+   "coder_note": "This computes, per candidate, the negative total number of strict crossings of the open edge (current\u2192candidate) and the closing edge (candidate\u2192start) against all already-drawn tour edges, divided by (E+1); when the tour has fewer than two cities it returns zeros.",
+   "measures": "Negative (open-edge crossings + closing-edge crossings) per candidate, normalised by (E+1).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    26.91134352850135
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -14.6032
+    ],
+    [
+     -1.506212,
+     -177.3487
+    ],
+    [
+     0.451863,
+     -5.9009
+    ],
+    [
+     -0.451863,
+     -11.67
+    ],
+    [
+     0.150621,
+     -0.9781
+    ],
+    [
+     -0.150621,
+     -0.4925
+    ]
+   ],
+   "best_probe": -0.4925,
+   "best_w": -0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "crossings",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.3336,
+    "lib_r2": 0.2483
+   },
+   "error": "",
+   "calls": [
+    "c038"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "homeward_cosine_projection",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Cosine of the angle between each candidate's step direction and the current->start bearing.\"\"\"\n    u = start - current\n    r = np.linalg.norm(u)\n    k = candidates.shape[0]\n    if r < 1e-9:\n        return np.zeros(k)\n    u = u / r\n    step = candidates - current\n    d1 = np.linalg.norm(step, axis=1)\n    return np.clip((step @ u) / (d1 + 1e-9), -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a07",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f001/f004 buy their gain by pulling toward the start through a distance difference, which is blind to direction: two candidates equidistant from start are treated alike even when one lies straight down the home bearing and the other sideways. The angular projection of the candidate onto the current->start bearing is a different quantity (not a monotone copy of d_cur - d_start) and should let the optimiser defer the closure to genuinely homeward moves, shortening the uniform tours.",
+    "feature": "u = (start - current); r = norm(u); if r < 1e-9 return zeros(k). Else u = u / r; d1 = norm(candidates - current, axis=1); return ((candidates - current) @ u) / (d1 + 1e-9), clipped to [-1, 1]. First decision (current == start) therefore contributes 0 and the kept NN feature decides.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "length",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": "a07 variants gated by progress (f009/f013) and the centroid gate (f014) were duplicates or probe-rejected: repeatedly rescaling the same difference adds nothing, so change the geometric quantity to a bearing."
+   },
+   "coder_note": "This computes, for each candidate, the cosine of the angle between the step from the current city to that candidate and the bearing from the current city toward the start city (returning zeros when current coincides with start, i.e. the first decision); I read \"clipped to [-1, 1]\" as applying to th\u2026",
+   "measures": "Cosine of the angle between each candidate's step direction and the current->start bearing.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.2575642746734546
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -109.9766
+    ],
+    [
+     -1.506212,
+     -33.1827
+    ],
+    [
+     0.451863,
+     -24.5419
+    ],
+    [
+     -0.451863,
+     -10.1837
+    ],
+    [
+     0.150621,
+     -2.5725
+    ],
+    [
+     -0.150621,
+     -5.3371
+    ]
+   ],
+   "best_probe": -2.5725,
+   "best_w": 0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "length",
+    "family": "uniform",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.7793,
+    "lib_r2": 0.4859
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "two_step_density_ratio",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"(d2 - d1) / (d1 + d2), where d1 = distance from current to candidate and d2 = distance from candidate to its nearest other unvisited city.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    k = candidates.shape[0]\n    d1 = np.linalg.norm(candidates - current[None, :], axis=1)\n    if k == 1:\n        d2 = np.zeros(1)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.linalg.norm(diff, axis=2)\n        np.fill_diagonal(D, np.inf)\n        d2 = D.min(axis=1)\n    denom = d1 + d2 + 1e-9\n    return (d2 - d1) / denom\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a09",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The plain two-step cost d1 + d2 is monotone in d1 and collapsed to f005. The informative part is the ratio: whether the candidate's onward nearest-neighbour gap is large *relative to* the step taken to reach it. If clustered losses are caused by greedy steps into isolated points, this ratio separates them from short steps into dense regions where the next move is cheap.",
+    "feature": "d1 = norm(candidates - current, axis=1). Compute the k x k matrix D = norm(candidates[:,None,:] - candidates[None,:,:], axis=2), set the diagonal to +inf, and take d2 = D.min(axis=1) (nearest other unvisited city; when k == 1 set d2 = 0). Return values = (d2 - d1) / (d1 + d2 + 1e-9), shape (k,), finite.",
+    "prediction": {
+     "family": "clustered",
+     "metric": "long_edges",
+     "direction": "down"
+    },
+    "builds_on": "f005",
+    "lesson": "f015 two_step_lookahead_nn was a duplicate of f005 because adding d1 + d2 only rescales the same ordering; a ratio of the two terms is the non-redundant form of the same lookahead."
+   },
+   "coder_note": "This computes, per candidate, the signed relative gap between its nearest other unvisited city distance (d2) and the step from the current city (d1), normalised by their sum; when only one candidate remains d2 is set to 0 as specified.",
+   "measures": "(d2 - d1) / (d1 + d2), where d1 = distance from current to candidate and d2 = distance from candidate to its nearest other unvisited city.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.191425345049937
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.506212,
+     -12.8435
+    ],
+    [
+     -1.506212,
+     -245.351
+    ],
+    [
+     0.451863,
+     -4.4205
+    ],
+    [
+     -0.451863,
+     -50.6612
+    ],
+    [
+     0.150621,
+     -1.3704
+    ],
+    [
+     -0.150621,
+     -10.0634
+    ]
+   ],
+   "best_probe": -1.3704,
+   "best_w": 0.150621,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "long_edges",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7124,
+    "lib_r2": 0.5803
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "homesick_vs_isolation_ratio",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"(nn - d_start) / (nn + d_start): closeness to start relative to the candidate's own nearest unvisited neighbour.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    start = np.asarray(start, dtype=float)\n    k = candidates.shape[0]\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k == 1:\n        nn = np.zeros(1, dtype=float)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.linalg.norm(diff, axis=2)\n        np.fill_diagonal(D, np.inf)\n        nn = D.min(axis=1)\n    denom = nn + d_start + 1e-9\n    return (nn - d_start) / denom\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a10",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The productive return-leg group measures closeness to start against the step cost, so it cannot tell a well-placed near-home city from a city that is near home only because it is stranded in an empty corner; those stranded picks are what leave long edges behind. Comparing distance-to-start with the candidate's own nearest-neighbour distance to the rest of the unvisited set isolates that difference.",
+    "feature": "d_start = norm(candidates - start, axis=1). Compute D = norm(candidates[:,None,:] - candidates[None,:,:], axis=2), diagonal = +inf, nn = D.min(axis=1) (0 when k == 1). Return values = (nn - d_start) / (nn + d_start + 1e-9), shape (k,), finite.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "closing_edge_pct",
+     "direction": "down"
+    },
+    "builds_on": "f004",
+    "lesson": "f004 is already the ratio (d_cur - d_start)/(d_cur + d_start), so the ratio form alone is spent; this probe ratios against a different denominator, the candidate's isolation, which no kept feature measures."
+   },
+   "coder_note": "This computes, per candidate, the signed ratio of its nearest-unvisited-neighbour distance minus its distance to the start over their sum (with `nn = 0` when only one candidate remains), so positive values flag cities near home relative to their isolation and negative values flag stranded cities; I\u2026",
+   "measures": "(nn - d_start) / (nn + d_start): closeness to start relative to the candidate's own nearest unvisited neighbour.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    3.7606481577637343
+   ],
+   "weights": [
+    0.301242
+   ],
+   "probe": [
+    [
+     1.506212,
+     -15.3055
+    ],
+    [
+     -1.506212,
+     -38.1812
+    ],
+    [
+     0.451863,
+     0.2977
+    ],
+    [
+     -0.451863,
+     -8.4703
+    ],
+    [
+     0.150621,
+     0.6246
+    ],
+    [
+     -0.150621,
+     -2.7732
+    ]
+   ],
+   "best_probe": 0.6246,
+   "best_w": 0.150621,
+   "d_train": 2.6339,
+   "d_valid": 1.7455,
+   "trial_x": [
+    -0.5705877071912422,
+    -1.272468212259461,
+    0.5962454384981977,
+    0.301242
+   ],
+   "prediction": {
+    "metric": "closing_edge_pct",
+    "family": "uniform",
+    "direction": "down",
+    "before": 0.9,
+    "after": 1.68,
+    "held": false,
+    "checked": true,
+    "instance": "uniform-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.6908,
+    "lib_r2": 0.5232
+   },
+   "error": "",
+   "calls": [
+    "c036"
+   ],
+   "kept_gen": 3,
+   "importance": 1.7455,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "return_leg_over_local_density",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation measured against the nearest unvisited neighbour: (d_cur - d_start) normalised by d_cur + nn_to_candidate, so it favours candidates that are both cheap to reach and leave a compact remainder.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n    k = candidates.shape[0]\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k == 1:\n        nn = np.zeros(1, dtype=float)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.linalg.norm(diff, axis=2)\n        np.fill_diagonal(D, np.inf)\n        nn = D.min(axis=1)\n    span = 0.5 * np.sqrt(2.0)\n    denom = d_cur + nn + 1e-9\n    return (d_cur - d_start) / denom / span\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation measured against the nearest unvisited neighbour: (d_cur - d_start) normalised by d_cur + nn_to_candidate, so it favours candidates that are both cheap to reach and leave a compact remainder.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    0.7628893279950225
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9964
+   },
+   "error": "",
+   "calls": [
+    "c042"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "homesick_vs_second_isolation_ratio",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"(nn2 - d_start) / (nn2 + d_start): closeness to start relative to the candidate's second-nearest unvisited neighbour (skips the trivial nearest, which the greedy step already exploits).\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    start = np.asarray(start, dtype=float)\n    k = candidates.shape[0]\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k <= 2:\n        nn2 = np.zeros(k, dtype=float)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.linalg.norm(diff, axis=2)\n        np.fill_diagonal(D, np.inf)\n        # second smallest distance per candidate\n        part = np.partition(D, 1, axis=1)\n        nn2 = part[:, 1]\n    denom = nn2 + d_start + 1e-9\n    return (nn2 - d_start) / denom\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a10",
+   "kind": "variant",
+   "parent": "f027",
+   "idea": {},
+   "coder_note": "",
+   "measures": "(nn2 - d_start) / (nn2 + d_start): closeness to start relative to the candidate's second-nearest unvisited neighbour (skips the trivial nearest, which the greedy step already exploits).",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    4.421272565453705
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -17.6985
+    ],
+    [
+     -1.435208,
+     -45.3695
+    ],
+    [
+     0.430562,
+     -3.2712
+    ],
+    [
+     -0.430562,
+     -11.0447
+    ],
+    [
+     0.143521,
+     0.3783
+    ],
+    [
+     -0.143521,
+     -5.7178
+    ]
+   ],
+   "best_probe": 0.3783,
+   "best_w": 0.143521,
+   "d_train": 0.3783,
+   "d_valid": -1.0816,
+   "trial_x": [
+    -0.4778525176014777,
+    -1.1577797896543303,
+    0.5638011391893074,
+    0.26003726406853966,
+    0.143521
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f027",
+    "rho": 0.8317,
+    "lib_r2": 0.8549
+   },
+   "error": "",
+   "calls": [
+    "c040"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "closing_balance_vs_local_neighbourhood",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Closing-link balance of a candidate, but measured against the candidate's own nearest unvisited neighbour rather than the current city: (d_nn - d_start) scaled by how far the current position is from start (tour-completion pressure).\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n    k = candidates.shape[0]\n\n    d_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n\n    if k == 1:\n        d_nn = np.zeros(1, dtype=float)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.sqrt((diff ** 2).sum(axis=2))\n        np.fill_diagonal(D, np.inf)\n        d_nn = D.min(axis=1)\n\n    # How much of the journey is still ahead (current -> start distance)\n    remain = np.sqrt(((current - start) ** 2).sum())\n\n    # Balance: prefer candidates near the closing link relative to their own local neighbourhood\n    return (d_nn - d_start) / (d_nn + d_start + 1e-9) * (remain / (remain + 1e-9))\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Closing-link balance of a candidate, but measured against the candidate's own nearest unvisited neighbour rather than the current city: (d_nn - d_start) scaled by how far the current position is from start (tour-completion pressure).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.64840516934302
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.6246,
+   "best_w": null,
+   "d_train": 2.6339,
+   "d_valid": 1.7455,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f027",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f027",
+    "rho": 0.9897
+   },
+   "error": "",
+   "calls": [
+    "c041"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "edge_swap_regret",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Edge-swap regret: for each candidate, how much shorter the two-link insertion (current->cand->nearest-unvisited-other, preserving the closing chain) is than the pure nearest-edge, normalized by candidate-to-nearest-unvisited distance.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n    k = candidates.shape[0]\n    if k <= 1:\n        return np.zeros(k, dtype=float)\n    # pairwise distances among candidates\n    diff = candidates[:, None, :] - candidates[None, :, :]\n    D = np.sqrt((diff ** 2).sum(axis=2))\n    np.fill_diagonal(D, np.inf)\n    # nearest other unvisited city for each candidate\n    nn = D.min(axis=1)\n    # distance from current to each candidate\n    d_cur = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n    # distance from each candidate to start\n    d_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    # \"regret\" of going to candidate: cost of detour via candidate vs. cost of closing directly\n    # The insertion cost current->cand->nn compared to current->nn (via 2-opt style)\n    # current->cand + cand->nn vs current->nn is hard without knowing next; instead:\n    # penalize candidates whose nn is far away relative to their own closeness to current:\n    # a good candidate clusters tightly with others (small nn) so future steps are cheap.\n    tightness = 1.0 / (nn + 1e-9)\n    # but also prefer candidates that don't strand the closing link: small d_start\n    # combine into a normalized, bounded score\n    span = np.sqrt(2.0)\n    score = (nn - d_cur) / span + 0.5 * (tightness / (tightness + 1.0)) - 0.5 * (d_start / span)\n    return score\n\nname: edge_swap_regret\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Edge-swap regret: for each candidate, how much shorter the two-link insertion (current->cand->nearest-unvisited-other, preserving the closing chain) is than the pure nearest-edge, normalized by candidate-to-nearest-unvisited distance.",
+   "status": "span",
+   "verdict": "span",
+   "width": 1,
+   "scales": [
+    5.874266713734352
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "type": "span",
+    "r2": 0.99854,
+    "of": [
+     "f004",
+     "f001",
+     "f005",
+     "f027"
+    ]
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "closing_balance_fringe_gate",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Balance of closing pull (current->candidate vs candidate->start), weighted by how far the candidate sits from the centroid of the remaining unvisited cities.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    start = np.asarray(start, dtype=float)\n    current = np.asarray(current, dtype=float)\n    to_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    from_current = np.linalg.norm(candidates - current[None, :], axis=1)\n    balance = (from_current - to_start) / (from_current + to_start + 1e-9)\n    # Distance of each candidate from the centroid of the remaining unvisited set\n    centroid = candidates.mean(axis=0)\n    d_centroid = np.linalg.norm(candidates - centroid[None, :], axis=1)\n    # Normalise by the spread of the remaining set so the gate is scale-free\n    spread = d_centroid.max() + 1e-9\n    gate = d_centroid / spread  # 0 near the pack, ~1 on the fringe\n    return balance * (0.5 + 0.5 * gate)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Balance of closing pull (current->candidate vs candidate->start), weighted by how far the candidate sits from the centroid of the remaining unvisited cities.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.462644664912299
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 0.9901
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "return_leg_gated_by_endgame",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation restricted to the endgame: (d_cur - d_start) normalized, but only counted for the last few unvisited cities, and blended with the candidate's own isolation so it separates candidates even late.\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    k = candidates.shape[0]\n    span = 0.5 * np.sqrt(2.0)\n    base = (d_cur - d_start) / span\n    # isolation of each candidate among the remaining unvisited cities\n    if k == 1:\n        iso = np.zeros(1, dtype=float)\n    else:\n        diff = candidates[:, None, :] - candidates[None, :, :]\n        D = np.sqrt((diff ** 2).sum(axis=2))\n        np.fill_diagonal(D, np.inf)\n        iso = D.min(axis=1) / span\n    # gate: only the tail of the tour (few candidates left) uses return-leg; earlier, lean on isolation\n    tail = 1.0 / (1.0 + k)\n    return tail * base + (1.0 - tail) * (iso - 0.5)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation restricted to the endgame: (d_cur - d_start) normalized, but only counted for the last few unvisited cities, and blended with the candidate's own isolation so it separates candidates even late.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    20.97137499603566
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -46.4987
+    ],
+    [
+     -1.435208,
+     -82.0013
+    ],
+    [
+     0.430562,
+     -14.8826
+    ],
+    [
+     -0.430562,
+     -25.6749
+    ],
+    [
+     0.143521,
+     -3.0865
+    ],
+    [
+     -0.143521,
+     -5.133
+    ]
+   ],
+   "best_probe": -3.0865,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f027",
+    "rho": 0.5921,
+    "lib_r2": 0.4991
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "density_scaled_return_leg",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"tanh((d_cur - d_start) / (nn + median(nn) + 0.02)): return-leg pull scaled by candidate local spacing.\"\"\"\n    k = len(candidates)\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n    np.fill_diagonal(D, np.inf)\n    nn = D.min(axis=1)\n    scale = nn + np.median(nn) + 0.02\n    return np.tanh((d_cur - d_start) / scale)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a07",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Every a07 variant so far (f009/f010/f013/f021/f022) was a within-decision rescaling of the same diff, which cannot change the ranking \u2014 that is why they came back as duplicates or rejects. The diff itself is fine; what it lacks is a denominator that varies by candidate. Scaling (d_cur - d_start) by the candidate's local spacing makes the return-leg pull strong in dense regions (where a cheap return is possible) and weak on isolated cities (where committing now is expensive anyway), which is exactly the clustered failure: the tour ends on a sparse outlier 6.3% from the start.",
+    "feature": "def feature(current, candidates, tour, start):\n    k = len(candidates)\n    d_cur = np.linalg.norm(candidates - current[None,:], axis=1)\n    d_start = np.linalg.norm(candidates - start[None,:], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:,None,:] - candidates[None,:,:], axis=2)\n    np.fill_diagonal(D, np.inf)\n    nn = D.min(axis=1)                      # nearest other unvisited city\n    scale = nn + np.median(nn) + 0.02      # local spacing + robust global floor\n    return np.tanh((d_cur - d_start) / scale)   # bounded in [-1,1], ranking changed by nn",
+    "prediction": {
+     "family": "clustered",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f001",
+    "lesson": "f014/f020/f023/f025 all re-expressed the same diff and were rejected; f009/f010/f013/f021 were duplicates because a progress gate is a within-decision constant. The denominator must be per-candidate."
+   },
+   "coder_note": "This computes the return-leg difference (distance from current minus distance to start) for each candidate, divided by that candidate's nearest-unvisited-neighbour distance plus the median such distance plus a 0.02 floor, then squashed with tanh into [-1, 1]; the k<2 case returns zeros as specified.",
+   "measures": "tanh((d_cur - d_start) / (nn + median(nn) + 0.02)): return-leg pull scaled by candidate local spacing.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.3557202817228453
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -82.6249
+    ],
+    [
+     -1.435208,
+     -2.8916
+    ],
+    [
+     0.430562,
+     -1.8722
+    ],
+    [
+     -0.430562,
+     -3.0838
+    ],
+    [
+     0.143521,
+     -0.4289
+    ],
+    [
+     -0.143521,
+     -0.4986
+    ]
+   ],
+   "best_probe": -0.4289,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.9723,
+    "lib_r2": 0.8242
+   },
+   "error": "",
+   "calls": [
+    "c048"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "homesick_knn_spacing_ratio",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"(mean 3-NN spacing - distance to start) / (mean 3-NN spacing + distance to start).\"\"\"\n    k = len(candidates)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n    np.fill_diagonal(D, np.inf)\n    kk = min(3, k - 1)\n    spacing = np.partition(D, kk - 1, axis=1)[:, :kk].mean(axis=1)\n    return (spacing - d_start) / (spacing + d_start + 1e-9)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a10",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f027 kept with weight +0.30 but its 1-NN denominator is a noisy density estimate: in clustered families the single nearest neighbour can sit in the same tight cluster and make every member look 'sparse'. Averaging the 3 nearest spacing smooths that, so the ratio (spacing - d_start)/(spacing + d_start) reflects whether the candidate is on the periphery of its cluster (cheap to leave, close to start) rather than one noisy pairing.",
+    "feature": "def feature(current, candidates, tour, start):\n    k = len(candidates)\n    d_start = np.linalg.norm(candidates - start[None,:], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:,None,:] - candidates[None,:,:], axis=2)\n    np.fill_diagonal(D, np.inf)\n    kk = min(3, k - 1)\n    spacing = np.partition(D, kk - 1, axis=1)[:, :kk].mean(axis=1)\n    return (spacing - d_start) / (spacing + d_start + 1e-9)",
+    "prediction": {
+     "family": "clustered",
+     "metric": "length",
+     "direction": "down"
+    },
+    "builds_on": "f027",
+    "lesson": "f027's prediction that closing_edge_pct would fall failed (0.9 -> 1.68), so the ratio's gain is not coming from the closing leg; the probe here checks whether the 1-NN denominator is noise or signal."
+   },
+   "coder_note": "This computes, per candidate, the ratio of (mean distance to its 3 nearest unvisited candidates minus its distance to the start) to their sum, exactly as specified; when fewer than 2 candidates remain it returns zeros, and the `1e-9` guard keeps the division finite.",
+   "measures": "(mean 3-NN spacing - distance to start) / (mean 3-NN spacing + distance to start).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.478530683013196
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -11.7097
+    ],
+    [
+     -1.435208,
+     -42.9703
+    ],
+    [
+     0.430562,
+     -6.0419
+    ],
+    [
+     -0.430562,
+     -8.4572
+    ],
+    [
+     0.143521,
+     -1.8261
+    ],
+    [
+     -0.143521,
+     -5.6117
+    ]
+   ],
+   "best_probe": -1.8261,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "length",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f029",
+    "rho": 0.9662,
+    "lib_r2": 0.8965
+   },
+   "error": "",
+   "calls": [
+    "c047"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "insertion_detour_mean_edge_norm",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative tanh of each candidate's cheapest insertion detour, normalised by the tour's mean edge length (not twice it).\"\"\"\n    m = len(tour)\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    if m < 2:\n        return -d_cur / np.sqrt(2.0)\n    a = tour[:-1]\n    b = tour[1:]\n    L = np.linalg.norm(b - a, axis=1)\n    dc_a = np.linalg.norm(candidates[:, None, :] - a[None, :, :], axis=2)\n    dc_b = np.linalg.norm(candidates[:, None, :] - b[None, :, :], axis=2)\n    detour = (dc_a + dc_b - L[None, :]).min(axis=1)\n    return -np.tanh(detour / (L.mean() + 1e-9))\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a03",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The insertion vein has been tried with a diameter normaliser (f012, weak keep) and with per-edge relative stretch plus clipping (f018, rejected). Both distort the comparison across edges. Detour measured in units of the tour's own mean edge length is the natural scale: a candidate whose cheapest insertion adds less than a typical existing edge is genuinely cheap, a candidate that needs two long edges to attach is not. If insertion cost is the real mechanism, this should tighten the chain and cut the 8 crossings and 12 long edges the champion leaves on clustered.",
+    "feature": "def feature(current, candidates, tour, start):\n    m = len(tour)\n    d_cur = np.linalg.norm(candidates - current[None,:], axis=1)\n    if m < 2:\n        return -d_cur / np.sqrt(2.0)\n    a = tour[:-1]; b = tour[1:]\n    L = np.linalg.norm(b - a, axis=1)\n    dc_a = np.linalg.norm(candidates[:,None,:] - a[None,:,:], axis=2)\n    dc_b = np.linalg.norm(candidates[:,None,:] - b[None,:,:], axis=2)\n    detour = (dc_a + dc_b - L[None,:]).min(axis=1)   # cheapest insertion detour per candidate\n    return -np.tanh(detour / (2.0 * L.mean() + 1e-9))  # global edge-length normalisation, in (-1,0]",
+    "prediction": {
+     "family": "clustered",
+     "metric": "long_edges",
+     "direction": "down"
+    },
+    "builds_on": "f012",
+    "lesson": "f018 (per-edge relative stretch, clipped) was rejected and its length prediction did not hold; f012's diameter normalisation drowned the signal. The global mean-edge scale is untested."
+   },
+   "coder_note": "This computes, per candidate, the cheapest insertion detour (min over existing tour edges of `|c-a| + |c-b| - |a-b|`), normalised by twice the tour's mean edge length and squashed with `-tanh` into (-1, 0]; for the first decision (m < 2) it falls back to the scaled negative current-to-candidate dis\u2026",
+   "measures": "Negative tanh of each candidate's cheapest insertion detour, normalised by the tour's mean edge length (not twice it).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    9.778295249417356
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.1879,
+   "best_w": null,
+   "d_train": 0.1879,
+   "d_valid": 0.778,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f012",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f012",
+    "rho": 0.9974
+   },
+   "error": "",
+   "calls": [
+    "c050",
+    "c051"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "start_reservation_gradient",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"(d_start(c) - d_start(nearest unvisited neighbour of c)) / (nn + d_start(c) + 1e-9).\"\"\"\n    k = len(candidates)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n    np.fill_diagonal(D, np.inf)\n    j = D.argmin(axis=1)\n    nn = D[np.arange(k), j]\n    return (d_start - d_start[j]) / (nn + d_start + 1e-9)\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a16",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A feature that only reads d_start(c) cannot beat f003 (a monotone copy), so reservation must be scored by a relation: taking c now is good when c is further from the start than the neighbour it is attached to, because the near-start member of the pair survives for the final hop. On clustered this should stop the tour from burning its near-start cities mid-route and leave a short closing leg.",
+    "feature": "def feature(current, candidates, tour, start):\n    k = len(candidates)\n    d_start = np.linalg.norm(candidates - start[None,:], axis=1)\n    if k < 2:\n        return np.zeros(k)\n    D = np.linalg.norm(candidates[:,None,:] - candidates[None,:,:], axis=2)\n    np.fill_diagonal(D, np.inf)\n    j = D.argmin(axis=1)             # index of each candidate's nearest unvisited neighbour\n    nn = D[np.arange(k), j]\n    return (d_start - d_start[j]) / (nn + d_start + 1e-9)   # >0: I am further from start than my neighbour",
+    "prediction": {
+     "family": "clustered",
+     "metric": "closing_edge_pct",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, for each candidate, how much further from the start it is than its nearest unvisited neighbour, normalised by that neighbour distance plus the candidate's own start distance (with a 1e-9 guard); for k < 2 it returns zeros since no neighbour exists.",
+   "measures": "(d_start(c) - d_start(nearest unvisited neighbour of c)) / (nn + d_start(c) + 1e-9).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    8.021690229324928
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -39.8829
+    ],
+    [
+     -1.435208,
+     -65.5972
+    ],
+    [
+     0.430562,
+     -25.4722
+    ],
+    [
+     -0.430562,
+     -13.2126
+    ],
+    [
+     0.143521,
+     -6.5642
+    ],
+    [
+     -0.143521,
+     -2.8392
+    ]
+   ],
+   "best_probe": -2.8392,
+   "best_w": -0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "closing_edge_pct",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f003",
+    "rho": 0.1511,
+    "lib_r2": 0.0904
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "closing_balance_tour_scaled",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Change of the remaining-start link plus the change of the current->candidate link, but measured against the current tour's own scale: normalises the closing balance by the typical tour edge length so late decisions weigh more.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n    tour = np.asarray(tour, dtype=float)\n\n    to_start = np.sqrt(((candidates - start) ** 2).sum(axis=1))\n    from_current = np.sqrt(((candidates - current) ** 2).sum(axis=1))\n\n    # Typical edge length seen so far: mean of consecutive tour legs (represents the scale of this instance's current solution)\n    if tour.shape[0] >= 2:\n        legs = np.sqrt(((tour[1:] - tour[:-1]) ** 2).sum(axis=1))\n        scale = float(legs.mean()) + 1e-9\n    else:\n        scale = 0.5\n\n    # Same balance as the parent, but expressed in units of the current tour's edge length\n    raw = (from_current - to_start)\n    return np.tanh(raw / (2.0 * scale))\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Change of the remaining-start link plus the change of the current->candidate link, but measured against the current tour's own scale: normalises the closing balance by the typical tour edge length so late decisions weigh more.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.4919193414925758
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 491.6076,
+   "best_w": null,
+   "d_train": 491.6076,
+   "d_valid": 489.2056,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c055"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "return_leg_vs_recent_scale",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg anticipation measured against the tour's own recent scale: (d_cur - d_start) divided by the mean leg length walked so far, so the pull toward start tightens as the tour's typical step shrinks.\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    if tour.shape[0] >= 2:\n        legs = np.linalg.norm(np.diff(tour, axis=0), axis=1)\n        scale = legs.mean()\n    else:\n        scale = 0.0\n    if scale < 1e-6:\n        scale = np.sqrt(((candidates - current[None, :]) ** 2).sum(axis=1)).mean()\n    if scale < 1e-6:\n        scale = 0.5 * np.sqrt(2.0)\n    return (d_cur - d_start) / scale\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg anticipation measured against the tour's own recent scale: (d_cur - d_start) divided by the mean leg length walked so far, so the pull toward start tightens as the tour's typical step shrinks.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    0.35156000313750874
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 491.6076,
+   "best_w": null,
+   "d_train": 491.6076,
+   "d_valid": 489.2056,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f001",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f001",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c054"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "greedy_tail_completion_blend",
+   "code": "import numpy as np\nimport math\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Negative nearest-neighbour completion cost from each candidate (vectorised), plus closing leg.\n\n    For each candidate i, we approximate the cost of completing the tour as:\n      dist(current, i) + sum over remaining cities of greedy nearest-neighbour hops + closing leg to start.\n    We vectorise by computing, for each candidate, the sum of distances of each other city to its\n    nearest neighbour among the remaining set (a lower-ish proxy that avoids per-candidate loops),\n    plus the current leg and the closing leg to start.\n    \"\"\"\n    k = candidates.shape[0]\n    cand = np.asarray(candidates, dtype=float)\n    cur = np.asarray(current, dtype=float)\n    st = np.asarray(start, dtype=float)\n\n    d_cur = np.sqrt(((cand - cur) ** 2).sum(axis=1))\n    d_start = np.sqrt(((cand - st) ** 2).sum(axis=1))\n\n    if k == 1:\n        return -(d_cur + d_start) / (math.sqrt(2.0) * 2.0)\n\n    # pairwise distance matrix among candidates\n    diff = cand[:, None, :] - cand[None, :, :]\n    D = np.sqrt((diff ** 2).sum(axis=2))\n    np.fill_diagonal(D, np.inf)\n\n    # For each candidate i, the \"remaining set\" is all others. Approximate the completion cost as:\n    #   for each other city j, the cheapest edge incident to j within the remaining set (nearest neighbour),\n    # summed and halved (each edge counted twice approx), excluding candidate i.\n    # This is a vectorised proxy for the greedy completion cost.\n    # nearest neighbor distance for each j among all candidates (excluding self)\n    nn = D.min(axis=1)  # shape (k,)\n    total_nn = nn.sum()\n\n    # For each candidate i, we remove i from the set, so we subtract its nn contribution,\n    # and we adjust for cities whose nearest neighbor was i: approximate by subtracting the\n    # edge (i, j) that was nearest for j and adding j's next-nearest.\n    D_no_i = D.copy()\n    D_no_i[:, :] = D\n    # next nearest for each j (second smallest in D row)\n    D_sorted = np.sort(D, axis=1)\n    nn2 = D_sorted[:, 1]  # second nearest\n\n    # For candidate i, cities j whose nearest was i need replacement with nn2[j].\n    nearest_is_i = (D.argmin(axis=1)[:, None] == np.arange(k)[None, :])\n    # shape (k_j, k_i): nearest_is_i[j, i] = True if nn of j is i\n    # subtract nn[j] for those j, add nn2[j]\n    adjust = nearest_is_i * (nn2[:, None] - nn[:, None])\n    # sum over j -> shape (k_i,)\n    adjust_sum = adjust.sum(axis=0)\n\n    # total pairwise nn sum excluding i (halved for double counting)\n    other_nn_sum = (total_nn - nn) + adjust_sum  # shape (k,)\n    # halve to account for each edge counted twice\n    completion_proxy = 0.5 * other_nn_sum\n\n    # add current leg and closing leg to start\n    cost = d_cur + completion_proxy + d_start\n\n    scale = math.sqrt(2.0) * (k + 1)\n    return -cost / scale\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f017",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative nearest-neighbour completion cost from each candidate (vectorised), plus closing leg.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    201.50713768331494
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -18.735
+    ],
+    [
+     -1.435208,
+     -87.2917
+    ],
+    [
+     0.430562,
+     -8.595
+    ],
+    [
+     -0.430562,
+     -10.288
+    ],
+    [
+     0.143521,
+     -4.9064
+    ],
+    [
+     -0.143521,
+     -1.7891
+    ]
+   ],
+   "best_probe": -1.7891,
+   "best_w": -0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9761,
+    "lib_r2": 0.6539
+   },
+   "error": "",
+   "calls": [
+    "c056",
+    "c059"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "unvisited_centroid_radius",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Squared distance from candidate to the centroid of the unvisited set: which candidate sits at the core of what's left to visit.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    k = candidates.shape[0]\n    if k == 1:\n        return np.zeros(1, dtype=float)\n    centroid = candidates.mean(axis=0)\n    d = np.linalg.norm(candidates - centroid[None, :], axis=1)\n    # normalise: max possible distance in unit square is sqrt(2)/2 from centre\n    return d / (0.5 * np.sqrt(2.0))\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a11",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Squared distance from candidate to the centroid of the unvisited set: which candidate sits at the core of what's left to visit.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    5.702143949659086
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -13.041
+    ],
+    [
+     -1.435208,
+     -45.6985
+    ],
+    [
+     0.430562,
+     -1.2188
+    ],
+    [
+     -0.430562,
+     -9.2686
+    ],
+    [
+     0.143521,
+     -0.3174
+    ],
+    [
+     -0.143521,
+     -5.4938
+    ]
+   ],
+   "best_probe": -0.3174,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.9766,
+    "lib_r2": 0.2278
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "return_leg_step_scaled_amplification",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Return-leg pull weighted by the candidate's distance to the current city relative to the tour's typical step length: (d_cur - d_start) * d_cur / mean_step.\"\"\"\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    d_start = np.linalg.norm(candidates - start[None, :], axis=1)\n    # typical step length so far (mean edge length of the visited chain)\n    if tour.shape[0] >= 2:\n        seg = np.linalg.norm(np.diff(tour, axis=0), axis=1)\n        mean_step = float(seg.mean())\n    else:\n        mean_step = 0.0\n    if mean_step < 1e-9:\n        mean_step = 0.5 * np.sqrt(2.0)\n    # amplify the return-leg signal for candidates that are also far from current\n    return (d_cur - d_start) * (d_cur / mean_step) / (1.0 + d_cur / mean_step)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Return-leg pull weighted by the candidate's distance to the current city relative to the tour's typical step length: (d_cur - d_start) * d_cur / mean_step.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.246735279292436
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -13.6059
+    ],
+    [
+     -1.435208,
+     -11.0662
+    ],
+    [
+     0.430562,
+     -3.406
+    ],
+    [
+     -0.430562,
+     -1.303
+    ],
+    [
+     0.143521,
+     -1.8957
+    ],
+    [
+     -0.143521,
+     -0.0482
+    ]
+   ],
+   "best_probe": -0.0482,
+   "best_w": -0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f001",
+    "rho": 0.954,
+    "lib_r2": 0.9028
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "closing_lag_scaled_by_drift",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Closing-lag: distance from current to candidate relative to how far the tour has already drifted from start, gating the closing pull by accumulated tour extent.\"\"\"\n    candidates = np.asarray(candidates, dtype=float)\n    current = np.asarray(current, dtype=float)\n    start = np.asarray(start, dtype=float)\n\n    # How stretched the tour already is: max distance from start among visited cities.\n    if tour.shape[0] > 0:\n        drift = np.linalg.norm(tour - start[None, :], axis=1).max()\n    else:\n        drift = 0.0\n\n    from_current = np.linalg.norm(candidates - current[None, :], axis=1)\n    to_start = np.linalg.norm(candidates - start[None, :], axis=1)\n\n    # Ratio of step cost to the whole tour's spread: a candidate is attractive\n    # when it is a cheap step and the tour is still compact (drift small),\n    # i.e. the closing leg can still be short. Scale is drift-dependent.\n    scale = drift + 0.1\n    return (from_current - to_start) / (scale * (from_current + to_start + 1e-9))\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f004",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Closing-lag: distance from current to candidate relative to how far the tour has already drifted from start, gating the closing pull by accumulated tour extent.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.443024739143183
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 492.1389,
+   "best_w": null,
+   "d_train": 492.1389,
+   "d_valid": 490.1468,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f004",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f004",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c058"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "two_step_cost_normalised",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Normalised two-step cost: distance from current to the candidate plus the candidate's nearest-neighbour distance into the remaining unvisited cities, each divided by its own mean over the candidates so both terms weigh the same.\"\"\"\n    k = len(candidates)\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    if k > 1:\n        dm = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n        np.fill_diagonal(dm, np.inf)\n        nn_rest = dm.min(axis=1)\n    else:\n        nn_rest = np.zeros(k)\n    s1 = d_cur.mean() + 1e-9\n    s2 = nn_rest.mean() + 1e-9\n    return -0.5 * (d_cur / s1 + nn_rest / s2)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The raw two-step cost d_cur + NN_from_candidate was dominated by d_cur, so it ranked candidates exactly like f005 (and failed as a ratio, f026). Dividing each of the two terms by its own mean over the current candidates makes the lookahead term carry equal influence, so a near city that strands the rest is penalised. That is the classic failure of pure NN here: it picks the cheap step that leaves leftovers and long edges.",
+    "feature": "def feature(current, candidates, tour, start):\n    \"\"\"Normalised two-step cost: distance from current to the candidate plus the candidate's nearest-neighbour distance into the remaining unvisited cities, each divided by its own mean over the candidates so both terms weigh the same.\"\"\"\n    k = len(candidates)\n    d_cur = np.linalg.norm(candidates - current[None, :], axis=1)\n    if k > 1:\n        dm = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n        np.fill_diagonal(dm, np.inf)\n        nn_rest = dm.min(axis=1)\n    else:\n        nn_rest = np.zeros(k)\n    s1 = d_cur.mean() + 1e-9\n    s2 = nn_rest.mean() + 1e-9\n    return -0.5 * (d_cur / s1 + nn_rest / s2)",
+    "prediction": {
+     "family": "clustered",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f015",
+    "lesson": "f015 was discarded as a duplicate of f005: the untiled sum d_cur + nn_rest ranked like d_cur. This retry fixes the scaling per decision instead of using a global constant."
+   },
+   "coder_note": "This computes the negated average of the current-to-candidate distance and the candidate's nearest-neighbour distance among the other unvisited cities, each normalised by its own mean over the candidates; I kept the `-0.5` scaling and the `1e-9` guards exactly as specified, and for `k == 1` the loo\u2026",
+   "measures": "Normalised two-step cost: distance from current to the candidate plus the candidate's nearest-neighbour distance into the remaining unvisited cities, each divided by its own mean over the candidates so both terms weigh the same.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.1969283394596206
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -45.8507
+    ],
+    [
+     -1.435208,
+     -108.1298
+    ],
+    [
+     0.430562,
+     -14.7592
+    ],
+    [
+     -0.430562,
+     -20.7631
+    ],
+    [
+     0.143521,
+     -4.8315
+    ],
+    [
+     -0.143521,
+     -5.6579
+    ]
+   ],
+   "best_probe": -4.8315,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.7722,
+    "lib_r2": 0.6978
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "signed_angular_sweep_centroid",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Signed angular sweep: negative absolute wrapped angle between each candidate's polar angle (around the fixed centroid of all cities) and the target angle = current city's angle advanced by one typical angular step in the tour's established rotation direction.\"\"\"\n    k = len(candidates)\n    pole = np.vstack([tour, candidates]).mean(axis=0)\n    rel_c = candidates - pole[None, :]\n    ang_c = np.arctan2(rel_c[:, 1], rel_c[:, 0])\n    rel_cur = current - pole\n    ang_cur = np.arctan2(rel_cur[1], rel_cur[0])\n    s = 1.0\n    if len(tour) >= 2:\n        rel_t = tour - pole[None, :]\n        cr = rel_t[:-1, 0] * rel_t[1:, 1] - rel_t[:-1, 1] * rel_t[1:, 0]\n        sgn = np.sign(np.sum(cr))\n        if sgn != 0.0:\n            s = float(sgn)\n    theta = min(0.5, 2.0 * np.pi / max(k, 1))\n    target = ang_cur + s * theta\n    diff = np.arctan2(np.sin(ang_c - target), np.cos(ang_c - target))\n    return -np.abs(diff) / np.pi\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f008's unsigned heading cosine was redundant with the champion because it only measures local turn magnitude. What kills crossings is rotational coherence: the tour should advance monotonically in angle around the instance instead of cutting back across itself. This measures the wrapped angular deficit to a one-step advance in the direction the tour has already been winding.",
+    "feature": "def feature(current, candidates, tour, start):\n    \"\"\"Signed angular sweep: negative absolute wrapped angle between each candidate's polar angle (around the fixed centroid of all cities) and the target angle = current city's angle advanced by one typical angular step in the tour's established rotation direction.\"\"\"\n    k = len(candidates)\n    pole = np.vstack([tour, candidates]).mean(axis=0)\n    rel_c = candidates - pole[None, :]\n    ang_c = np.arctan2(rel_c[:, 1], rel_c[:, 0])\n    rel_cur = current - pole\n    ang_cur = np.arctan2(rel_cur[1], rel_cur[0])\n    s = 1.0\n    if len(tour) >= 2:\n        rel_t = tour - pole[None, :]\n        cr = rel_t[:-1, 0] * rel_t[1:, 1] - rel_t[:-1, 1] * rel_t[1:, 0]\n        sgn = np.sign(np.sum(cr))\n        if sgn != 0.0:\n            s = float(sgn)\n    theta = min(0.5, 2.0 * np.pi / max(k, 1))\n    target = ang_cur + s * theta\n    diff = np.arctan2(np.sin(ang_c - target), np.cos(ang_c - target))\n    return -np.abs(diff) / np.pi",
+    "prediction": {
+     "family": "clustered",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "f008",
+    "lesson": "f008 (cosine between incoming direction and step) added nothing over the champion once refit; so measure the signed angular position around the centroid, not the local turn magnitude."
+   },
+   "coder_note": "This computes, for each candidate, the negative wrapped angular distance (normalised by \u03c0) between its polar angle around the centroid of all cities and the current city's angle advanced by one typical angular step in the tour's established winding direction; I implemented the experiment verbatim, \u2026",
+   "measures": "Signed angular sweep: negative absolute wrapped angle between each candidate's polar angle (around the fixed centroid of all cities) and the target angle = current city's angle advanced by one typical angular step in the tour's established rotation direction.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.8900551733511355
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -5.5301
+    ],
+    [
+     -1.435208,
+     -121.4576
+    ],
+    [
+     0.430562,
+     -5.0209
+    ],
+    [
+     -0.430562,
+     -6.5865
+    ],
+    [
+     0.143521,
+     -2.4081
+    ],
+    [
+     -0.143521,
+     -2.8846
+    ]
+   ],
+   "best_probe": -2.4081,
+   "best_w": 0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "crossings",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f005",
+    "rho": 0.8011,
+    "lib_r2": 0.7104
+   },
+   "error": "",
+   "calls": [
+    "c064"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "remaining_centroid_radial_z",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Standardised distance from the candidate to the centroid of the still-unvisited cities, measured relative to the current city's own radial position (tanh of the z-score of d_cand - d_current): high = candidate lies further out on the remaining rim than the current city, low = candidate sits deeper inside the remaining mass than the current city.\"\"\"\n    k = len(candidates)\n    if k < 2:\n        return np.zeros(k)\n    cen = candidates.mean(axis=0)\n    d = np.linalg.norm(candidates - cen[None, :], axis=1)\n    d_cur = np.linalg.norm(current - cen)\n    r = d - d_cur\n    return np.tanh(r / (d.std() + 1e-9))\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a11",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The untested half of the hull/centroid idea is radial structure, not angular exposure (f016's hull resultant was neutral). Peeling the current boundary of the remaining set (prefer outer rim) makes a spiral-in whose edges never have to cut back through unconsumed mass, unlike diving at the remaining centroid which strands a far ring for the end.",
+    "feature": "def feature(current, candidates, tour, start):\n    \"\"\"Standardised distance from the candidate to the centroid of the still-unvisited cities (tanh of the z-score): high = outer rim of what is left, low = in the middle of the remaining mass.\"\"\"\n    k = len(candidates)\n    if k < 2:\n        return np.zeros(k)\n    cen = candidates.mean(axis=0)\n    d = np.linalg.norm(candidates - cen[None, :], axis=1)\n    return np.tanh((d - d.mean()) / (d.std() + 1e-9))",
+    "prediction": {
+     "family": "uniform",
+     "metric": "crossings",
+     "direction": "down"
+    },
+    "builds_on": "f016",
+    "lesson": "f016 hull_vertex_resultant scored +0.49 (neutral) and f014's gated centroid pull was rejected; this isolates the radial/rim half as a single clean column, recomputed on the remaining set each decision."
+   },
+   "coder_note": "This computes, for each unvisited candidate, the tanh-squashed z-score of its Euclidean distance to the centroid of the remaining unvisited cities, so outer-rim cities score high and central ones low; the `k < 2` guard returns zeros as specified, and the `1e-9` in the denominator guards the divisio\u2026",
+   "measures": "Standardised distance from the candidate to the centroid of the still-unvisited cities, measured relative to the current city's own radial position (tanh of the z-score of d_cand - d_current): high = candidate lies further out on the remaining rim than the current city, low = candidate sits deeper inside the remaining mass than the current city.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    2.0560022660045125
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.3174,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f041",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f041",
+    "rho": 0.9998
+   },
+   "error": "",
+   "calls": [
+    "c062",
+    "c065"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "unvisited_density_kernel",
+   "code": "import numpy as np\n\ndef feature(current, candidates, tour, start):\n    \"\"\"Unvisited-density kernel around each candidate: mean over the other unvisited cities of exp(-(d/R)^2), with R = 2 * median nearest-neighbour spacing of the unvisited set; high = the candidate still has many unvisited neighbours right next to it.\"\"\"\n    k = len(candidates)\n    if k < 3:\n        return np.zeros(k)\n    dm = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n    np.fill_diagonal(dm, np.inf)\n    R = 2.0 * np.median(dm.min(axis=1)) + 1e-9\n    return np.exp(-(dm / R) ** 2).sum(axis=1) / (k - 1)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a17",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The champion's clustered failures (12 long edges vs 7, closing leg 6.33% vs 1.79%) come from leaving a cluster while members remain, then paying to come back. f027/f035 only look at the candidate's nearest/spacing distance, which says nothing about how much unvisited mass is still sitting around it; a neighbour count with a locally adaptive radius does, so the tour empties a cluster before it departs.",
+    "feature": "def feature(current, candidates, tour, start):\n    \"\"\"Unvisited-density kernel around each candidate: mean over the other unvisited cities of exp(-(d/R)^2), with R = 2 * median nearest-neighbour spacing of the unvisited set; high = the candidate still has many unvisited neighbours right next to it.\"\"\"\n    k = len(candidates)\n    if k < 3:\n        return np.zeros(k)\n    dm = np.linalg.norm(candidates[:, None, :] - candidates[None, :, :], axis=2)\n    np.fill_diagonal(dm, np.inf)\n    R = 2.0 * np.median(dm.min(axis=1)) + 1e-9\n    return np.exp(-(dm / R) ** 2).sum(axis=1) / (k - 1)",
+    "prediction": {
+     "family": "clustered",
+     "metric": "long_edges",
+     "direction": "down"
+    },
+    "builds_on": "f035",
+    "lesson": "f035 (3-NN spacing vs distance to start, a distance ratio) was rejected; a smooth count of unvisited neighbours is a different quantity, not another rearrangement of nn and d_start."
+   },
+   "coder_note": "This computes, for each candidate, the mean Gaussian kernel weight over all other unvisited cities with bandwidth R = 2\u00d7 the median nearest-neighbour spacing of the unvisited set (returning zeros when fewer than 3 candidates remain, as specified); I read the experiment literally and added no normal\u2026",
+   "measures": "Unvisited-density kernel around each candidate: mean over the other unvisited cities of exp(-(d/R)^2), with R = 2 * median nearest-neighbour spacing of the unvisited set; high = the candidate still has many unvisited neighbours right next to it.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    33.247741964649144
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.435208,
+     -139.3451
+    ],
+    [
+     -1.435208,
+     -22.2728
+    ],
+    [
+     0.430562,
+     -38.0207
+    ],
+    [
+     -0.430562,
+     -8.8585
+    ],
+    [
+     0.143521,
+     -10.3164
+    ],
+    [
+     -0.143521,
+     -3.7729
+    ]
+   ],
+   "best_probe": -3.7729,
+   "best_w": -0.143521,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "long_edges",
+    "family": "clustered",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.6509,
+    "lib_r2": 0.2845
+   },
+   "error": "",
+   "calls": [
+    "c063"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "nearest-neighbour",
+   "description": "Prefer the unvisited city closest to the current city (greedy NN).",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f005",
+    "f011",
+    "f019",
+    "f031"
+   ],
+   "best_gain": 488.003,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     488.003
+    ],
+    [
+     2,
+     -2.6883
+    ],
+    [
+     3,
+     -0.9471
+    ],
+    [
+     4,
+     null
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": 5
+  },
+  {
+   "id": "a02",
+   "title": "return-cost",
+   "description": "Prefer candidates that keep the eventual closing leg to start short, e.g. penalise distance from start.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f006",
+    "f003"
+   ],
+   "best_gain": 253.075,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     253.075
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a03",
+   "title": "insertion-cost",
+   "description": "Score a candidate by the detour it adds relative to the current edge, favouring cheap insertions.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f018",
+    "f012",
+    "f036"
+   ],
+   "best_gain": 440.7481,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     440.7481
+    ],
+    [
+     2,
+     0.778
+    ],
+    [
+     4,
+     0.778
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "angular-sweep",
+   "description": "Order candidates by polar angle around the current city or centroid to avoid zigzag crossings.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f008",
+    "f045"
+   ],
+   "best_gain": 326.384,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     326.384
+    ],
+    [
+     5,
+     -2.4081
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "centroid-radial",
+   "description": "Prefer candidates near the centroid of remaining cities, or on the convex hull, to structure the tour.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f016"
+   ],
+   "best_gain": 0.4853,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.4853
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "two-step-lookahead",
+   "description": "Score a candidate by distance now plus the nearest-neighbour distance from it to the rest.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f015",
+    "f044"
+   ],
+   "best_gain": -4.8315,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     488.003
+    ],
+    [
+     5,
+     -4.8315
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: return_leg_minus_step",
+   "description": "Distance from each candidate to the start city, minus its distance to the current city (return-leg anticipation).",
+   "parent": "",
+   "origin": "wide",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f001",
+    "f004",
+    "f009",
+    "f010",
+    "f013",
+    "f014",
+    "f017",
+    "f020",
+    "f021",
+    "f023",
+    "f025",
+    "f028",
+    "f030",
+    "f032",
+    "f033",
+    "f034",
+    "f038",
+    "f039",
+    "f040",
+    "f042",
+    "f043"
+   ],
+   "best_gain": 490.1468,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     490.1468
+    ],
+    [
+     2,
+     490.1468
+    ],
+    [
+     3,
+     -1.0683
+    ],
+    [
+     4,
+     490.1468
+    ],
+    [
+     5,
+     490.1468
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "wide find: insertion_savings_to_start",
+   "description": "Savings of inserting each candidate between current and start (closing-edge proxy), normalised.",
+   "parent": "",
+   "origin": "wide",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f002"
+   ],
+   "best_gain": 469.0076,
+   "last_gen": 1,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     469.0076
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "two-step-nn-lookahead",
+   "description": "Score each candidate by its distance now plus the nearest-neighbour distance from it to the remaining cities, capturing the next greedy step.",
+   "parent": "a06",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f026"
+   ],
+   "best_gain": -1.3704,
+   "last_gen": 3,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -1.3704
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "return-leg-ratio",
+   "description": "Prefer candidates whose distance to start is small relative to their distance to current, as a ratio rather than a difference.",
+   "parent": "a07",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 2,
+   "features": [
+    "f027",
+    "f029",
+    "f035"
+   ],
+   "best_gain": 1.7455,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     1.7455
+    ],
+    [
+     4,
+     -1.0816
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "hull-and-centroid-pull",
+   "description": "Prefer candidates near the centroid of remaining cities or on the convex hull to structure the tour and cut crossings.",
+   "parent": "a05",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f046",
+    "f041"
+   ],
+   "best_gain": -0.3174,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.3174
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "crossing-avoidance",
+   "description": "Penalise candidates whose new edge would cross an existing tour edge or the closing edge, to cut crossings in clustered instances.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f024"
+   ],
+   "best_gain": -0.4925,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.4925
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "gated-return-ratio",
+   "description": "Return-leg pull expressed as a ratio d_start/d_cur gated by remaining fraction, ranking differently from the kept diff form.",
+   "parent": "a07",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 3,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "wide find: closure_bias_progress_modulated_spread",
+   "description": "Relative savings of inserting the candidate next versus it being reached later: (d_cur - d_start) normalized by the unvisited-set scale, gated by remaining count to modulate closure bias late in the \u2026",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f022"
+   ],
+   "best_gain": -0.6441,
+   "last_gen": 3,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.6441
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "density-aware return-leg",
+   "description": "Scale the return-leg pull by the candidate's local neighbourhood spacing so isolated far cities are penalised more than in dense clusters.",
+   "parent": "a07",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 4,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "last-leg reservation",
+   "description": "Prefer leaving a city near the start unvisited until late, so the closing leg stays short; score by how well the candidate preserves a cheap final hop.",
+   "parent": "a02",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f037"
+   ],
+   "best_gain": -2.8392,
+   "last_gen": 4,
+   "notes": [
+    {
+     "gen": 5,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -2.8392
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a17",
+   "title": "unvisited-density attraction",
+   "description": "Prefer candidates sitting in still-dense unvisited neighbourhoods (many unvisited neighbours within a local radius), so a cluster gets finished before the tour leaves it.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f047"
+   ],
+   "best_gain": -3.7729,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -3.7729
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a18",
+   "title": "heading-continuity",
+   "description": "Prefer candidates that continue the current heading (small turn angle from the last tour edge) to smooth the path and cut zigzag crossings.",
+   "parent": "a04",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 5,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f004",
+  "f001",
+  "f005",
+  "f027"
+ ],
+ "backlog": [
+  "f017",
+  "f042",
+  "f014",
+  "f018",
+  "f029"
+ ]
+}

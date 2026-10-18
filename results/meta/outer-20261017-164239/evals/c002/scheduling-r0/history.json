@@ -1,0 +1,138 @@
+[
+ {
+  "gen": 0,
+  "train": 999.8013439208025,
+  "valid": 1028.2438939056617,
+  "progress": 0.0,
+  "valid_progress": 0.0,
+  "families": {
+   "uniform": 299.8732948934805,
+   "exponential": 899.1987233953747,
+   "bimodal": 1800.3320134735525
+  },
+  "accepted": [],
+  "library": [],
+  "weights": [],
+  "features": [],
+  "plan_source": null,
+  "seconds": 0.0,
+  "agent_seconds": 0.0,
+  "calls": 0,
+  "tokens_in": 0,
+  "tokens_out": 0,
+  "evals": 2,
+  "nodes": {
+   "untried": 0,
+   "promising": 0,
+   "unproven": 0,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 1,
+  "train": 17.897730683655187,
+  "valid": 20.69944512180516,
+  "progress": 98.21,
+  "valid_progress": 97.99,
+  "families": {
+   "uniform": 1.8897922776290506,
+   "exponential": 7.383750570178971,
+   "bimodal": 44.41964920315754
+  },
+  "accepted": [
+   "f001"
+  ],
+  "library": [
+   "f001"
+  ],
+  "weights": [
+   [
+    1.0
+   ]
+  ],
+  "features": [
+   "f008",
+   "f009",
+   "f010",
+   "f001",
+   "f006",
+   "f007",
+   "f011",
+   "f005"
+  ],
+  "plan_source": "navigator",
+  "seconds": 236.6,
+  "agent_seconds": 234.5,
+  "calls": 16,
+  "tokens_in": 24736,
+  "tokens_out": 96212,
+  "evals": 99,
+  "nodes": {
+   "untried": 4,
+   "promising": 2,
+   "unproven": 1,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 2,
+  "train": 11.241666462258706,
+  "valid": 12.885393789782404,
+  "progress": 98.88,
+  "valid_progress": 98.75,
+  "families": {
+   "uniform": 8.556250151017315,
+   "exponential": 8.894434158863048,
+   "bimodal": 16.274315076895757
+  },
+  "accepted": [
+   "f012",
+   "f013",
+   "f017"
+  ],
+  "library": [
+   "f001",
+   "f012",
+   "f013",
+   "f017"
+  ],
+  "weights": [
+   [
+    0.7613058865227067
+   ],
+   [
+    0.6366198866118766
+   ],
+   [
+    0.2936419043457532,
+    -0.36804185656362853
+   ],
+   [
+    0.030908
+   ]
+  ],
+  "features": [
+   "f017",
+   "f018",
+   "f019",
+   "f012",
+   "f013",
+   "f014",
+   "f015",
+   "f016"
+  ],
+  "plan_source": "navigator",
+  "seconds": 176.9,
+  "agent_seconds": 147.8,
+  "calls": 26,
+  "tokens_in": 48238,
+  "tokens_out": 161341,
+  "evals": 502,
+  "nodes": {
+   "untried": 4,
+   "promising": 4,
+   "unproven": 2,
+   "pruned": 0
+  }
+ }
+]

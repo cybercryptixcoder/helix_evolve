@@ -1,0 +1,76 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 15.467171717171718,
+  "valid": 17.401218062982764,
+  "progress": 73.16,
+  "valid_progress": 69.63,
+  "library": [
+   "f002",
+   "f001",
+   "f016",
+   "f010"
+  ]
+ },
+ "test": {
+  "gap": 23.185185185185187,
+  "families": {
+   "sparse": 19.999999999999996,
+   "dense": 22.222222222222225,
+   "geometric": 0.0,
+   "planted": 55.555555555555564,
+   "medium": 18.148148148148156
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 59.51
+ },
+ "progress_curve": [
+  0.0,
+  54.37,
+  73.16,
+  73.16,
+  73.16,
+  73.16
+ ],
+ "valid_curve": [
+  0.0,
+  51.8,
+  69.63,
+  69.63,
+  69.63,
+  69.63
+ ],
+ "calls": 59,
+ "tokens_in": 150502,
+ "tokens_out": 173254,
+ "features_tried": 45,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "color_option_fraction",
+   "origin": "wide"
+  },
+  {
+   "id": "f001",
+   "name": "colored_neighbor_fraction_minus_open_fraction",
+   "origin": "wide"
+  },
+  {
+   "id": "f016",
+   "name": "degree_tiebreak_on_max_saturation",
+   "origin": "deep"
+  },
+  {
+   "id": "f010",
+   "name": "relative_saturation_forced_crowding",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792279686.5008008
+}

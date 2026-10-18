@@ -1,0 +1,75 @@
+{
+ "problem": "tsp",
+ "label": "meta-tsp-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 514.7454815817777,
+  "valid": 511.7230383998162
+ },
+ "champion": {
+  "train": 10.895310254518963,
+  "valid": 10.207152446330442,
+  "progress": 97.88,
+  "valid_progress": 98.01,
+  "library": [
+   "f005",
+   "f015",
+   "f013",
+   "f033"
+  ]
+ },
+ "test": {
+  "gap": 13.891855883938353,
+  "families": {
+   "uniform": 17.356604002807895,
+   "clustered": 17.86740257343943,
+   "grid": 8.0147894668126,
+   "mixed": 12.328627492693485
+  },
+  "code_zero": 526.464221542033,
+  "progress": 97.36
+ },
+ "progress_curve": [
+  0.0,
+  97.24,
+  96.94,
+  96.94,
+  97.88,
+  97.88
+ ],
+ "valid_curve": [
+  0.0,
+  97.04,
+  97.83,
+  97.83,
+  98.01,
+  98.01
+ ],
+ "calls": 56,
+ "tokens_in": 129040,
+ "tokens_out": 86669,
+ "features_tried": 43,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "nearest_neighbour_negdist",
+   "origin": "deep"
+  },
+  {
+   "id": "f015",
+   "name": "local_spacing_neg",
+   "origin": "deep"
+  },
+  {
+   "id": "f013",
+   "name": "near_and_outward",
+   "origin": "wide"
+  },
+  {
+   "id": "f033",
+   "name": "abs_turn_soft_straight",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792270837.8591695
+}

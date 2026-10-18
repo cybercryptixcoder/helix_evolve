@@ -1,0 +1,70 @@
+{
+ "problem": "coloring",
+ "label": "meta-coloring-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 57.61881636881637,
+  "valid": 57.28992412815941
+ },
+ "champion": {
+  "train": 7.133838383838382,
+  "valid": 20.052733214497923,
+  "progress": 87.62,
+  "valid_progress": 65.0,
+  "library": [
+   "f008",
+   "f005",
+   "f033"
+  ]
+ },
+ "test": {
+  "gap": 28.333333333333332,
+  "families": {
+   "sparse": 13.33333333333333,
+   "dense": 19.444444444444446,
+   "geometric": 0.0,
+   "planted": 83.33333333333333,
+   "medium": 25.555555555555554
+  },
+  "code_zero": 57.26334776334777,
+  "progress": 50.52
+ },
+ "progress_curve": [
+  0.0,
+  69.84,
+  72.15,
+  73.36,
+  73.77,
+  87.62
+ ],
+ "valid_curve": [
+  0.0,
+  53.96,
+  59.67,
+  60.88,
+  63.68,
+  65.0
+ ],
+ "calls": 57,
+ "tokens_in": 149217,
+ "tokens_out": 127567,
+ "features_tried": 45,
+ "kept": [
+  {
+   "id": "f008",
+   "name": "free_colour_count",
+   "origin": "deep"
+  },
+  {
+   "id": "f005",
+   "name": "dsatur_saturation",
+   "origin": "deep"
+  },
+  {
+   "id": "f033",
+   "name": "residual_hub_tightness",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792275351.4330132
+}

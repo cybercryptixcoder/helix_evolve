@@ -1,0 +1,71 @@
+{
+ "problem": "binpack1d",
+ "label": "meta-binpack1d-r1",
+ "generations": 5,
+ "code_zero": {
+  "train": 5.056019436590471,
+  "valid": 5.004971290407417
+ },
+ "champion": {
+  "train": 3.606117485580385,
+  "valid": 3.8949106387458468,
+  "progress": 34.84,
+  "valid_progress": 24.6,
+  "library": [
+   "f002",
+   "f014",
+   "f040"
+  ]
+ },
+ "test": {
+  "gap": 6.2924912553302415,
+  "families": {
+   "weibull": 4.581854530398789,
+   "uniform": 4.008433544171937,
+   "small": 1.262772315403889,
+   "large": 5.616323370485669,
+   "bimodal": 18.738848064001434,
+   "scaled": 3.5467157075197284
+  },
+  "code_zero": 7.376614077127708,
+  "progress": 24.29
+ },
+ "progress_curve": [
+  0.0,
+  21.39,
+  33.92,
+  33.92,
+  34.84,
+  34.84
+ ],
+ "valid_curve": [
+  0.0,
+  15.51,
+  22.77,
+  22.77,
+  24.6,
+  24.6
+ ],
+ "calls": 65,
+ "tokens_in": 138095,
+ "tokens_out": 156168,
+ "features_tried": 48,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "squared_slack_after_placement",
+   "origin": "wide"
+  },
+  {
+   "id": "f014",
+   "name": "unfillable_residue_penalty",
+   "origin": "wide"
+  },
+  {
+   "id": "f040",
+   "name": "half_item_leftover_band",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792271264.1706152
+}

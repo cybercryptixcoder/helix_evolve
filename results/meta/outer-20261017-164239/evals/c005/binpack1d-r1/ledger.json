@@ -1,0 +1,3656 @@
+{
+ "features": [
+  {
+   "id": "f001",
+   "name": "post_placement_slack_multiple_bonus",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit slack: remaining room left in a bin after placing the item, scaled by capacity, plus a small bonus for bins whose residual is near a multiple of the item size.\"\"\"\n    rem = np.asarray(bins, dtype=float)\n    slack = rem - item\n    # normalised post-placement slack (empty bin -> large positive, tight fit -> near 0)\n    norm_slack = slack / capacity\n    # how close the leftover is to an exact multiple of the item: packing-friendly residuals\n    with np.errstate(divide='ignore', invalid='ignore'):\n        ratio = rem / item\n    frac = ratio - np.floor(ratio)\n    near_mult = (np.minimum(frac, 1.0 - frac) < 0.15).astype(float)\n    # only reward near-multiples when the bin can actually take the item\n    fits = (slack >= 0).astype(float)\n    return np.clip(norm_slack, -1.0, 1.0) + 0.2 * near_mult * fits\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a07",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit slack: remaining room left in a bin after placing the item, scaled by capacity, plus a small bonus for bins whose residual is near a multiple of the item size.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.132487356922788
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -135.4671
+    ],
+    [
+     -1.0,
+     -2.2427
+    ]
+   ],
+   "best_probe": -2.2427,
+   "best_w": -1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.51
+   },
+   "error": "",
+   "calls": [
+    "c006",
+    "c011"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f002",
+   "name": "exp_fit_matching",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Exponential fit-cost: exp(-remaining/item) per bin, large when remaining just fits the item.\"\"\"\n    total = bins + item\n    x = np.clip(total / max(capacity, 1), 0.0, 1.0)\n    r = bins / max(capacity, 1)\n    it = item / max(capacity, 1)\n    # Free space after placing item, shaped by how \"matching\" the bin is\n    room = (bins - item) / max(capacity, 1)\n    return np.exp(-np.abs(room) * 4.0) * (1.0 - r) - 0.5\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Exponential fit-cost: exp(-remaining/item) per bin, large when remaining just fits the item.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    4.3714782134584995
+   ],
+   "weights": [
+    1.2558726767239525
+   ],
+   "probe": [
+    [
+     1.0,
+     0.8018
+    ],
+    [
+     -1.0,
+     -229.7292
+    ]
+   ],
+   "best_probe": 0.8018,
+   "best_w": 1.0,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [
+    1.0
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {},
+   "error": "",
+   "calls": [
+    "c002"
+   ],
+   "kept_gen": 1,
+   "importance": 0.6899,
+   "retired_gen": null
+  },
+  {
+   "id": "f003",
+   "name": "fullness_weighted_slack",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Relative slack of the tightest fit: leftover fraction after placing item, scaled by how tight the bin already is.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    cap = float(capacity)\n    it = float(item)\n    rem = bins - it\n    # fraction of the bin that would remain after placing the item\n    frac = np.clip(rem / cap, -1.0, 1.0)\n    # how full the bin currently is (before placement), in [0,1]\n    fill = np.clip(1.0 - bins / cap, 0.0, 1.0)\n    # weight the leftover by current fullness: prefer bins that are already full and still fit\n    return frac * (1.0 + fill)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Relative slack of the tightest fit: leftover fraction after placing item, scaled by how tight the bin already is.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.204437515487129
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": null,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c003"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f004",
+   "name": "concave_fill_scaled_slack",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Slack left after placing the item, relative to a scale that grows with how full the bin already is.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    remaining = bins - item\n    # how full the bin would be after placement, in [0,1]\n    fill = 1.0 - np.clip(remaining / capacity, 0.0, 1.0)\n    # penalise tight fits nonlinearly: concave in remaining room, scaled by capacity\n    scaled = np.clip(remaining / capacity, 0.0, 1.0)\n    return fill * np.sqrt(scaled)\n",
+   "origin": "wide",
+   "gen": 1,
+   "node": "a03",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Slack left after placing the item, relative to a scale that grows with how full the bin already is.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    11.47465106511446
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -24.3169
+    ],
+    [
+     -1.0,
+     -152.9806
+    ]
+   ],
+   "best_probe": -24.3169,
+   "best_w": 1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.529
+   },
+   "error": "",
+   "calls": [
+    "c004"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f005",
+   "name": "best_fit_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Best-fit residual: leftover room after placing the item, normalised by capacity, but squashed so tight fits are separated from merely-fitting bins.\"\"\"\n    residual = (bins - item) / capacity\n    # Smooth, monotone squash of the residual: emphasises the difference between\n    # near-perfect fits (residual ~ 0) and loose fits (residual large), while\n    # staying finite and bounded in [-1, 1].\n    return np.tanh(4.0 * residual)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Code Zero is first-fit: it drops each item into the oldest bin that fits, stranding room. Best-fit picks the tightest fitting bin, so leftovers stay small and fewer bins are opened. This is the canonical fix for the 80-95% bins that strand small gaps.",
+    "feature": "For each candidate bin, leftover = bins - item (elementwise; the last, empty bin gives capacity - item). Return (bins - item) / capacity, one value per candidate. The optimiser will pick the negative sign to prefer the smallest residual.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes `(bins - item) / capacity` elementwise, one value per candidate (the empty bin yields `(capacity - item) / capacity`); the optimiser will choose the negative sign to prefer the tightest fit.",
+   "measures": "Best-fit residual: leftover room after placing the item, normalised by capacity, but squashed so tight fits are separated from merely-fitting bins.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.1846061403597345
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c007",
+    "c014"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f006",
+   "name": "worst_fit_residual",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Remaining room after placing the item, divided by capacity (worst-fit residual: emptiest post-placement bin scores highest).\"\"\"\n    cap = float(capacity)\n    post = (np.asarray(bins, dtype=float) - float(item)) / cap\n    return np.clip(post, -1.0, 1.0)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a02",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The opposite of best-fit: always take the emptiest fitting bin, keeping many large holes open for future large items. If the large family's 43 one-item bins come from big items landing in already-tight bins, worst-fit should reduce them.",
+    "feature": "Return bins / capacity, one value per candidate (largest remaining room before placement scores highest). The empty last bin scores 1.0.",
+    "prediction": {
+     "family": "large",
+     "metric": "nearly_empty_bins",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's remaining room normalised by capacity, so the emptiest fitting bin (and the brand-new bin, which scores 1.0) gets the highest value; the experiment's \"bins / capacity\" is read as remaining room \u00f7 capacity, since that is the quantity that makes the empty last bin score\u2026",
+   "measures": "Remaining room after placing the item, divided by capacity (worst-fit residual: emptiest post-placement bin scores highest).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.08558941100629
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c009",
+    "c015"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f007",
+   "name": "waste_penalty",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Leftover fraction plus a Gaussian bump rewarding near-exact fits: leftover/capacity + exp(-(leftover/(0.1*capacity))**2).\"\"\"\n    leftover = bins - item\n    frac = leftover / capacity\n    bump = np.exp(-((leftover / (0.1 * capacity)) ** 2))\n    return frac + bump\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a03",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "A small non-zero leftover (say 1-10% of capacity) is dead space no future item can use, while an exact fit wastes nothing and a large leftover stays useful. Adding a bump near zero leftover rewards exact fits and large holes over stranded slivers.",
+    "feature": "leftover = bins - item (elementwise). Return leftover/capacity + exp(-(leftover/(0.1*capacity))**2). Exact fits get +1, small non-zero leftovers get a smaller positive bump, large leftovers get their size. One value per candidate.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate, the leftover room after placing the item as a fraction of capacity, plus a Gaussian bump that is +1 at an exact fit and decays with width 0.1\u00b7capacity, so exact fits and large holes score above stranded slivers; I read \"leftover\" as `bins - item` (remaining room minus \u2026",
+   "measures": "Leftover fraction plus a Gaussian bump rewarding near-exact fits: leftover/capacity + exp(-(leftover/(0.1*capacity))**2).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.811341516127402
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.0,
+     -165.2161
+    ],
+    [
+     -1.0,
+     -17.3551
+    ]
+   ],
+   "best_probe": -17.3551,
+   "best_w": -1.0,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "uniform",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8737
+   },
+   "error": "",
+   "calls": [
+    "c012"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f008",
+   "name": "large_item_headroom",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"tanh((leftover/capacity - 0.5) * 10) where leftover = bins - item, scaled by how large the item is relative to capacity.\"\"\"\n    leftover = bins - item\n    step = np.tanh((leftover / capacity - 0.5) * 10.0)\n    # Weight the half-capacity step by the item's own size: a big item makes\n    # preserving a big hole matter more than a small item does.\n    return step * (item / capacity)\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a06",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Large items need a big hole; if a bin's leftover after placement falls below half capacity it is nearly useless for the next large item. A sharp threshold at half capacity tests whether preserving big holes is what the large family needs.",
+    "feature": "leftover = bins - item (elementwise). Return tanh((leftover/capacity - 0.5) * 10), a smooth step: ~+1 when leftover stays above half capacity, ~-1 below. One value per candidate.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes a smooth step on the remaining room after placing the item, normalised by capacity: near +1 when the bin still has more than half its capacity free afterwards, near -1 when it drops below half. I read \"leftover = bins - item\" literally (elementwise, including the empty bin candidate),\u2026",
+   "measures": "tanh((leftover/capacity - 0.5) * 10) where leftover = bins - item, scaled by how large the item is relative to capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.808110651606477
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c010",
+    "c016"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f009",
+   "name": "fill_fraction",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Post-placement fill fraction 1 - (bins - item)/capacity, centred on the empty-bin value item/capacity.\"\"\"\n    fill = 1.0 - (bins - item) / capacity\n    return fill - item / capacity\n",
+   "origin": "deep",
+   "gen": 1,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Post-placement fill (capacity - leftover)/capacity is a monotone copy of best-fit residual, so it should reproduce best-fit's gain. Testing it tells us whether the packing signal is simply 'fuller is better' or whether the residual shape matters.",
+    "feature": "Return (capacity - (bins - item)) / capacity = (item - (capacity - bins))... concretely: 1 - (bins - item)/capacity, one value per candidate. The empty last bin scores item/capacity.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "a01",
+    "lesson": ""
+   },
+   "coder_note": "This computes the fill fraction of each candidate bin after hypothetically placing the item, i.e. `(capacity - (bins - item)) / capacity`; the empty last bin (bins = capacity) scores `item/capacity`, and I read the formula literally as written, with no clipping or extra terms.",
+   "measures": "Post-placement fill fraction 1 - (bins - item)/capacity, centred on the empty-bin value item/capacity.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.08558941100629
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c008",
+    "c013"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f010",
+   "name": "adaptive_scale_fit",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Exponential fit-cost but with the decay scale set by the bin's current fill level: tight bins demand near-exact fits, empty bins tolerate slack.\"\"\"\n    cap = max(capacity, 1)\n    r = bins / cap            # remaining fraction BEFORE placing (empty bin = 1.0)\n    it = item / cap\n    room = (bins - item) / cap  # leftover fraction after placing\n    # scale: how picky the bin is. Full bins (small r) -> sharp; empty bins -> gentle\n    scale = 0.5 + 3.5 * (1.0 - r)\n    # symmetric in leftover sign, but only reward leftover >= 0 (fits) with more weight\n    fit = np.exp(-np.abs(room) * scale)\n    # asymmetry: overshoot (shouldn't happen for fitting bins) penalised harder\n    asym = np.where(room < 0.0, 0.35, 1.0)\n    return np.clip(fit * asym, 0.0, 1.0) * 2.0 - 1.0\n\nname: adaptive_scale_fit\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Exponential fit-cost but with the decay scale set by the bin's current fill level: tight bins demand near-exact fits, empty bins tolerate slack.",
+   "status": "tried",
+   "verdict": "flat",
+   "width": 1,
+   "scales": [
+    3.856829017928816
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -136.801
+    ],
+    [
+     -0.7932,
+     -8.2649
+    ],
+    [
+     0.23796,
+     -135.3
+    ],
+    [
+     -0.23796,
+     0.0
+    ],
+    [
+     0.07932,
+     -29.6786
+    ],
+    [
+     -0.07932,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.23796,
+   "d_train": 0.0,
+   "d_valid": 0.0,
+   "trial_x": [
+    1.0,
+    -0.23796
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.8579,
+    "lib_r2": 0.7157
+   },
+   "error": "",
+   "calls": [
+    "c019"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f011",
+   "name": "post_placement_multiple_graded",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Residual-compatibility: after placing the item, how well the leftover room can host future items of the same size \u2014 leftover modulo item, graded rather than thresholded, and gated on actually fitting.\"\"\"\n    rem = np.asarray(bins, dtype=float)\n    slack = rem - item\n    fits = slack >= 0.0\n\n    # Grade how close the post-placement leftover is to an exact multiple of the item,\n    # but use the *leftover* (not the pre-placement room) so the signal looks forward.\n    safe_item = max(item, 1.0)\n    ratio = slack / safe_item\n    frac = ratio - np.floor(ratio)\n    # triangular closeness to a multiple, in [0,1]: 1 when exact multiple, 0 when half-way\n    closeness = 1.0 - 2.0 * np.minimum(frac, 1.0 - frac)\n\n    # Continuous packing-friendliness: leftover near a multiple of the item, and not tiny.\n    leftover_frac = np.clip(slack / capacity, -1.0, 1.0)\n    # reward residuals that are multiples AND leave enough room for at least one more item\n    usable = np.clip(slack / safe_item, 0.0, 1.0)\n\n    score = closeness * usable * fits - 0.5 * leftover_frac\n    # The empty (new) bin: leftover = capacity - item, value it by how many items of this size fit.\n    return np.clip(score, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a07",
+   "kind": "variant",
+   "parent": "f001",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Residual-compatibility: after placing the item, how well the leftover room can host future items of the same size \u2014 leftover modulo item, graded rather than thresholded, and gated on actually fitting.",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    4.3220697605831075
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -1.3043
+    ],
+    [
+     -0.7932,
+     -1.6671
+    ],
+    [
+     0.23796,
+     -0.1671
+    ],
+    [
+     -0.23796,
+     -0.7647
+    ],
+    [
+     0.07932,
+     0.0
+    ],
+    [
+     -0.07932,
+     -0.5179
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.07932,
+   "d_train": 0.0,
+   "d_valid": -0.1068,
+   "trial_x": [
+    1.0,
+    0.07932
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.4474,
+    "lib_r2": 0.0598
+   },
+   "error": "",
+   "calls": [
+    "c020"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f012",
+   "name": "residual_pack_count",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Rank candidates by how many future items of the observed size scale would still fit: estimate of remaining capacity fragmentation.\"\"\"\n    cap = max(capacity, 1)\n    item_f = item / cap\n    rem = bins / cap\n    # two natural scales for future items: mean training size (~0.3*cap) and a small tail (~0.1*cap)\n    s1 = 0.30\n    s2 = 0.10\n    # how many s1-sized and s2-sized items could still go into each bin (continuous relaxation)\n    n1 = np.maximum(rem - item_f + item_f, 0.0)  # placeholder to avoid unused warning\n    room = np.maximum(rem - item_f, 0.0)\n    cnt = room / s1 + room / s2\n    # reward bins whose leftover cleanly packs many small items (smooth, bounded)\n    val = np.tanh(cnt) - 0.3\n    # empty bin gets a fixed neutral value so it isn't overly favoured or punished\n    val[-1] = np.tanh((1.0 - item_f) / s1 + (1.0 - item_f) / s2) - 0.3\n    return val\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Rank candidates by how many future items of the observed size scale would still fit: estimate of remaining capacity fragmentation.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.2754581588211655
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c018"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f013",
+   "name": "leftover_rank_vs_bins",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Number of already-open bins this candidate's leftover could still absorb if it were the only remaining item, plus 1.\"\"\"\n    k = len(bins)\n    leftover = bins - item\n    # how many of the OTHER open bins (excluding the new bin) are at least as empty as this leftover\n    # measure: relative rank of this bin's post-placement room against the distribution of all bins\n    c = max(capacity, 1)\n    lf = np.clip(leftover / c, -1.0, 1.0)\n    # count, as a fraction of k, how many bins have room below this candidate's leftover\n    # (vectorised pairwise comparison)\n    diff = lf[None, :] - lf[:, None]          # (k, k): other - self\n    frac_below = (diff > 0).sum(axis=1) / max(k - 1, 1)\n    # also give new bin a distinct nudge based on how full the system already is\n    total_room = bins.sum() / c\n    open_room = (bins[:-1].sum() / c) if k > 1 else 0.0\n    is_new = np.zeros(k)\n    is_new[-1] = 1.0\n    return np.tanh(3.0 * (frac_below - 0.5)) + 0.3 * is_new * np.tanh(open_room - total_room + item / c)\n",
+   "origin": "wide",
+   "gen": 2,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Number of already-open bins this candidate's leftover could still absorb if it were the only remaining item, plus 1.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.311463684400759
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c021"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f014",
+   "name": "bin_age_rank",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Normalised bin age rank: i/max(k-1,1) - 0.5, oldest = -0.5, new empty bin = +0.5.\"\"\"\n    k = bins.shape[0]\n    if k == 1:\n        return np.zeros(1)\n    return np.arange(k) / (k - 1) - 0.5\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Within a decision the item is fixed, so every monotone function of remaining room ranks candidates the same way (why f005/f006/f008/f009 all collapsed into f002). Bin age is an orthogonal quantity: it can only act as a tie-breaker among equal-fit bins, testing whether concentrating on the oldest open bin (first-fit-like) beats the default first-candidate tie-break.",
+    "feature": "For each candidate i (0 = oldest, k-1 = the new empty bin): value = i/max(k-1,1) - 0.5, so oldest = -0.5, empty bin = +0.5. Constant 0 if k==1.",
+    "prediction": {
+     "family": "all",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": ""
+   },
+   "coder_note": "This computes each candidate's position in the oldest-first ordering, rescaled to [-0.5, +0.5] (oldest = -0.5, brand-new empty bin = +0.5), returning 0 when there is only one candidate; I read \"constant 0 if k==1\" as a single zero value for that sole candidate.",
+   "measures": "Normalised bin age rank: i/max(k-1,1) - 0.5, oldest = -0.5, new empty bin = +0.5.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.6456732705829795
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -16.1904
+    ],
+    [
+     -0.7932,
+     -0.4275
+    ],
+    [
+     0.23796,
+     -5.9854
+    ],
+    [
+     -0.23796,
+     -0.0635
+    ],
+    [
+     0.07932,
+     -2.5393
+    ],
+    [
+     -0.07932,
+     -0.0411
+    ]
+   ],
+   "best_probe": -0.0411,
+   "best_w": -0.07932,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "all",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.6599,
+    "lib_r2": 0.4298
+   },
+   "error": "",
+   "calls": [
+    "c024"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f015",
+   "name": "two_sided_fit_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Two-sided fit band: max of an exact-fit Gaussian and a large-hole ramp, minus 0.5.\"\"\"\n    leftover = (bins - item) / capacity\n    exact = np.exp(-((leftover / 0.05) ** 2))\n    hole = np.clip((leftover - 0.3) / 0.3, 0.0, 1.0)\n    return np.maximum(exact, hole) - 0.5\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a08",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Best-fit strands unusable holes: the large family shows 35 single-item bins and 35 bins at 50-80% fill. A two-sided score that rewards an exact post-placement fit OR a genuinely large hole, and penalises the dead middle band, should rank differently from f002 and recover those holes for future large items.",
+    "feature": "leftover = (bins - item)/capacity; exact = exp(-(leftover/0.05)**2); hole = clip((leftover - 0.3)/0.3, 0.0, 1.0); return np.maximum(exact, hole) - 0.5.",
+    "prediction": {
+     "family": "all",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate bin, the leftover fraction `(remaining \u2212 item)/capacity`, scores it as the max of a narrow Gaussian peaked at an exact fit (width 0.05) and a ramp that saturates at 1 once leftover \u2265 0.6 (rising from 0.3), then subtracts 0.5; I read \"leftover\" literally as the post-plac\u2026",
+   "measures": "Two-sided fit band: max of an exact-fit Gaussian and a large-hole ramp, minus 0.5.",
+   "status": "tried",
+   "verdict": "flat",
+   "width": 1,
+   "scales": [
+    2.7152391303918226
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -57.4363
+    ],
+    [
+     -0.7932,
+     -4.098
+    ],
+    [
+     0.23796,
+     -16.4901
+    ],
+    [
+     -0.23796,
+     0.0
+    ],
+    [
+     0.07932,
+     0.0
+    ],
+    [
+     -0.07932,
+     0.0
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": -0.23796,
+   "d_train": 0.0,
+   "d_valid": 0.0,
+   "trial_x": [
+    1.0,
+    -0.23796
+   ],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "all",
+    "direction": "down",
+    "before": 3,
+    "after": 2,
+    "held": true,
+    "checked": true,
+    "instance": "weibull-000",
+    "why": "checked at an exaggerated weight (the fitted weight left it unchanged)"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.7029,
+    "lib_r2": 0.0003
+   },
+   "error": "",
+   "calls": [
+    "c027"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f016",
+   "name": "item_relative_matching",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian bump on leftover = (remaining - item)/item centred at 1, minus 0.5.\"\"\"\n    leftover = (bins - item) / max(item, 1)\n    return np.exp(-((leftover - 1.0) ** 2) * 2.0) - 0.5\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a09",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Normalising the residual by the arriving item (not capacity) makes the same bin look tight for big items and roomy for small ones; rewarding bins whose leftover is about one more item of the current size concentrates same-size items and should cut bins. Non-monotone in residual, so it escapes the spent best-fit group.",
+    "feature": "leftover = (bins - item)/max(item,1); return np.exp(-((leftover - 1.0)**2) * 2.0) - 0.5.",
+    "prediction": {
+     "family": "all",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": "f005/f006/f008/f009 all collapsed into f002 because they were monotone in remaining room; this one is not."
+   },
+   "coder_note": "This computes a Gaussian bump (width set by the factor 2.0, shifted by \u22120.5) over the item-relative leftover `(remaining \u2212 item)/item`, peaking when a bin's leftover after placing the item is about one more item of the current size; I read \"leftover\" exactly as the experiment's formula and used `ma\u2026",
+   "measures": "Gaussian bump on leftover = (remaining - item)/item centred at 1, minus 0.5.",
+   "status": "tried",
+   "verdict": "flat",
+   "width": 1,
+   "scales": [
+    3.3471126983871184
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -3.9687
+    ],
+    [
+     -0.7932,
+     -1.3733
+    ],
+    [
+     0.23796,
+     -0.1042
+    ],
+    [
+     -0.23796,
+     -0.3528
+    ],
+    [
+     0.07932,
+     0.0
+    ],
+    [
+     -0.07932,
+     -0.0421
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.07932,
+   "d_train": 0.0,
+   "d_valid": 0.0,
+   "trial_x": [
+    1.0,
+    0.07932
+   ],
+   "prediction": {
+    "metric": "bins",
+    "family": "all",
+    "direction": "down",
+    "before": 209,
+    "after": 214,
+    "held": false,
+    "checked": true,
+    "instance": "weibull-000",
+    "why": "checked at an exaggerated weight (the fitted weight left it unchanged)"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f004",
+    "rho": 0.697,
+    "lib_r2": 0.0002
+   },
+   "error": "",
+   "calls": [
+    "c025"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f017",
+   "name": "worst_fit_large_only",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Large-item-gated worst-fit: 1[item/capacity > 0.35] * (bins/capacity - 0.5).\"\"\"\n    large = 1.0 if item / capacity > 0.35 else 0.0\n    return large * (bins / capacity - 0.5)\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Pure worst-fit is anti-correlated with f002 and was discarded as a duplicate. Conditioning it on large items only (item/capacity > 0.35) is a genuinely different ranking: it tests whether spreading large items, keeping big holes open, beats best-fit exactly where the large family loses (6.76% gap).",
+    "feature": "large = 1.0 if item/capacity > 0.35 else 0.0; return large * (bins/capacity - 0.5). Constant 0 for small-item decisions.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "up"
+    },
+    "builds_on": "f006",
+    "lesson": ""
+   },
+   "coder_note": "This computes the worst-fit preference (favoring bins with more remaining room, centered at half capacity) multiplied by a hard gate that is 1 only when the arriving item exceeds 35% of capacity and 0 otherwise; I read \"large\" as a strict `>` threshold on `item/capacity` and applied it as a scalar \u2026",
+   "measures": "Large-item-gated worst-fit: 1[item/capacity > 0.35] * (bins/capacity - 0.5).",
+   "status": "tried",
+   "verdict": "redundant",
+   "width": 1,
+   "scales": [
+    13.181147592737455
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     0.7932,
+     -38.7038
+    ],
+    [
+     -0.7932,
+     0.0
+    ],
+    [
+     0.23796,
+     0.2459
+    ],
+    [
+     -0.23796,
+     0.0
+    ],
+    [
+     0.07932,
+     0.0421
+    ],
+    [
+     -0.07932,
+     0.0
+    ]
+   ],
+   "best_probe": 0.2459,
+   "best_w": 0.23796,
+   "d_train": 0.2459,
+   "d_valid": 0.3125,
+   "trial_x": [
+    1.0,
+    0.23796
+   ],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "up",
+    "before": 267,
+    "after": 266,
+    "held": false,
+    "checked": true,
+    "instance": "large-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.4497,
+    "lib_r2": 0.1279
+   },
+   "error": "",
+   "calls": [
+    "c023"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f018",
+   "name": "headroom_band_50",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian band on leftover headroom (bins-item)/capacity peaking at 0.5, width 0.15, minus 0.5.\"\"\"\n    leftover = (bins - item) / capacity\n    return np.exp(-((leftover - 0.5) ** 2) / (2 * 0.15 ** 2)) - 0.5\n",
+   "origin": "deep",
+   "gen": 2,
+   "node": "a06",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f008 headroom was a duplicate because a monotone threshold in leftover ranks like best-fit. A non-monotone band peaking at half-capacity headroom instead asks whether deliberately leaving a mid-size hole (enough for a future large item, not a wasted near-empty bin) helps the large family.",
+    "feature": "leftover = (bins - item)/capacity; return np.exp(-((leftover - 0.5)**2) / (2 * 0.15**2)) - 0.5.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f008",
+    "lesson": "f008 was a duplicate of f002 (monotone); this version is non-monotone."
+   },
+   "coder_note": "This computes a Gaussian bump centred at half-capacity leftover headroom (width 0.15, shifted down by 0.5), so candidates whose post-placement remaining room is near half the capacity score highest; I read \"leftover\" as the post-placement remaining room `(bins - item)/capacity` exactly as written.",
+   "measures": "Gaussian band on leftover headroom (bins-item)/capacity peaking at 0.5, width 0.15, minus 0.5.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    4.390558674240803
+   ],
+   "weights": [
+    0.6481777009821734
+   ],
+   "probe": [
+    [
+     0.7932,
+     -28.7719
+    ],
+    [
+     -0.7932,
+     -135.216
+    ],
+    [
+     0.23796,
+     -0.1671
+    ],
+    [
+     -0.23796,
+     -135.2579
+    ],
+    [
+     0.07932,
+     0.0
+    ],
+    [
+     -0.07932,
+     -69.6447
+    ]
+   ],
+   "best_probe": 0.0,
+   "best_w": 0.07932,
+   "d_train": 0.3396,
+   "d_valid": 0.3494,
+   "trial_x": [
+    1.3407495751020837,
+    0.4771805428186789
+   ],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "before": 35,
+    "after": 31,
+    "held": true,
+    "checked": true,
+    "instance": "large-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f010",
+    "rho": 0.9168,
+    "lib_r2": 0.2901
+   },
+   "error": "",
+   "calls": [
+    "c026"
+   ],
+   "kept_gen": 2,
+   "importance": 0.2866,
+   "retired_gen": null
+  },
+  {
+   "id": "f019",
+   "name": "adaptive_headroom_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Asymmetric Gaussian band on leftover headroom: peak shifts toward 0.5 for small items and toward 0.0 for large ones, width scales with item size.\"\"\"\n    leftover = (bins - item) / capacity\n    r = item / capacity\n    # Peak: large items want near-exact fits (peak -> 0), small items spread out (peak -> ~0.5)\n    peak = 0.5 * (1.0 - r) ** 1.5\n    # Width: narrow for large items (exact fits matter), wide for small items\n    width = 0.10 + 0.25 * (1.0 - r)\n    return np.exp(-((leftover - peak) ** 2) / (2.0 * width ** 2 + 1e-9)) - 0.5\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a06",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Asymmetric Gaussian band on leftover headroom: peak shifts toward 0.5 for small items and toward 0.0 for large ones, width scales with item size.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.167689436743897
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -0.2289
+    ],
+    [
+     -1.021023,
+     -50.7315
+    ],
+    [
+     0.306307,
+     -0.4225
+    ],
+    [
+     -0.306307,
+     -2.673
+    ],
+    [
+     0.102102,
+     -0.3394
+    ],
+    [
+     -0.102102,
+     -0.4666
+    ]
+   ],
+   "best_probe": -0.2289,
+   "best_w": 1.021023,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f015",
+    "rho": 0.8778,
+    "lib_r2": 0.0609
+   },
+   "error": "",
+   "calls": [
+    "c029"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f020",
+   "name": "multiscale_fit_smoothing",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit-cost smoothing over neighboring item scales: exp(-|bins - s|/capacity) averaged over item sizes s near the arriving item, weighted by how empty the bin is.\"\"\"\n    cap = max(capacity, 1)\n    r = bins / cap\n    it = item / cap\n    # A small band of plausible next-item scales around the arriving item's size.\n    scales = np.array([0.6, 0.8, 1.0, 1.25, 1.6]) * it  # fractions of the current item\n    # Residual after placing a hypothetical item of each scale, in capacity units.\n    # bins shape (k,), scales shape (s,) -> residuals (k, s)\n    resid = (bins[:, None] - (scales[None, :] * cap)) / cap\n    # Scale-dependent tolerance: bigger items demand tighter matching.\n    width = 0.15 + 0.5 * scales[None, :]\n    fit = np.exp(-np.abs(resid) / width)\n    # Weight each hypothetical scale by the size of the item being imagined (large items matter more).\n    w = scales / scales.sum()\n    match = (fit * w[None, :]).sum(axis=1)\n    # Reward emptier bins (more room to absorb mismatch), centre around 0.\n    return match * (1.0 - r) - 0.5\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit-cost smoothing over neighboring item scales: exp(-|bins - s|/capacity) averaged over item sizes s near the arriving item, weighted by how empty the bin is.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.23256912061171
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c031"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f021",
+   "name": "fill_tightness_interaction",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Interaction: how much of the bin's current fill is 'protected' by being a tight fit for this item.\"\"\"\n    cap = max(capacity, 1)\n    # current fill fraction of each bin (before placing)\n    fill = 1.0 - bins / cap\n    # how tightly the item fits relative to remaining room: 1 when exact, ->0 when roomy\n    tight = item / np.maximum(bins, 1e-9)\n    tight = np.clip(tight, 0.0, 1.0)\n    # interaction: reward bins that are already fairly full AND that the item nearly exactly fills\n    return (2.0 * fill - 1.0) * tight\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Interaction: how much of the bin's current fill is 'protected' by being a tight fit for this item.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.643194904813988
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c030"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f022",
+   "name": "post_placement_decisiveness",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Negative entropy of the post-placement room distribution: rewards bins whose fill state (full/empty) is decisive, punishes mediocre middle states.\"\"\"\n    k = len(bins)\n    post = bins - item\n    # Normalised post-placement room for real bins; the empty bin is special-cased.\n    r = np.clip(post / max(capacity, 1), 0.0, 1.0)\n    # Entropy-like \"middle-ness\": peaks at r=0.5, zero at extremes (parabolic).\n    mid = 4.0 * r * (1.0 - r)          # 0 at full/empty, 1 at half-full\n    # How decisive the bin's state is: full-ish or empty-ish is good, half-full is bad.\n    val = 1.0 - 2.0 * mid              # +1 decisive, -1 mediocre\n    # The brand-new empty bin is always maximally decisive (r = 1 - item/cap is high room).\n    val[-1] = 1.0\n    # Also weight by whether this item actually leaves a decisive state, not the pre-state.\n    return val\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a06",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Negative entropy of the post-placement room distribution: rewards bins whose fill state (full/empty) is decisive, punishes mediocre middle states.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    1.8105992061677427
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -170.5619
+    ],
+    [
+     -1.021023,
+     -0.2965
+    ],
+    [
+     0.306307,
+     -3.6035
+    ],
+    [
+     -0.306307,
+     -0.2993
+    ],
+    [
+     0.102102,
+     -0.1052
+    ],
+    [
+     -0.102102,
+     -0.1979
+    ]
+   ],
+   "best_probe": -0.1052,
+   "best_w": 0.102102,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.9766,
+    "lib_r2": 0.0354
+   },
+   "error": "",
+   "calls": [
+    "c033"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f023",
+   "name": "room_scaled_fit_tolerance",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Exponential fit-cost weighted by the bin's remaining room: exp(-|room|/scale) where scale shrinks as the bin fills.\"\"\"\n    cap = max(capacity, 1)\n    r = bins / cap\n    it = item / cap\n    room = (bins - item) / cap\n    # scale is large when the bin is empty, small when it is nearly full:\n    # a loose bin tolerates mismatch, a tight bin needs a near-exact fit\n    scale = 0.25 * (1.0 - r) + 0.02\n    return np.exp(-np.abs(room) / scale) * it - 0.5\n",
+   "origin": "wide",
+   "gen": 3,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Exponential fit-cost weighted by the bin's remaining room: exp(-|room|/scale) where scale shrinks as the bin fills.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    9.353772427878397
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c032"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f024",
+   "name": "size_conditional_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Blend of tight-fit band (small items) and headroom (large items), weighted by item/capacity.\"\"\"\n    cap = max(capacity, 1)\n    it = item / cap\n    room = (bins - item) / cap\n    tight = np.exp(-np.abs(room) * 4.0) - 0.5\n    head = np.clip(room, -1.0, 1.0)\n    return (1.0 - it) * tight + it * head\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a10",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f002's tight-fit band is right for small items (fill holes) but for large items the item's own size dominates the residual, so a headroom term should take over; blending by item/capacity gives one policy that does both, and it is non-monotone in bins so it cannot collapse onto the f002 group.",
+    "feature": "Per candidate: cap=max(capacity,1); it=item/cap; room=(bins-item)/cap; tight=exp(-abs(room)*4.0)-0.5; head=clip(room,-1,1); return (1-it)*tight + it*head.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": "f017's worst-fit-for-large gate did not raise large bins (267->266), so spreading large items is not obviously harmful; test the size-conditioned blend directly."
+   },
+   "coder_note": "This computes, per candidate bin, a convex blend of the tight-fit band `exp(-|room|*4)-0.5` and the clipped headroom `room`, weighted by `item/capacity` so small items favour tight fits and large items favour headroom; I read `room` as leftover headroom `(bins-item)/capacity` exactly as written, an\u2026",
+   "measures": "Blend of tight-fit band (small items) and headroom (large items), weighted by item/capacity.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    6.8342517693800025
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -0.3802
+    ],
+    [
+     -1.021023,
+     -14.7231
+    ],
+    [
+     0.306307,
+     -0.2327
+    ],
+    [
+     -0.306307,
+     -0.2025
+    ],
+    [
+     0.102102,
+     -0.1681
+    ],
+    [
+     -0.102102,
+     -0.0421
+    ]
+   ],
+   "best_probe": -0.0421,
+   "best_w": -0.102102,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9583,
+    "lib_r2": 0.9623
+   },
+   "error": "",
+   "calls": [
+    "c035"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f025",
+   "name": "adaptive_headroom_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian band on leftover headroom (bins-item)/capacity with item-size-dependent peak 0.5*(1-item/cap)+0.05 and width 0.15+0.15*(item/cap), minus 0.5.\"\"\"\n    cap = max(capacity, 1)\n    it = item / cap\n    room = (bins - item) / cap\n    peak = 0.5 * (1.0 - it) + 0.05\n    width = 0.15 + 0.15 * it\n    width = np.maximum(width, 1e-6)\n    return np.exp(-((room - peak) / width) ** 2) - 0.5\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a12",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f018's fixed peak at 0.5 headroom is a compromise; the ideal leftover scales with the arriving item, large items wanting a lower peak (tighter end-fill) and small items a higher one, so a size-dependent peak/width should beat the fixed band.",
+    "feature": "Per candidate: cap=max(capacity,1); it=item/cap; room=(bins-item)/cap; peak=0.5*(1-it)+0.05; width=0.15+0.15*it; return exp(-((room-peak)/width)**2)-0.5.",
+    "prediction": {
+     "family": "large",
+     "metric": "gap",
+     "direction": "down"
+    },
+    "builds_on": "f018",
+    "lesson": "f018 was kept and its probe showed +0.34; refine its band rather than replace it."
+   },
+   "coder_note": "This computes a Gaussian band on the leftover headroom `(bins-item)/capacity` whose peak `0.5*(1-item/cap)+0.05` and width `0.15+0.15*(item/cap)` both shift with the arriving item's relative size, minus 0.5; I read `cap=max(capacity,1)` literally as guarding the capacity division and clamped the wi\u2026",
+   "measures": "Gaussian band on leftover headroom (bins-item)/capacity with item-size-dependent peak 0.5*(1-item/cap)+0.05 and width 0.15+0.15*(item/cap), minus 0.5.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.4052868249866775
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -2.6074
+    ],
+    [
+     -1.021023,
+     -83.3078
+    ],
+    [
+     0.306307,
+     -0.1401
+    ],
+    [
+     -0.306307,
+     -0.6251
+    ],
+    [
+     0.102102,
+     -0.1234
+    ],
+    [
+     -0.102102,
+     -0.0582
+    ]
+   ],
+   "best_probe": -0.0582,
+   "best_w": -0.102102,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "gap",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f010",
+    "rho": 0.9223,
+    "lib_r2": 0.2746
+   },
+   "error": "",
+   "calls": [
+    "c039"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f026",
+   "name": "pre_placement_room_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Signed Gaussian band on pre-placement room r=bins/cap peaking at target=2*item/cap, width 0.25: sign(r-target) times the band height, so bins below and above the target are ordered oppositely.\"\"\"\n    cap = max(capacity, 1)\n    r = bins / cap\n    target = 2.0 * item / cap\n    band = np.exp(-((r - target) / 0.25) ** 2)\n    return np.sign(r - target) * band\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a11",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Scoring on pre-placement room removes the item-size shift that makes every post-placement feature monotone in bins; a band peaking at twice the item size asks for bins where the item takes about half the room, a genuinely non-monotone ordering the policy has never had.",
+    "feature": "Per candidate: cap=max(capacity,1); r=bins/cap; target=2.0*item/cap; return exp(-((r-target)/0.25)**2)-0.5.",
+    "prediction": {
+     "family": "all",
+     "metric": "items_per_bin",
+     "direction": "up"
+    },
+    "builds_on": "",
+    "lesson": ""
+   },
+   "coder_note": "This computes, per candidate bin, a Gaussian band on the pre-placement remaining room `bins/capacity` centred at twice the item size over capacity with width 0.25, shifted by \u22120.5; I read `cap=max(capacity,1)` literally as guarding the division, and applied the band to the raw `bins` array as given\u2026",
+   "measures": "Signed Gaussian band on pre-placement room r=bins/cap peaking at target=2*item/cap, width 0.25: sign(r-target) times the band height, so bins below and above the target are ordered oppositely.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.2250637132033924
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -2.1948
+    ],
+    [
+     -1.021023,
+     -0.5934
+    ],
+    [
+     0.306307,
+     -0.9536
+    ],
+    [
+     -0.306307,
+     -0.4609
+    ],
+    [
+     0.102102,
+     -0.2339
+    ],
+    [
+     -0.102102,
+     -0.1801
+    ]
+   ],
+   "best_probe": -0.1801,
+   "best_w": -0.102102,
+   "d_train": 0.0,
+   "d_valid": 0.0,
+   "trial_x": [],
+   "prediction": {
+    "metric": "items_per_bin",
+    "family": "all",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f028",
+    "rho": 0.5684,
+    "lib_r2": 0.2831
+   },
+   "error": "",
+   "calls": [
+    "c036",
+    "c040"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f027",
+   "name": "sharpened_worst_fit_gate",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Smoothly gated worst-fit: sigmoid((item/capacity-0.5)/0.05) * (remaining/capacity - 0.5), scaled by the item's own size fraction.\"\"\"\n    cap = max(capacity, 1)\n    it = item / cap\n    gate = 1.0 / (1.0 + np.exp(-(it - 0.5) / 0.05))\n    return gate * it * (bins / cap - 0.5)\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f017's hard gate at item/capacity>0.35 was too loose (it caught medium items) and redundant; restricting worst-fit to genuinely large items with a smooth gate at 0.5 isolates whether spreading only the biggest items helps.",
+    "feature": "Per candidate: cap=max(capacity,1); it=item/cap; gate=1/(1+exp(-(it-0.5)/0.05)); return gate*(bins/cap-0.5).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f017",
+    "lesson": "f017 predicted large bins up but they went 267->266; the gate was too wide, so sharpen it to item/capacity>0.5."
+   },
+   "coder_note": "This computes a sigmoid gate on the item's relative size (centred at 0.5 of capacity, width 0.05) times the candidate's normalised remaining room minus 0.5, so worst-fit preference is only expressed for genuinely large items; I read \"bins/cap\" as the candidate's remaining room divided by capacity, \u2026",
+   "measures": "Smoothly gated worst-fit: sigmoid((item/capacity-0.5)/0.05) * (remaining/capacity - 0.5), scaled by the item's own size fraction.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    34.94357804402
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c038",
+    "c041"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f028",
+   "name": "post_fill_band_85",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian band on post-placement fill fraction peaking at 0.85, width 0.10, minus 0.5.\"\"\"\n    cap = max(capacity, 1)\n    fill = 1.0 - (bins - item) / cap\n    return np.exp(-((fill - 0.85) / 0.10) ** 2) - 0.5\n",
+   "origin": "deep",
+   "gen": 3,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f009's monotone fill fraction was a duplicate of f002; a band on post-placement fill peaking at 0.85 (room 0.15) sits between f002's peak at 0 and f018's at 0.5, testing whether an intermediate target is the missing point rather than another monotone re-expression.",
+    "feature": "Per candidate: cap=max(capacity,1); fill=1.0-(bins-item)/cap; return exp(-((fill-0.85)/0.10)**2)-0.5.",
+    "prediction": {
+     "family": "all",
+     "metric": "mean_fill_pct",
+     "direction": "up"
+    },
+    "builds_on": "f009",
+    "lesson": "f009 fill_fraction was ruled a duplicate of f002, so the monotone form is spent; probe an intermediate band instead."
+   },
+   "coder_note": "This computes, per candidate bin, a Gaussian bump centred on a post-placement fill fraction of 0.85 (width 0.10) minus 0.5, so bins whose leftover room after placing the item leaves them ~85% full score highest; I read \"fill\" as the fraction of capacity occupied after the item is placed, and normal\u2026",
+   "measures": "Gaussian band on post-placement fill fraction peaking at 0.85, width 0.10, minus 0.5.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.398315341506508
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.021023,
+     -3.6453
+    ],
+    [
+     -1.021023,
+     -0.8059
+    ],
+    [
+     0.306307,
+     -0.4628
+    ],
+    [
+     -0.306307,
+     -0.2576
+    ],
+    [
+     0.102102,
+     -0.4215
+    ],
+    [
+     -0.102102,
+     -0.1083
+    ]
+   ],
+   "best_probe": -0.1083,
+   "best_w": -0.102102,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "mean_fill_pct",
+    "family": "all",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.8527,
+    "lib_r2": 0.2026
+   },
+   "error": "",
+   "calls": [
+    "c037"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f029",
+   "name": "headroom_band_item_scaled",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Peak of leftover band re-centred on frac = item/capacity (self-similar fit), width 0.15.\"\"\"\n    leftover = (bins - item) / capacity\n    # target leftover adapts to how big the item is: big items -> aim tighter, small -> aim looser\n    target = 0.5 * (1.0 - item / capacity)\n    return np.exp(-((leftover - target) ** 2) / (2 * 0.15 ** 2)) - 0.5\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a06",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Peak of leftover band re-centred on frac = item/capacity (self-similar fit), width 0.15.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.6821338341590284
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.1052,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f022",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f022",
+    "rho": 0.9928
+   },
+   "error": "",
+   "calls": [
+    "c044"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f030",
+   "name": "asymmetric_item_scaled_fit",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Asymmetric exponential fit-cost: penalise leaving too much room far more than packing too tight, using a scale set by the item's own size.\"\"\"\n    cap = max(capacity, 1)\n    room = (bins - item) / cap            # leftover after placing; negative only if it doesn't fit (shouldn't happen)\n    it = item / cap\n    # Asymmetric decay: over-spacious placements decay with the item's own footprint scale,\n    # tight/negative leftovers decay much faster (we don't want to shave bins to the bone).\n    scale = np.clip(it, 0.05, 1.0)\n    over = np.maximum(room, 0.0)\n    under = np.maximum(-room, 0.0)\n    score = np.exp(-over / scale) - np.exp(-under / (0.25 * scale))\n    return score - 0.5\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Asymmetric exponential fit-cost: penalise leaving too much room far more than packing too tight, using a scale set by the item's own size.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    3.821175399238575
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c046"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f031",
+   "name": "headroom_item_interaction",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Interaction: leftover headroom fraction (bins-item)/capacity times the item's size fraction item/capacity, so big items prefer moderate gaps and small items tolerate tight fits.\"\"\"\n    leftover = (bins - item) / capacity\n    it = item / capacity\n    # signed, bounded interaction; peaks where both a sizable item and a healthy gap coexist\n    return np.tanh(3.0 * leftover) * (it - 0.5)\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Interaction: leftover headroom fraction (bins-item)/capacity times the item's size fraction item/capacity, so big items prefer moderate gaps and small items tolerate tight fits.",
+   "status": "tried",
+   "verdict": "flat",
+   "width": 1,
+   "scales": [
+    15.648692134013656
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -0.3629
+    ],
+    [
+     -1.047187,
+     -0.7941
+    ],
+    [
+     0.314156,
+     -0.2732
+    ],
+    [
+     -0.314156,
+     0.0253
+    ],
+    [
+     0.104719,
+     -0.1228
+    ],
+    [
+     -0.104719,
+     -0.0423
+    ]
+   ],
+   "best_probe": 0.0253,
+   "best_w": -0.314156,
+   "d_train": 0.033,
+   "d_valid": 0.0082,
+   "trial_x": [
+    1.7503194599734866,
+    0.6229036444057678,
+    -0.078539
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.9234,
+    "lib_r2": 0.871
+   },
+   "error": "",
+   "calls": [
+    "c043"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f032",
+   "name": "asymmetric_headroom_band_item_peak",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Asymmetric band on post-placement headroom: penalise near-full bins more than half-full ones, with the peak shifted by how big the item is.\"\"\"\n    leftover = (bins - item) / capacity          # in [-1, 1] roughly\n    it = item / capacity\n    # Peak location moves with item size: small items prefer a fuller bin, big items a roomier one\n    peak = 0.35 + 0.45 * it\n    # Asymmetric widths: tight side (leftover < peak) is narrow, roomy side is wide\n    width = np.where(leftover < peak, 0.08 + 0.10 * it, 0.28)\n    return np.exp(-((leftover - peak) ** 2) / (2 * width ** 2)) - 0.5\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a06",
+   "kind": "variant",
+   "parent": "f018",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Asymmetric band on post-placement headroom: penalise near-full bins more than half-full ones, with the peak shifted by how big the item is.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8667672580193218
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -34.6594
+    ],
+    [
+     -1.047187,
+     -0.3394
+    ],
+    [
+     0.314156,
+     -2.0301
+    ],
+    [
+     -0.314156,
+     -0.3378
+    ],
+    [
+     0.104719,
+     -0.1857
+    ],
+    [
+     -0.104719,
+     -0.3796
+    ]
+   ],
+   "best_probe": -0.1857,
+   "best_w": 0.104719,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.9341,
+    "lib_r2": 0.8812
+   },
+   "error": "",
+   "calls": [
+    "c045"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f033",
+   "name": "leftover_ratio_asymmetric_fit",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit-cost that compares post-placement leftover against the item itself: exp(-leftover/item) but only for bins that already hold something, plus a bonus for the empty bin scaled by how poorly it fits.\"\"\"\n    it = max(item, 1)\n    r = bins / max(capacity, 1)\n    leftover = bins - item\n    # Negative room means the item does not fit; the empty bin always fits.\n    fits = leftover >= 0\n    # Asymmetric shape: tight fits rewarded, but with a floor so leftover=0 is not a singularity\n    ratio = np.where(fits, leftover / it, 1.0)\n    tight = np.exp(-ratio * 2.0) - 0.5\n    # Penalise bins that are nearly full but not matching (their leftover is small yet the bin is crowded)\n    crowded = np.exp(-np.abs(r - 0.5) * 6.0)\n    # Empty bin (last, r == 1.0) gets a flatter response relying on how big the item is\n    empty = (r > 0.999).astype(float)\n    empty_bonus = empty * (0.5 - item / max(capacity, 1))\n    return tight * (1.0 - 0.5 * crowded) + empty_bonus\n",
+   "origin": "wide",
+   "gen": 4,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit-cost that compares post-placement leftover against the item itself: exp(-leftover/item) but only for bins that already hold something, plus a bonus for the empty bin scaled by how poorly it fits.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    4.749702843138587
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -5.5101
+    ],
+    [
+     -1.047187,
+     -44.5185
+    ],
+    [
+     0.314156,
+     -0.5283
+    ],
+    [
+     -0.314156,
+     -5.3943
+    ],
+    [
+     0.104719,
+     -0.1576
+    ],
+    [
+     -0.104719,
+     -0.1855
+    ]
+   ],
+   "best_probe": -0.1576,
+   "best_w": 0.104719,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f018",
+    "rho": 0.9308,
+    "lib_r2": 0.7413
+   },
+   "error": "",
+   "calls": [
+    "c047"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f034",
+   "name": "two_peak_headroom_band",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Max of a sharp Gaussian at leftover 0 (width 0.06) and a broad Gaussian at leftover 0.5 (width 0.15), minus 0.5.\"\"\"\n    L = (bins - item) / capacity\n    sharp = np.exp(-0.5 * (L / 0.06) ** 2)\n    broad = np.exp(-0.5 * ((L - 0.5) / 0.15) ** 2)\n    return np.maximum(sharp, broad) - 0.5\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f018's single band at leftover=0.5 competes with f002's pull toward exact fits, and both miss the third state: the dead hole (0<leftover<min item). A band with peaks at exact closure AND at half-capacity rewards only the two leftover sizes that are actually usable, leaving the dead middle lowest. This tests that the failure is dead holes rather than half-full bins.",
+    "feature": "L = (bins - item)/capacity. Return np.maximum(np.exp(-0.5*(L/0.06)**2), np.exp(-0.5*((L-0.5)/0.15)**2)) - 0.5. Sharp peak at L=0, broad peak at L=0.5, valley at L~0.22; the last (empty) bin scores from its own (capacity-item)/capacity.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f018",
+    "lesson": "f022 failed because a parabolic peak at 0.5 is just a wider f018; f019/f025 failed by moving the 0.5 peak, not by adding a second one."
+   },
+   "coder_note": "This computes, for each candidate bin, the larger of a sharp peak at leftover `(bins-item)/capacity = 0` (exact closure) and a broad peak at leftover `0.5`, minus 0.5; the empty last bin is scored from its own `(capacity-item)/capacity` as specified.",
+   "measures": "Max of a sharp Gaussian at leftover 0 (width 0.06) and a broad Gaussian at leftover 0.5 (width 0.15), minus 0.5.",
+   "status": "tried",
+   "verdict": "worse",
+   "width": 1,
+   "scales": [
+    3.5726771413653884
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -0.3826
+    ],
+    [
+     -1.047187,
+     -110.3543
+    ],
+    [
+     0.314156,
+     -0.3005
+    ],
+    [
+     -0.314156,
+     -0.4638
+    ],
+    [
+     0.104719,
+     0.0489
+    ],
+    [
+     -0.104719,
+     -0.3062
+    ]
+   ],
+   "best_probe": 0.0489,
+   "best_w": 0.104719,
+   "d_train": 0.0489,
+   "d_valid": -0.2604,
+   "trial_x": [
+    1.7503194599734866,
+    0.6229036444057678,
+    0.104719
+   ],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "before": 265,
+    "after": 267,
+    "held": false,
+    "checked": true,
+    "instance": "large-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f007",
+    "rho": 0.5945,
+    "lib_r2": 0.7298
+   },
+   "error": "",
+   "calls": [
+    "c049"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f035",
+   "name": "exact_or_twin_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Max of a tight-fit Gaussian (leftover ~0) and a same-size-pairing Gaussian (leftover ~ item), minus 0.35.\"\"\"\n    L = (bins - item) / capacity\n    it = item / capacity\n    tight = np.exp(-0.5 * (L / 0.05) ** 2)\n    twin = 0.8 * np.exp(-0.5 * ((L - it) / 0.10) ** 2)\n    return np.maximum(tight, twin) - 0.35\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f002 pushes the tightest fit but is blind inside the dead zone (leftover 2 vs 6 both score ~1), so it happily burns a bin on a useless sliver while a hole that could hold one more same-size item stays open. Adding a second peak where leftover equals the arriving item's own size asks for same-size pairing, which is exactly the large-family structure (1.89 items per bin).",
+    "feature": "L = (bins - item)/capacity; it = item/capacity. Return np.maximum(np.exp(-0.5*(L/0.05)**2), 0.8*np.exp(-0.5*((L-it)/0.10)**2)) - 0.35.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f002",
+    "lesson": "f005/f013/f021 all reshaped the residual monotonically and ranked like f002; a second peak is the only way to say something new about the leftover."
+   },
+   "coder_note": "This computes, per candidate bin, the larger of a narrow Gaussian peaked at zero leftover (tight fit) and a Gaussian peaked where leftover equals the item's own size (same-size pairing), minus 0.35; I read `L` as leftover headroom `(bins - item)/capacity` and `it` as the normalised item size, exact\u2026",
+   "measures": "Max of a tight-fit Gaussian (leftover ~0) and a same-size-pairing Gaussian (leftover ~ item), minus 0.35.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    3.5299809785435188
+   ],
+   "weights": [
+    3.822010045790165
+   ],
+   "probe": [
+    [
+     1.047187,
+     0.1835
+    ],
+    [
+     -1.047187,
+     -8.0985
+    ],
+    [
+     0.314156,
+     -0.0587
+    ],
+    [
+     -0.314156,
+     -0.6231
+    ],
+    [
+     0.104719,
+     0.0495
+    ],
+    [
+     -0.104719,
+     -0.2837
+    ]
+   ],
+   "best_probe": 0.1835,
+   "best_w": 1.047187,
+   "d_train": 0.3922,
+   "d_valid": 0.3519,
+   "trial_x": [
+    1.798167594598221,
+    0.9047954282414604,
+    4.159128223884235
+   ],
+   "prediction": {
+    "metric": "bins",
+    "family": "weibull",
+    "direction": "down",
+    "before": 209,
+    "after": 205,
+    "held": true,
+    "checked": true,
+    "instance": "weibull-000",
+    "why": ""
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f002",
+    "rho": 0.8028,
+    "lib_r2": 0.6983
+   },
+   "error": "",
+   "calls": [
+    "c050"
+   ],
+   "kept_gen": 4,
+   "importance": 0.8063,
+   "retired_gen": null
+  },
+  {
+   "id": "f036",
+   "name": "worst_fit_when_no_exact_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Worst-fit preference (0.5 - remaining/capacity) only when no bin fits exactly and item/capacity >= 0.35, else 0.\"\"\"\n    it = item / capacity\n    r = bins / capacity\n    if np.any(bins - item == 0) or it < 0.35:\n        return np.zeros(len(bins))\n    return 0.5 - r\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a02",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f017's worst-fit gate on item size was redundant because item size is not the binding condition. If worst-fit helps at all it should help as a fallback: when no open bin gives an exact fit, precision is unavailable anyway, so open a big usable hole instead of a sliver. Zero elsewhere it cannot disturb the tight-fit decisions.",
+    "feature": "it = item/capacity; r = bins/capacity. If np.any(bins - item == 0) or it < 0.35: return np.zeros(len(bins)). Otherwise return 0.5 - r (larger remaining room wins).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f017",
+    "lesson": "f017 predicted large/bins 267 -> 266 and failed; the gate was on the wrong variable, so gate on fit availability instead of item size."
+   },
+   "coder_note": "This returns `0.5 - remaining/capacity` for every candidate (so larger remaining room wins) only when no open bin gives an exact fit and the item is at least 35% of capacity, and zeros otherwise; I read \"it < 0.35\" as the gate on item/capacity and applied the exact-fit check over all candidate bins\u2026",
+   "measures": "Worst-fit preference (0.5 - remaining/capacity) only when no bin fits exactly and item/capacity >= 0.35, else 0.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    7.171771877657816
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -0.3806
+    ],
+    [
+     -1.047187,
+     -7.3058
+    ],
+    [
+     0.314156,
+     -0.3815
+    ],
+    [
+     -0.314156,
+     -5.1329
+    ],
+    [
+     0.104719,
+     -0.3394
+    ],
+    [
+     -0.104719,
+     -0.4987
+    ]
+   ],
+   "best_probe": -0.3394,
+   "best_w": 0.104719,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f017",
+    "rho": 0.7357,
+    "lib_r2": 0.4102
+   },
+   "error": "",
+   "calls": [
+    "c053"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f037",
+   "name": "dead_zone_bump_08",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian bump on leftover fraction L=(bins-item)/capacity peaking at 0.08, width 0.05, minus 0.45.\"\"\"\n    L = (bins - item) / capacity\n    return np.exp(-0.5 * ((L - 0.08) / 0.05) ** 2) - 0.45\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a04",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f028 aimed at fill 0.85 and lost; the diagnostics say the waste sits in bins at 90-95% fill (42 weibull, 55 uniform), i.e. leftovers of 5-15% of capacity that no future item can use. Score that state directly instead of aiming at a fill level.",
+    "feature": "L = (bins - item)/capacity. Return np.exp(-0.5*((L-0.08)/0.05)**2) - 0.45: one bump on leftovers of roughly 2-15% of capacity, about -0.17 at L=0 and -0.45 for L>=0.3.",
+    "prediction": {
+     "family": "uniform",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f028",
+    "lesson": "f028 (band at 0.85) and f009 (fill fraction, monotone) both failed; the quantity is right but the target was a fill level, not a hole size."
+   },
+   "coder_note": "This computes a Gaussian bump centred at leftover fraction 0.08 (width 0.05) minus 0.45, so it is about -0.17 at L=0, peaks near +0.55 at L=0.08, and flattens to -0.45 for L\u22650.3; I read \"bins\" as the remaining room of each candidate and normalised by capacity as specified.",
+   "measures": "Gaussian bump on leftover fraction L=(bins-item)/capacity peaking at 0.08, width 0.05, minus 0.45.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.558076961527366
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -3.286
+    ],
+    [
+     -1.047187,
+     -3.2617
+    ],
+    [
+     0.314156,
+     -0.4654
+    ],
+    [
+     -0.314156,
+     -0.4734
+    ],
+    [
+     0.104719,
+     -0.273
+    ],
+    [
+     -0.104719,
+     -0.1088
+    ]
+   ],
+   "best_probe": -0.1088,
+   "best_w": -0.104719,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "uniform",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f028",
+    "rho": 0.7347,
+    "lib_r2": 0.3874
+   },
+   "error": "",
+   "calls": [
+    "c051"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f038",
+   "name": "pressure_shifted_fit_target",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Gaussian on leftover L=(bins-item)/capacity around target 0.35*(1-pressure), pressure=1-mean(open bins/capacity).\"\"\"\n    r = bins / capacity\n    L = r - item / capacity\n    if len(bins) > 1:\n        pressure = 1.0 - np.mean(r[:-1])\n    else:\n        pressure = 0.5\n    target = 0.35 * (1.0 - pressure)\n    return np.exp(-0.5 * ((L - target) / 0.12) ** 2) - 0.5\n",
+   "origin": "deep",
+   "gen": 4,
+   "node": "a13",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f010 let each bin set its own decay scale and went flat; that only re-weights candidates monotonically. If the regime matters it must move the *target* leftover, not the sharpness: with open bins still empty (low pressure) a wide hole is worth keeping, when they are nearly full only exact closure pays. A global (per-decision) target makes the ranking genuinely non-monotone in leftover.",
+    "feature": "r = bins/capacity; L = r - item/capacity. pressure = 1 - mean(r[:-1]) if len(bins) > 1 else 0.5 (exclude the always-last new bin). target = 0.35*(1 - pressure). Return np.exp(-0.5*((L - target)/0.12)**2) - 0.5.",
+    "prediction": {
+     "family": "weibull",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f010",
+    "lesson": "f010's per-bin scale change produced identical rankings (any monotone reshape of the residual does); conditioning must shift the target."
+   },
+   "coder_note": "This computes, per candidate, a Gaussian (width 0.12, minus 0.5) on the leftover fraction `L = (bins - item)/capacity` centred on a per-decision target `0.35*(1 - pressure)`, where pressure is `1 - mean(remaining/capacity)` over the open bins excluding the always-last new bin (0.5 when only the new\u2026",
+   "measures": "Gaussian on leftover L=(bins-item)/capacity around target 0.35*(1-pressure), pressure=1-mean(open bins/capacity).",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.8859254444663653
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     1.047187,
+     -0.3396
+    ],
+    [
+     -1.047187,
+     -1.6847
+    ],
+    [
+     0.314156,
+     -0.2589
+    ],
+    [
+     -0.314156,
+     -0.3503
+    ],
+    [
+     0.104719,
+     -0.3796
+    ],
+    [
+     -0.104719,
+     -0.1532
+    ]
+   ],
+   "best_probe": -0.1532,
+   "best_w": -0.104719,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "weibull",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f028",
+    "rho": 0.9346,
+    "lib_r2": 0.4161
+   },
+   "error": "",
+   "calls": [
+    "c052"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f039",
+   "name": "exp_fit_item_scaled",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Exponential fit-cost with item-relative sharpness: exp(-|leftover|/item) weighted by remaining room, minus 0.5.\"\"\"\n    cap = max(capacity, 1)\n    it = max(item, 1)\n    leftover = bins - item\n    r = bins / cap\n    # Relative scale: how sharply we demand a tight fit scales with item size\n    sharpness = 1.0 + 2.0 * (it / cap)\n    fit = np.exp(-np.abs(leftover) / (it * 0.5 + 1e-9) * sharpness)\n    # Weight by room left, but also reward bins that were already reasonably full\n    weight = (1.0 - r) + 0.3 * r\n    return np.clip(fit * weight, 0.0, 1.0) - 0.5\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Exponential fit-cost with item-relative sharpness: exp(-|leftover|/item) weighted by remaining room, minus 0.5.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.03316019054894
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 0.9992
+   },
+   "error": "",
+   "calls": [
+    "c055"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f040",
+   "name": "resonant_multifit_pairs",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Tight-fit vs pairing resonance: reward leftovers near 0 or near a multiple of the item size, with width scaled by item size.\"\"\"\n    L = (bins - item) / capacity\n    it = item / capacity\n    # width of the pairing resonance grows with the item (small items pair loosely, large items sharply)\n    w = 0.04 + 0.6 * it\n    # resonance at leftover ~ m*item for m = 0,1,2 (exact, pair, triple)\n    res = np.zeros_like(L)\n    for m in range(3):\n        mu = m * it\n        width = (0.05 if m == 0 else w)\n        amp = 1.0 if m == 0 else (0.8 if m == 1 else 0.5)\n        res = np.maximum(res, amp * np.exp(-0.5 * ((L - mu) / width) ** 2))\n    # scale resonance by how well the bin can host this item at all\n    host = np.clip((bins - item) / max(capacity, 1) + 1.0, 0.0, 1.0)\n    return res * host - 0.35\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f035",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Tight-fit vs pairing resonance: reward leftovers near 0 or near a multiple of the item size, with width scaled by item size.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    4.941139529299869
+   ],
+   "weights": [
+    1.2187545775570077
+   ],
+   "probe": [
+    [
+     4.77071,
+     -0.1977
+    ],
+    [
+     -4.77071,
+     -15.8007
+    ],
+    [
+     1.431213,
+     0.0331
+    ],
+    [
+     -1.431213,
+     -0.1839
+    ],
+    [
+     0.477071,
+     -0.093
+    ],
+    [
+     -0.477071,
+     -0.1653
+    ]
+   ],
+   "best_probe": 0.0331,
+   "best_w": 1.431213,
+   "d_train": 0.0331,
+   "d_valid": 0.1987,
+   "trial_x": [
+    1.8732110303865512,
+    0.8921186355484244,
+    4.188699617763894,
+    1.431213
+   ],
+   "prediction": {},
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f035",
+    "rho": 0.8209,
+    "lib_r2": 0.8722
+   },
+   "error": "",
+   "calls": [
+    "c057"
+   ],
+   "kept_gen": 5,
+   "importance": 0.1595,
+   "retired_gen": null
+  },
+  {
+   "id": "f041",
+   "name": "fill_weighted_tight_fit",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Fit quality weighted by the bin's own remaining room: tight fits in nearly-full bins get a bump, empty bin is neutral.\"\"\"\n    cap = max(capacity, 1)\n    leftover = (bins - item) / cap\n    bin_fill = 1.0 - bins / cap\n    it = item / cap\n    tight = np.exp(-0.5 * (leftover / 0.08) ** 2)\n    # reward tight fits scaled by how full the bin already is, so nearly-full bins are preferred\n    score = tight * bin_fill\n    # subtract the value the empty bin would get (leftover = 1 - it, fill = 0) => 0 baseline\n    empty_val = np.exp(-0.5 * ((1.0 - it) / 0.08) ** 2) * 0.0\n    return np.clip(score - empty_val, -1.0, 1.0)\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Fit quality weighted by the bin's own remaining room: tight fits in nearly-full bins get a bump, empty bin is neutral.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    4.68271236967094
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c056"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f042",
+   "name": "exp_fit_adaptive_sharpness_with_slack",
+   "code": "import numpy as np\nimport math\n\ndef feature(item, bins, capacity):\n    \"\"\"Exponential fit-cost, but the sharpness adapts to item size: small items get a loose fit, large items a sharp one.\"\"\"\n    cap = max(capacity, 1)\n    room = np.abs(bins - item) / cap          # distance to perfect fit\n    it = item / cap                            # fractional item size\n    # sharpness grows with item: small items tolerate slack, large items demand tight fits\n    sharp = 2.0 + 14.0 * it\n    fit = np.exp(-room * sharp)\n    # discount nearly-full bins less able to host this item\n    room_frac = (bins / cap)\n    return fit * (1.0 - room_frac) - 0.5\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a01",
+   "kind": "variant",
+   "parent": "f002",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Exponential fit-cost, but the sharpness adapts to item size: small items get a loose fit, large items a sharp one.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    5.222964847026248
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": 0.8018,
+   "best_w": null,
+   "d_train": 0.8018,
+   "d_valid": 0.6093,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f002",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f002",
+    "rho": 1.0
+   },
+   "error": "",
+   "calls": [
+    "c059"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f043",
+   "name": "sliver_fit_for_large_items",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Ratio of the item's size to the post-placement leftover gap, when the gap is a small positive sliver; large only for slivers just above zero, decays for perfect fits and for loose fits.\"\"\"\n    leftover = (bins - item) / capacity\n    it = item / capacity\n    # asymmetric: penalise overfill never happens (bins>=item for candidates), so use signed leftover\n    # measure a \"sliver\" band: leftover slightly positive (not zero, not large)\n    sliver = np.exp(-0.5 * ((leftover - 0.08) / 0.06) ** 2)\n    # scale by item size so big items getting tight fits are preferred\n    return sliver * np.clip(it, 0.0, 1.0) - 0.3\n",
+   "origin": "wide",
+   "gen": 5,
+   "node": "a04",
+   "kind": "fresh",
+   "parent": "",
+   "idea": {},
+   "coder_note": "",
+   "measures": "Ratio of the item's size to the post-placement leftover gap, when the gap is a small positive sliver; large only for slivers just above zero, decays for perfect fits and for loose fits.",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    9.076139168267128
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.1088,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f037",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f037",
+    "rho": 0.9974
+   },
+   "error": "",
+   "calls": [
+    "c058"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f044",
+   "name": "periodic_multiple_match",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Periodic multiple match: cosine of post-placement leftover in units of the item size, damped for tiny items.\"\"\"\n    i = max(item, 1)\n    L = (bins - item) / i\n    feasible = bins >= item\n    match = 0.5 * (1.0 + np.cos(2.0 * np.pi * L))\n    amp = np.clip((item / capacity) / 0.5, 0.0, 1.0)\n    val = amp * match - 0.4\n    return np.where(feasible, val, -1.0)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a01",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f035 rewards leftover ~0 and leftover ~item but decays past item, so a bin that could still hold two or three more items of the arriving size is scored like a wasteful one. If tiling the bin with copies of the arriving item is the real signal, scoring closeness of the post-placement leftover to an exact multiple of the item (peaks at 0, item, 2*item, ...) should beat both references the champion already has.",
+    "feature": "i=max(item,1); L=(bins-item)/i; feasible=(bins>=item); match=0.5*(1+cos(2*pi*L)) (peaks at L=0,1,2,...); amp=clip((item/capacity)/0.5,0,1) damps the oscillation for tiny items; val=amp*match-0.4; return -1.0 where not feasible, val otherwise (the empty bin is always feasible).",
+    "prediction": {
+     "family": "uniform",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "f035",
+    "lesson": "f035 was kept (+0.39 train) but only has two references and its twin Gaussian dies past leftover = item; this tests a bolder multi-reference set."
+   },
+   "coder_note": "This computes, per candidate bin, a cosine oscillation over the post-placement leftover measured in units of the arriving item size (peaking when the leftover is an exact multiple of the item), damped by the item's relative size and shifted down by 0.4, with infeasible bins set to -1.0; I read \"the\u2026",
+   "measures": "Periodic multiple match: cosine of post-placement leftover in units of the item size, damped for tiny items.",
+   "status": "kept",
+   "verdict": "kept",
+   "width": 1,
+   "scales": [
+    7.143752921135054
+   ],
+   "weights": [
+    -0.2702386523341649
+   ],
+   "probe": [
+    [
+     4.77071,
+     -0.2736
+    ],
+    [
+     -4.77071,
+     -13.8025
+    ],
+    [
+     1.431213,
+     -0.2047
+    ],
+    [
+     -1.431213,
+     -0.3822
+    ],
+    [
+     0.477071,
+     -0.1985
+    ],
+    [
+     -0.477071,
+     0.0315
+    ]
+   ],
+   "best_probe": 0.0315,
+   "best_w": -0.477071,
+   "d_train": 0.0315,
+   "d_valid": 0.1238,
+   "trial_x": [
+    1.8732110303865512,
+    0.8921186355484244,
+    4.188699617763894,
+    -0.477071
+   ],
+   "prediction": {
+    "metric": "bins",
+    "family": "uniform",
+    "direction": "down",
+    "before": 210,
+    "after": 239,
+    "held": false,
+    "checked": true,
+    "instance": "uniform-000",
+    "why": "checked at an exaggerated weight (the fitted weight left it unchanged)"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f035",
+    "rho": 0.5878,
+    "lib_r2": 0.4331
+   },
+   "error": "",
+   "calls": [
+    "c061"
+   ],
+   "kept_gen": 5,
+   "importance": 0.1681,
+   "retired_gen": null
+  },
+  {
+   "id": "f045",
+   "name": "reserve_window_item_to_half",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Trapezoid on leftover L=bins-item: rises 0.6*item->item, falls 0.5*cap->0.75*cap, minus 0.4; -1 where bins<item.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    i = max(float(item), 1.0)\n    cap = max(float(capacity), 1.0)\n    L = bins - i\n    up = np.clip((L - 0.6 * i) / (0.4 * i), 0.0, 1.0)\n    down = np.clip((0.75 * cap - L) / (0.25 * cap), 0.0, 1.0)\n    val = np.minimum(up, down) - 0.4\n    return np.where(bins < i, -1.0, val)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a06",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f018's half-capacity band is nearly inert (importance -0.029) and every item-shifted band tried (f019, f032) was rejected on the probe, so the reserve must be expressed against the item, not shifted on capacity. A trapezoid that is positive exactly while the leftover holds one more item of the arriving size but is still below half capacity should stop large items being sealed next to unusable slivers without rewarding wasteful near-empty bins.",
+    "feature": "L=bins-item (absolute leftover); i=max(item,1); up=clip((L-0.6*i)/(0.4*i),0,1) (0 until 0.6*item, 1 from item); down=clip((0.75*capacity-L)/(0.25*capacity),0,1) (1 up to 0.5*capacity, 0 at 0.75*capacity); val=minimum(up,down)-0.4; return -1.0 where bins<item, val otherwise.",
+    "prediction": {
+     "family": "large",
+     "metric": "bins_with_one_item",
+     "direction": "down"
+    },
+    "builds_on": "f018",
+    "lesson": "f019/f032 adaptive bands rejected by the probe and f018 is near-inert: the capacity-centred band shape is spent, the item-relative reserve window is not."
+   },
+   "coder_note": "This computes, per candidate bin, a trapezoid over the absolute leftover `L = bins - item` that is 0 until `0.6*item`, rises to 1 at `item`, stays 1 until `0.5*capacity`, falls to 0 at `0.75*capacity`, then subtracts 0.4, returning -1.0 for bins too small to hold the item; I read \"0.5*capacity\" as \u2026",
+   "measures": "Trapezoid on leftover L=bins-item: rises 0.6*item->item, falls 0.5*cap->0.75*cap, minus 0.4; -1 where bins<item.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.896452624554611
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     4.77071,
+     -16.5453
+    ],
+    [
+     -4.77071,
+     -73.219
+    ],
+    [
+     1.431213,
+     -3.1593
+    ],
+    [
+     -1.431213,
+     -0.3878
+    ],
+    [
+     0.477071,
+     -0.1915
+    ],
+    [
+     -0.477071,
+     -0.1411
+    ]
+   ],
+   "best_probe": -0.1411,
+   "best_w": -0.477071,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins_with_one_item",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f033",
+    "rho": 0.6779,
+    "lib_r2": 0.6336
+   },
+   "error": "",
+   "calls": [
+    "c063"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f046",
+   "name": "dead_zone_signed_penalty",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Signed non-monotone score: -1 where the item doesn't fit, else max(exact-fill Gaussian, twin-reserve ramp) - 0.45.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    item = float(item)\n    cap = float(capacity)\n\n    Lc = (bins - item) / cap\n    exact = np.exp(-((Lc / 0.07) ** 2))\n\n    leftover = bins - item\n    ratio = leftover / max(item, 1.0)\n    res = np.clip((ratio - 1.0) / 0.8, 0.0, 1.0)\n\n    val = np.maximum(exact, res) - 0.45\n    return np.where(bins < item, -1.0, val)\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a15",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "The large family wastes room in bins whose post-placement leftover is positive but smaller than the item (19 nearly-empty and many 95-98% bins, 45 singletons). A signed non-monotone score - high on exact fits, high once the leftover can host a twin, flat and negative in between - should convert dead leftovers into either sealed bins or usable reserves. This isolates the dead zone as a penalty rather than the narrow reward bump f037 tried.",
+    "feature": "Lc=(bins-item)/capacity; exact=exp(-(Lc/0.07)^2) (peak 1 at exact fill); res=clip(((bins-item)/max(item,1)-1.0)/0.8,0,1) (0 while leftover<=item, 1 at leftover>=1.8*item); val=maximum(exact,res)-0.45; return -1.0 where bins<item, val otherwise.",
+    "prediction": {
+     "family": "large",
+     "metric": "full_bins_pct",
+     "direction": "up"
+    },
+    "builds_on": "f037",
+    "lesson": "f037 (a positive Gaussian bump at leftover 8%) was rejected on the probe; the dead zone should be punished and the two outside regions rewarded, not the middle rewarded."
+   },
+   "coder_note": "This computes, per candidate bin, `-1` when the item does not fit (`bins < item`), and otherwise `max(exact, res) - 0.45`, where `exact` is a Gaussian in the post-placement leftover fraction `(bins-item)/capacity` peaking at exact fill (width 0.07) and `res` is a ramp from 0 at leftover \u2264 item to 1\u2026",
+   "measures": "Signed non-monotone score: -1 where the item doesn't fit, else max(exact-fill Gaussian, twin-reserve ramp) - 0.45.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    2.931900462434585
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     4.77071,
+     -0.1275
+    ],
+    [
+     -4.77071,
+     -10.2874
+    ],
+    [
+     1.431213,
+     -0.1177
+    ],
+    [
+     -1.431213,
+     -1.7389
+    ],
+    [
+     0.477071,
+     -0.0082
+    ],
+    [
+     -0.477071,
+     -0.2334
+    ]
+   ],
+   "best_probe": -0.0082,
+   "best_w": 0.477071,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "full_bins_pct",
+    "family": "large",
+    "direction": "up",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f016",
+    "rho": 0.8643,
+    "lib_r2": 0.0369
+   },
+   "error": "",
+   "calls": [
+    "c064"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f047",
+   "name": "new_bin_opportunity_cost",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Zero for every real open bin; for the trailing empty bin, minus the best exp(-(remaining-item)/item) fit quality among the real bins.\"\"\"\n    bins = np.asarray(bins, dtype=float)\n    k = bins.shape[0]\n    i = max(float(item), 1.0)\n    q = np.where(bins >= item, np.exp(-np.clip((bins - item) / i, 0.0, 50.0)), 0.0)\n    b = float(np.max(q[:-1])) if k > 1 else 0.0\n    out = np.zeros(k, dtype=float)\n    out[-1] = -b\n    return out\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a16",
+   "kind": "improve",
+   "parent": "",
+   "idea": {
+    "hypothesis": "Large opens 14 bins above the provable minimum and 19 bins end under half full: opening a fresh bin is currently a fixed-threshold decision. Scoring the empty bin by the negative of the best fit quality available among the real bins makes it pay the opportunity cost of the best alternative it would displace, so a fresh bin is only opened when no real bin offers a genuinely good fit.",
+    "feature": "i=max(item,1); q=where(bins>=item, exp(-clip((bins-item)/i,0,50)), 0.0); b=max(q[:-1]) if k>1 else 0 (best quality among the real open bins, excluding the trailing empty bin); return a zero vector with the last entry set to -b (all real bins 0, empty bin -b).",
+    "prediction": {
+     "family": "large",
+     "metric": "bins",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": "f036 (worst-fit when no exact fit, large items only) was rejected by the probe: changing the fit direction is not the lever, pricing the new-bin decision is."
+   },
+   "coder_note": "The code scores all real open bins as 0 and the trailing empty bin as the negative of the best exponential fit quality `exp(-(remaining-item)/item)` available among the real bins (0 if there are none), so a fresh bin is penalised in proportion to the quality of the best alternative it would displac\u2026",
+   "measures": "Zero for every real open bin; for the trailing empty bin, minus the best exp(-(remaining-item)/item) fit quality among the real bins.",
+   "status": "rejected",
+   "verdict": "rejected by the probe",
+   "width": 1,
+   "scales": [
+    3.0129143544056403
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [
+    [
+     4.77071,
+     -0.4303
+    ],
+    [
+     -4.77071,
+     -29.1585
+    ],
+    [
+     1.431213,
+     -0.197
+    ],
+    [
+     -1.431213,
+     -5.2736
+    ],
+    [
+     0.477071,
+     -0.0582
+    ],
+    [
+     -0.477071,
+     -0.2347
+    ]
+   ],
+   "best_probe": -0.0582,
+   "best_w": 0.477071,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {
+    "metric": "bins",
+    "family": "large",
+    "direction": "down",
+    "checked": false,
+    "why": "not checked: the feature made the policy much worse at every weight tried"
+   },
+   "duplicate_of": "",
+   "certificate": {
+    "nearest": "f019",
+    "rho": 0.6242,
+    "lib_r2": 0.5674
+   },
+   "error": "",
+   "calls": [
+    "c065"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  },
+  {
+   "id": "f048",
+   "name": "age_tiebreak_ramp",
+   "code": "import numpy as np\n\ndef feature(item, bins, capacity):\n    \"\"\"Age ramp weighted by how much room the bin has left: (2*rank/(k-1)-1) * (remaining/capacity).\"\"\"\n    k = len(bins)\n    if k == 1:\n        return np.zeros(1)\n    rank = np.linspace(-1.0, 1.0, k)\n    fill = np.clip(bins / capacity, 0.0, 1.0)\n    return rank * fill\n",
+   "origin": "deep",
+   "gen": 5,
+   "node": "a05",
+   "kind": "probe",
+   "parent": "",
+   "idea": {
+    "hypothesis": "f035's exact and twin peaks create many exact ties, and ties currently go to the oldest bin, so placements drift and freshly opened bins are starved into singletons. A pure age feature, orthogonal to every leftover-based feature in the policy, tests whether the tie-break order matters at all; a fitted non-zero weight means age carries real information.",
+    "feature": "k=len(bins); return linspace(-1.0, 1.0, k): oldest bin -1, newest (the empty bin, always last) +1, linear in between; zeros if k==1.",
+    "prediction": {
+     "family": "large",
+     "metric": "nearly_empty_bins",
+     "direction": "down"
+    },
+    "builds_on": "",
+    "lesson": "f013 rank-vs-bins sits in the f002 duplicate group; age (position in the bins array) is the only quantity the policy never sees and exact/twin peaks make ties common."
+   },
+   "coder_note": "This computes a pure age tie-break ramp: `-1` for the oldest candidate bin, `+1` for the newest (the always-last empty bin), evenly spaced in between, and `0` when there is only one candidate. I read \"newest\" as the last entry of `bins`, which the problem guarantees is the brand-new empty bin.",
+   "measures": "Age ramp weighted by how much room the bin has left: (2*rank/(k-1)-1) * (remaining/capacity).",
+   "status": "duplicate",
+   "verdict": "duplicate",
+   "width": 1,
+   "scales": [
+    1.8273171153066108
+   ],
+   "weights": [
+    0.0
+   ],
+   "probe": [],
+   "best_probe": -0.0411,
+   "best_w": null,
+   "d_train": null,
+   "d_valid": null,
+   "trial_x": [],
+   "prediction": {},
+   "duplicate_of": "f014",
+   "certificate": {
+    "type": "duplicate",
+    "of": "f014",
+    "rho": 0.996
+   },
+   "error": "",
+   "calls": [
+    "c062",
+    "c066"
+   ],
+   "kept_gen": null,
+   "importance": null,
+   "retired_gen": null
+  }
+ ],
+ "nodes": [
+  {
+   "id": "a01",
+   "title": "best-fit residual",
+   "description": "Prefer the bin whose remaining room after placing the item is smallest (tightest fit), normalised by capacity.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "promising",
+   "created_gen": 1,
+   "features": [
+    "f005",
+    "f002",
+    "f010",
+    "f013",
+    "f020",
+    "f023",
+    "f030",
+    "f033",
+    "f035",
+    "f031",
+    "f039",
+    "f040",
+    "f042",
+    "f044"
+   ],
+   "best_gain": 0.6093,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     2,
+     0.6093
+    ],
+    [
+     3,
+     0.6093
+    ],
+    [
+     4,
+     0.3519
+    ],
+    [
+     5,
+     0.6093
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a02",
+   "title": "worst-fit residual",
+   "description": "Prefer the bin with the largest remaining room before placement, spreading load to keep big holes open.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f006",
+    "f017",
+    "f027",
+    "f036"
+   ],
+   "best_gain": 0.3125,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     2,
+     0.3125
+    ],
+    [
+     3,
+     0.6093
+    ],
+    [
+     4,
+     -0.3394
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": 4
+  },
+  {
+   "id": "a03",
+   "title": "waste penalty",
+   "description": "Penalise candidates whose post-placement leftover is small but non-zero (unusable waste), favouring exact fits and large leftovers.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f007",
+    "f004"
+   ],
+   "best_gain": -17.3551,
+   "last_gen": 1,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     1,
+     -17.3551
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a04",
+   "title": "fill fraction",
+   "description": "Score candidates by how full they are after placement (used/capacity), a monotone proxy for packing density.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f009",
+    "f028",
+    "f037",
+    "f043"
+   ],
+   "best_gain": -0.1083,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 4,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     3,
+     -0.1083
+    ],
+    [
+     4,
+     -0.1088
+    ],
+    [
+     5,
+     -0.1088
+    ]
+   ],
+   "benched_gen": 4,
+   "revived_gen": null
+  },
+  {
+   "id": "a05",
+   "title": "age / recency",
+   "description": "Prefer older (or newer) open bins to concentrate or spread placements, breaking ties among equal-fit candidates.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f014",
+    "f048"
+   ],
+   "best_gain": -0.0411,
+   "last_gen": 5,
+   "notes": [
+    {
+     "gen": 3,
+     "prune_request": true,
+     "result": "not attempted: no feature under it is close to a duplicate or to the kept features (nearest rho < 0.93, R^2 < 0.98)"
+    }
+   ],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     2,
+     -0.0411
+    ],
+    [
+     5,
+     -0.0411
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a06",
+   "title": "large-item headroom",
+   "description": "Prefer bins whose leftover after placement stays above a threshold (e.g. half capacity) so future large items still fit.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "benched",
+   "created_gen": 1,
+   "features": [
+    "f008",
+    "f018",
+    "f019",
+    "f022",
+    "f029",
+    "f032",
+    "f034",
+    "f045"
+   ],
+   "best_gain": 0.3494,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 3,
+   "gains": [
+    [
+     1,
+     0.6093
+    ],
+    [
+     2,
+     0.3494
+    ],
+    [
+     3,
+     -0.1052
+    ],
+    [
+     4,
+     -0.1857
+    ],
+    [
+     5,
+     -0.1411
+    ]
+   ],
+   "benched_gen": 5,
+   "revived_gen": null
+  },
+  {
+   "id": "a07",
+   "title": "wide find: post_placement_slack_multiple_bonus",
+   "description": "Fit slack: remaining room left in a bin after placing the item, scaled by capacity, plus a small bonus for bins whose residual is near a multiple of the item size.",
+   "parent": "",
+   "origin": "wide",
+   "state": "unproven",
+   "created_gen": 1,
+   "features": [
+    "f001",
+    "f011"
+   ],
+   "best_gain": -0.1068,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 2,
+   "gains": [
+    [
+     1,
+     -2.2427
+    ],
+    [
+     2,
+     -0.1068
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a08",
+   "title": "exact-fit vs hole",
+   "description": "Two-sided score: reward near-exact post-placement fits but also reward leaving a leftover large enough for a typical future item, penalising the middle band.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f015"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a09",
+   "title": "item-size-relative residual",
+   "description": "Measure leftover after placement relative to the arriving item's size rather than capacity, so the same bin looks tight for big items and roomy for small ones.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 2,
+   "features": [
+    "f016"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 2,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     2,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a10",
+   "title": "size-conditional fit",
+   "description": "Switch between tight-fit and headroom preference depending on how large the arriving item is relative to capacity.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f024"
+   ],
+   "best_gain": -0.0421,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.0421
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a11",
+   "title": "pre-placement room",
+   "description": "Score candidates by their room before placement (not after), so the item's own size does not dominate the ordering.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f026"
+   ],
+   "best_gain": 0.0,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     0.0
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a12",
+   "title": "adaptive headroom band",
+   "description": "Headroom band whose peak and width shift with item size, so large items demand more leftover than small ones.",
+   "parent": "a06",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 3,
+   "features": [
+    "f025"
+   ],
+   "best_gain": -0.0582,
+   "last_gen": 3,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     3,
+     -0.0582
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a13",
+   "title": "regime-conditional fit cost",
+   "description": "Exponential fit cost whose decay scale adapts to the global fill pressure (mean bin fill), tightening as bins fill up.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 4,
+   "features": [
+    "f038"
+   ],
+   "best_gain": -0.1532,
+   "last_gen": 4,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     4,
+     -0.1532
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a14",
+   "title": "two-peak headroom band",
+   "description": "Headroom band with two peaks: one at exact fit (0) and one at half-capacity, so both tight packing and large-hole preservation are rewarded.",
+   "parent": "a06",
+   "origin": "navigator",
+   "state": "untried",
+   "created_gen": 4,
+   "features": [],
+   "best_gain": null,
+   "last_gen": null,
+   "notes": [],
+   "certificate": [],
+   "streak": 0,
+   "gains": [],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a15",
+   "title": "twin-reserve dead-zone matching",
+   "description": "Non-monotone item-relative score: reward post-placement leftover ~0 (exact fit) and leftover >= item (room for a twin), penalise the dead zone 0 < leftover < item where no same-size item can follow.",
+   "parent": "a01",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f046"
+   ],
+   "best_gain": -0.0082,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0082
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  },
+  {
+   "id": "a16",
+   "title": "opportunity-cost new-bin penalty",
+   "description": "Score the empty bin by the negative of the best fit quality available among existing bins, so opening a new bin is penalised in proportion to how good the available fits are.",
+   "parent": "",
+   "origin": "navigator",
+   "state": "unproven",
+   "created_gen": 5,
+   "features": [
+    "f047"
+   ],
+   "best_gain": -0.0582,
+   "last_gen": 5,
+   "notes": [],
+   "certificate": [],
+   "streak": 1,
+   "gains": [
+    [
+     5,
+     -0.0582
+    ]
+   ],
+   "benched_gen": null,
+   "revived_gen": null
+  }
+ ],
+ "library": [
+  "f002",
+  "f018",
+  "f035",
+  "f040",
+  "f044"
+ ],
+ "backlog": [
+  "f031",
+  "f010",
+  "f015",
+  "f016",
+  "f026",
+  "f046"
+ ]
+}
