@@ -43,3 +43,28 @@ Same interface as `helix3/problem.py` (a decision-by-decision priority problem),
 - **Thinking-mode ablation** on two problems: Researcher and Navigator without hidden thinking, at low (the
   default), always at high, and low with a high breakthrough every 5th generation.
 - Results land in `results/open/<job>/`, with the full trace.
+
+## Round 2: games, debugging, mathematical construction
+
+Four more open problems, each a different kind of thing to evolve: a strategy for a puzzle game, a controller for a
+fast arcade game, a debugger, and a construction rule for an open mathematical question.
+
+| Name | Kind | One decision | Score |
+|---|---|---|---|
+| `stacker` | puzzle game (invented falling-piece rules) | where to drop the next piece (rotation and column) | points over a fixed number of pieces, game over ends it early |
+| `runner` | arcade game, run as a speedrun | the action for the next tick (left, right, jump, dash, wait) | ticks to reach the goal across seeded levels, plus penalties for deaths and for not finishing |
+| `repair` | debugging | which candidate patch to try next on a buggy program | patches tried before every test passes, plus a penalty per test still failing at the budget |
+| `progression` | mathematical construction | which number to add next to a set that must avoid an invented equation | the final set's size (bigger is better; no known maximum) |
+
+Scoring for problems where bigger is better (`stacker`, `progression`): `gap = 100 * score_of_code_zero / score`,
+so Code Zero is 100 and the ceiling stays open (a score twice Code Zero's is gap 50, ten times is 10). For cost
+problems (`runner`, `repair`): `gap = 100 * cost / cost_of_code_zero` as before.
+
+**repair** in more detail: a handful of invented calculation programs (a made-up tariff calculator, a geometry
+routine, a small simulator...) each have a hidden correct version and a test suite of 20-40 cases generated from it.
+An instance injects 2-4 seeded bugs (operator swaps, off-by-one, wrong variable, changed constant, negated
+condition, swapped arguments). The candidates are single-edit patches over the program (each mutation operator at
+each applicable place). The engine applies the chosen patch and keeps it only if the tests get better (fewer
+failing, or less numeric error); otherwise it reverts. The features see what a debugger sees: for each candidate
+patch its kind and line, how many failing and passing tests execute that line, the errors the failing tests raise
+(exception kinds, how far off the numbers are), and what has been tried. Never the correct program.
