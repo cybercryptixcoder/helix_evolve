@@ -39,6 +39,8 @@ def check(name, verbose=True):
             problems.append(f"train split takes {dt:.1f}s with Code Zero; keep it under ~1s")
         if any(not np.isfinite(g) for g in gaps):
             problems.append(f"{split}: non-finite gap")
+        if getattr(p, "open_ceiling", False) and any(g != 100.0 for g in gaps):
+            problems.append(f"{split}: open-ceiling problem, but Code Zero's gap is not exactly 100")
         if split == "train" and set(fams) != set(p.families):
             problems.append(f"train families {fams} != declared {p.families}")
     for i, code in enumerate(p.example_features):

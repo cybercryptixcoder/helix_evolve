@@ -87,3 +87,4 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - 2026-10-17 19:10: (scheduled resume) cloud agent's 9 runs reviewed; fixed the generation-14 crash; diagnosing the 2D bin-packing plateau.
 - 2026-10-17 20:36: is 99.95% on knapsack leakage (pre-training, evaluator)? explain the textbook rule; a per-generation chart for every problem; an honest read of the runs (answered: algorithm found, not leakage; chart sent; offered an ablation hiding reference statistics from the Researcher).
 - 2026-10-17 22:30: round 6 beat the records; stopping rule met; wrap-up.
+- 2026-10-18 00:17: new open-ceiling problems (invented, no reference, no textbook rule, varied objectives: task performance, speed and scaling, games, one judgement-call objective), a test bench and a job with ablations (thinking modes), a prompt for the cloud agent and a time estimate; keep it short on context.
