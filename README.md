@@ -12,6 +12,8 @@ Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 202
 > python -m meta.outer --help                # the meta loop
 > ```
 >
+> Results (October 17): on 2D bin packing, v3 reached **35.1%** on train and **−5.91** on the held-out test in 15 generations (best before: 34.6%, −6.00, in 25). On the 8 other problems of the suite it beats each problem's textbook heuristic on unseen instances, with no problem-specific changes (`results/v3/`, docs/WORKLOG.md).
+>
 > Start with [helix3/README.md](helix3/README.md), [docs/V3_DESIGN.md](docs/V3_DESIGN.md) (why each part exists) and [docs/META_V3.md](docs/META_V3.md). The rest of this page describes the original system (v1/v2), which still runs.
 
 ---
@@ -87,6 +89,8 @@ The idea stayed the same; *what* the agents write changed once.
 | 6 | features (fast loop) | 10 | −7.034 | 24.6% | −6.686 (25.8%) | |
 | 7 | features (fast loop) | 25 | **−6.156** | **34.6%** | **−6.001 (33.7%)** | Best from scratch so far |
 | 8 | features (fast loop) | 5 | −6.774 | 27.5% | −6.645 (26.2%) | A short look at what the agents actually do; replay it with `results/20261017-014858-full/viewer.html` (download, open in a browser) |
+| v3 cloud | **v3** | 13 | −6.75 | 28.7% | 28.8% | Plateaued from generation 4; crashed at 14 on a fixed bug (`results/v3/bp2d-25`) |
+| v3 round 6 | **v3** | 15 | **−6.115** | **35.1%** | **−5.910 (33.7%)** | **Best so far**: plateau broken at generations 7 and 14 by features conditioned on large items (`results/v3/bp2d-r6-15`) |
 
 Every run's full trace (every agent call with its reasoning, every program, generation and feature) is in [`results/`](results/). Run 1 (the first hackathon runs) wasn't kept.
 
