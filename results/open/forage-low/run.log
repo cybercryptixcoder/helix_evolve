@@ -1,0 +1,100 @@
+Helix v3 · Forage: a drone collecting decaying items on a battery · 12 generations → runs/open/forage-low
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 100.000% train, 100.000% valid
+── generation 1: champion gap 100.000% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_open_suite/.venv/lib/python3.12/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['feasible_arrival_value'] → gap 67.499% progress 32.5% (valid 31.6%) | 50s, 11 calls
+── generation 2: champion gap 67.499% (progress 32.5%), 1 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['reachable_value_after_pickup', 'detour_risk_urgency', 'stranded_shortfall_penalty', 'perishable_affordable_value_per_time', 'feasible_arrival_value_roundtrip_amortised'] → gap 56.606% progress 43.4% (valid 43.8%) | 237s, 22 calls
+── generation 3: champion gap 56.606% (progress 43.4%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 55.976% progress 44.0% (valid 44.4%) | 195s, 32 calls
+── generation 4: champion gap 55.976% (progress 44.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 56.377% vs 55.803%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['best_followup_item_after_pickup', 'stranded_recharge_time_penalty'] → gap 54.370% progress 45.6% (valid 45.9%) | 399s, 43 calls
+── generation 5: champion gap 54.370% (progress 45.6%), 7 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+<feature>:12: RuntimeWarning: invalid value encountered in divide
+<feature>:12: RuntimeWarning: invalid value encountered in divide
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['pair_slack_chain'] → gap 53.201% progress 46.8% (valid 46.7%) | 476s, 54 calls
+── generation 6: champion gap 53.201% (progress 46.8%), 8 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 53.201% progress 46.8% (valid 46.7%) | 162s, 64 calls
+── generation 7: champion gap 53.201% (progress 46.8%), 8 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['endgame_surviving_density'] → gap 53.194% progress 46.8% (valid 46.9%) | 309s, 75 calls
+── generation 8: champion gap 53.194% (progress 46.8%), 9 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 56.669% vs 53.194%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 53.194% progress 46.8% (valid 46.9%) | 264s, 85 calls
+── generation 9: champion gap 53.194% (progress 46.8%), 9 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['roundtrip_battery_margin_gate'] → gap 53.126% progress 46.9% (valid 47.3%) | 285s, 95 calls
+── generation 10: champion gap 53.126% (progress 46.9%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+<feature>:21: RuntimeWarning: invalid value encountered in multiply
+<feature>:22: RuntimeWarning: overflow encountered in exp
+<feature>:21: RuntimeWarning: invalid value encountered in multiply
+<feature>:22: RuntimeWarning: overflow encountered in exp
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 53.126% progress 46.9% (valid 47.3%) | 194s, 105 calls
+── generation 11: champion gap 53.126% (progress 46.9%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+<feature>:15: RuntimeWarning: overflow encountered in exp
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 53.126% progress 46.9% (valid 47.3%) | 266s, 116 calls
+── generation 12: champion gap 53.126% (progress 46.9%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 57.024% vs 53.126%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 53.126% progress 46.9% (valid 47.3%) | 281s, 126 calls
+done: progress 46.87% train, 47.28% valid, test 46.71% | 126 calls

@@ -1,0 +1,125 @@
+{
+ "problem": "forage",
+ "label": "forage-low",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 53.1257543412381,
+  "valid": 52.72307254774966,
+  "progress": 46.87,
+  "valid_progress": 47.28,
+  "library": [
+   "f002",
+   "f015",
+   "f016",
+   "f012",
+   "f014",
+   "f028",
+   "f027",
+   "f042",
+   "f054",
+   "f074"
+  ]
+ },
+ "test": {
+  "gap": 53.29376612210768,
+  "families": {
+   "scatter": 58.855799296844886,
+   "hotspots": 39.586052868365314,
+   "waves": 61.336777068066965,
+   "drift": 53.39643525515354
+  },
+  "code_zero": 100.0,
+  "progress": 46.71
+ },
+ "progress_curve": [
+  0.0,
+  32.5,
+  43.39,
+  44.02,
+  45.63,
+  46.8,
+  46.8,
+  46.81,
+  46.81,
+  46.87,
+  46.87,
+  46.87,
+  46.87
+ ],
+ "valid_curve": [
+  0.0,
+  31.65,
+  43.77,
+  44.43,
+  45.92,
+  46.69,
+  46.69,
+  46.89,
+  46.89,
+  47.28,
+  47.28,
+  47.28,
+  47.28
+ ],
+ "calls": 126,
+ "tokens_in": 565357,
+ "tokens_out": 177788,
+ "features_tried": 100,
+ "kept": [
+  {
+   "id": "f002",
+   "name": "feasible_arrival_value",
+   "origin": "wide"
+  },
+  {
+   "id": "f015",
+   "name": "reachable_value_after_pickup",
+   "origin": "deep"
+  },
+  {
+   "id": "f016",
+   "name": "stranded_shortfall_penalty",
+   "origin": "deep"
+  },
+  {
+   "id": "f012",
+   "name": "perishable_affordable_value_per_time",
+   "origin": "wide"
+  },
+  {
+   "id": "f014",
+   "name": "feasible_arrival_value_roundtrip_amortised",
+   "origin": "wide"
+  },
+  {
+   "id": "f028",
+   "name": "best_followup_item_after_pickup",
+   "origin": "wide"
+  },
+  {
+   "id": "f027",
+   "name": "stranded_recharge_time_penalty",
+   "origin": "wide"
+  },
+  {
+   "id": "f042",
+   "name": "pair_slack_chain",
+   "origin": "deep"
+  },
+  {
+   "id": "f054",
+   "name": "endgame_surviving_density",
+   "origin": "wide"
+  },
+  {
+   "id": "f074",
+   "name": "roundtrip_battery_margin_gate",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792402843.0495563
+}
