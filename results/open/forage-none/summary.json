@@ -1,0 +1,89 @@
+{
+ "problem": "forage",
+ "label": "forage-none",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 54.65736458546618,
+  "valid": 55.32021370558607,
+  "progress": 45.34,
+  "valid_progress": 44.68,
+  "library": [
+   "f008",
+   "f013",
+   "f040",
+   "f086"
+  ]
+ },
+ "test": {
+  "gap": 53.48497985857922,
+  "families": {
+   "scatter": 59.21098557667339,
+   "hotspots": 38.324301941335065,
+   "waves": 60.35415300751844,
+   "drift": 56.05047890878998
+  },
+  "code_zero": 100.0,
+  "progress": 46.52
+ },
+ "progress_curve": [
+  0.0,
+  43.53,
+  44.64,
+  44.64,
+  44.64,
+  45.17,
+  45.17,
+  45.17,
+  45.17,
+  45.17,
+  45.17,
+  45.34,
+  45.34
+ ],
+ "valid_curve": [
+  0.0,
+  43.13,
+  45.17,
+  45.17,
+  45.17,
+  44.61,
+  44.61,
+  44.61,
+  44.61,
+  44.61,
+  44.61,
+  44.68,
+  44.68
+ ],
+ "calls": 134,
+ "tokens_in": 470568,
+ "tokens_out": 68524,
+ "features_tried": 100,
+ "kept": [
+  {
+   "id": "f008",
+   "name": "battery_feasibility_margin",
+   "origin": "deep"
+  },
+  {
+   "id": "f013",
+   "name": "opportunity_cost_rank_gap",
+   "origin": "wide"
+  },
+  {
+   "id": "f040",
+   "name": "endgame_horizon_gate",
+   "origin": "deep"
+  },
+  {
+   "id": "f086",
+   "name": "round_trip_reserve_vs_doomed_item_density",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792399719.1132135
+}
