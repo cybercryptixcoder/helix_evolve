@@ -1,0 +1,93 @@
+Helix v3 · Stacker: an invented falling-piece puzzle, points over a fixed number of pieces · 12 generations → runs/open/stacker
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 100.000% train, 100.000% valid
+── generation 1: champion gap 100.000% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_open_suite/.venv/lib/python3.12/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['stack_height_control', 'covered_hole_fraction'] → gap 10.139% progress 89.9% (valid 88.7%) | 176s, 10 calls
+── generation 2: champion gap 10.139% (progress 89.9%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['same_colour_adjacency_density'] → gap 8.732% progress 91.3% (valid 90.2%) | 217s, 21 calls
+── generation 3: champion gap 8.732% (progress 91.3%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['danger_excess_x_roughness', 'same_colour_reachable_component', 'next_piece_fit_fraction'] → gap 6.900% progress 93.1% (valid 92.6%) | 404s, 32 calls
+── generation 4: champion gap 6.900% (progress 93.1%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 7.349% vs 6.900%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 6.900% progress 93.1% (valid 92.6%) | 300s, 44 calls
+── generation 5: champion gap 6.900% (progress 93.1%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['open_near_full_rows'] → gap 6.131% progress 93.9% (valid 93.0%) | 381s, 56 calls
+── generation 6: champion gap 6.131% (progress 93.9%), 7 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['rows_blocked_by_covered_holes'] → gap 5.915% progress 94.1% (valid 93.4%) | 416s, 67 calls
+── generation 7: champion gap 5.915% (progress 94.1%), 7 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['piece_cells_resting_on_same_colour'] → gap 5.776% progress 94.2% (valid 93.5%) | 461s, 77 calls
+── generation 8: champion gap 5.776% (progress 94.2%), 8 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 7.167% vs 5.776%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['marginal_covered_holes'] → gap 5.614% progress 94.4% (valid 93.5%) | 631s, 88 calls
+── generation 9: champion gap 5.614% (progress 94.4%), 9 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 5.614% progress 94.4% (valid 93.5%) | 300s, 101 calls
+── generation 10: champion gap 5.614% (progress 94.4%), 9 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['endgame_gain_sprint'] → gap 5.600% progress 94.4% (valid 93.6%) | 468s, 111 calls
+── generation 11: champion gap 5.600% (progress 94.4%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 5.600% progress 94.4% (valid 93.6%) | 330s, 121 calls
+── generation 12: champion gap 5.600% (progress 94.4%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 7.224% vs 5.600%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 5.600% progress 94.4% (valid 93.6%) | 486s, 132 calls
+done: progress 94.4% train, 93.57% valid, test 94.15% | 132 calls
