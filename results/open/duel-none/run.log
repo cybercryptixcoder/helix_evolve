@@ -1,0 +1,93 @@
+Helix v3 · Duel: play an invented territory game against a pool of scripted opponents · 12 generations → runs/open/duel-none
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 100.000% train, 100.000% valid
+── generation 1: champion gap 100.000% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_open_suite/.venv/lib/python3.12/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['flip_pressure_expansion', 'safe_frontier_share'] → gap 64.758% progress 35.2% (valid 33.1%) | 196s, 10 calls
+── generation 2: champion gap 64.758% (progress 35.2%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['flip_gain', 'defensive_safety'] → gap 63.349% progress 36.6% (valid 34.7%) | 236s, 21 calls
+── generation 3: champion gap 63.349% (progress 36.6%), 4 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['opp_home_distance'] → gap 58.832% progress 41.2% (valid 37.4%) | 476s, 33 calls
+── generation 4: champion gap 58.832% (progress 41.2%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 59.284% vs 58.599%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['tempo_threat_vs_secured'] → gap 58.469% progress 41.5% (valid 38.6%) | 547s, 47 calls
+── generation 5: champion gap 58.469% (progress 41.5%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['contested_corridor_differential'] → gap 57.664% progress 42.3% (valid 38.8%) | 523s, 61 calls
+── generation 6: champion gap 57.664% (progress 42.3%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['phase_gated_flip_vs_safety', 'net_flip_swing'] → gap 57.346% progress 42.6% (valid 39.4%) | 963s, 71 calls
+── generation 7: champion gap 57.346% (progress 42.6%), 8 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['flip_pressure_per_exposure'] → gap 57.312% progress 42.7% (valid 39.5%) | 580s, 83 calls
+── generation 8: champion gap 57.312% (progress 42.7%), 9 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 61.784% vs 57.312%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['two_hop_denial_value'] → gap 57.296% progress 42.7% (valid 41.1%) | 1186s, 93 calls
+── generation 9: champion gap 57.296% (progress 42.7%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 57.296% progress 42.7% (valid 41.1%) | 680s, 104 calls
+── generation 10: champion gap 57.296% (progress 42.7%), 10 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['opponent_best_counter_value', 'value_weighted_surplus_phase'] → gap 57.057% progress 42.9% (valid 41.4%) | 1184s, 115 calls
+── generation 11: champion gap 57.057% (progress 42.9%), 12 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 57.057% progress 42.9% (valid 41.4%) | 3582s, 132 calls
+── generation 12: champion gap 57.057% (progress 42.9%), 12 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 61.098% vs 57.057%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['contested_gated_surplus'] → gap 56.794% progress 43.2% (valid 41.7%) | 1336s, 143 calls
+done: progress 43.21% train, 41.69% valid, test 36.94% | 143 calls
