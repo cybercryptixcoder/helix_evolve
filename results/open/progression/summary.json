@@ -1,0 +1,107 @@
+{
+ "problem": "progression",
+ "label": "progression",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 78.82762475677096,
+  "valid": 79.35235754917574,
+  "progress": 21.17,
+  "valid_progress": 20.65,
+  "library": [
+   "f008",
+   "f012",
+   "f015",
+   "f026",
+   "f054",
+   "f091",
+   "f092"
+  ]
+ },
+ "test": {
+  "gap": 81.42922966155687,
+  "families": {
+   "trio": 81.99550919889903,
+   "pentad": 82.09945239357005,
+   "skew": 79.13970308336506,
+   "hept": 82.48225397039333
+  },
+  "code_zero": 100.0,
+  "progress": 18.57
+ },
+ "progress_curve": [
+  0.0,
+  12.83,
+  17.81,
+  19.32,
+  20.05,
+  20.05,
+  19.84,
+  19.84,
+  19.84,
+  19.84,
+  19.84,
+  21.17,
+  21.17
+ ],
+ "valid_curve": [
+  0.0,
+  13.02,
+  17.66,
+  19.78,
+  20.38,
+  20.38,
+  21.61,
+  21.61,
+  21.61,
+  21.61,
+  21.61,
+  20.65,
+  20.65
+ ],
+ "calls": 170,
+ "tokens_in": 615882,
+ "tokens_out": 321495,
+ "features_tried": 107,
+ "kept": [
+  {
+   "id": "f008",
+   "name": "position_frac",
+   "origin": "deep"
+  },
+  {
+   "id": "f012",
+   "name": "future_avail_impact",
+   "origin": "wide"
+  },
+  {
+   "id": "f015",
+   "name": "available_partner_solution_count",
+   "origin": "wide"
+  },
+  {
+   "id": "f026",
+   "name": "live_block_frac_retry",
+   "origin": "deep"
+  },
+  {
+   "id": "f054",
+   "name": "ratio_offset_resonance",
+   "origin": "deep"
+  },
+  {
+   "id": "f091",
+   "name": "density_weighted_block_frac",
+   "origin": "wide"
+  },
+  {
+   "id": "f092",
+   "name": "danger_weighted_future_threat",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792398402.1305285
+}
