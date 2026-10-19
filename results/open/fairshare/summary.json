@@ -1,0 +1,161 @@
+{
+ "problem": "fairshare",
+ "label": "fairshare",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 40.80885241369203,
+  "valid": 37.93891565816941,
+  "progress": 59.19,
+  "valid_progress": 62.06,
+  "library": [
+   "f005",
+   "f006",
+   "f007",
+   "f009",
+   "f013",
+   "f010",
+   "f014",
+   "f023",
+   "f018",
+   "f020",
+   "f027",
+   "f031",
+   "f032",
+   "f026",
+   "f040",
+   "f045"
+  ]
+ },
+ "test": {
+  "gap": 38.18797129634255,
+  "families": {
+   "balanced": 15.414105194907032,
+   "scarce": 58.845713814329315,
+   "skewed": 42.19196105240468,
+   "large": 36.300105123729175
+  },
+  "code_zero": 100.0,
+  "progress": 61.81
+ },
+ "progress_curve": [
+  0.0,
+  51.87,
+  55.61,
+  57.58,
+  59.08,
+  59.16,
+  59.19,
+  59.19,
+  59.19,
+  59.19,
+  59.19,
+  59.19,
+  59.19
+ ],
+ "valid_curve": [
+  0.0,
+  51.11,
+  56.97,
+  59.5,
+  61.88,
+  61.95,
+  62.06,
+  62.06,
+  62.06,
+  62.06,
+  62.06,
+  62.06,
+  62.06
+ ],
+ "calls": 128,
+ "tokens_in": 694716,
+ "tokens_out": 189741,
+ "features_tried": 99,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "pref_match_floor",
+   "origin": "deep"
+  },
+  {
+   "id": "f006",
+   "name": "target_deficit_norm",
+   "origin": "deep"
+  },
+  {
+   "id": "f007",
+   "name": "coverage_tightness_gate",
+   "origin": "deep"
+  },
+  {
+   "id": "f009",
+   "name": "opportunity_scarcity_pressure",
+   "origin": "wide"
+  },
+  {
+   "id": "f013",
+   "name": "need_per_opportunity_pref_pressure",
+   "origin": "deep"
+  },
+  {
+   "id": "f010",
+   "name": "opponent_adjusted_need",
+   "origin": "wide"
+  },
+  {
+   "id": "f014",
+   "name": "specialist_reservation_tight_share",
+   "origin": "deep"
+  },
+  {
+   "id": "f023",
+   "name": "capacity_surplus_ratio",
+   "origin": "deep"
+  },
+  {
+   "id": "f018",
+   "name": "contested_urgency_room_gate",
+   "origin": "wide"
+  },
+  {
+   "id": "f020",
+   "name": "target_overshoot_marginal",
+   "origin": "wide"
+  },
+  {
+   "id": "f027",
+   "name": "signed_surplus_demand_exposure",
+   "origin": "wide"
+  },
+  {
+   "id": "f031",
+   "name": "pref_need_per_remaining_capacity",
+   "origin": "deep"
+  },
+  {
+   "id": "f032",
+   "name": "marginal_post_dissatisfaction_vs_mean",
+   "origin": "deep"
+  },
+  {
+   "id": "f026",
+   "name": "endgame_preferred_supply_urgency",
+   "origin": "wide"
+  },
+  {
+   "id": "f040",
+   "name": "near_term_decisive_reservation",
+   "origin": "deep"
+  },
+  {
+   "id": "f045",
+   "name": "critical_specialist_reservation",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792384175.8283665
+}
