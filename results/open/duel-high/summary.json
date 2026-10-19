@@ -1,0 +1,125 @@
+{
+ "problem": "duel",
+ "label": "duel-high",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 55.10487576604396,
+  "valid": 54.974762492571834,
+  "progress": 44.9,
+  "valid_progress": 45.03,
+  "library": [
+   "f007",
+   "f001",
+   "f002",
+   "f008",
+   "f015",
+   "f013",
+   "f047",
+   "f049",
+   "f053",
+   "f098"
+  ]
+ },
+ "test": {
+  "gap": 58.952397544798266,
+  "families": {
+   "grid": 55.227951234853094,
+   "hex": 50.1425735349409,
+   "web": 64.80712993020954,
+   "islands": 65.63193547918954
+  },
+  "code_zero": 100.0,
+  "progress": 41.05
+ },
+ "progress_curve": [
+  0.0,
+  31.22,
+  39.66,
+  40.52,
+  40.52,
+  40.52,
+  41.03,
+  40.92,
+  40.92,
+  42.32,
+  42.32,
+  42.32,
+  44.9
+ ],
+ "valid_curve": [
+  0.0,
+  28.84,
+  39.66,
+  39.42,
+  39.42,
+  39.42,
+  39.51,
+  39.84,
+  39.84,
+  43.46,
+  43.46,
+  43.46,
+  45.03
+ ],
+ "calls": 139,
+ "tokens_in": 605995,
+ "tokens_out": 345914,
+ "features_tried": 99,
+ "kept": [
+  {
+   "id": "f007",
+   "name": "claimed_cell_safety",
+   "origin": "deep"
+  },
+  {
+   "id": "f001",
+   "name": "flip_cascade_gain",
+   "origin": "wide"
+  },
+  {
+   "id": "f002",
+   "name": "claim_flip_point_swing",
+   "origin": "wide"
+  },
+  {
+   "id": "f008",
+   "name": "denial_by_opponent_simulation",
+   "origin": "deep"
+  },
+  {
+   "id": "f015",
+   "name": "access_race_empty_points",
+   "origin": "deep"
+  },
+  {
+   "id": "f013",
+   "name": "two_ply_best_reply_swing",
+   "origin": "deep"
+  },
+  {
+   "id": "f047",
+   "name": "opponent_mobility_denial",
+   "origin": "deep"
+  },
+  {
+   "id": "f049",
+   "name": "endgame_contested_grab",
+   "origin": "deep"
+  },
+  {
+   "id": "f053",
+   "name": "cut_vertex_opponent_access_block",
+   "origin": "wide"
+  },
+  {
+   "id": "f098",
+   "name": "preempt_opponent_best_claim",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792443667.4820373
+}
