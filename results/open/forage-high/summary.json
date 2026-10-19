@@ -1,0 +1,95 @@
+{
+ "problem": "forage",
+ "label": "forage-high",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 53.29403051215133,
+  "valid": 52.8491068995013,
+  "progress": 46.71,
+  "valid_progress": 47.15,
+  "library": [
+   "f037",
+   "f053",
+   "f065",
+   "f076",
+   "f102"
+  ]
+ },
+ "test": {
+  "gap": 53.569852244923354,
+  "families": {
+   "scatter": 59.881365481159065,
+   "hotspots": 38.762095868976424,
+   "waves": 62.72486932087617,
+   "drift": 52.911078308681766
+  },
+  "code_zero": 100.0,
+  "progress": 46.43
+ },
+ "progress_curve": [
+  0.0,
+  41.76,
+  41.76,
+  41.76,
+  41.76,
+  44.15,
+  44.15,
+  45.23,
+  45.68,
+  46.47,
+  46.47,
+  46.47,
+  46.71
+ ],
+ "valid_curve": [
+  0.0,
+  44.63,
+  44.63,
+  44.63,
+  44.63,
+  44.82,
+  44.82,
+  44.97,
+  46.69,
+  47.06,
+  47.06,
+  47.06,
+  47.15
+ ],
+ "calls": 135,
+ "tokens_in": 530459,
+ "tokens_out": 342915,
+ "features_tried": 104,
+ "kept": [
+  {
+   "id": "f037",
+   "name": "opportunity_cost_trip_feasibility",
+   "origin": "wide"
+  },
+  {
+   "id": "f053",
+   "name": "rate_normalised_survival_trip_density",
+   "origin": "wide"
+  },
+  {
+   "id": "f065",
+   "name": "two_stop_pair_tour_rate",
+   "origin": "deep"
+  },
+  {
+   "id": "f076",
+   "name": "soft_range_gate_pair_tour",
+   "origin": "deep"
+  },
+  {
+   "id": "f102",
+   "name": "burst_gated_short_hop",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792405595.0170195
+}
