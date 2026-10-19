@@ -1,0 +1,96 @@
+{
+ "about": "How Helix v3 searches. The meta loop evolves this folder (config, prompts/, hooks.py).",
+ "researcher": {
+  "experiments": 4,
+  "effort": "low",
+  "temperature": 0.6,
+  "max_tokens": 6000
+ },
+ "coder": {
+  "effort": "none",
+  "temperature": 0.2,
+  "max_tokens": 2500
+ },
+ "mutator": {
+  "slots": 4,
+  "fresh": 1,
+  "effort": "none",
+  "temperature": 0.9,
+  "max_tokens": 2500,
+  "scoreboard": 10,
+  "retry_duplicates": true,
+  "kept_parents": 1
+ },
+ "navigator": {
+  "enabled": true,
+  "effort": "none",
+  "temperature": 0.5,
+  "max_tokens": 5000
+ },
+ "prover": {
+  "enabled": true,
+  "effort": "none",
+  "temperature": 0.3,
+  "max_tokens": 3000
+ },
+ "fit": {
+  "probe_margin": 0.0,
+  "trial_evals": 16,
+  "champion_refit_evals": 24,
+  "joint_refit_evals": 32,
+  "accept_margin": 0.03,
+  "sensitivity": [
+   0
+  ],
+  "sigma": 0.3,
+  "near_miss_trials": 2,
+  "near_miss_floor": 0.1,
+  "probe_multiples": [
+   1,
+   -1,
+   0.3,
+   -0.3,
+   0.1,
+   -0.1,
+   0.03,
+   -0.03
+  ],
+  "probe_on_search": true,
+  "search_on_train": true
+ },
+ "novelty": {
+  "duplicate_rho": 0.98,
+  "span_r2": 0.995,
+  "states": 500
+ },
+ "combine": {
+  "near_miss": 0.3,
+  "max_pairs": 2
+ },
+ "ledger_lines": 14,
+ "breakthrough": {
+  "every": 0,
+  "effort": "high",
+  "roles": [
+   "navigator",
+   "researcher"
+  ],
+  "about": "every Nth generation these roles think at this level, hoping for a breakthrough"
+ },
+ "streams": {
+  "bench_after": 3,
+  "revive_p": 0.2,
+  "about": "an approach with no gain for bench_after generations in a row is benched (hidden from the Navigator); each generation it returns with probability revive_p x (1 + rest/4), capped at 0.6",
+  "stall_after": 2
+ },
+ "perturb": {
+  "every": 4,
+  "restarts": 3,
+  "evals": 16,
+  "kick": 0.8,
+  "about": "every Nth generation the champion's weight fit also restarts from randomly kicked weights (kick x the weight scale); adopted only if better on search and validation"
+ },
+ "diagnostics": {
+  "show_reference": false
+ }
+}
