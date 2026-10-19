@@ -1,0 +1,143 @@
+{
+ "problem": "duel",
+ "label": "duel-none",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 56.79439474812031,
+  "valid": 58.31154796070899,
+  "progress": 43.21,
+  "valid_progress": 41.69,
+  "library": [
+   "f003",
+   "f004",
+   "f007",
+   "f024",
+   "f028",
+   "f033",
+   "f049",
+   "f043",
+   "f058",
+   "f063",
+   "f078",
+   "f076",
+   "f095"
+  ]
+ },
+ "test": {
+  "gap": 63.06437375867927,
+  "families": {
+   "grid": 60.621882660479095,
+   "hex": 54.13313623187815,
+   "web": 70.43961234778274,
+   "islands": 67.06286379457707
+  },
+  "code_zero": 100.0,
+  "progress": 36.94
+ },
+ "progress_curve": [
+  0.0,
+  35.24,
+  36.65,
+  41.17,
+  41.53,
+  42.34,
+  42.65,
+  42.69,
+  42.7,
+  42.7,
+  42.94,
+  42.94,
+  43.21
+ ],
+ "valid_curve": [
+  0.0,
+  33.15,
+  34.74,
+  37.41,
+  38.61,
+  38.76,
+  39.41,
+  39.5,
+  41.15,
+  41.15,
+  41.39,
+  41.39,
+  41.69
+ ],
+ "calls": 143,
+ "tokens_in": 607284,
+ "tokens_out": 87446,
+ "features_tried": 98,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "flip_pressure_expansion",
+   "origin": "wide"
+  },
+  {
+   "id": "f004",
+   "name": "safe_frontier_share",
+   "origin": "wide"
+  },
+  {
+   "id": "f007",
+   "name": "defensive_safety",
+   "origin": "deep"
+  },
+  {
+   "id": "f024",
+   "name": "opp_home_distance",
+   "origin": "deep"
+  },
+  {
+   "id": "f028",
+   "name": "tempo_threat_vs_secured",
+   "origin": "wide"
+  },
+  {
+   "id": "f033",
+   "name": "contested_corridor_differential",
+   "origin": "wide"
+  },
+  {
+   "id": "f049",
+   "name": "phase_gated_flip_vs_safety",
+   "origin": "deep"
+  },
+  {
+   "id": "f043",
+   "name": "net_flip_swing",
+   "origin": "wide"
+  },
+  {
+   "id": "f058",
+   "name": "flip_pressure_per_exposure",
+   "origin": "deep"
+  },
+  {
+   "id": "f063",
+   "name": "two_hop_denial_value",
+   "origin": "deep"
+  },
+  {
+   "id": "f078",
+   "name": "opponent_best_counter_value",
+   "origin": "wide"
+  },
+  {
+   "id": "f076",
+   "name": "value_weighted_surplus_phase",
+   "origin": "wide"
+  },
+  {
+   "id": "f095",
+   "name": "contested_gated_surplus",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792417095.1212327
+}
