@@ -1,0 +1,137 @@
+{
+ "problem": "duel",
+ "label": "duel",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 56.69629287692559,
+  "valid": 59.238198789264494,
+  "progress": 43.3,
+  "valid_progress": 40.76,
+  "library": [
+   "f007",
+   "f017",
+   "f022",
+   "f033",
+   "f058",
+   "f068",
+   "f072",
+   "f074",
+   "f090",
+   "f103",
+   "f066",
+   "f056"
+  ]
+ },
+ "test": {
+  "gap": 62.249042619023385,
+  "families": {
+   "grid": 55.18242968177622,
+   "hex": 53.52679473363303,
+   "web": 70.77477080532249,
+   "islands": 69.51217525536178
+  },
+  "code_zero": 100.0,
+  "progress": 37.75
+ },
+ "progress_curve": [
+  0.0,
+  33.43,
+  37.44,
+  39.17,
+  39.84,
+  40.74,
+  40.74,
+  39.27,
+  41.74,
+  43.03,
+  43.03,
+  41.92,
+  43.3
+ ],
+ "valid_curve": [
+  0.0,
+  32.58,
+  34.26,
+  36.71,
+  37.37,
+  38.81,
+  38.81,
+  37.86,
+  40.45,
+  41.26,
+  41.26,
+  41.27,
+  40.76
+ ],
+ "calls": 135,
+ "tokens_in": 554169,
+ "tokens_out": 192833,
+ "features_tried": 105,
+ "kept": [
+  {
+   "id": "f007",
+   "name": "flip_points_available",
+   "origin": "deep"
+  },
+  {
+   "id": "f017",
+   "name": "contested_value_near_opponent",
+   "origin": "deep"
+  },
+  {
+   "id": "f022",
+   "name": "exposure_tempo_value",
+   "origin": "wide"
+  },
+  {
+   "id": "f033",
+   "name": "opp_high_value_mobility",
+   "origin": "deep"
+  },
+  {
+   "id": "f058",
+   "name": "lock_out_empty_margin",
+   "origin": "wide"
+  },
+  {
+   "id": "f068",
+   "name": "hub_gate_denial",
+   "origin": "deep"
+  },
+  {
+   "id": "f072",
+   "name": "net_tempo_with_flip_fold",
+   "origin": "wide"
+  },
+  {
+   "id": "f074",
+   "name": "frontier_split_degree_normalized",
+   "origin": "wide"
+  },
+  {
+   "id": "f090",
+   "name": "flip_margin_squared_weighted",
+   "origin": "wide"
+  },
+  {
+   "id": "f103",
+   "name": "flip_severs_opp_access",
+   "origin": "deep"
+  },
+  {
+   "id": "f066",
+   "name": "exclusive_reach_shift",
+   "origin": "wide"
+  },
+  {
+   "id": "f056",
+   "name": "behind_flip_leverage_vs_denial",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792380176.9477496
+}
