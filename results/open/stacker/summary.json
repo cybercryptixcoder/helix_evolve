@@ -1,0 +1,125 @@
+{
+ "problem": "stacker",
+ "label": "stacker",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 5.600488461936366,
+  "valid": 6.434112162908182,
+  "progress": 94.4,
+  "valid_progress": 93.57,
+  "library": [
+   "f005",
+   "f017",
+   "f020",
+   "f021",
+   "f022",
+   "f041",
+   "f049",
+   "f058",
+   "f063",
+   "f083"
+  ]
+ },
+ "test": {
+  "gap": 5.851288265957459,
+  "families": {
+   "trio": 6.7040298903967965,
+   "penta": 7.471534378420071,
+   "rising": 4.229412625439179,
+   "prism": 5.000176169573792
+  },
+  "code_zero": 100.0,
+  "progress": 94.15
+ },
+ "progress_curve": [
+  0.0,
+  89.86,
+  91.27,
+  93.1,
+  93.1,
+  93.87,
+  94.08,
+  94.22,
+  94.39,
+  94.39,
+  94.4,
+  94.4,
+  94.4
+ ],
+ "valid_curve": [
+  0.0,
+  88.72,
+  90.25,
+  92.61,
+  92.61,
+  93.01,
+  93.39,
+  93.47,
+  93.51,
+  93.51,
+  93.57,
+  93.57,
+  93.57
+ ],
+ "calls": 132,
+ "tokens_in": 573542,
+ "tokens_out": 186795,
+ "features_tried": 99,
+ "kept": [
+  {
+   "id": "f005",
+   "name": "stack_height_control",
+   "origin": "deep"
+  },
+  {
+   "id": "f017",
+   "name": "same_colour_adjacency_density",
+   "origin": "deep"
+  },
+  {
+   "id": "f020",
+   "name": "danger_excess_x_roughness",
+   "origin": "wide"
+  },
+  {
+   "id": "f021",
+   "name": "same_colour_reachable_component",
+   "origin": "wide"
+  },
+  {
+   "id": "f022",
+   "name": "next_piece_fit_fraction",
+   "origin": "deep"
+  },
+  {
+   "id": "f041",
+   "name": "open_near_full_rows",
+   "origin": "deep"
+  },
+  {
+   "id": "f049",
+   "name": "rows_blocked_by_covered_holes",
+   "origin": "deep"
+  },
+  {
+   "id": "f058",
+   "name": "piece_cells_resting_on_same_colour",
+   "origin": "deep"
+  },
+  {
+   "id": "f063",
+   "name": "marginal_covered_holes",
+   "origin": "deep"
+  },
+  {
+   "id": "f083",
+   "name": "endgame_gain_sprint",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792388753.1157954
+}
