@@ -1,0 +1,83 @@
+{
+ "problem": "repair",
+ "label": "repair",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 79.09316056378994,
+  "valid": 52.54928228741909,
+  "progress": 20.91,
+  "valid_progress": 47.45,
+  "library": [
+   "f006",
+   "f043",
+   "f046"
+  ]
+ },
+ "test": {
+  "gap": 86.16669687119484,
+  "families": {
+   "billing": 65.09772305252211,
+   "geometry": 102.57997116637121,
+   "simulation": 69.58055491253569,
+   "encoding": 107.40853835335038
+  },
+  "code_zero": 100.0,
+  "progress": 13.83
+ },
+ "progress_curve": [
+  0.0,
+  9.54,
+  9.54,
+  9.54,
+  9.54,
+  20.62,
+  20.91,
+  20.91,
+  20.91,
+  20.91,
+  20.91,
+  20.91,
+  20.91
+ ],
+ "valid_curve": [
+  0.0,
+  41.16,
+  41.16,
+  41.16,
+  41.16,
+  47.38,
+  47.45,
+  47.45,
+  47.45,
+  47.45,
+  47.45,
+  47.45,
+  47.45
+ ],
+ "calls": 137,
+ "tokens_in": 532706,
+ "tokens_out": 174602,
+ "features_tried": 103,
+ "kept": [
+  {
+   "id": "f006",
+   "name": "fail_line_contrast",
+   "origin": "deep"
+  },
+  {
+   "id": "f043",
+   "name": "rare_explanation_failure_specificity",
+   "origin": "deep"
+  },
+  {
+   "id": "f046",
+   "name": "fail_line_contrast_sharp_error_mode_gated",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792395514.127062
+}
