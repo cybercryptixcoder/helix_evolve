@@ -1,0 +1,137 @@
+{
+ "problem": "duel",
+ "label": "duel-low",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 54.54917698659519,
+  "valid": 53.69456682773674,
+  "progress": 45.45,
+  "valid_progress": 46.31,
+  "library": [
+   "f006",
+   "f017",
+   "f018",
+   "f026",
+   "f020",
+   "f034",
+   "f031",
+   "f042",
+   "f049",
+   "f059",
+   "f071",
+   "f102"
+  ]
+ },
+ "test": {
+  "gap": 59.43226144550988,
+  "families": {
+   "grid": 59.952961025503406,
+   "hex": 49.09564440267879,
+   "web": 62.34971971922042,
+   "islands": 66.33072063463693
+  },
+  "code_zero": 100.0,
+  "progress": 40.57
+ },
+ "progress_curve": [
+  0.0,
+  33.43,
+  37.48,
+  37.66,
+  44.41,
+  45.82,
+  46.03,
+  46.73,
+  46.73,
+  46.88,
+  46.88,
+  46.98,
+  45.45
+ ],
+ "valid_curve": [
+  0.0,
+  32.58,
+  36.96,
+  40.54,
+  44.33,
+  44.39,
+  44.87,
+  45.04,
+  45.04,
+  45.14,
+  45.14,
+  45.44,
+  46.31
+ ],
+ "calls": 141,
+ "tokens_in": 559804,
+ "tokens_out": 163598,
+ "features_tried": 102,
+ "kept": [
+  {
+   "id": "f006",
+   "name": "flip_gain_points",
+   "origin": "deep"
+  },
+  {
+   "id": "f017",
+   "name": "opp_home_distance",
+   "origin": "deep"
+  },
+  {
+   "id": "f018",
+   "name": "opponent_pocket_denial",
+   "origin": "deep"
+  },
+  {
+   "id": "f026",
+   "name": "opp_frontier_value_after_claim",
+   "origin": "deep"
+  },
+  {
+   "id": "f020",
+   "name": "opp_home_path_value_denial",
+   "origin": "wide"
+  },
+  {
+   "id": "f034",
+   "name": "claim_next_turn_exposure",
+   "origin": "deep"
+  },
+  {
+   "id": "f031",
+   "name": "opp_best_grab_after_claim",
+   "origin": "deep"
+  },
+  {
+   "id": "f042",
+   "name": "two_step_expansion_value",
+   "origin": "deep"
+  },
+  {
+   "id": "f049",
+   "name": "three_step_expansion_value",
+   "origin": "deep"
+  },
+  {
+   "id": "f059",
+   "name": "uncontested_two_step_value",
+   "origin": "deep"
+  },
+  {
+   "id": "f071",
+   "name": "soft_flip_pressure",
+   "origin": "wide"
+  },
+  {
+   "id": "f102",
+   "name": "net_flip_value_after_recapture",
+   "origin": "deep"
+  }
+ ],
+ "finished": 1792427079.8481271
+}
