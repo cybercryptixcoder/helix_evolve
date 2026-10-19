@@ -1,0 +1,656 @@
+[
+ {
+  "gen": 0,
+  "train": 100.0,
+  "valid": 100.0,
+  "progress": 0.0,
+  "valid_progress": 0.0,
+  "families": {
+   "scatter": 100.0,
+   "hotspots": 100.0,
+   "waves": 100.0
+  },
+  "accepted": [],
+  "library": [],
+  "weights": [],
+  "features": [],
+  "plan_source": null,
+  "seconds": 0.0,
+  "agent_seconds": 0.0,
+  "calls": 0,
+  "tokens_in": 0,
+  "tokens_out": 0,
+  "evals": 2,
+  "nodes": {
+   "untried": 0,
+   "promising": 0,
+   "unproven": 0,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 1,
+  "train": 56.47365205039784,
+  "valid": 56.86586866981467,
+  "progress": 43.53,
+  "valid_progress": 43.13,
+  "families": {
+   "scatter": 56.69651302481126,
+   "hotspots": 45.61268893049623,
+   "waves": 67.11175419588602
+  },
+  "accepted": [
+   "f008",
+   "f003"
+  ],
+  "library": [
+   "f008",
+   "f003"
+  ],
+  "weights": [
+   [
+    1.4936565772427601
+   ],
+   [
+    0.21184888187803722
+   ]
+  ],
+  "features": [
+   "f006",
+   "f007",
+   "f008",
+   "f009",
+   "f001",
+   "f005",
+   "f003",
+   "f004"
+  ],
+  "plan_source": "navigator",
+  "seconds": 76.7,
+  "agent_seconds": 11.5,
+  "calls": 11,
+  "tokens_in": 22721,
+  "tokens_out": 4257,
+  "evals": 258,
+  "nodes": {
+   "untried": 2,
+   "promising": 4,
+   "unproven": 1,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 2,
+  "train": 55.35758721770602,
+  "valid": 54.82855309407048,
+  "progress": 44.64,
+  "valid_progress": 45.17,
+  "families": {
+   "scatter": 56.318922943876174,
+   "hotspots": 44.71134605316664,
+   "waves": 65.04249265607525
+  },
+  "accepted": [
+   "f013"
+  ],
+  "library": [
+   "f008",
+   "f013"
+  ],
+  "weights": [
+   [
+    2.1151472830945197
+   ],
+   [
+    0.35402580558983654
+   ]
+  ],
+  "features": [
+   "f014",
+   "f015",
+   "f016",
+   "f017",
+   "f010",
+   "f011",
+   "f012",
+   "f013"
+  ],
+  "plan_source": "navigator",
+  "seconds": 127.3,
+  "agent_seconds": 16.6,
+  "calls": 23,
+  "tokens_in": 57385,
+  "tokens_out": 9954,
+  "evals": 503,
+  "nodes": {
+   "untried": 2,
+   "promising": 5,
+   "unproven": 3,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 3,
+  "train": 55.35758721770602,
+  "valid": 54.82855309407048,
+  "progress": 44.64,
+  "valid_progress": 45.17,
+  "families": {
+   "scatter": 56.318922943876174,
+   "hotspots": 44.71134605316664,
+   "waves": 65.04249265607525
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013"
+  ],
+  "weights": [
+   [
+    2.1151472830945197
+   ],
+   [
+    0.35402580558983654
+   ]
+  ],
+  "features": [
+   "f022",
+   "f023",
+   "f024",
+   "f025",
+   "f018",
+   "f019",
+   "f020",
+   "f021"
+  ],
+  "plan_source": "navigator",
+  "seconds": 143.1,
+  "agent_seconds": 18.1,
+  "calls": 34,
+  "tokens_in": 92393,
+  "tokens_out": 15628,
+  "evals": 802,
+  "nodes": {
+   "untried": 0,
+   "promising": 5,
+   "unproven": 7,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 4,
+  "train": 55.35758721770602,
+  "valid": 54.82855309407048,
+  "progress": 44.64,
+  "valid_progress": 45.17,
+  "families": {
+   "scatter": 56.318922943876174,
+   "hotspots": 44.71134605316664,
+   "waves": 65.04249265607525
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013"
+  ],
+  "weights": [
+   [
+    2.1151472830945197
+   ],
+   [
+    0.35402580558983654
+   ]
+  ],
+  "features": [
+   "f031",
+   "f032",
+   "f033",
+   "f034",
+   "f026",
+   "f027",
+   "f030",
+   "f029"
+  ],
+  "plan_source": "navigator",
+  "seconds": 92.0,
+  "agent_seconds": 18.2,
+  "calls": 46,
+  "tokens_in": 134548,
+  "tokens_out": 22023,
+  "evals": 1012,
+  "nodes": {
+   "untried": 1,
+   "promising": 4,
+   "unproven": 8,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 5,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [
+   "f040"
+  ],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f040",
+   "f041",
+   "f042",
+   "f043",
+   "f035",
+   "f036",
+   "f039",
+   "f038"
+  ],
+  "plan_source": "navigator",
+  "seconds": 103.0,
+  "agent_seconds": 18.4,
+  "calls": 60,
+  "tokens_in": 180012,
+  "tokens_out": 28905,
+  "evals": 1204,
+  "nodes": {
+   "untried": 0,
+   "promising": 5,
+   "unproven": 11,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 6,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f049",
+   "f050",
+   "f051",
+   "f052",
+   "f044",
+   "f045",
+   "f048",
+   "f047"
+  ],
+  "plan_source": "navigator",
+  "seconds": 92.3,
+  "agent_seconds": 19.2,
+  "calls": 71,
+  "tokens_in": 220930,
+  "tokens_out": 34825,
+  "evals": 1354,
+  "nodes": {
+   "untried": 2,
+   "promising": 5,
+   "unproven": 12,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 7,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f057",
+   "f058",
+   "f059",
+   "f060",
+   "f053",
+   "f054",
+   "f055",
+   "f056"
+  ],
+  "plan_source": "navigator",
+  "seconds": 61.0,
+  "agent_seconds": 19.7,
+  "calls": 83,
+  "tokens_in": 263273,
+  "tokens_out": 40787,
+  "evals": 1461,
+  "nodes": {
+   "untried": 2,
+   "promising": 5,
+   "unproven": 14,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 8,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f065",
+   "f066",
+   "f067",
+   "f068",
+   "f061",
+   "f062",
+   "f063",
+   "f064"
+  ],
+  "plan_source": "navigator",
+  "seconds": 132.4,
+  "agent_seconds": 17.4,
+  "calls": 93,
+  "tokens_in": 300033,
+  "tokens_out": 46249,
+  "evals": 1693,
+  "nodes": {
+   "untried": 0,
+   "promising": 5,
+   "unproven": 19,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 9,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f073",
+   "f074",
+   "f075",
+   "f076",
+   "f069",
+   "f070",
+   "f071",
+   "f072"
+  ],
+  "plan_source": "navigator",
+  "seconds": 94.6,
+  "agent_seconds": 19.6,
+  "calls": 103,
+  "tokens_in": 337250,
+  "tokens_out": 51412,
+  "evals": 1858,
+  "nodes": {
+   "untried": 1,
+   "promising": 5,
+   "unproven": 23,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 10,
+  "train": 54.828778319917866,
+  "valid": 55.392267345849326,
+  "progress": 45.17,
+  "valid_progress": 44.61,
+  "families": {
+   "scatter": 57.15610052546733,
+   "hotspots": 44.95375757027181,
+   "waves": 62.37647686401448
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ]
+  ],
+  "features": [
+   "f081",
+   "f082",
+   "f083",
+   "f084",
+   "f077",
+   "f078",
+   "f079",
+   "f080"
+  ],
+  "plan_source": "navigator",
+  "seconds": 105.7,
+  "agent_seconds": 20.0,
+  "calls": 114,
+  "tokens_in": 389424,
+  "tokens_out": 57526,
+  "evals": 2023,
+  "nodes": {
+   "untried": 2,
+   "promising": 4,
+   "unproven": 25,
+   "pruned": 0
+  }
+ },
+ {
+  "gen": 11,
+  "train": 54.65736458546618,
+  "valid": 55.32021370558607,
+  "progress": 45.34,
+  "valid_progress": 44.68,
+  "families": {
+   "scatter": 56.60895862918432,
+   "hotspots": 45.07643146614138,
+   "waves": 62.286703661072856
+  },
+  "accepted": [
+   "f086"
+  ],
+  "library": [
+   "f008",
+   "f013",
+   "f040",
+   "f086"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ],
+   [
+    0.085872
+   ]
+  ],
+  "features": [
+   "f089",
+   "f090",
+   "f091",
+   "f092",
+   "f085",
+   "f086",
+   "f087",
+   "f088"
+  ],
+  "plan_source": "navigator",
+  "seconds": 128.8,
+  "agent_seconds": 20.8,
+  "calls": 124,
+  "tokens_in": 428088,
+  "tokens_out": 62853,
+  "evals": 2233,
+  "nodes": {
+   "untried": 2,
+   "promising": 4,
+   "unproven": 26,
+   "pruned": 1
+  }
+ },
+ {
+  "gen": 12,
+  "train": 54.65736458546618,
+  "valid": 55.32021370558607,
+  "progress": 45.34,
+  "valid_progress": 44.68,
+  "families": {
+   "scatter": 56.60895862918432,
+   "hotspots": 45.07643146614138,
+   "waves": 62.286703661072856
+  },
+  "accepted": [],
+  "library": [
+   "f008",
+   "f013",
+   "f040",
+   "f086"
+  ],
+  "weights": [
+   [
+    1.7444964568659347
+   ],
+   [
+    0.1724010714722321
+   ],
+   [
+    -0.054719
+   ],
+   [
+    0.085872
+   ]
+  ],
+  "features": [
+   "f097",
+   "f098",
+   "f099",
+   "f100",
+   "f093",
+   "f094",
+   "f095",
+   "f096"
+  ],
+  "plan_source": "navigator",
+  "seconds": 154.9,
+  "agent_seconds": 24.1,
+  "calls": 134,
+  "tokens_in": 470568,
+  "tokens_out": 68524,
+  "evals": 2427,
+  "nodes": {
+   "untried": 3,
+   "promising": 5,
+   "unproven": 26,
+   "pruned": 1
+  }
+ }
+]
