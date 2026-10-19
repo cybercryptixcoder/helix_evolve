@@ -1,0 +1,101 @@
+{
+ "problem": "backtrack",
+ "label": "backtrack",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 33.94882113266666,
+  "valid": 34.78995376694317,
+  "progress": 66.05,
+  "valid_progress": 65.21,
+  "library": [
+   "f007",
+   "f011",
+   "f034",
+   "f037",
+   "f080",
+   "f082"
+  ]
+ },
+ "test": {
+  "gap": 47.747527511241735,
+  "families": {
+   "scatter": 64.86520323123221,
+   "strip": 53.78393809631132,
+   "clusters": 39.71183427975275,
+   "hubs": 32.62913443767068
+  },
+  "code_zero": 100.0,
+  "progress": 52.25
+ },
+ "progress_curve": [
+  0.0,
+  48.69,
+  55.44,
+  55.44,
+  56.79,
+  60.81,
+  60.81,
+  60.81,
+  60.81,
+  60.81,
+  58.82,
+  66.05,
+  66.05
+ ],
+ "valid_curve": [
+  0.0,
+  51.83,
+  52.75,
+  52.75,
+  54.25,
+  59.29,
+  59.29,
+  59.29,
+  59.29,
+  59.29,
+  64.51,
+  65.21,
+  65.21
+ ],
+ "calls": 132,
+ "tokens_in": 554341,
+ "tokens_out": 194799,
+ "features_tried": 96,
+ "kept": [
+  {
+   "id": "f007",
+   "name": "basin_slack_tightness",
+   "origin": "deep"
+  },
+  {
+   "id": "f011",
+   "name": "census_scarcity_basin_amplified",
+   "origin": "wide"
+  },
+  {
+   "id": "f034",
+   "name": "basin_stranding_tightness_weighted",
+   "origin": "wide"
+  },
+  {
+   "id": "f037",
+   "name": "census_hall_infeasible_depth_fraction",
+   "origin": "deep"
+  },
+  {
+   "id": "f080",
+   "name": "basin_second_order_tightness",
+   "origin": "deep"
+  },
+  {
+   "id": "f082",
+   "name": "basin_bottleneck_multi_constraint_tightness",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792373263.22351
+}

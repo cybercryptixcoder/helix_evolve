@@ -1,0 +1,95 @@
+Helix v3 · Backtrack: choose the branching order of a fixed depth-first solver · 12 generations → runs/open/backtrack
+   [setup] scoring Code Zero
+── generation 0: Code Zero, gap 100.000% train, 100.000% valid
+── generation 1: champion gap 100.000% (progress 0.0%), 0 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+/home/ubuntu/helix_open_suite/.venv/lib/python3.12/site-packages/cma/s.py:17: UserWarning: Could not import matplotlib.pyplot, therefore ``cma.plot()`` etc. is not available
+  _warnings.warn('Could not import matplotlib.pyplot, therefore'
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['basin_slack_tightness', 'domain_weighted_channel_compatibility'] → gap 51.312% progress 48.7% (valid 51.8%) | 402s, 11 calls
+── generation 2: champion gap 51.312% (progress 48.7%), 2 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['census_scarcity_basin_amplified'] → gap 44.560% progress 55.4% (valid 52.8%) | 859s, 22 calls
+── generation 3: champion gap 44.560% (progress 55.4%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 44.560% progress 55.4% (valid 52.8%) | 367s, 34 calls
+── generation 4: champion gap 44.560% (progress 55.4%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 43.205% vs 43.674% (adopted)
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 43.205% progress 56.8% (valid 54.2%) | 429s, 45 calls
+── generation 5: champion gap 43.205% (progress 56.8%), 3 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['basin_stranding_tightness_weighted', 'census_hall_infeasible_depth_fraction'] → gap 39.187% progress 60.8% (valid 59.3%) | 762s, 56 calls
+── generation 6: champion gap 39.187% (progress 60.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+<feature>:19: RuntimeWarning: divide by zero encountered in divide
+<feature>:19: RuntimeWarning: divide by zero encountered in divide
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 39.187% progress 60.8% (valid 59.3%) | 735s, 66 calls
+── generation 7: champion gap 39.187% (progress 60.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 39.187% progress 60.8% (valid 59.3%) | 936s, 77 calls
+── generation 8: champion gap 39.187% (progress 60.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 39.469% vs 39.187%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 39.187% progress 60.8% (valid 59.3%) | 687s, 88 calls
+── generation 9: champion gap 39.187% (progress 60.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 39.187% progress 60.8% (valid 59.3%) | 804s, 98 calls
+── generation 10: champion gap 39.187% (progress 60.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['basin_second_order_tightness'] → gap 41.183% progress 58.8% (valid 64.5%) | 948s, 109 calls
+── generation 11: champion gap 41.183% (progress 58.8%), 5 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept ['basin_bottleneck_multi_constraint_tightness'] → gap 33.949% progress 66.0% (valid 65.2%) | 1090s, 120 calls
+── generation 12: champion gap 33.949% (progress 66.0%), 6 features
+   [inspect] sampling decisions, diagnosing the champion
+   [navigate] Navigator planning
+   [agents] Researcher, Coders and Mutator writing; fitting each feature as it arrives
+   perturbation: 3 restarts, best 42.681% vs 33.949%
+   [fit] near-miss trials and prediction checks
+   [accept] combining the winners
+   kept nothing → gap 33.949% progress 66.0% (valid 65.2%) | 1006s, 132 calls
+done: progress 66.05% train, 65.21% valid, test 52.25% | 132 calls
