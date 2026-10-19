@@ -1,0 +1,113 @@
+{
+ "problem": "runner",
+ "label": "runner",
+ "generations": 12,
+ "code_zero": {
+  "train": 100.0,
+  "valid": 100.0
+ },
+ "champion": {
+  "train": 44.76896530472205,
+  "valid": 32.36603950315629,
+  "progress": 55.23,
+  "valid_progress": 67.63,
+  "library": [
+   "f003",
+   "f006",
+   "f014",
+   "f039",
+   "f058",
+   "f054",
+   "f066",
+   "f069"
+  ]
+ },
+ "test": {
+  "gap": 41.22822883439679,
+  "families": {
+   "meadow": 56.13198943791671,
+   "caves": 19.65581996612381,
+   "towers": 37.6711348404445,
+   "foundry": 51.453971093102126
+  },
+  "code_zero": 100.0,
+  "progress": 58.77
+ },
+ "progress_curve": [
+  0.0,
+  23.53,
+  28.02,
+  28.02,
+  28.02,
+  37.2,
+  37.2,
+  43.97,
+  51.95,
+  55.23,
+  55.23,
+  55.23,
+  55.23
+ ],
+ "valid_curve": [
+  0.0,
+  27.86,
+  35.45,
+  35.45,
+  35.45,
+  34.69,
+  34.69,
+  48.06,
+  67.51,
+  67.63,
+  67.63,
+  67.63,
+  67.63
+ ],
+ "calls": 130,
+ "tokens_in": 674323,
+ "tokens_out": 238352,
+ "features_tried": 98,
+ "kept": [
+  {
+   "id": "f003",
+   "name": "forward_clearance",
+   "origin": "wide"
+  },
+  {
+   "id": "f006",
+   "name": "hazard_clearance",
+   "origin": "deep"
+  },
+  {
+   "id": "f014",
+   "name": "dash_safe_landing",
+   "origin": "deep"
+  },
+  {
+   "id": "f039",
+   "name": "saw_folded_arrival_margin",
+   "origin": "deep"
+  },
+  {
+   "id": "f058",
+   "name": "dash_gap_urgency",
+   "origin": "deep"
+  },
+  {
+   "id": "f054",
+   "name": "spike_time_to_contact",
+   "origin": "wide"
+  },
+  {
+   "id": "f066",
+   "name": "post_death_hazard_brake",
+   "origin": "deep"
+  },
+  {
+   "id": "f069",
+   "name": "spike_clearance_margin_sum",
+   "origin": "wide"
+  }
+ ],
+ "finished": 1792393313.0979497
+}
