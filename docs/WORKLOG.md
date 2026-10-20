@@ -4,6 +4,53 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 20, 2026 (evening): Helix v4, program evolution with memory, and the overnight job
+
+### What was asked
+The full brief is `docs/BRIEF_2026-10-20.md` (verbatim). In short: evaluate the hypothesis that the plateau comes
+from missing continuity between generations; compare (A) appended, managed context with (B) an Avy-inspired
+structured memory; evolve programs, not weights; a population, not a champion; a richer evaluator; one good
+open-ceiling problem (a benchmark if one fits); test small first; an overnight job of at most 8 hours on the 2-core
+OCI VM for the Hermes agent; results for a presentation on October 21.
+
+### Decisions and reasoning (details in `docs/V4_DESIGN.md`)
+- **The hypothesis.** Literally inaccurate: the v3 Researcher had a ~15k-character ledger. In spirit right: no
+  agent kept its own reasoning, the Coder and Mutator saw no history, the evaluator returned aggregates. The main
+  cause of the v3 plateau is the representation (a linear sum of one-step features): on runner, the champion clears
+  55% of levels and a simple planner at least 85%. So memory is tested only once whole programs evolve.
+- **Helix v4** (`helix4/`): programs `construct(budget_seconds, start)` that improve their parent's construction
+  with 20 s of CPU; every program kept in a tree; wide loop (memoryless Mutator, rank-and-novelty parent sampling)
+  identical across conditions; deep loop (Researcher at `low`, Coders without thinking) whose view of the past is
+  the variable; evaluator feedback computed by code (no LLM in the evaluator).
+- **Three conditions**: Control (the standard prompt: best program + top-6 scoreboard); Journal (appended
+  chronological journal with the Researcher's own analyses, compacted by an LLM past 24k characters, last 4
+  generations verbatim); Atlas (log + tree + findings graph; a Distiller writes findings that must cite program
+  ids; code computes each finding's status from measured gains; the Researcher sees a map with the last generation
+  in full, opens up to 6 items, then plans).
+- **Problem**: the second autocorrelation inequality (best known 0.962643, human best 0.94136, 2010 record 0.88922;
+  constant unknown). Exact verifier, cheap on one ARM core, not recallable (zero-shot 0.862 with 7 steps). Circle
+  packing rejected (saturated, public code). One problem only.
+- **Benchmarks**: ALE-Bench and HeuriGym too heavy for one night on 2 cores; the AlphaEvolve problem set is the de
+  facto benchmark for these systems and AC2 is in it.
+- **Run plan**: 3 conditions × 3 seeds × 20 generations, all side by side; evaluations capped machine-wide at 2
+  at a time (one per core); a 7.5-hour deadline.
+
+### Small tests (real model, this container: 2 cores, like the VM)
+- 1 seed × 3 conditions × 3 generations: control 0.8788, Atlas 0.8587, Journal 0.8321 (one seed each: the ranking
+  means nothing). Gains per generation are large early (0.667 → ~0.80 in generation 1).
+- Atlas works as intended: findings like "seeding p0012-style FFT block hill climbing from p0013's asymmetric profile
+  ... raised exact R from 0.796302 to 0.843996 (+0.047694)", linked to earlier findings; in generation 3 the
+  Researcher opened F12 (an open question written the generation before) and tested it.
+- Model latency: Coders and Mutators 3-5 s, Researcher at `low` 30-70 s; generation time is set by evaluation CPU.
+- Fixed: a program returning heights near 1e300 overflowed the scorer (heights are now normalised in `check`); the
+  v3 client treated "thought until max_tokens with no answer" as an empty reply and retried with the same budget
+  (v4 client lets it double); programs that stopped after a quick probe (prompts now ask to use the whole budget);
+  the job's progress ticker leaving a stray process; the job script now runs from a snapshot of itself (editing
+  a running bash script broke a test job); the sandbox no longer uses isolated mode (it would miss user-installed
+  numpy).
+
+---
+
 ## October 20, 2026 (later): is the plateau the optimum? And what would test for discovery
 
 ### What was asked

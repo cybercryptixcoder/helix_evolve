@@ -126,7 +126,7 @@ class Run:
     def researcher(self, user, gen, step="plan"):
         system = P.RESEARCHER_SYSTEM.format(k=self.cfg.deep, budget=self.cfg.budget)
         t0 = time.time()
-        text = self.call("researcher", system, user, temperature=0.7, max_tokens=3500, effort=self.cfg.researcher_effort, gen=gen)
+        text = self.call("researcher", system, user, temperature=0.7, max_tokens=12000, effort=self.cfg.researcher_effort, gen=gen)
         plan = P.extract_json(text)
         retried = False
         if not (isinstance(plan, dict) and isinstance(plan.get("experiments"), list) and plan["experiments"]):
