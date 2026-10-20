@@ -118,8 +118,7 @@ def downsample(a, k):
     a = np.asarray(a, float)
     if len(a) <= k:
         return [round(float(x), 6) for x in a]
-    idx = np.linspace(0, len(a) - 1, k).round().astype(int)
-    return [round(float(a[i]), 6) for i in idx]
+    return [round(float(c.max()), 6) for c in np.array_split(a, k)]     # bucket maxima keep narrow spikes visible
 
 
 def esc(s):
