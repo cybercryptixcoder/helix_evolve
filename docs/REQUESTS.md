@@ -37,7 +37,9 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - **done**: Generality runs on all 9 problems (cloud batch): every one beats its textbook rule on unseen instances. TSP: 97% from Code Zero in 5 generations; test tour gap ~14% against 25% for the hidden nearest-neighbour baseline.
 - **done**: Everything plugged in for Shreyas to run big suite runs himself.
 
-## 4. Meta-evolution (code by me, runs by Shreyas)
+## 4. Meta-evolution (code by me, runs by Shreyas) — scrapped 2026-10-20
+
+- **dropped**: Shreyas scrapped meta-evolution (too expensive and slow for the compute available). The code stays as history; nothing builds on it.
 
 - **done**: An evolutionary loop that evolves the evolutionary loop, using the same kind of LLM search. The best strategy is swapped into the outer loop and the process continues. (`meta/`)
 - **done**: The evaluator runs the suite and measures the degree of improvement, speed, generations to improve, flatlining.
@@ -66,7 +68,8 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 ## 8. Thinking modes
 
 - **done**: Effort per role (none, low, medium, high, max), always-on or every Nth generation ("breakthrough"); a thinking model is not asked to write out its reasoning; output budgets grow with effort.
-- **doing**: Compare modes in runs. Round 3 (Researcher at low): 25.7% by generation 4. Round 4 (none, max breakthrough at generation 5): 16.6% after 5; the max generation first failed (reasoning ate the token budget; fixed), then kept nothing. Default is back to low.
+- **done**: Thinking ablation on forage and duel (open suite, 12 generations): no effect on forage; low/high ~3-4 points over none on duel (one run each, unconfirmed); breakthroughs never helped. See WORKLOG, October 20.
+- **done (earlier)**: Compare modes in runs. Round 3 (Researcher at low): 25.7% by generation 4. Round 4 (none, max breakthrough at generation 5): 16.6% after 5; the max generation first failed (reasoning ate the token budget; fixed), then kept nothing. Default is back to low.
 
 ## 9. Robustness of runs on Shreyas's machine
 
@@ -89,3 +92,4 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - 2026-10-17 22:30: round 6 beat the records; stopping rule met; wrap-up.
 - 2026-10-18 00:17: new open-ceiling problems (invented, no reference, no textbook rule, varied objectives: task performance, speed and scaling, games, one judgement-call objective), a test bench and a job with ablations (thinking modes), a prompt for the cloud agent and a time estimate; keep it short on context.
 - 2026-10-18 13:10: meta run analysis (paused: not worth it on this VM); new open problems: a game (also a fast video-game-style one), debugging a program, a math value/construction; jobs gentle on the shared 2-core VM; no meta tests; don't improve the evolver itself, only adapt it to the new problems.
+- 2026-10-20: catch up on everything since; the meta loop is scrapped; analyse the ~23-hour open-suite job (results/open/) and say what it tested and what it shows.

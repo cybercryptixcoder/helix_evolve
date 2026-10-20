@@ -1,3 +1,5 @@
+> **Scrapped (October 20, 2026).** Meta-evolution was dropped: too expensive and slow for the compute available. Kept as history; see docs/WORKLOG.md.
+
 # Meta loop: evolving Helix itself
 
 **Status: specification, not built yet.** Written October 16, 2026, so whoever picks this up can build it without the conversation it came from.
