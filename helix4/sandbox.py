@@ -67,7 +67,7 @@ def run_program(code: str, budget: float, start=None, mem_mb: int = 1500, workdi
         wall_cap = budget * 2.5 + 30
         t0 = time.time()
         try:
-            p = subprocess.run([sys.executable, "-I", str(d / "runner.py"), str(d / "candidate.py"), str(d / "out.npy"),
+            p = subprocess.run([sys.executable, str(d / "runner.py"), str(d / "candidate.py"), str(d / "out.npy"),
                                 str(budget), str(cpu_cap), str(mem_mb), start_path],
                                cwd=d, env=env, capture_output=True, text=True, timeout=wall_cap)
             out, err = p.stdout, p.stderr

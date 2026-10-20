@@ -295,8 +295,8 @@ class Atlas(Memory):
             out.append(f"Coder's summary: {p.summary}")
         out.append("Result:\n  " + "\n  ".join(result_lines(p, 8)))
         if p.diff:
-            out.append(f"Diff from {p.parent}:\n```diff\n{P.clip(p.diff, 2500)}\n```")
-        out.append(f"Code:\n```python\n{P.clip(p.code, 4000)}```")
+            out.append(f"Diff from {p.parent}:\n```diff\n{P.clip(p.diff, 1800)}\n```")
+        out.append(f"Code:\n```python\n{P.clip(p.code, 3500)}```")
         kids = [q for q in a.programs.values() if q.parent == pid]
         if kids:
             out.append("Its children: " + "; ".join(
