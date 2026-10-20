@@ -47,7 +47,7 @@ class Config:
     gens: int = 20
     deep: int = 3
     wide: int = 3
-    budget: float = 20.0
+    budget: float = 30.0
     researcher_effort: str = "low"
     journal_chars: int = 24000
     journal_keep: int = 4
@@ -383,7 +383,7 @@ def main(argv=None):
     ap.add_argument("--condition", choices=sorted(MODES), default="atlas")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--gens", type=int, default=None)
-    ap.add_argument("--budget", type=float, default=20.0)
+    ap.add_argument("--budget", type=float, default=30.0)
     ap.add_argument("--deep", type=int, default=3)
     ap.add_argument("--wide", type=int, default=3)
     ap.add_argument("--effort", default="low", help="the Researcher's thinking effort")
