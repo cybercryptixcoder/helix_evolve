@@ -48,6 +48,16 @@ OCI VM for the Hermes agent; results for a presentation on October 21.
   the job's progress ticker leaving a stray process; the job script now runs from a snapshot of itself (editing
   a running bash script broke a test job); the sandbox no longer uses isolated mode (it would miss user-installed
   numpy).
+- The full configuration in miniature (9 runs side by side, 3 generations, 20 s per program): 3.5 to 8.5 minutes
+  per generation per run; programs used most of their budget (median 18 s of CPU); about 40 MB per run process;
+  no API errors with nine runs on four keys. Three Researcher calls thought past the old token room and were
+  retried with double (now given 12k answer tokens up front). Best after 3 generations: 0.836-0.882 across the 9
+  runs, every run past 0.83.
+- Continuity shows up in the plans. Journal, generation 3: "p0013's smoothed max failed, so I will not repeat that",
+  then bets on carrying an older, flatter-topped branch (p0008) to higher resolution. Control, the same generation
+  in another run, proposes smoothing the max as a fresh idea: it cannot know what has already failed.
+- **Overnight settings**: 20 generations, 30 s per program, 3 seeds, 2 evaluation slots: about 3.5-4.5 hours,
+  with a 7.5-hour deadline as a backstop (`docs/V4_JOB.md`).
 
 ---
 
