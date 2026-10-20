@@ -29,7 +29,8 @@ nohup bash scripts/run_v4_jobs.sh > v4_jobs.log 2>&1 &
 - **To start over from nothing**: `rm -rf runs/v4` (also clears the deadline).
 
 Knobs (environment variables): `GENS` (20), `SEEDS` ("1 2 3"), `CONDITIONS` ("atlas journal control"), `BUDGET`
-(30 s of CPU per program), `HOURS` (7.5), `EVAL_SLOTS` (2), `PUSH` (1), `FAKE` (1 = no model calls, a test).
+(30 s of CPU per program), `HOURS` (7.5), `EVAL_SLOTS` (2), `PUSH` (1), `FAKE` (1 = no model calls, a test), `TICK`
+(600: seconds between status lines; progress is pushed every fourth).
 
 ## Timing
 

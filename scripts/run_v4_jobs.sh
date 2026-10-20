@@ -74,14 +74,17 @@ git_push() {   # message
   ) 9> "$ROOT_RUNS/.git.lock"
 }
 
-copy_run() {   # name  (everything worth keeping; constructions only for the best program)
+copy_run() {   # name [light]: everything worth keeping (constructions only for the best program); "light" = only the
+               # small files, for the progress pushes, so the repository doesn't fill with copies of growing traces
   local name="$1" src="$ROOT_RUNS/$1" dst="$RESULTS/$1"
   mkdir -p "$dst"
-  for f in summary.json history.jsonl plans.jsonl programs.jsonl findings.jsonl journal.jsonl journal_summary.json state.json best.py best.npy; do
+  for f in summary.json history.jsonl plans.jsonl findings.jsonl journal.jsonl journal_summary.json state.json; do
     [ -f "$src/$f" ] && cp "$src/$f" "$dst/"
   done
-  [ -f "$src/trace.jsonl" ] && gzip -c "$src/trace.jsonl" > "$dst/trace.jsonl.gz"
   [ -f "$ROOT_RUNS/$name.log" ] && cp "$ROOT_RUNS/$name.log" "$dst/run.log"
+  [ "${2:-}" = "light" ] && return 0
+  for f in programs.jsonl best.py best.npy; do [ -f "$src/$f" ] && cp "$src/$f" "$dst/"; done
+  [ -f "$src/trace.jsonl" ] && gzip -nc "$src/trace.jsonl" > "$dst/trace.jsonl.gz"
   return 0
 }
 
@@ -89,8 +92,11 @@ report() {
   "$PY" -m helix4.report "$ROOT_RUNS" "$RESULTS" > /dev/null 2>&1 || echo "   (report failed; the run data are fine)" >&2
 }
 
-progress() {
-  for d in "$ROOT_RUNS"/*/; do [ -f "$d/state.json" ] && copy_run "$(basename "$d")"; done
+progress() {   # [final]
+  for d in "$ROOT_RUNS"/*/; do
+    [ -f "$d/state.json" ] || continue
+    if [ "${1:-}" = "final" ] || [ -f "$d/summary.json" ]; then copy_run "$(basename "$d")"; else copy_run "$(basename "$d")" light; fi
+  done
   report
   git_push "Helix v4 job: progress at $(date -u +%H:%M) UTC"
 }
@@ -130,7 +136,7 @@ PY
 
 ( trap 'kill $SL 2>/dev/null; exit 0' TERM
   n=0
-  while true; do sleep 600 & SL=$!; wait $SL; status; n=$((n + 1)); [ $((n % 4)) -eq 0 ] && progress; done
+  while true; do sleep "${TICK:-600}" & SL=$!; wait $SL; status; n=$((n + 1)); [ $((n % 4)) -eq 0 ] && progress; done
 ) &   # a status line every 10 minutes; progress pushed every 40
 TICKER=$!
 trap 'kill $TICKER 2>/dev/null' EXIT
@@ -147,7 +153,7 @@ wait "${PIDS[@]}"
 kill $TICKER 2>/dev/null
 
 echo "== report"
-progress
+progress final
 "$PY" - "$ROOT_RUNS" <<'PY'
 import json, sys
 from pathlib import Path
