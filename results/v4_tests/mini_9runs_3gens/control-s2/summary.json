@@ -1,0 +1,43 @@
+{
+ "run": "control-s2",
+ "condition": "control",
+ "seed": 2,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8371622818112188,
+ "best_id": "p0018",
+ "best_n": 4000,
+ "best_lineage": "p0001 0.66667 -> p0005 0.66667 (+0.00000: If the optimal f is edge-heavy, a one-parameter U-shaped po\u2026) -> p0012 0.83399 (+0.16732: Replaced grid search over a parametric family with a broad \u2026) -> p0018 0.83716 (+0.00318: p0012's random/block search is near a local optimum; the ex\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.819998399258824,
+  0.833986093841724,
+  0.8371622818112188
+ ],
+ "programs": 19,
+ "valid": 19,
+ "calls": 21,
+ "tokens_in": 46538,
+ "tokens_out": 51893,
+ "memory": {},
+ "config": {
+  "condition": "control",
+  "seed": 2,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1065.696460723877,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

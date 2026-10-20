@@ -1,0 +1,49 @@
+{
+ "run": "atlas-s1",
+ "condition": "atlas",
+ "seed": 1,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8639717074838041,
+ "best_id": "p0018",
+ "best_n": 100,
+ "best_lineage": "p0001 0.66667 -> p0002 0.85939 (+0.19272: Added stochastic coordinate-wise hill climbing on a smooth \u2026) -> p0008 0.86272 (+0.00333: A flat f*f top may be produced by a genuinely bimodal f (tw\u2026) -> p0018 0.86397 (+0.00125: The N=50 grid may be binding: p0008's f*f plateau is flat t\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8593890615098627,
+  0.8627218724558453,
+  0.8639717074838041
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 26,
+ "tokens_in": 95861,
+ "tokens_out": 43006,
+ "memory": {
+  "findings": 18,
+  "supported": 9,
+  "refuted": 6,
+  "mixed": 1,
+  "links": 25
+ },
+ "config": {
+  "condition": "atlas",
+  "seed": 1,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1100.7244482040405,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

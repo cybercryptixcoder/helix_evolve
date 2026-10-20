@@ -1,0 +1,49 @@
+{
+ "run": "atlas-s2",
+ "condition": "atlas",
+ "seed": 2,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.882296619023531,
+ "best_id": "p0011",
+ "best_n": 50000,
+ "best_lineage": "p0001 0.66667 -> p0005 0.86517 (+0.19850: The shape f(t)=t^{-1/2} on [0,1] makes f*f nearly constant \u2026) -> p0011 0.88230 (+0.01713: The pure power law may not be locally optimal; a smooth mul\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8651708834093661,
+  0.882296619023531,
+  0.882296619023531
+ ],
+ "programs": 19,
+ "valid": 17,
+ "calls": 28,
+ "tokens_in": 114106,
+ "tokens_out": 90890,
+ "memory": {
+  "findings": 18,
+  "supported": 12,
+  "refuted": 2,
+  "mixed": 1,
+  "links": 20
+ },
+ "config": {
+  "condition": "atlas",
+  "seed": 2,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1284.867431640625,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

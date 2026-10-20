@@ -1,0 +1,43 @@
+{
+ "run": "control-s3",
+ "condition": "control",
+ "seed": 3,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8793854615470362,
+ "best_id": "p0016",
+ "best_n": 20000,
+ "best_lineage": "p0001 0.66667 -> p0003 0.83786 (+0.17119: A fixed family is too restrictive; direct nonparametric loc\u2026) -> p0009 0.86373 (+0.02587: Added analytic gradient of R w.r.t. heights and switched to\u2026) -> p0016 0.87939 (+0.01565: Two-stage Adam on log-h: coarse 4000-step pass then refine \u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.837859599124804,
+  0.8637310679477651,
+  0.8793854615470362
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 21,
+ "tokens_in": 56182,
+ "tokens_out": 59559,
+ "memory": {},
+ "config": {
+  "condition": "control",
+  "seed": 3,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1001.323166847229,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

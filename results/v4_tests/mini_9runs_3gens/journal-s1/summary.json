@@ -1,0 +1,47 @@
+{
+ "run": "journal-s1",
+ "condition": "journal",
+ "seed": 1,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8757749644602486,
+ "best_id": "p0015",
+ "best_n": 800,
+ "best_lineage": "p0001 0.66667 -> p0002 0.82744 (+0.16077: Added R evaluation, multi-start candidates, and randomized \u2026) -> p0012 0.82815 (+0.00071: Added smooth block perturbations and adaptive upsampling to\u2026) -> p0015 0.87577 (+0.04763: Replaced random hill-climb with softmax-parametrised L-BFGS\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8685030013730272,
+  0.868938047818935,
+  0.8757749644602486
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 22,
+ "tokens_in": 62203,
+ "tokens_out": 79602,
+ "memory": {
+  "journal_chars": 13480,
+  "compactions": 0,
+  "summary_upto_gen": 0
+ },
+ "config": {
+  "condition": "journal",
+  "seed": 1,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1142.325472354889,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}
