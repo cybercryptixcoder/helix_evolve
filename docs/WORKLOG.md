@@ -19,7 +19,7 @@ OCI VM for the Hermes agent; results for a presentation on October 21.
   cause of the v3 plateau is the representation (a linear sum of one-step features): on runner, the champion clears
   55% of levels and a simple planner at least 85%. So memory is tested only once whole programs evolve.
 - **Helix v4** (`helix4/`): programs `construct(budget_seconds, start)` that improve their parent's construction
-  with 20 s of CPU; every program kept in a tree; wide loop (memoryless Mutator, rank-and-novelty parent sampling)
+  with 30 s of CPU (20 s in the small tests); every program kept in a tree; wide loop (memoryless Mutator, rank-and-novelty parent sampling)
   identical across conditions; deep loop (Researcher at `low`, Coders without thinking) whose view of the past is
   the variable; evaluator feedback computed by code (no LLM in the evaluator).
 - **Three conditions**: Control (the standard prompt: best program + top-6 scoreboard); Journal (appended

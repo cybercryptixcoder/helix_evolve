@@ -34,7 +34,7 @@ say more than a number.
 ## 3. What v4 is
 
 **Programs.** A candidate is a Python module with `construct(budget_seconds, start)` that returns a construction. It
-starts from its parent's construction (`start`) and gets `budget` seconds of CPU (default 20) to improve it, as in
+starts from its parent's construction (`start`) and gets `budget` seconds of CPU (30 in the overnight job) to improve it, as in
 AlphaEvolve's set-up for this kind of problem. Progress therefore compounds down a lineage: a child that improves its
 parent's construction by +0.004 builds on everything above it.
 
@@ -143,7 +143,7 @@ the frontier table.
 FunSearch drew about a million program samples, AlphaEvolve thousands; v4 gets 6 per generation per run. Each sample
 costs a model call plus CPU to evaluate it. With Luminal, a call without thinking takes 3 to 5 s and a Researcher
 call at `low` 30 to 70 s, so time per generation is set by evaluation CPU, not by the model. So: thinking only where
-it pays (planning), fast coders and mutators, and a fixed 20 s of CPU per program. In this kind of search, more cheap
+it pays (planning), fast coders and mutators, and a fixed 30 s of CPU per program (20 s in the small tests). In this kind of search, more cheap
 samples beat fewer expensive ones.
 
 ## 7. What we measure

@@ -29,11 +29,21 @@ nohup bash scripts/run_v4_jobs.sh > v4_jobs.log 2>&1 &
 - **To start over from nothing**: `rm -rf runs/v4` (also clears the deadline).
 
 Knobs (environment variables): `GENS` (20), `SEEDS` ("1 2 3"), `CONDITIONS` ("atlas journal control"), `BUDGET`
-(20 s of CPU per program), `HOURS` (7.5), `EVAL_SLOTS` (2), `PUSH` (1), `FAKE` (1 = no model calls, a test).
+(30 s of CPU per program), `HOURS` (7.5), `EVAL_SLOTS` (2), `PUSH` (1), `FAKE` (1 = no model calls, a test).
 
 ## Timing
 
-Measured on a 2-core cloud container (the same core count as the OCI VM) on October 20; see "Measured" below.
+Measured on October 20 on a 2-core cloud container (the same core count as the OCI VM), with the full job
+configuration in miniature (9 runs side by side, 3 generations, 20 s per program):
+
+- Programs used most of their budget (median 18 s of CPU, mean 15 s; 78% used at least 15 s).
+- A generation took 3.5 to 8.5 minutes per run (about 6.5 typical); Atlas runs are the slowest (two extra model
+  calls and a larger prompt). Model calls are not the bottleneck: Coders and Mutators answer in 3 to 5 s, the
+  Researcher in 20 to 200 s, and nine runs stay well inside Luminal's limits.
+- Memory: about 40 MB per run process, under 600 MB for the whole job.
+
+The overnight job gives each program 30 s instead of 20, so a generation should take about 9 to 11 minutes and
+20 generations **about 3.5 to 4.5 hours** (allow up to 5 on the VM). The 7.5-hour deadline is a backstop.
 
 ## The prompt for the Hermes agent
 
@@ -52,7 +62,7 @@ Measured on a 2-core cloud container (the same core count as the OCI VM) on Octo
 >    other agents share this machine, and the job is sized for it.
 > 5. If the machine restarts or the script dies for any other reason, run the same command again. Finished runs are
 >    skipped and unfinished ones resume. Repeat until v4_jobs.log ends with "== all jobs done". Expect about
->    TIME_ESTIMATE; it stops itself at 7.5 hours at the latest. Lines like "(waiting: ... MB available)" are normal:
+>    4 to 5 hours; it stops itself at 7.5 hours at the latest. Lines like "(waiting: ... MB available)" are normal:
 >    it is waiting for free memory.
 > 6. The job pushes its results to GitHub by itself (results/v4/), every 40 minutes and at the end. If pushing fails,
 >    don't debug it: at the end run tar czf helix_v4_results.tgz results/v4 runs/v4 v4_jobs.log and send me that file.
