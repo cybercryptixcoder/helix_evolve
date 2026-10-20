@@ -35,6 +35,7 @@ def eval_slot():
     d = Path(os.environ.get("HELIX4_SLOTS_DIR", ROOT / "runs" / "v4" / ".slots"))
     d.mkdir(parents=True, exist_ok=True)
     need = int(os.environ.get("HELIX4_EVAL_MIN_MB", "600"))
+    t0 = time.time()
     while True:
         if _mem_available_mb() >= need:
             for i in range(n):
@@ -50,7 +51,9 @@ def eval_slot():
                     fcntl.flock(f, fcntl.LOCK_UN)
                     f.close()
                 return
-        time.sleep(0.5)
+        # rough fairness without a shared queue: the longer a program has waited, the more often it checks, so it
+        # is usually first to a freed slot (runs otherwise starve at random: one generation took 831 s in a test)
+        time.sleep(max(0.05, 0.5 - (time.time() - t0) / 120))
 
 
 def evaluate(problem, code, start, budget, mem_mb=1500):
