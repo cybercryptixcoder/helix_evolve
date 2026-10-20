@@ -1,3 +1,5 @@
+> **Scrapped (October 20, 2026).** Meta-evolution was dropped: too expensive and slow for the compute available. Kept as history; see docs/WORKLOG.md.
+
 # The meta loop: Helix evolving how Helix searches
 
 Built October 17, 2026. It supersedes the specification in `META_LOOP.md` in one respect: the outer level is **not** a single coding agent but the same kind of evolutionary loop as the inner one (Navigator, Researcher, Coder, Mutator), and the winning strategy is swapped into the outer loop itself.

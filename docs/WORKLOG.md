@@ -4,6 +4,61 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 20, 2026: the open-suite job (about 23 hours), and the meta loop dropped
+
+### Decision: the meta loop is scrapped
+
+Shreyas decided to drop meta-evolution entirely: too expensive, too slow and not worth it on the compute available (the one real meta run took 6.8 hours for a single outer generation, overloaded a 2-core VM, and its +10.6 gain was within reach of a 7.6-point repeat noise). `meta/`, `docs/META_V3.md`, `docs/META_LOOP.md` and `scripts/run_meta.sh` stay in the repo as history; nothing builds on them. `scripts/run_open_jobs.sh` still calls `run_meta.sh` for its preflight only (dependency and key checks).
+
+### What the job was
+
+`scripts/run_open_jobs.sh` on the cloud VM, October 18 14:15 → October 19 17:01, one run at a time, one fitting worker. It answers two questions from [OPEN_SUITE.md](OPEN_SUITE.md):
+
+1. **How far does Helix v3 climb when nothing caps it and nothing tells it what good looks like?** Nine invented problems with no reference, no textbook rule and no known optimum, each run once for 12 generations with the default strategy (Researcher thinks at low, a high-effort breakthrough every 5th generation).
+2. **Does hidden thinking help?** The same 12 generations on `forage` and `duel` with three more settings: no thinking anywhere (`none`), low without breakthroughs (`low`), Researcher and Navigator always at high (`high`).
+
+Units: progress = share of Code Zero's cost removed (for "bigger is better" problems, `100 − 100 × Code Zero's score / score`). Code Zero here is a **random policy** (candidate order is shuffled), so large early numbers mostly mean "much better than random"; the comparisons that matter are between generations and between runs.
+
+### Results
+
+| Problem | Train | Valid | Test (held-out family) | Best at gen | Gen 1 | Kept / tried | Hours |
+|---|---|---|---|---|---|---|---|
+| stacker (puzzle game) | 94.4 | 93.6 | **94.2** (prism 95.0) | 10 | 89.9 | 10 / 99 | 1.3 |
+| backtrack (solver branching) | 66.1 | 65.2 | 52.3 (hubs 67.4) | 11 | 48.7 | 6 / 96 | 2.5 |
+| fairshare (judgement call) | 59.2 | 62.1 | 61.8 (large 63.7) | 6 | 51.9 | 16 / 99 | 1.1 |
+| runner (arcade speedrun) | 55.2 | 67.6 | 58.8 (foundry 48.5) | 9 | 23.5 | 8 / 98 | 1.3 |
+| thermal (data-hall placement) | 52.8 | 52.0 | 47.3 (mixed 46.3) | 6 | 49.4 | 2 / 100 | 0.5 |
+| forage (drone pickup) | 45.4 | 45.8 | 45.9 (drift 44.9) | 10 | 38.5 | 9 / 104 | 0.9 |
+| duel (two-player game) | 43.3 | 40.8 | 37.8 (islands 30.5) | 12 | 33.4 | 12 / 105 | 1.9 |
+| progression (math construction) | 21.2 | 20.7 | 18.6 (hept 17.5) | 11 | 12.8 | 7 / 107 | 0.8 |
+| repair (debugger) | 20.9 | 47.5 | **13.8** (encoding −7.4) | 6 | 9.5 | 3 / 103 | 0.6 |
+
+Thinking ablation (12 generations each, one run per setting):
+
+| Setting | forage test | duel test | duel train | Output tokens (duel) |
+|---|---|---|---|---|
+| none | 46.5 | 36.9 | 43.2 | 87k |
+| low + breakthrough (default) | 45.9 | 37.8 | 43.3 | 192k |
+| low | 46.7 | 40.6 | 45.5 | 163k |
+| high | 46.4 | 41.1 | 44.9 | 345k |
+
+### What it shows
+
+- **The engine works on problems it has never seen and nothing caps.** All nine improved from a random start with no problem-specific changes, and seven generalise to the held-out family at about the training level or better (stacker, fairshare, forage, thermal, progression, backtrack's `hubs`, runner's train-level test).
+- **Most of the gain comes in generation 1.** Generation 1 reaches 85-95% of the final result on stacker, thermal, fairshare and forage. The search loop itself adds the most on runner (+32 points after generation 1, still climbing at 9), backtrack (+17), duel (+10) and progression (+8). Elsewhere it adds 2-7 points.
+- **The plateau is the same one as on bin packing.** Fairshare, thermal and forage are flat from generation 5-6; thermal kept 2 of 100 features. The stall response and perturbation generations don't break it here either.
+- **repair over-fits.** Train 20.9, valid 47.5, test 13.8, with two test families below Code Zero (geometry −2.6, a *training* family, and the held-out encoding −7.4). The splits have 3 instances per family, so each split is 9 bug sets; the policy fitted those particular bugs. It needs more instances per family before its numbers mean anything.
+- **backtrack generalises unevenly**: the held-out `hubs` family scores 67.4, but `scatter` falls from 49 on train to 35 on test, so the policy depends on instance details within a family.
+- **Thinking: no effect on forage, maybe 3-4 points on duel.** On forage all four settings land within 0.8 points of each other. On duel, `low` and `high` beat `none` and the default by 3-4 test points, but with one run each and no repeat noise measured, that isn't established. `high` costs about twice the output tokens of `low` for no gain over it. Breakthrough generations never helped (the default was no better than `low` on either problem).
+- **Wall time is mostly fitting, not the model.** Agents took 10-15% of the time on duel and backtrack (game and solver simulations dominate) and 25-65% on the light problems. On this VM, faster fitting would shorten runs more than cheaper prompts.
+
+### Next (proposed, not decided)
+
+1. Repeat duel `none` vs `low` 2-3 times each to see whether the 3-4 points are real; if not, run without thinking (half the tokens, same results).
+2. Give `repair` more instances per family (3 → 10+) and rerun before reading anything into it.
+3. Attack the plateau directly (a population of champions, or restarting from a different library), since every problem shows it.
+4. Drop breakthrough generations from the default: they cost tokens and never helped.
+
 ## October 17, 2026 (night): Helix v3, the problem suite, the meta loop, the dashboard
 
 ### What was asked
