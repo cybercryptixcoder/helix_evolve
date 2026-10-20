@@ -4,6 +4,24 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 20, 2026 (later): is the plateau the optimum? And what would test for discovery
+
+### What was asked
+
+Shreyas suspects leakage: every problem jumps in generation 1 and then flattens, as if the system already knew the answer. The aim of Helix is to make real discoveries, so the tests should show a system still climbing at generation 10. Asked: a non-linear flowchart of the current system ([helix_v3_flow.png](helix_v3_flow.png)); why it flatlines and how to push through; what problems would test for discovery; research on other evolutionary setups. Nothing to be built yet.
+
+### Findings
+
+- **The generation-1 jump is recall, not leakage of the answer.** The agents name the textbook method behind each invented problem in their own replies: MRV for `backtrack` (24 mentions; the Navigator's first approach was "Classic MRV"), Salem-Spencer / 3-AP-free sets for `progression`, Ochiai/Tarantula fault localisation for `repair`, a Tetris well for `stacker`, TSP and orienteering for `forage`, Reversi for `duel`. The invented skins don't hide the structure.
+- **The plateau is not the optimum.** `tools/runner_headroom.py` runs a beam search over the runner's own physics. On train the evolved champion scores 55.2% and fails 7 of 18 levels; the planner reaches at least 85.0% (16 of 18 finished; it is itself not optimal). On the held-out test: champion 58.7%, planner 85.6%, every level finished. On levels both finish: 384 ticks against 284. So at least 30 points are left on a problem where the run had flattened.
+- **Stacker is not clear.** Quick searches (2-ply, clairvoyant beam, champion-guided beam) did not beat the champion overall (guided beam: 0.90x its points; +20% on `penta`, worse elsewhere). Its 94% is partly the metric: score is 18.6x Code Zero, and gap = 100 x Code Zero / score compresses near 100.
+- **Why it flattens:** (1) the champion's shape: a linear sum of one-step features of (state, candidate), then argmax: no lookahead, memory or search, which is exactly what the runner planner uses; (2) one champion line, greedy acceptance: a feature must gain alone on validation at once, so stepping stones die; (3) budget: about 100 features per run; (4) measurement: progress from a random policy front-loads generation 1, and small instance sets (repair: 9) hide later gains in noise.
+- **Research** (sources in the conversation): AlphaEvolve mostly evolves *search heuristics* with a time budget as whole programs, Flash + Pro ensemble (about 75% matched, 20% improved on 50+ open math problems); FunSearch ran about a million samples with islands (the cap set n = 8 record came in 4 of 140 runs); ShinkaEvolve: islands, novelty rejection, a bandit over models, 150 samples to a circle-packing record; ALE-Bench: the best agent reached the top 8.6% of AtCoder heuristic contestants by injecting search knowledge (simulated annealing, beam search) plus a best-first search over solutions; Darwin Gödel Machine: removing the archive of stepping stones dropped SWE-bench from 50% to 23%; Zhang et al. (PPSN 2024): simple baselines are competitive and run-to-run variance is large; Tao et al.: AlphaEvolve exploited flawed verifiers.
+
+### Options put to Shreyas (not decided)
+
+Evolve whole policy programs inside a skeleton that can call the simulator (so they can plan and search); keep a population/archive instead of one champion; a discovery suite with external frontiers (open math constructions with best-known records, post-cutoff AtCoder heuristic contests, a league of past champions for games, "make this program faster"); a search-based headroom reference for every problem; a blind-description ablation to measure how much generation 1 owes to recall.
+
 ## October 20, 2026: the open-suite job (about 23 hours), and the meta loop dropped
 
 ### Decision: the meta loop is scrapped
