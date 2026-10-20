@@ -108,6 +108,9 @@ def load_run(d: Path):
                           "evidence": f["evidence"][:8], "best_gain": f["best_gain"], "gains": f["gains"],
                           "links": f.get("links", [])} for f in findings[:12]],
             "n_findings": len(findings), "construction": construction,
+            "graph": [{"id": f["id"], "gen": f["gen"], "kind": f["kind"], "claim": f["claim"][:300],
+                       "links": f.get("links", []), "n_ev": len(f["evidence"]), "gains": f["gains"],
+                       "best_gain": f["best_gain"]} for f in sorted(findings, key=lambda f: int(f["id"][1:]))],
             "finished": (d / "summary.json").exists()}
 
 
@@ -189,7 +192,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 .legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--ink2);font-size:13px;margin:6px 0}
 svg text{fill:var(--muted);font-size:11px}svg .reflabel{fill:var(--ink2)}#tip{position:fixed;pointer-events:none;background:var(--surface);
 border:1px solid var(--ring);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.12);display:none;z-index:5}
-#tip .v{font-weight:600;font-variant-numeric:tabular-nums}#tip .r{color:var(--ink2)}.chain li{margin:4px 0}.chain .d{font-variant-numeric:tabular-nums;font-weight:600}
+#tip{max-width:420px}#tip .v{font-weight:600;font-variant-numeric:tabular-nums}#tip .r{color:var(--ink2)}.chain li{margin:4px 0}.chain .d{font-variant-numeric:tabular-nums;font-weight:600}
 .role{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;border:1px solid var(--ring);color:var(--ink2);margin-right:6px}
 details summary{cursor:pointer;color:var(--ink2)}select{font:inherit;padding:4px 6px;border-radius:6px;border:1px solid var(--ring);background:var(--surface);color:var(--ink)}
 .finding{margin:8px 0;padding-left:10px;border-left:2px solid var(--grid)}.finding .m{color:var(--muted);font-size:12px}
@@ -218,6 +221,12 @@ details summary{cursor:pointer;color:var(--ink2)}select{font:inherit;padding:4px
 <div class="card"><ol class="chain" id="chain"></ol></div>
 <div id="findwrap"><h2>What Atlas recorded</h2>
 <p class="note">Findings written by the Distiller, each citing its evidence; the gains are measured by code, not claimed by the model. Top findings by measured gain.</p>
+<p class="note">The findings graph: one dot per finding, placed by the generation that wrote it; lines are the links the Distiller drew between findings (refines, contradicts, requires, combines with, explains). Hover a dot for the claim.</p>
+<div class="legend"><span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--c-atlas)"/></svg> works</span>
+<span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--c-journal)"/></svg> fails</span>
+<span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--c-control)"/></svg> mechanism</span>
+<span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="none" stroke="var(--ink2)" stroke-width="2"/></svg> open question</span></div>
+<div class="card"><div id="fgraph"></div></div>
 <div class="card" id="findings"></div></div>
 <div id="tip"></div>
 <script>
@@ -288,9 +297,31 @@ function showRun(){
   const fw=document.getElementById("findwrap"),fb=document.getElementById("findings");fb.replaceChildren();
   const fr=r.condition==="atlas"?r:D.runs.filter(x=>x.condition==="atlas").sort((a,b)=>b.best-a.best)[0];
   if(!fr||!fr.findings.length){fw.style.display="none";return}fw.style.display="";
-  txt("p",`${fr.name}: ${fr.n_findings} findings recorded.`,fb,"note");
+  txt("p",`${fr.name}: ${fr.n_findings} findings recorded.`,fb,"note");fgraph(fr);
   fr.findings.forEach(f=>{const d=txt("div","",fb,"finding");txt("div",`${f.id} · ${f.kind}: ${f.claim}`,d);
     txt("div",`generation ${f.gen} · evidence ${f.evidence.join(", ")} · ${f.gains} gained`+(f.best_gain!=null?`, best ${f.best_gain>=0?"+":""}${f.best_gain.toFixed(6)}`:"")+(f.links.length?" · "+f.links.map(l=>l.type+" "+l.to).join(", "):""),d,"m")});
+}
+function fgraph(r){
+  const box=document.getElementById("fgraph");box.replaceChildren();const G=r.graph||[];if(!G.length)return;
+  const W=Math.max(320,box.clientWidth),gmax=Math.max(1,...G.map(f=>f.gen)),gmin=Math.min(...G.map(f=>f.gen));
+  const per={};G.forEach(f=>{(per[f.gen]=per[f.gen]||[]).push(f)});const most=Math.max(...Object.values(per).map(a=>a.length));
+  const H=Math.max(220,Math.min(520,most*26+50)),L=24,R=24,T=16,B=28,pos={};
+  const X=g=>gmax===gmin?W/2:L+(W-L-R)*(g-gmin)/(gmax-gmin);
+  Object.entries(per).forEach(([g,a])=>a.forEach((f,i)=>{pos[f.id]=[X(+g),T+(H-T-B)*(i+0.5)/a.length]}));
+  const svg=el("svg",{width:W,height:H,viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"findings graph"},box);
+  for(let g=gmin;g<=gmax;g++){el("line",{x1:X(g),x2:X(g),y1:T,y2:H-B,stroke:css("--grid")},svg);
+    if(gmax-gmin<=12||g%2===0)el("text",{x:X(g),y:H-8,"text-anchor":"middle"},svg).textContent="g"+g}
+  G.forEach(f=>f.links.forEach(l=>{const a=pos[f.id],b=pos[l.to];if(!a||!b)return;const mx=(a[0]+b[0])/2,my=Math.min(a[1],b[1])-18;
+    el("path",{d:`M${a[0]},${a[1]}Q${mx},${my} ${b[0]},${b[1]}`,fill:"none",stroke:css("--axis"),"stroke-width":1.2},svg)}));
+  const col={works:css("--c-atlas"),fails:css("--c-journal"),mechanism:css("--c-control")};
+  G.forEach(f=>{const [x,y]=pos[f.id];
+    if(f.kind==="question")el("circle",{cx:x,cy:y,r:4.5,fill:css("--surface"),stroke:css("--ink2"),"stroke-width":2},svg);
+    else el("circle",{cx:x,cy:y,r:5,fill:col[f.kind]||css("--ink2"),stroke:css("--surface"),"stroke-width":2},svg);
+    const hit=el("circle",{cx:x,cy:y,r:12,fill:"transparent",tabindex:0},svg);
+    const rows=()=>[[f.id+" · "+f.kind,`generation ${f.gen} · ${f.n_ev} evidence · ${f.gains} gained`+(f.best_gain!=null?` · best ${f.best_gain>=0?"+":""}${f.best_gain.toFixed(5)}`:""),""],
+      [f.claim.length>200?f.claim.slice(0,200)+"…":f.claim,"",""]].concat(f.links.length?[[f.links.map(l=>l.type+" "+l.to).join(", "),"",""]]:[]);
+    hit.addEventListener("pointermove",e=>showTip(e.clientX,e.clientY,rows()));hit.addEventListener("pointerleave",hideTip);
+    hit.addEventListener("focus",()=>{const b=hit.getBoundingClientRect();showTip(b.right,b.top,rows())});hit.addEventListener("blur",hideTip)});
 }
 sel.addEventListener("change",showRun);
 function all(){curve();showRun()}all();let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(all,150)});

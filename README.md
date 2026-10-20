@@ -4,6 +4,21 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
+> **Helix v4 (October 20, 2026)** evolves whole programs instead of feature weights, keeps a population (a tree of
+> every program) instead of one champion, describes each result in detail, and tests whether **memory across
+> generations** helps: a control without memory, an appended and compacted journal, and **Atlas**, a structured
+> memory (log, tree of attempts, evidence-backed findings graph) inspired by Avy. The test problem is an open one: the
+> second autocorrelation inequality (best known 0.9626; nobody knows the true constant).
+>
+> ```bash
+> python -m helix4.run --condition atlas --gens 20 --out runs/v4/atlas-s1     # one run
+> nohup bash scripts/run_v4_jobs.sh > v4_jobs.log 2>&1 &                     # the overnight job (9 runs)
+> python -m helix4.report runs/v4 results/v4                                 # the results page
+> ```
+>
+> Start with [docs/V4_DESIGN.md](docs/V4_DESIGN.md) (what, why, and the reasoning behind it) and
+> [docs/V4_JOB.md](docs/V4_JOB.md) (running the job).
+
 > **Helix v3 (October 17, 2026)** rebuilds the engine around the same two loops, adding a Navigator over a map of approaches, checked predictions, probes that don't compete, novelty fingerprints and proof-by-certificate pruning. It runs on eight verifiable problems, and a meta loop evolves how Helix searches.
 >
 > ```bash

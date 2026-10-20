@@ -14,6 +14,11 @@
 #   FAKE=1 PUSH=0 GENS=2 bash scripts/run_v4_jobs.sh     # the whole job with a fake model, nothing pushed (a test)
 set -uo pipefail
 cd "$(dirname "$0")/.."
+# run from a snapshot: bash reads a script as it goes, so a `git pull` that changes this file mid-job (the job's own
+# pushes pull first) must not change what the running job does
+if [ -z "${V4_SNAPSHOT:-}" ]; then
+  mkdir -p runs && cp "$0" runs/.v4_job_snapshot.sh && V4_SNAPSHOT=1 exec bash runs/.v4_job_snapshot.sh "$@"
+fi
 PY="${PYTHON:-$(command -v python3 || command -v python)}"
 GENS="${GENS:-20}"
 SEEDS="${SEEDS:-1 2 3}"
@@ -109,7 +114,24 @@ one() {   # condition seed
   fi
 }
 
-( while sleep 2400; do progress; done ) &
+status() {   # one line: each run's generation and best score so far
+  "$PY" - "$ROOT_RUNS" <<'PY'
+import json, sys, time
+from pathlib import Path
+parts = []
+for d in sorted(p for p in Path(sys.argv[1]).glob("*-s*") if p.is_dir()):
+    h = [l for l in (d / "history.jsonl").read_text().splitlines() if l.strip()] if (d / "history.jsonl").exists() else []
+    if h:
+        j = json.loads(h[-1])
+        parts.append(f"{d.name} g{j['gen']} {j['best']:.5f}")
+print(time.strftime("== %H:%M progress: ") + (" | ".join(parts) or "starting"), flush=True)
+PY
+}
+
+( trap 'kill $SL 2>/dev/null; exit 0' TERM
+  n=0
+  while true; do sleep 600 & SL=$!; wait $SL; status; n=$((n + 1)); [ $((n % 4)) -eq 0 ] && progress; done
+) &   # a status line every 10 minutes; progress pushed every 40
 TICKER=$!
 trap 'kill $TICKER 2>/dev/null' EXIT
 
@@ -129,7 +151,7 @@ progress
 "$PY" - "$ROOT_RUNS" <<'PY'
 import json, sys
 from pathlib import Path
-for d in sorted(Path(sys.argv[1]).glob("*-s*")):
+for d in sorted(p for p in Path(sys.argv[1]).glob("*-s*") if p.is_dir()):
     s = d / "summary.json"
     if s.exists():
         j = json.loads(s.read_text())
