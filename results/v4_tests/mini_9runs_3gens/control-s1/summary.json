@@ -1,0 +1,43 @@
+{
+ "run": "control-s1",
+ "condition": "control",
+ "seed": 1,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8824351613788893,
+ "best_id": "p0017",
+ "best_n": 200000,
+ "best_lineage": "p0001 0.66667 -> p0005 0.88180 (+0.21513: The pure x^-1/2 profile has an unnecessary decaying tail of\u2026) -> p0012 0.88231 (+0.00051: Combine the parametric x^-0.5 family (Nelder-Mead on a,q) w\u2026) -> p0017 0.88244 (+0.00013: p0012 fixes the left exponent at -0.5 and only uses 1+a(1-x\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8822044992431765,
+  0.8823079703278441,
+  0.8824351613788893
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 23,
+ "tokens_in": 51601,
+ "tokens_out": 101919,
+ "memory": {},
+ "config": {
+  "condition": "control",
+  "seed": 1,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1313.6488361358643,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

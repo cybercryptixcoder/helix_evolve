@@ -1,0 +1,47 @@
+{
+ "run": "journal-s3",
+ "condition": "journal",
+ "seed": 3,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8581924416008009,
+ "best_id": "p0019",
+ "best_n": 120,
+ "best_lineage": "p0001 0.66667 -> p0003 0.80490 (+0.13823: Replaced constant output with a scoring function and a mult\u2026) -> p0013 0.85619 (+0.05129: Added analytic gradient + ADAM polish interleaved with hill\u2026) -> p0019 0.85819 (+0.00200: p0013's 95% zeros mean its active support (about 6 indices)\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8049002926507203,
+  0.8561923395243319,
+  0.8581924416008009
+ ],
+ "programs": 19,
+ "valid": 17,
+ "calls": 21,
+ "tokens_in": 51819,
+ "tokens_out": 45405,
+ "memory": {
+  "journal_chars": 13539,
+  "compactions": 0,
+  "summary_upto_gen": 0
+ },
+ "config": {
+  "condition": "journal",
+  "seed": 3,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1191.0187439918518,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

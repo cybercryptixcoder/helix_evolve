@@ -1,0 +1,49 @@
+{
+ "run": "atlas-s3",
+ "condition": "atlas",
+ "seed": 3,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8638776802906944,
+ "best_id": "p0017",
+ "best_n": 2400,
+ "best_lineage": "p0001 0.66667 -> p0002 0.81225 (+0.14558: Added exact R evaluator, seeded with several smooth shapes,\u2026) -> p0009 0.85512 (+0.04287: R = ||g||_2^2/(||g||_1||g||_inf) with g=f*f is largest when\u2026) -> p0017 0.86388 (+0.00876: p0009 stopped at N=1500 after 4.2 s with beta capped at 512\u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.812249236554332,
+  0.8551220194989738,
+  0.8638776802906944
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 26,
+ "tokens_in": 118459,
+ "tokens_out": 59604,
+ "memory": {
+  "findings": 18,
+  "supported": 12,
+  "refuted": 2,
+  "mixed": 1,
+  "links": 23
+ },
+ "config": {
+  "condition": "atlas",
+  "seed": 3,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1346.0290625095367,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}

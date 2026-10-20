@@ -1,0 +1,47 @@
+{
+ "run": "journal-s2",
+ "condition": "journal",
+ "seed": 2,
+ "gens": 3,
+ "problem": "ac2",
+ "budget": 20.0,
+ "best": 0.8381879318809361,
+ "best_id": "p0019",
+ "best_n": 200,
+ "best_lineage": "p0001 0.66667 -> p0007 0.80748 (+0.14082: Replaced constant seed with projected gradient ascent on R \u2026) -> p0008 0.83790 (+0.03042: Added multi-resolution resampling of start, momentum gradie\u2026) -> p0019 0.83819 (+0.00028: After exact-R selection is restored, p0008's momentum loop \u2026)",
+ "best_by_gen": [
+  0.6666666666666666,
+  0.8368035958244842,
+  0.8379036250348411,
+  0.8381879318809361
+ ],
+ "programs": 19,
+ "valid": 18,
+ "calls": 21,
+ "tokens_in": 55125,
+ "tokens_out": 59550,
+ "memory": {
+  "journal_chars": 13290,
+  "compactions": 0,
+  "summary_upto_gen": 0
+ },
+ "config": {
+  "condition": "journal",
+  "seed": 2,
+  "gens": 3,
+  "deep": 3,
+  "wide": 3,
+  "budget": 20.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "seconds_this_session": 1076.6478629112244,
+ "gens_done": 3,
+ "stopped_by_deadline_at": null
+}
