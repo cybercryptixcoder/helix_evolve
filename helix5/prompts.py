@@ -9,13 +9,13 @@ CODE_RULES = """
 Rules that matter for the score:
 - Use the whole budget. Keep improving until about 90% of budget_seconds of CPU (check time.process_time()), for
   example with restarts or perturbations from the best found so far. A program that stops early wastes its budget.
-- Keep the best construction found anywhere in the run (any restart, any resolution) and return that one, never a
+- Keep the best construction found anywhere in the run (any restart, any stage) and return that one, never a
   later, worse one. When `start` is given, never return something worse than `start` unless told to start over.
 - The program is stopped when its CPU time passes 1.25 x budget_seconds + 10 s. Call keep_best(h) (predefined, no \
 import needed) each time your best construction improves (not every iteration): if the program is stopped, the \
 construction it last kept is scored instead of nothing. Check the clock inside long loops, and before starting a \
 stage that may not finish.
-- For each stage (a schedule, a resolution level, a restart, a polish), print one line that starts with "stage": \
+- For each stage of the program, print one line that starts with "stage": \
 stage <name>: <score before> -> <score after>, <seconds> s. These lines are always shown back to the team, so they \
 can see where the budget goes and which stage pays. Print a few other short progress lines as well."""
 
@@ -154,10 +154,10 @@ LOOKUP_ASK = """## Before you decide: look things up (optional)
 
 You can look up to {k} things in full before deciding: a notebook step (S12), an agenda thread with its full version \
 history (A3), a belief with its version history (B2), a program (p0040: plan, diff, code, result, children), or a \
-search over every experiment and step ("search: penalty continuation"). Look up only what you need.
+search over every experiment and step ("search: <words>"). Look up only what you need.
 Reply with one JSON object and nothing else:
 ```json
-{{"lookups": ["S12", "A3", "search: resolution ladder"], "why": "one sentence"}}
+{{"lookups": ["S12", "A3", "search: <words>"], "why": "one sentence"}}
 ```
 or {{"lookups": []}} if you have what you need."""
 
