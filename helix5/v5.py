@@ -176,9 +176,14 @@ class Researcher:
             st = "supported" if gains and gains >= bad else "mixed" if gains else "contradicted" if bad else "untested"
         return f"{st}: {gains} gained, {bad} didn't"
 
+    LIMIT_WORDS = re.compile(r"\b(optimal|optimum|maximum|maximal|ceiling|upper bound|supremum|impossible|cannot|"
+                             r"can't|limit|best possible|global)\b", re.I)
+
     def belief_line(self, b, n=260):
+        flag = (" [a claim about a limit: a hypothesis, not a fact; the true maximum is unknown]"
+                if self.LIMIT_WORDS.search(b["statement"] or "") else "")
         return (f"{b['id']} [{b['kind']} · {b['confidence']} confidence · {self.belief_status(b)} · version "
-                f"{len(b['versions'])}] {short(b['statement'], n)} (evidence: {', '.join(b['evidence'][:6]) or 'none'})")
+                f"{len(b['versions'])}] {short(b['statement'], n)} (evidence: {', '.join(b['evidence'][:6]) or 'none'}){flag}")
 
     def theory_block(self):
         act = [b for b in self.beliefs.values() if b["active"]]
@@ -462,6 +467,22 @@ class Researcher:
         (step id, applied lines, rejected lines, ref map for items added in this step)."""
         step_id = self.next_id("S", self.steps)
         applied, rejected, refmap = [], [], {}
+        # refs ("n1") name items added in this same reply: give them their ids first, so that any text mentioning
+        # them (plans, experiments) can be rewritten to the real ids
+        nxt = int(self.next_id("A", self.items)[1:])
+        for op in js.get("agenda") or []:
+            if isinstance(op, dict) and op.get("op") in ("add", "branch") and op.get("purpose"):
+                op["_id"] = f"A{nxt}"                      # every add gets its id up front: no collisions
+                nxt += 1
+                if op.get("ref"):
+                    refmap[str(op["ref"])] = op["_id"]
+
+        def sub(t):
+            t = "" if t is None else str(t)
+            for r, iid in refmap.items():
+                t = re.sub(rf"\b{re.escape(r)}\b", iid, t)
+            return t
+
         for op in js.get("agenda") or []:
             if not isinstance(op, dict) or op.get("op") not in ITEM_OPS:
                 rejected.append(f"agenda op {short(op, 80)}")
@@ -476,10 +497,9 @@ class Researcher:
                 if not purpose:
                     rejected.append("agenda add without a purpose")
                     continue
-                iid = self.next_id("A", self.items)
-                ev.update(id=iid, purpose=purpose, plan=short(op.get("plan"), 1200), **({"from": op["from"]} if kindop == "branch" else {}))
-                if op.get("ref"):
-                    refmap[str(op["ref"])] = iid
+                iid = op.get("_id") or self.next_id("A", self.items)
+                ev.update(id=iid, purpose=sub(purpose), plan=short(sub(op.get("plan")), 1200),
+                          **({"from": op["from"]} if kindop == "branch" else {}))
                 applied.append(f"{kindop} {iid}: {short(purpose, 100)}")
             else:
                 iid = str(op.get("id"))
@@ -490,7 +510,7 @@ class Researcher:
                     if not (op.get("plan") or op.get("purpose")):
                         rejected.append(f"revise {iid} with nothing to change")
                         continue
-                    ev.update(plan=short(op.get("plan"), 1200), purpose=short(op.get("purpose"), 600))
+                    ev.update(plan=short(sub(op.get("plan")), 1200), purpose=short(sub(op.get("purpose")), 600))
                 if kindop == "done":
                     ev["outcome"] = short(op.get("outcome"), 600)
                 ev["id"] = iid
@@ -543,8 +563,13 @@ class Researcher:
                 if prior:
                     auto.append(prior[-1])
         follows = list(dict.fromkeys(auto + declared))
+        for e in js.get("experiments") or []:
+            if isinstance(e, dict):
+                for k in ("hypothesis", "change", "prediction", "if_gain", "if_not"):
+                    if e.get(k):
+                        e[k] = sub(e[k])
         step = {"op": "step", "id": step_id, "gen": gen, "kind": kind, "focus": focus, "follows": follows,
-                "declared": declared, "thinking": short(js.get("thinking"), 3000), "gist": short(js.get("gist"), 300),
+                "declared": declared, "thinking": short(sub(js.get("thinking")), 3000), "gist": short(sub(js.get("gist")), 300),
                 "applied": applied, "rejected": rejected, "lookups": js.get("_lookups", [])}
         self._append("notebook", step)
         self.steps[step_id] = {**step, "eids": [], "exps": []}
