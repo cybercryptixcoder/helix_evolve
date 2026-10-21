@@ -1,0 +1,5 @@
+21:28:38 [journal-s2] gen 0: Code Zero scores 0.666667
+21:35:52 [journal-s2] gen 1: best 0.849423 (p0003, deep); deep 0.849423 (3/3 gained), wide 0.797298 (3/3 gained); 434 s
+21:44:52 [journal-s2] gen 2: best 0.862876 (p0012, deep); deep 0.862876 (3/3 gained), wide 0.860970 (3/3 gained); 540 s
+21:50:38 [journal-s2] gen 3: best 0.866131 (p0018, deep); deep 0.866131 (3/3 gained), wide 0.859245 (3/3 gained); 346 s
+21:55:08 [journal-s2] gen 4: best 0.878009 (p0025, deep); deep 0.878009 (3/3 gained), wide 0.866551 (3/3 gained); 270 s

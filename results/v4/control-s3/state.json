@@ -1,0 +1,20 @@
+{
+ "gen_done": 2,
+ "config": {
+  "condition": "control",
+  "seed": 3,
+  "gens": 20,
+  "deep": 3,
+  "wide": 3,
+  "budget": 30.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "t": 1792547675.1138113
+}

@@ -1,0 +1,5 @@
+21:29:15 [atlas-s3] gen 0: Code Zero scores 0.666667
+21:34:56 [atlas-s3] gen 1: best 0.864816 (p0005, wide); deep 0.840448 (3/3 gained), wide 0.864816 (3/3 gained); 341 s
+21:43:53 [atlas-s3] gen 2: best 0.880755 (p0012, deep); deep 0.880755 (3/3 gained), wide 0.868300 (3/3 gained); 537 s
+21:53:36 [atlas-s3] gen 3: best 0.881554 (p0015, deep); deep 0.881554 (2/3 gained), wide 0.880875 (3/3 gained); 583 s
+22:03:31 [atlas-s3] gen 4: best 0.881681 (p0020, wide); deep 0.881645 (3/3 gained), wide 0.881681 (3/3 gained); 596 s
