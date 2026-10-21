@@ -9,7 +9,7 @@
 #   results/v4/VERIFICATION.md; at the end it does the same for v4.5/v5 (results/v5/VERIFICATION.md).
 # - Safe to re-run at any time: finished runs are skipped, unfinished ones resume from their last generation.
 # - Gentle on a small shared machine: programs are evaluated at most EVAL_SLOTS at a time machine-wide (default 2,
-#   one per core), at low priority, only with 600 MB free; a deadline (HOURS after the first start, default 7) stops
+#   one per core), at low priority, only with 600 MB free; a deadline (HOURS after the first start, default 6) stops
 #   every run after its current generation. Each finished run is copied to results/v5/<run>/ and pushed (commits as
 #   Shreyas Naik); progress and the report are pushed every 40 minutes.
 #
@@ -26,7 +26,7 @@ GENS="${GENS:-20}"
 SEEDS="${SEEDS:-1 2 3}"
 CONDITIONS="${CONDITIONS:-v5 v45}"
 BUDGET="${BUDGET:-30}"
-HOURS="${HOURS:-7}"
+HOURS="${HOURS:-6}"
 MIN_FREE_MB="${MIN_FREE_MB:-1200}"
 PUSH="${PUSH:-1}"
 FAKE="${FAKE:-0}"
