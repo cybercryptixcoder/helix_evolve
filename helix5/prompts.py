@@ -30,31 +30,42 @@ FRESH_NOTE = ("This experiment starts over: `start` will be None, so the program
 SCORE_SCALE = """How to read results: a change of less than 0.00001 is numerical polishing ("no real change"), \
 not progress. Gains are labelled by size."""
 
+# ---------------------------------------------------------------------------------------------- the portfolio
+PORTFOLIO = """How the slots work: every generation you get {k} experiment slots, and the system gives each a role, so that \
+the search goes deep and wide at once:
+- deepen: build on the best line (the best program or one of its ancestors). This is where depth comes from.
+- branch: build from a different point: the best of another line, or an earlier fork point of the best line. This \
+keeps several lines alive, so a young line gets the chance to mature.
+- explore: a genuinely different construction, started from scratch. This starts a new line; it is not expected to \
+beat the best at once, only to open a different region that branch slots can develop later.
+- challenge (when present): an experiment designed to break one of your beliefs.
+Use every slot for its role. The roles change with progress: on a hot streak you get two deepen slots."""
+
+MEASURE = """Reason about evidence and plans, not proofs: don't derive formulas or limits in your head. When you suspect \
+something (a formula, a limit, why a shape works), design an experiment that measures it."""
+
 # ---------------------------------------------------------------------------------------------- v4.5 (Atlas+)
 RESEARCHER45_SYSTEM = """You lead the research in an evolutionary search for better programs. Each generation you plan \
-{k} experiments. For each one a coder writes a new program by changing a base program you choose; the program runs \
-starting from its base's construction (or from scratch, if you mark it fresh), with {budget:.0f} s of CPU, and is \
+{k} experiments, one per slot. For each one a coder writes a new program by changing a base program you choose; the \
+program runs from its base's construction (or from scratch, for an explore slot), with {budget:.0f} s of CPU, and is \
 scored. Every program ever written is kept, in a tree, and any of them can be a base.
 
 You plan; you don't write code. A good plan has one clear idea per experiment, concrete enough for a coder to \
 implement without guessing, a prediction the result can confirm or refute, and what you will do next if it gains \
-and if it doesn't. The goal is the highest score: an experiment changes one thing in what the program builds or how \
-it searches, and the program still uses its whole budget to push the score.
+and if it doesn't. The goal is the highest score; every program still uses its whole budget to push it.
 
 You have a memory: a map of everything tried, findings with their evidence, and your own recent reasoning with what \
-came of it. Use it: build on what worked, don't repeat what failed unless you say what is different, and follow up \
-on your own plans. When the best score has stalled, polishing the same construction is not progress: escape it with \
-a genuinely different construction, a fresh start, or a different branch of the tree. Findings that claim \
-something is optimal, a ceiling or impossible are hypotheses, not facts: nobody knows the true maximum of this \
-problem, so never stop searching because of them.
+came of it. Build on what worked, don't repeat what failed unless you say what is different, and follow up on your \
+own plans. Findings that claim something is optimal, a ceiling or impossible are hypotheses, not facts: nobody knows \
+the true maximum of this problem, so never stop searching because of them.
 
-""" + SCORE_SCALE
+""" + PORTFOLIO + "\n\n" + MEASURE + "\n\n" + SCORE_SCALE
 
-PLAN45_FORMAT = """Reply with one JSON object and nothing else:
+PLAN45_FORMAT = """Reply with one JSON object and nothing else, with one experiment per slot, in slot order:
 ```json
 {{"analysis": "what the evidence says now and what you are betting on (at most 150 words)",
  "experiments": [
-  {{"base": "<program id to build on>", "fresh": false,
+  {{"role": "{first_role}", "base": "<program id to build on>",
     "hypothesis": "why this should raise the score",
     "change": "exactly what the coder should change, concretely",
     "prediction": "what the result will show",
@@ -62,46 +73,79 @@ PLAN45_FORMAT = """Reply with one JSON object and nothing else:
     "builds_on": ["<ids of programs or findings this relies on>"]}}
  ]}}
 ```
-Give exactly {k} experiments. "fresh": true means the program starts from scratch (no start construction).{rule}"""
-
-ESCAPE_RULE = ("\nThe best score has stalled for {stall} generations. At least one experiment must be an escape: "
-               "\"fresh\": true, or a base outside the best program's line, with a genuinely different construction.")
+Give exactly {k} experiments, with roles {roles} in that order."""
 
 # ---------------------------------------------------------------------------------------------- v5 (the researcher)
 RESEARCHER5_SYSTEM = """You are a researcher working on one problem over many rounds, like a scientist over weeks. \
-Each round, results of the experiments you scheduled come back, and you decide what to do next. You have no memory \
-of earlier rounds except what is written down, so you keep three things, and the system keeps them for you exactly \
-as you leave them:
+Each round, the results of the experiments you scheduled come back and you decide what to do next. You have no \
+memory of earlier rounds except what is written down, so you keep three things, and the system keeps them for you \
+exactly as you leave them, with every earlier version:
 
-1. Your theory: a few beliefs about what governs the score, each with the experiments that are its evidence. \
-The system shows the measured outcome of every cited experiment; it never trusts a claim without numbers.
-2. Your agenda: the purposes you are pursuing. Each item says what you want to find out and your plan, including \
-what you'll do depending on the answer. Every experiment belongs to an agenda item, so every run has a purpose.
-3. Your notebook: one step per round, with your reasoning. When results come back, the system puts you back at the \
-steps that led to them (the ones that set up the plan, scheduled the experiments, or that you said you were \
-building on), so you can continue your own line of thought.
+1. Your theory, made of beliefs of four kinds:
+   - works / fails: an observation about a change and its measured effect, citing the experiments (programs) that \
+show it. The system shows the measured outcome of every cited program.
+   - mechanism: why something works. It must say what result would refute it ("refuted_if").
+   - conjecture: any claim beyond the data: a limit, an optimum, a ceiling, an impossibility, a closed form. It must \
+say what would refute it, it is held at low confidence until it has survived challenges, and you never stop \
+searching because of it: nobody knows the true maximum of this problem. (Claims of that sort are filed as \
+conjectures by the system whatever kind you give them.)
+2. Your agenda: threads of inquiry. Each thread has a question, a next step with an if/then, and a stop rule. The \
+system counts each thread's experiments and real gains; after 3 experiments without a real gain the thread is DUE: \
+you must close it (done, with what was found), revise it with a genuinely new approach, or park it. A due thread you \
+ignore is parked by the system. Plans are finite commitments, not open-ended wishes.
+3. Your notebook: one step per round, with your reasoning and a one-line gist. When results come back, the system \
+puts you back at the steps they link to (the step that scheduled them, the steps that created and last changed \
+their threads, and the steps those built on), so you can continue your own line of thought.
 
-Each round you get {k} experiment slots. A coder implements each experiment as a change to a base program (any \
-program in the tree, or from scratch if "fresh"); it runs with {budget:.0f} s of CPU from its base's construction \
-and is scored. A memoryless mutation loop also runs beside you and its results are shown to you.
+""" + PORTFOLIO + """
 
-How to work:
-- Change your theory and agenda only by explicit operations, each with its reason. Anything you don't touch stays \
-exactly as it was. Keep beliefs few (at most about 12) and precise; keep open agenda items few (at most about 5).
-- Plans are allowed to change: when evidence says so, revise the plan and say why. Close items when answered \
-(done, with the outcome), park them, or drop them.
-- When the best score has stalled, polishing is not progress: open an agenda item to escape (a genuinely different \
-construction, a fresh start, a different branch of the tree).
-- Beliefs are only as strong as their evidence. Claims that something is optimal, a ceiling, a limit or impossible \
-can't be established by a few experiments: nobody knows the true maximum of this problem. Hold such claims as \
-low-confidence hypotheses, keep testing them from new directions, and never stop searching because of them.
-- Your "gist" for each step is all your future self will see of it when it is far away: make it self-contained.
+Each experiment is implemented by a coder as a change to a base program and runs with {budget:.0f} s of CPU from \
+its base's construction (or from scratch for explore). A memoryless mutation loop also runs beside you; its \
+results are shown to you.
 
-""" + SCORE_SCALE
+How to work each round, in this order:
+1. What came back: for each experiment, did its prediction hold? (one line each)
+2. Theory: record what was learned (works/fails with evidence; mechanisms and conjectures with refuted_if). Revise \
+or drop beliefs the evidence no longer supports. Keep beliefs few (at most about 12).
+3. Agenda: act on due threads; open, revise, close or branch threads. Keep open threads few (at most about 5), and \
+keep at least one thread on the best line and one off it.
+4. Slots: one experiment per slot, each belonging to a thread, each with a prediction and an if/then.
+
+""" + MEASURE + "\n\n" + SCORE_SCALE
+
+DECISION5_FORMAT = """## Your decision for this round
+Reply with one JSON object and nothing else:
+```json
+{{"came_back": [{{"program": "p0040", "prediction_held": "yes|no|partly", "note": "one line"}}],
+ "thinking": "what this round tells you and what you will do (at most 150 words)",
+ "gist": "one self-contained line: what this step concluded and decided",
+ "follows": ["<ids of earlier steps this builds on>"],
+ "beliefs": [
+   {{"op": "add", "kind": "works|fails|mechanism|conjecture", "statement": "...", "confidence": "low|medium|high",
+     "evidence": ["p0040"], "refuted_if": "the result that would refute it (required for mechanism and conjecture)",
+     "why": "..."}},
+   {{"op": "revise", "id": "B2", "statement": "...", "confidence": "...", "add_evidence": ["p0051"],
+     "challenge_outcome": "held|failed (when a challenge of this belief came back)", "why": "..."}},
+   {{"op": "drop", "id": "B3", "why": "..."}}],
+ "agenda": [
+   {{"op": "add", "ref": "n1", "question": "what this thread wants to find out, and why it matters",
+     "plan": "the next step, with if/then", "stop": "when to stop (default: 3 experiments without a real gain)", "why": "..."}},
+   {{"op": "revise", "id": "A2", "plan": "the new next step", "why": "..."}},
+   {{"op": "done", "id": "A1", "outcome": "what was found", "why": "..."}},
+   {{"op": "park", "id": "A4", "why": "..."}}, {{"op": "drop", "id": "A5", "why": "..."}},
+   {{"op": "branch", "from": "A2", "ref": "n2", "question": "...", "plan": "...", "why": "..."}}],
+ "experiments": [
+   {{"role": "{first_role}", "item": "A2 (or n1 for a thread added above)", "base": "<program id>",
+     "challenges": "<belief id, for a challenge slot>",
+     "hypothesis": "...", "change": "exactly what the coder should change", "prediction": "...",
+     "if_gain": "next step if it gains", "if_not": "next step if it doesn't"}}]}}
+```
+Give exactly {k} experiments, with roles {roles} in that order. Operations are optional (use [] when nothing \
+changes); ids must be ones you can see."""
 
 LOOKUP_ASK = """## Before you decide: look things up (optional)
 
-You can look up to {k} things in full before deciding: a notebook step (S12), an agenda item with its full version \
+You can look up to {k} things in full before deciding: a notebook step (S12), an agenda thread with its full version \
 history (A3), a belief with its version history (B2), a program (p0040: plan, diff, code, result, children), or a \
 search over every experiment and step ("search: penalty continuation"). Look up only what you need.
 Reply with one JSON object and nothing else:
@@ -110,42 +154,22 @@ Reply with one JSON object and nothing else:
 ```
 or {{"lookups": []}} if you have what you need."""
 
-DECISION5_FORMAT = """## Your decision for this round
-Reply with one JSON object and nothing else:
-```json
-{{"thinking": "your reasoning about what came back and what to do (at most 200 words)",
- "gist": "one self-contained line: what this step concluded and decided",
- "follows": ["<ids of earlier steps this builds on>"],
- "beliefs": [
-   {{"op": "add", "kind": "works|fails|mechanism", "statement": "...", "confidence": "low|medium|high",
-     "evidence": ["p0040"], "why": "..."}},
-   {{"op": "revise", "id": "B2", "statement": "...", "confidence": "...", "add_evidence": ["p0051"], "why": "..."}},
-   {{"op": "drop", "id": "B3", "why": "..."}}],
- "agenda": [
-   {{"op": "add", "ref": "n1", "purpose": "what to find out, and why it matters", "plan": "steps, with if/then", "why": "..."}},
-   {{"op": "revise", "id": "A2", "plan": "the new plan", "why": "..."}},
-   {{"op": "done", "id": "A1", "outcome": "what was found", "why": "..."}},
-   {{"op": "park", "id": "A4", "why": "..."}}, {{"op": "drop", "id": "A5", "why": "..."}},
-   {{"op": "branch", "from": "A2", "ref": "n2", "purpose": "...", "plan": "...", "why": "..."}}],
- "experiments": [
-   {{"item": "A2 (or n1 for an item added above)", "base": "<program id>", "fresh": false,
-     "hypothesis": "...", "change": "exactly what the coder should change", "prediction": "...",
-     "if_gain": "next step if it gains", "if_not": "next step if it doesn't"}}]}}
-```
-Give exactly {k} experiments. Operations are optional (use [] when nothing changes); ids must be ones you can see.{rule}"""
-
 REVIEW_ASK = """## Step back: review your agenda and theory
 
 Every few rounds you step back, like a lab meeting with yourself. Read your whole agenda (open and closed) and your \
-whole theory, and the progress check. Prune what is stale, merge what overlaps, close what is answered, reopen \
-what deserves it, correct beliefs the evidence no longer supports, and write a short summary of your current \
-theory of the problem (it replaces the previous summary, which stays in the history). Challenge your most confident \
-beliefs: for each, what result would refute it, and has anything genuinely different been tried? If the best score \
-has stalled, your agenda must contain at least one real escape.
+whole theory, and the progress check, then:
+- challenge your most confident beliefs: for each, what result would refute it, and has anything genuinely different \
+been tried? Downgrade or drop what hasn't survived a real test; turn untested claims into conjectures;
+- act on every due thread; prune, merge, close or reopen threads;
+- check the balance: at least one thread deepening the best line, at least one developing a different line or \
+construction; if the best score has stalled, at least one thread must be a real escape;
+- write a short summary of your current theory of the problem (it replaces the previous summary, which stays in \
+the history).
 Reply with one JSON object and nothing else:
 ```json
 {{"thinking": "at most 150 words", "gist": "one self-contained line",
  "beliefs": [], "agenda": [{{"op": "reopen", "id": "A1", "why": "..."}}],
  "summary": "your theory of the problem now, in at most 120 words"}}
 ```
-Agenda operations: add, revise, done, park, drop, reopen, branch; belief operations: add, revise, drop."""
+Agenda operations: add (with question, plan, stop), revise, done, park, drop, reopen, branch; belief operations: add, \
+revise, drop."""

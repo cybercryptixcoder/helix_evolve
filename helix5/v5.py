@@ -34,7 +34,13 @@ from helix5 import prompts as P
 from helix5.evaluate import GAIN_EPS, gain_label
 from helix5.run import STALL_EPS
 
-KINDS = ("works", "fails", "mechanism")
+DEFAULT_STOP = "3 experiments without a real gain"
+DUE_AFTER = 3
+
+KINDS = ("works", "fails", "mechanism", "conjecture")
+# words that make a statement a claim about the problem's limits (optimum, ceiling, impossibility, closed form)
+LIMIT_WORDS = re.compile(r"\b(optimal|optimum|optimality|maximum|supremum|ceiling|upper bound|best possible|"
+                         r"impossible|global(ly)? (optimum|maximum|optimal)|closed[- ]form|true max)\b", re.I)
 ITEM_OPS = ("add", "revise", "done", "park", "drop", "reopen", "branch")
 
 
@@ -106,11 +112,12 @@ class Researcher:
 
     def _apply_item(self, ev):
         op, iid = ev["op"], ev["id"]
-        ver = {k: ev.get(k) for k in ("gen", "step", "op", "purpose", "plan", "outcome", "why", "from")}
+        ver = {k: ev.get(k) for k in ("gen", "step", "op", "purpose", "plan", "stop", "outcome", "why", "from")}
         if op in ("add", "branch"):
             self.items[iid] = {"id": iid, "purpose": ev.get("purpose", ""), "plan": ev.get("plan", ""), "status": "open",
-                               "outcome": "", "created_gen": ev["gen"], "created_step": ev["step"], "from": ev.get("from"),
-                               "touched": [ev["step"]], "versions": [ver]}
+                               "stop": ev.get("stop") or DEFAULT_STOP, "outcome": "", "created_gen": ev["gen"],
+                               "created_step": ev["step"], "from": ev.get("from"),
+                               "touched": [ev["step"]] if ev["step"] != "system" else [], "versions": [ver]}
             return
         it = self.items.get(iid)
         if it is None:
@@ -129,7 +136,7 @@ class Researcher:
         elif op == "reopen":
             it["status"] = "open"
         it["versions"].append(ver)
-        if ev["step"] not in it["touched"]:
+        if ev["step"] != "system" and ev["step"] not in it["touched"]:
             it["touched"].append(ev["step"])
 
     def _apply_belief(self, ev):
@@ -138,20 +145,23 @@ class Researcher:
             self.summaries.append(ev)
             return
         bid = ev["id"]
-        ver = {k: ev.get(k) for k in ("gen", "step", "op", "statement", "confidence", "evidence", "add_evidence", "why")}
+        ver = {k: ev.get(k) for k in ("gen", "step", "op", "kind", "statement", "confidence", "evidence", "add_evidence",
+                                      "refuted_if", "challenge_outcome", "why")}
         if op == "add":
             self.beliefs[bid] = {"id": bid, "kind": ev.get("kind", "mechanism"), "statement": ev.get("statement", ""),
                                  "confidence": ev.get("confidence", "medium"), "evidence": list(ev.get("evidence") or []),
-                                 "active": True, "versions": [ver]}
+                                 "refuted_if": ev.get("refuted_if", ""), "challenges": [], "active": True, "versions": [ver]}
             return
         b = self.beliefs.get(bid)
         if b is None:
             return
         if op == "revise":
-            for k in ("statement", "confidence"):
+            for k in ("statement", "confidence", "refuted_if", "kind"):
                 if ev.get(k):
                     b[k] = ev[k]
             b["evidence"] += [p for p in (ev.get("add_evidence") or []) if p not in b["evidence"]]
+            if ev.get("challenge_outcome") in ("held", "failed"):
+                b["challenges"].append({"gen": ev["gen"], "outcome": ev["challenge_outcome"], "why": ev.get("why", "")})
         elif op == "drop":
             b["active"] = False
         b["versions"].append(ver)
@@ -176,14 +186,63 @@ class Researcher:
             st = "supported" if gains and gains >= bad else "mixed" if gains else "contradicted" if bad else "untested"
         return f"{st}: {gains} gained, {bad} didn't"
 
-    LIMIT_WORDS = re.compile(r"\b(optimal|optimum|maximum|maximal|ceiling|upper bound|supremum|impossible|cannot|"
-                             r"can't|limit|best possible|global)\b", re.I)
+    def effective_confidence(self, b):
+        """Conjectures stay at low confidence until they have survived two challenges."""
+        if b["kind"] == "conjecture" and sum(1 for c in b["challenges"] if c["outcome"] == "held") < 2:
+            return "low"
+        return b["confidence"]
+
+    def challenged_by(self, bid):
+        return [p for p in self.run.archive.programs.values() if p.plan and p.plan.get("challenges") == bid]
 
     def belief_line(self, b, n=260):
-        flag = (" [a claim about a limit: a hypothesis, not a fact; the true maximum is unknown]"
-                if self.LIMIT_WORDS.search(b["statement"] or "") else "")
-        return (f"{b['id']} [{b['kind']} · {b['confidence']} confidence · {self.belief_status(b)} · version "
-                f"{len(b['versions'])}] {short(b['statement'], n)} (evidence: {', '.join(b['evidence'][:6]) or 'none'}){flag}")
+        parts = [b["kind"], f"{self.effective_confidence(b)} confidence"]
+        if b["kind"] in ("works", "fails"):
+            parts.append(self.belief_status(b))
+        ch = self.challenged_by(b["id"])
+        held = sum(1 for c in b["challenges"] if c["outcome"] == "held")
+        failed = sum(1 for c in b["challenges"] if c["outcome"] == "failed")
+        parts.append(f"challenged {len(ch)}x" + (f" (held {held}, failed {failed})" if ch or b["challenges"] else ""))
+        parts.append(f"version {len(b['versions'])}")
+        line = f"{b['id']} [{' · '.join(parts)}] {short(b['statement'], n)} (evidence: {', '.join(b['evidence'][:6]) or 'none'})"
+        if b.get("refuted_if"):
+            line += f"\n      refuted if: {short(b['refuted_if'], 200)}"
+        return line
+
+    def challenge_candidates(self):
+        """Active mechanisms and conjectures, least challenged and most confident first."""
+        rank = {"high": 0, "medium": 1, "low": 2}
+        act = [b for b in self.beliefs.values() if b["active"] and b["kind"] in ("mechanism", "conjecture")]
+        return sorted(act, key=lambda b: (len(self.challenged_by(b["id"])), rank.get(b["confidence"], 1), b["id"]))
+
+    def adjust_roles(self, gen, roles):
+        """Every `challenge_every` rounds, the explore slot (or the last slot) becomes a challenge of a belief, if any
+        mechanism or conjecture has not been challenged yet."""
+        every = self.run.cfg.challenge_every
+        if gen > 1 and every and gen % every == 0 and any(not self.challenged_by(b["id"]) for b in self.challenge_candidates()):
+            i = len(roles) - 1 - roles[::-1].index("explore") if "explore" in roles else len(roles) - 1
+            roles = list(roles)
+            roles[i] = "challenge"
+        return roles
+
+    def thread_stats(self, it):
+        ps = sorted([p for p in self.run.archive.programs.values() if p.plan and p.plan.get("item") == it["id"]
+                     and p.role == "deep"], key=lambda p: (p.gen, p.id))
+        gains = [p for p in ps if p.valid and ((p.delta is not None and p.delta >= GAIN_EPS)
+                                               or (p.delta is None and p.score is not None and p.score >= self.line_best(p)))]
+        since = 0
+        for p in reversed(ps):
+            if p in gains:
+                break
+            since += 1
+        ok = [p for p in ps if p.valid]
+        return {"n": len(ps), "gains": len(gains), "since_gain": since, "due": since >= DUE_AFTER,
+                "best": max(ok, key=lambda p: p.score) if ok else None}
+
+    def line_best(self, p):
+        """For a fresh start (no delta): it counts as a gain only if it beats every program made before it."""
+        before = [q.score for q in self.run.archive.valid() if q.gen < p.gen]
+        return max(before) if before else 0
 
     def theory_block(self):
         act = [b for b in self.beliefs.values() if b["active"]]
@@ -202,21 +261,28 @@ class Researcher:
         return ps
 
     def agenda_block(self):
-        out = ["## Your agenda"]
+        out = ["## Your agenda (threads)"]
         opened = [it for it in self.items.values() if it["status"] == "open"]
+        due = []
         for it in opened:
-            ps = self.item_results(it)
-            ok = [p for p in ps if p.valid]
-            best = max(ok, key=lambda p: p.score) if ok else None
-            out.append(f"{it['id']} [open, since gen {it['created_gen']}, {len(ps)} experiments"
-                       + (f", best {best.score:.6f} ({best.id})" if best else "") + f", version {len(it['versions'])}]"
-                       f"\n   purpose: {short(it['purpose'], 260)}\n   plan: {short(it['plan'], 420)}")
+            st = self.thread_stats(it)
+            flag = ""
+            if st["due"]:
+                due.append(it["id"])
+                flag = (f"  <- DUE: {st['since_gain']} experiments without a real gain; close it (done), revise it with "
+                        f"a genuinely new approach, or park it this round, or the system parks it")
+            out.append(f"{it['id']} [open, since gen {it['created_gen']}, {st['n']} experiments, {st['gains']} real gains"
+                       + (f", best {st['best'].score:.6f} ({st['best'].id})" if st["best"] else "")
+                       + f", version {len(it['versions'])}]{flag}"
+                       f"\n   question: {short(it['purpose'], 260)}\n   plan: {short(it['plan'], 420)}"
+                       f"\n   stop: {short(it.get('stop') or DEFAULT_STOP, 160)}")
         if not opened:
             out.append("(no open items)")
         closed = [it for it in self.items.values() if it["status"] != "open"][-8:]
         for it in closed:
             out.append(f"{it['id']} [{it['status']}] {short(it['purpose'], 120)}"
                        + (f" -> {short(it['outcome'], 140)}" if it["outcome"] else ""))
+        self._due_shown = due
         return "\n".join(out)
 
     def exp_lines(self, step, full=True, fb=6):
@@ -225,7 +291,8 @@ class Researcher:
             p = self.program_of(eid)
             tag = " [fresh start]" if e.get("fresh") else ""
             if full:
-                out.append(f"- {p.id if p else '?'} for {e.get('item')} on {e.get('base')}{tag}: "
+                ch = f" challenging {e.get('challenges')}" if e.get("challenges") else ""
+                out.append(f"- {p.id if p else '?'} ({e.get('role', '?')}{ch}) for {e.get('item')} on {e.get('base')}{tag}: "
                            f"{short(e.get('hypothesis'), 200)}\n    change: {short(e.get('change'), 260)}\n"
                            f"    predicted: {short(e.get('prediction'), 140)} | if it gains: {short(e.get('if_gain'), 140)}"
                            f" | if not: {short(e.get('if_not'), 140)}\n    -> {result_text(p)}")
@@ -407,15 +474,47 @@ class Researcher:
         wb = self.wide_block(gen)
         if wb:
             parts.append(wb)
-        return "\n\n".join(parts), focus, linked
+        slots, roles = run.portfolio_block(gen)
+        if "challenge" in roles:
+            cands = [b for b in self.challenge_candidates()][:4]
+            slots += "\nBeliefs to challenge (least tested first): " + "; ".join(
+                f"{b['id']} ({b['kind']}, challenged {len(self.challenged_by(b['id']))}x): {short(b['statement'], 140)}" for b in cands)
+        parts.append(slots)
+        return "\n\n".join(parts), focus, linked, roles
+
+    def auto_park(self, gen):
+        """Threads shown as due in the last round and left untouched by it are parked by their stop rule."""
+        order = sorted((s for s in self.steps.values() if s["kind"] == "round"), key=lambda s: int(s["id"][1:]))
+        if not order:
+            return []
+        last = order[-1]
+        parked = []
+        for iid in last.get("due_shown") or []:
+            it = self.items.get(iid)
+            if it is None or it["status"] != "open" or not self.thread_stats(it)["due"]:
+                continue
+            later = {sid for sid in self.steps if int(sid[1:]) >= int(last["id"][1:])}
+            if any(v.get("step") in later for v in it["versions"]):
+                continue                                             # the researcher acted on it (round or review)
+            ev = {"op": "park", "id": iid, "gen": gen, "step": "system",
+                  "why": f"stopped by its stop rule ({it.get('stop') or DEFAULT_STOP}); it was due and left untouched"}
+            self._append("agenda", ev)
+            self._apply_item(ev)
+            parked.append(iid)
+        return parked
 
     def plan(self, gen):
         run = self.run
         info = {}
         if gen >= run.cfg.review_every and gen % run.cfg.review_every == 0 and self.steps:
             info["review"] = self.review(gen)
+        parked = self.auto_park(gen)
+        if parked:
+            info["auto_parked"] = parked
         system = P.RESEARCHER5_SYSTEM.format(k=run.cfg.deep, budget=run.cfg.budget)
-        ctx, focus, linked = self.context(gen)
+        self._due_shown = []
+        ctx, focus, linked, roles = self.context(gen)
+        due_shown = list(self._due_shown)
         answers, asked = [], []
         if self.steps or run.archive.programs and gen > 1:
             reply = run.call("lookup", system, ctx + "\n\n" + P.LOOKUP_ASK.format(k=run.cfg.lookup_k),
@@ -427,14 +526,14 @@ class Researcher:
         if answers:
             user += "\n\n## What you looked up\n" + "\n\n".join(answers)
         stall = run.stall(gen)
-        rule = P.ESCAPE_RULE.format(stall=stall) if stall >= run.cfg.stall_gens else ""
-        user += "\n\n" + P.DECISION5_FORMAT.format(k=run.cfg.deep, rule=rule)
+        user += "\n\n" + P.DECISION5_FORMAT.format(k=run.cfg.deep, roles=", ".join(roles), first_role=roles[0])
         plan, rinfo = run.researcher(system, user, gen)
         info.update(rinfo)
-        info.update(lookups=asked, focus=focus, continuity=linked, stall=stall)
+        info.update(lookups=asked, focus=focus, continuity=linked, stall=stall, roles=roles)
         if plan is None:
             return None, info
         plan["_lookups"] = asked
+        plan["_due_shown"] = due_shown
         step_id, applied, rejected, refmap = self.apply_step(gen, "round", plan, focus)
         exps = []
         open_ids = [i for i, it in self.items.items() if it["status"] == "open"]
@@ -445,7 +544,19 @@ class Researcher:
             item = refmap.get(item, item)
             if item not in self.items or self.items[item]["status"] != "open":
                 item = self.default_item(gen, step_id, focus, open_ids)
-            exps.append({**e, "item": item, "step": step_id})
+            ch = str(e.get("challenges") or "").split()[0] if e.get("challenges") else ""
+            e = {**e, "item": item, "step": step_id}
+            if ch in self.beliefs:
+                e["challenges"] = ch
+            else:
+                e.pop("challenges", None)
+            exps.append(e)
+        # a challenge slot must name a belief: if the researcher didn't, the least-tested one is named for it
+        if "challenge" in roles:
+            i = roles.index("challenge")
+            cands = self.challenge_candidates()
+            if i < len(exps) and not exps[i].get("challenges") and cands:
+                exps[i]["challenges"] = cands[0]["id"]
         plan["experiments"] = exps
         plan["analysis"] = plan.get("thinking", "")
         info.update(step=step_id, applied=applied, rejected=rejected)
@@ -471,7 +582,7 @@ class Researcher:
         # them (plans, experiments) can be rewritten to the real ids
         nxt = int(self.next_id("A", self.items)[1:])
         for op in js.get("agenda") or []:
-            if isinstance(op, dict) and op.get("op") in ("add", "branch") and op.get("purpose"):
+            if isinstance(op, dict) and op.get("op") in ("add", "branch") and (op.get("question") or op.get("purpose")):
                 op["_id"] = f"A{nxt}"                      # every add gets its id up front: no collisions
                 nxt += 1
                 if op.get("ref"):
@@ -493,10 +604,11 @@ class Researcher:
                 if kindop == "branch" and op.get("from") not in self.items:
                     rejected.append(f"branch from unknown {op.get('from')}")
                     continue
-                purpose = short(op.get("purpose"), 600)
+                purpose = short(op.get("question") or op.get("purpose"), 600)
                 if not purpose:
-                    rejected.append("agenda add without a purpose")
+                    rejected.append("agenda add without a question")
                     continue
+                ev["stop"] = short(op.get("stop"), 200) or DEFAULT_STOP
                 iid = op.get("_id") or self.next_id("A", self.items)
                 ev.update(id=iid, purpose=sub(purpose), plan=short(sub(op.get("plan")), 1200),
                           **({"from": op["from"]} if kindop == "branch" else {}))
@@ -507,10 +619,12 @@ class Researcher:
                     rejected.append(f"{kindop} unknown item {iid}")
                     continue
                 if kindop == "revise":
-                    if not (op.get("plan") or op.get("purpose")):
+                    q = op.get("question") or op.get("purpose")
+                    if not (op.get("plan") or q):
                         rejected.append(f"revise {iid} with nothing to change")
                         continue
-                    ev.update(plan=short(sub(op.get("plan")), 1200), purpose=short(sub(op.get("purpose")), 600))
+                    ev.update(plan=short(sub(op.get("plan")), 1200), purpose=short(sub(q), 600),
+                              stop=short(op.get("stop"), 200) if op.get("stop") else None)
                 if kindop == "done":
                     ev["outcome"] = short(op.get("outcome"), 600)
                 ev["id"] = iid
@@ -529,10 +643,22 @@ class Researcher:
                 if not st:
                     rejected.append("belief add without a statement")
                     continue
+                kind = op.get("kind") if op.get("kind") in KINDS else "mechanism"
+                refuted_if = short(op.get("refuted_if"), 300)
+                if LIMIT_WORDS.search(st) and kind != "conjecture":
+                    kind = "conjecture"                  # a claim about a limit is a conjecture, whatever it was called
+                    refuted_if = refuted_if or "a construction that does better than this statement says is possible"
+                    applied.append(f"(filed as a conjecture: a claim about the problem's limits)")
+                if kind in ("mechanism", "conjecture") and not refuted_if:
+                    rejected.append(f"belief '{short(st, 60)}': a {kind} must say what would refute it (refuted_if)")
+                    continue
+                if kind in ("works", "fails") and not ev_ids:
+                    rejected.append(f"belief '{short(st, 60)}': an observation must cite the programs that show it")
+                    continue
                 bid = self.next_id("B", self.beliefs)
-                ev.update(id=bid, statement=st, kind=op.get("kind") if op.get("kind") in KINDS else "mechanism",
-                          confidence=str(op.get("confidence") or "medium")[:10], evidence=ev_ids)
-                applied.append(f"belief {bid}: {short(st, 100)}")
+                ev.update(id=bid, statement=st, kind=kind, confidence=str(op.get("confidence") or "medium")[:10],
+                          evidence=ev_ids, refuted_if=refuted_if)
+                applied.append(f"belief {bid} ({kind}): {short(st, 100)}")
             else:
                 bid = str(op.get("id"))
                 if bid not in self.beliefs:
@@ -540,9 +666,13 @@ class Researcher:
                     continue
                 ev["id"] = bid
                 if op["op"] == "revise":
-                    ev.update(statement=short(op.get("statement"), 500) if op.get("statement") else None,
-                              confidence=str(op.get("confidence"))[:10] if op.get("confidence") else None,
-                              add_evidence=[str(p) for p in (op.get("add_evidence") or []) if str(p) in known])
+                    st = short(op.get("statement"), 500) if op.get("statement") else None
+                    ev.update(statement=st, confidence=str(op.get("confidence"))[:10] if op.get("confidence") else None,
+                              add_evidence=[str(p) for p in (op.get("add_evidence") or []) if str(p) in known],
+                              refuted_if=short(op.get("refuted_if"), 300) if op.get("refuted_if") else None,
+                              challenge_outcome=op.get("challenge_outcome") if op.get("challenge_outcome") in ("held", "failed") else None)
+                    if st and LIMIT_WORDS.search(st) and self.beliefs[bid]["kind"] != "conjecture":
+                        ev["kind"] = "conjecture"
                 applied.append(f"{op['op']} {bid}")
             self._append("beliefs", ev)
             self._apply_belief(ev)
@@ -570,7 +700,8 @@ class Researcher:
                         e[k] = sub(e[k])
         step = {"op": "step", "id": step_id, "gen": gen, "kind": kind, "focus": focus, "follows": follows,
                 "declared": declared, "thinking": short(sub(js.get("thinking")), 3000), "gist": short(sub(js.get("gist")), 300),
-                "applied": applied, "rejected": rejected, "lookups": js.get("_lookups", [])}
+                "applied": applied, "rejected": rejected, "lookups": js.get("_lookups", []),
+                "due_shown": js.get("_due_shown", []), "came_back": js.get("came_back") if isinstance(js.get("came_back"), list) else []}
         self._append("notebook", step)
         self.steps[step_id] = {**step, "eids": [], "exps": []}
         for iid in set(focus):
@@ -592,8 +723,8 @@ class Researcher:
             if e.get("item") not in self.items:
                 e["item"] = self.default_item(gen, step_id, [], [i for i, it in self.items.items() if it["status"] == "open"])
         ev = {"op": "scheduled", "gen": gen, "step": step_id, "eids": [e["eid"] for e in exps],
-              "exps": [{k: e.get(k) for k in ("item", "base", "fresh", "forced_escape", "hypothesis", "change", "prediction",
-                                              "if_gain", "if_not")} for e in exps]}
+              "exps": [{k: e.get(k) for k in ("item", "role", "challenges", "base", "fresh", "hypothesis", "change",
+                                              "prediction", "if_gain", "if_not")} for e in exps]}
         self._append("notebook", ev)
         s = self.steps[step_id]
         s["eids"], s["exps"] = ev["eids"], ev["exps"]
@@ -604,23 +735,24 @@ class Researcher:
 
     def review(self, gen):
         run = self.run
-        allitems = []
-        for it in self.items.values():
-            ps = self.item_results(it)
-            allitems.append(f"{it['id']} [{it['status']}, {len(ps)} experiments, version {len(it['versions'])}] "
-                            f"purpose: {short(it['purpose'], 220)} | plan: {short(it['plan'], 300)}"
-                            + (f" | outcome: {short(it['outcome'], 200)}" if it["outcome"] else ""))
+        self._due_shown = []
+        agenda = self.agenda_block()
+        due = list(self._due_shown)
+        closed = [it for it in self.items.values() if it["status"] != "open"]
         beliefs = [self.belief_line(b) + ("" if b["active"] else " [DROPPED]") for b in self.beliefs.values()]
         recent = sorted(self.steps.values(), key=lambda s: int(s["id"][1:]))[-10:]
-        user = (f"{run.problem.TITLE}\n\n{run.progress_block(gen)}\n\n## Your whole agenda\n" + ("\n".join(allitems) or "(empty)")
-                + "\n\n## Your whole theory\n" + ("\n".join(beliefs) or "(empty)")
+        lines = run.lines()
+        user = (f"{run.problem.TITLE}\n\n{run.progress_block(gen)}\nLines so far: {len(lines)}\n\n{agenda}\n"
+                + (f"(and {len(closed)} closed threads in all)\n" if closed else "")
+                + "\n## Your whole theory\n" + ("\n".join(beliefs) or "(empty)")
                 + (f"\nCurrent summary: {self.summaries[-1]['text']}" if self.summaries else "")
                 + "\n\n## Your last steps\n" + "\n".join(self.step_gist(s) for s in recent)
                 + "\n\n" + P.REVIEW_ASK.format())
         system = P.RESEARCHER5_SYSTEM.format(k=run.cfg.deep, budget=run.cfg.budget)
-        js, rinfo = run.researcher(system, user, gen, max_tokens=6000, role="review", need=None)
+        js, rinfo = run.researcher(system, user, gen, max_tokens=8000, role="review", need=None)
         if not js:
             return {"ok": False}
+        js["_due_shown"] = due
         sid, applied, rejected, _ = self.apply_step(gen, "review", js, [])
         return {"ok": True, "step": sid, "applied": applied, "rejected": rejected, "seconds": rinfo.get("seconds")}
 

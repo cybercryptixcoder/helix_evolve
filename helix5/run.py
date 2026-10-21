@@ -13,9 +13,20 @@ Changes from v4's engine:
 - experiments can start fresh (no start construction) and carry their if/then and agenda item;
 - evaluator: 8 printed lines back, unused budget stated, gains labelled by size (helix5/evaluate.py);
 - coders are told to use the whole budget and return the best they found (prompts.CODE_RULES);
-- stagnation is computed (generations since the best last rose by STALL_EPS) and, after `stall_gens`, at least one
-  experiment must be an escape (fresh, or a base outside the best line), enforced by code;
+- a portfolio of slot roles every generation, assigned by code (see PORTFOLIO below), instead of 3 free slots;
 - history counts real gains (>= 1e-5), not 1e-9 polishing, and "new_best" means the record actually rose.
+
+PORTFOLIO. The v4 run and the first v5 tests showed the planner narrowing: with 3 free slots, spending all of them on
+the most promising line always looks locally right, so the population went unused and runs stalled on one
+construction. The fix is structural: each generation's planned experiments have roles, assigned by code.
+- deepen: build on the best line (the best program or one of its ancestors). Depth never stops.
+- branch: build from a different point: the best program of another line, or an earlier point of the best line where
+  a big gain happened (a fork point). Candidates are listed by code, young lines first, so new lines get to mature.
+- explore: a genuinely different construction, from scratch (no start construction). It starts a new line.
+- challenge (v5 only, every few rounds): an experiment designed to break one of the researcher's beliefs.
+Default: deepen, branch, explore. On a hot streak (the record rose by HOT_EPS or more last generation, on the best
+line): deepen, deepen, and branch or explore alternately. Generation 1: deepen, explore, explore.
+A line is the set of programs descending from one root: Code Zero or a fresh start.
 """
 from __future__ import annotations
 
@@ -42,6 +53,8 @@ from helix5 import prompts as P
 from helix5.evaluate import GAIN_EPS, evaluate, gain_label
 
 STALL_EPS = 1e-4
+HOT_EPS = 1e-3
+ROLES = ("deepen", "branch", "explore", "challenge")
 
 
 @dataclass
@@ -57,6 +70,7 @@ class Config:
     lookup_k: int = 5
     review_every: int = 5
     stall_gens: int = 3
+    challenge_every: int = 3
     mem_mb: int = 1500
     problem: str = "ac2"
     label: str = ""
@@ -169,6 +183,93 @@ class Run:
         b = self.archive.best()
         return {p.id for p in self.archive.lineage(b.id, depth=1000)}
 
+    # ---------------------------------------------------------------- lines and the portfolio
+    def root_of(self, p):
+        """The root of p's line: the nearest ancestor (or p itself) that is Code Zero or a fresh start."""
+        a = self.archive.programs
+        while p is not None:
+            if p.parent is None or (p.plan or {}).get("fresh"):
+                return p.id
+            p = a.get(p.parent)
+        return None
+
+    def lines(self, before_gen=None):
+        """{root id: [valid programs of that line]}, optionally only programs made before a generation."""
+        out = {}
+        for p in self.archive.valid():
+            if before_gen is not None and p.gen >= before_gen:
+                continue
+            out.setdefault(self.root_of(p), []).append(p)
+        return out
+
+    def roles(self, gen):
+        """The roles of this generation's planned slots (see PORTFOLIO in the module docstring); fixed once per
+        generation, so the planner's view and the enforcement agree."""
+        cache = self.__dict__.setdefault("_roles_cache", {})
+        if gen not in cache:
+            cache[gen] = self._compute_roles(gen)
+        return list(cache[gen])
+
+    def _compute_roles(self, gen):
+        if gen <= 1:
+            roles = ["deepen", "explore", "explore"]
+        else:
+            hist = [h for h in self.history() if h["gen"] < gen]
+            hot = len(hist) >= 2 and hist[-1]["best"] - hist[-2]["best"] >= HOT_EPS
+            roles = ["deepen", "deepen", "branch" if gen % 2 == 0 else "explore"] if hot else ["deepen", "branch", "explore"]
+        roles = (roles + ["explore"] * self.cfg.deep)[: self.cfg.deep]
+        return self.memory.adjust_roles(gen, roles) if hasattr(self.memory, "adjust_roles") else roles
+
+    def branch_candidates(self, gen, k=6):
+        """Where a branch slot may build from, with why: the best of each other line (young lines first), fork points
+        on the best line (ancestors where a big gain happened), then strong programs off the best line."""
+        best = self.archive.best()
+        line = [q.id for q in self.archive.lineage(best.id, depth=1000)]
+        inc_root = self.root_of(best)
+        out, seen = [], {best.id}
+        others = []
+        for root, ps in self.lines(before_gen=gen).items():
+            if root == inc_root:
+                continue
+            top = max(ps, key=lambda q: q.score)
+            rp = self.archive.programs[root]
+            others.append((rp.gen, top, f"best of the line started by {root} (gen {rp.gen}): {top.score:.6f}"))
+        for _, top, why in sorted(others, key=lambda x: (-x[0], -x[1].score)):       # young lines first
+            out.append((top, why))
+        for pid in reversed(line[:-2]):
+            q = self.archive.programs[pid]
+            if q.valid and q.delta is not None and q.delta >= HOT_EPS:
+                out.append((q, f"fork point on the best line (gen {q.gen}, {q.delta:+.6f} there): {q.score:.6f}"))
+        for q in self.archive.ranked():
+            if q.id not in line and q.gen < gen:
+                out.append((q, f"strong program off the best line: {q.score:.6f}"))
+        res = []
+        for q, why in out:
+            if q.id not in seen:
+                seen.add(q.id)
+                res.append((q, why))
+        return res[:k]
+
+    def portfolio_block(self, gen):
+        roles = self.roles(gen)
+        best = self.archive.best()
+        desc = {"deepen": f"build on the best line (best: {best.id}, {best.score:.6f}, or one of its ancestors)",
+                "branch": "build from a different point: pick one of the branch candidates below",
+                "explore": "a genuinely different construction, started from scratch (no start construction); the base "
+                           "is only a code template",
+                "challenge": "an experiment designed to break one of your beliefs (name it in \"challenges\")"}
+        out = [f"## This generation's slots (assigned by the system: depth and breadth every generation)"]
+        out += [f"{i + 1}. {r}: {desc[r]}" for i, r in enumerate(roles)]
+        cands = self.branch_candidates(gen)
+        if "branch" in roles and cands:
+            out.append("Branch candidates:")
+            out += [f"- {q.id}: {why}" for q, why in cands]
+        lines = self.lines(before_gen=gen)
+        if len(lines) > 1:
+            out.append(f"Lines so far: {len(lines)} (" + ", ".join(
+                f"{r}: best {max(q.score for q in ps):.6f}" for r, ps in sorted(lines.items(), key=lambda kv: -max(q.score for q in kv[1]))[:6]) + ")")
+        return "\n".join(out), roles
+
     # ---------------------------------------------------------------- roles
     def researcher(self, system, user, gen, max_tokens=20000, effort=None, role="researcher", need="experiments"):
         """A planning call at the planner's effort, capped: if it thinks past its budget (20k answer + 12k thinking
@@ -190,36 +291,61 @@ class Run:
                       "seconds": round(time.time() - t0, 1)}
 
     def experiments(self, plan, gen):
-        """Validated experiments (exactly `deep`); the escape rule is applied when the best has stalled."""
+        """Validated experiments, one per slot role (deepen / branch / explore / challenge), constraints enforced."""
         best = self.archive.best()
+        line = [q.id for q in self.archive.lineage(best.id, depth=1000)]
+        roles = self.roles(gen)
+        cands = [q.id for q, _ in self.branch_candidates(gen)]
+        keep = ("base", "fresh", "role", "hypothesis", "change", "prediction", "if_gain", "if_not", "builds_on", "item",
+                "step", "challenges")
+        given = []
+        for e in (plan or {}).get("experiments", []):
+            if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
+                given.append({k: e.get(k) for k in keep if k in e})
+        # match experiments to roles: by their stated role first, then in order
+        slots = [None] * len(roles)
+        rest = []
+        for e in given:
+            r = str(e.get("role", "")).lower()
+            idx = next((i for i, rr in enumerate(roles) if rr == r and slots[i] is None), None)
+            if idx is None:
+                rest.append(e)
+            else:
+                slots[idx] = e
+        for i in range(len(slots)):
+            if slots[i] is None and rest:
+                slots[i] = rest.pop(0)
         out = []
-        for e in (plan or {}).get("experiments", [])[: self.cfg.deep]:
-            if not isinstance(e, dict) or not (e.get("change") or e.get("hypothesis")):
-                continue
+        for role, e in zip(roles, slots):
+            if e is None:
+                e = {"hypothesis": "(no plan for this slot: the planner's reply was unusable or short)",
+                     "change": "Improve the base program in the way you judge most promising.", "prediction": "",
+                     "builds_on": [], "fallback": True}
+            e["role"] = role
             base = str(e.get("base", "")).strip()
             p = self.archive.programs.get(base)
-            keep = ("base", "fresh", "hypothesis", "change", "prediction", "if_gain", "if_not", "builds_on", "item", "step")
-            e = {k: e.get(k) for k in keep if k in e}
-            e["fresh"] = bool(e.get("fresh")) or base.lower() == "fresh"
-            if p is None or not p.valid:
-                if base.lower() != "fresh":
-                    e["base_requested"] = base
-                e["base"] = best.id
+            ok = p is not None and p.valid
+            if role == "deepen":
+                if not (ok and base in line):
+                    e["base_requested"], base = base, best.id
+                e["fresh"] = False
+            elif role == "branch":
+                if not (ok and base != best.id and base not in line[-2:]):
+                    alt = cands[0] if cands else (line[-3] if len(line) >= 3 else best.id)
+                    e["base_requested"], base = base, alt
+                e["fresh"] = False
+            elif role == "explore":
+                if not ok:
+                    base = best.id
+                e["fresh"] = True
+            else:                                   # challenge: any base, as designed
+                if not ok:
+                    e["base_requested"], base = base, best.id
+                e["fresh"] = bool(e.get("fresh"))
+            e["base"] = base
             if not isinstance(e.get("builds_on"), list):
                 e["builds_on"] = [str(e["builds_on"])] if e.get("builds_on") else []
             out.append(e)
-        while len(out) < self.cfg.deep:
-            out.append({"base": best.id, "fresh": False, "hypothesis": "(no plan: the planner's reply was unusable)",
-                        "change": "Improve the base program in the way you judge most promising.",
-                        "prediction": "", "builds_on": [], "fallback": True})
-        stall = self.stall(gen)
-        if stall >= self.cfg.stall_gens:
-            line = self.best_line()
-            if not any(e["fresh"] or e["base"] not in line for e in out):
-                out[-1]["fresh"] = True
-                out[-1]["forced_escape"] = True
-                out[-1]["change"] = (f"{out[-1].get('change')}\n(The best score has stalled for {stall} generations, "
-                                     "so this experiment starts from scratch: build a genuinely different construction.)")
         return out
 
     def program_block(self, p, title):
@@ -349,7 +475,11 @@ class Run:
                "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
                "fallback_experiments": sum(1 for e in exps if e.get("fallback")),
                "base_fallbacks": sum(1 for e in exps if "base_requested" in e),
-               "fresh": sum(1 for e in exps if e.get("fresh")), "forced_escapes": sum(1 for e in exps if e.get("forced_escape")),
+               "fresh": sum(1 for e in exps if e.get("fresh")), "roles": [e.get("role") for e in exps],
+               "role_gains": {r: sum(1 for c in dc if (c.plan or {}).get("role") == r and c.valid and c.delta is not None
+                                     and c.delta >= GAIN_EPS) for r in ROLES},
+               "role_best": {r: max([c.score for c in dc if (c.plan or {}).get("role") == r and c.valid] or [0]) for r in ROLES},
+               "lines": len(self.lines()), "best_line_root": self.root_of(best),
                "stall": self.stall(gen), "bases": [e["base"] for e in exps],
                "distinct_bases": len({("fresh" if e.get("fresh") else e["base"]) for e in exps}),
                "builds_on_refs": len(refs), "researcher_prompt_chars": info.get("prompt_chars"),
@@ -433,8 +563,11 @@ def fake_answer(role, system, user):
     tag = random.randint(1, 10 ** 9)
     base = ids[0] if ids else "p0001"
 
+    roles = re.findall(r"with roles ([a-z, ]+) in that order", user)
+    roles = [r.strip() for r in roles[-1].split(",")] if roles else ["deepen", "branch", "explore"]
+
     def exps(item=None):
-        return [{"base": base if i else (ids[-1] if ids else base), "fresh": i == 2 and random.random() < 0.3,
+        return [{"role": roles[i % len(roles)], "base": base if i else (ids[-1] if ids else base), "fresh": False,
                  "hypothesis": f"fake hypothesis {i}", "change": f"perturb heights, variant {i}",
                  "prediction": "a small gain", "if_gain": "push further", "if_not": "try another family",
                  "builds_on": ids[:1], **({"item": item} if item else {})} for i in range(3)]
@@ -442,12 +575,14 @@ def fake_answer(role, system, user):
         items = re.findall(r"\bA\d+\b", user)
         bel = re.findall(r"\bB\d+\b", user)
         steps = re.findall(r"\bS\d+\b", user)
-        agenda = [{"op": "add", "ref": "n1", "purpose": "fake purpose", "plan": "if A then B", "why": "fake"}]
+        agenda = [{"op": "add", "ref": "n1", "question": "fake question", "plan": "if A then B", "stop": "3 tries", "why": "fake"}]
         if items:
             agenda.append({"op": "revise", "id": items[0], "plan": "revised plan", "why": "fake evidence"})
-        beliefs = [{"op": "add", "kind": "works", "statement": "fake belief", "confidence": "low", "evidence": ids[:1], "why": "x"}]
+        beliefs = [{"op": "add", "kind": "works", "statement": "fake belief", "confidence": "low", "evidence": ids[:1], "why": "x"},
+                   {"op": "add", "kind": "mechanism", "statement": "fake mechanism", "refuted_if": "a fake result", "why": "z"}]
         if bel:
-            beliefs.append({"op": "revise", "id": bel[0], "confidence": "medium", "add_evidence": ids[1:2], "why": "y"})
+            beliefs.append({"op": "revise", "id": bel[0], "confidence": "medium", "add_evidence": ids[1:2],
+                            "challenge_outcome": "held", "why": "y"})
         return "```json\n" + json.dumps({"thinking": "fake thinking", "gist": f"fake step about {base}",
                                          "follows": steps[:1], "beliefs": beliefs, "agenda": agenda,
                                          "experiments": exps(items[0] if items else "n1")}) + "\n```"
