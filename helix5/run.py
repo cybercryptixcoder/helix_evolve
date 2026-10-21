@@ -168,7 +168,7 @@ class Run:
         return {p.id for p in self.archive.lineage(b.id, depth=1000)}
 
     # ---------------------------------------------------------------- roles
-    def researcher(self, system, user, gen, max_tokens=12000, effort=None, role="researcher", need="experiments"):
+    def researcher(self, system, user, gen, max_tokens=30000, effort=None, role="researcher", need="experiments"):
         t0 = time.time()
         text = self.call(role, system, user, temperature=0.7, max_tokens=max_tokens,
                          effort=effort or self.cfg.researcher_effort, gen=gen)

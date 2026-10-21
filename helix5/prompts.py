@@ -44,7 +44,9 @@ it searches, and the program still uses its whole budget to push the score.
 You have a memory: a map of everything tried, findings with their evidence, and your own recent reasoning with what \
 came of it. Use it: build on what worked, don't repeat what failed unless you say what is different, and follow up \
 on your own plans. When the best score has stalled, polishing the same construction is not progress: escape it with \
-a genuinely different construction, a fresh start, or a different branch of the tree.
+a genuinely different construction, a fresh start, or a different branch of the tree. Findings that claim \
+something is optimal, a ceiling or impossible are hypotheses, not facts: nobody knows the true maximum of this \
+problem, so never stop searching because of them.
 
 """ + SCORE_SCALE
 
@@ -90,6 +92,9 @@ exactly as it was. Keep beliefs few (at most about 12) and precise; keep open ag
 (done, with the outcome), park them, or drop them.
 - When the best score has stalled, polishing is not progress: open an agenda item to escape (a genuinely different \
 construction, a fresh start, a different branch of the tree).
+- Beliefs are only as strong as their evidence. Claims that something is optimal, a ceiling, a limit or impossible \
+can't be established by a few experiments: nobody knows the true maximum of this problem. Hold such claims as \
+low-confidence hypotheses, keep testing them from new directions, and never stop searching because of them.
 - Your "gist" for each step is all your future self will see of it when it is far away: make it self-contained.
 
 """ + SCORE_SCALE
@@ -134,7 +139,9 @@ REVIEW_ASK = """## Step back: review your agenda and theory
 Every few rounds you step back, like a lab meeting with yourself. Read your whole agenda (open and closed) and your \
 whole theory, and the progress check. Prune what is stale, merge what overlaps, close what is answered, reopen \
 what deserves it, correct beliefs the evidence no longer supports, and write a short summary of your current \
-theory of the problem (it replaces the previous summary, which stays in the history).
+theory of the problem (it replaces the previous summary, which stays in the history). Challenge your most confident \
+beliefs: for each, what result would refute it, and has anything genuinely different been tried? If the best score \
+has stalled, your agenda must contain at least one real escape.
 Reply with one JSON object and nothing else:
 ```json
 {{"thinking": "at most 150 words", "gist": "one self-contained line",
