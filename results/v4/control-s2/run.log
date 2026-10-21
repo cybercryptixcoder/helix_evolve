@@ -9,3 +9,7 @@
 23:03:15 [control-s2] gen 8: best 0.882269 (p0046, deep); deep 0.882269 (1/3 gained), wide 0.882215 (3/3 gained); 823 s
 23:12:10 [control-s2] gen 9: best 0.882270 (p0052, deep); deep 0.882270 (2/3 gained), wide 0.882250 (2/3 gained); 536 s
 23:23:00 [control-s2] gen 10: best 0.882276 (p0060, deep); deep 0.882276 (2/3 gained), wide 0.882270 (3/3 gained); 649 s
+23:46:12 [control-s2] gen 11: best 0.882276 (p0067, deep); deep 0.882276 (2/3 gained), wide 0.882270 (2/3 gained); 1392 s
+23:50:21 [control-s2] gen 12: best 0.882277 (p0070, wide); deep 0.882276 (1/3 gained), wide 0.882277 (2/3 gained); 249 s
+23:57:16 [control-s2] gen 13: best 0.902895 (p0074, wide); deep 0.882277 (3/3 gained), wide 0.902895 (2/3 gained); 416 s
+00:06:35 [control-s2] gen 14: best 0.904273 (p0084, deep); deep 0.904273 (3/3 gained), wide 0.882277 (2/3 gained); 559 s
