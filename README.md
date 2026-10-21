@@ -6,9 +6,9 @@ Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 202
 
 > **Helix v4.5 and v5 (October 21, 2026)**: v4.5 is v4's Atlas fixed where the v4 overnight run showed it was weak
 > (stall escapes, its own reasoning carried forward, real-gain counting); v5 is a continuing researcher with a
-> versioned theory, agenda and notebook, continuity built from links, and explicit lookups. Helix v4 found a
-> construction certifying C2 ≥ 0.936 on the second autocorrelation inequality, above AlphaEvolve's first published
-> result (0.8962); see [docs/MILESTONES.md](docs/MILESTONES.md), [docs/V5_DESIGN.md](docs/V5_DESIGN.md) and
+> versioned theory, agenda and notebook, continuity built from links, and explicit lookups. Mid-run, Helix v4 found a
+> construction scoring 0.936 on the second autocorrelation inequality (independent verification pending), above
+> AlphaEvolve's first published result for it (0.8962); see [docs/MILESTONES.md](docs/MILESTONES.md), [docs/V5_DESIGN.md](docs/V5_DESIGN.md) and
 > [docs/V5_JOB.md](docs/V5_JOB.md).
 
 > **Helix v4 (October 20, 2026)** evolves whole programs instead of feature weights, keeps a population (a tree of
