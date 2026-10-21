@@ -24,3 +24,13 @@
 07:25:47 [v45-s1] gen 5: best 0.852108 (p0029, deep); deep 0.852108 (2/3 gained), wide 0.852089 (0/3 gained); 444 s
 07:29:21 [v45-s1] gen 6: best 0.852108 (p0036, deep); deep 0.852108 (1/3 gained), wide 0.852089 (0/3 gained); 215 s
 07:37:48 [v45-s1] gen 7: best 0.852591 (p0039, deep); deep 0.852591 (2/3 gained), wide 0.852109 (1/3 gained); 506 s
+07:42:53 [v45-s1] gen 8: best 0.852596 (p0047, deep); deep 0.852596 (1/3 gained), wide 0.852088 (1/3 gained); 305 s
+07:48:52 [v45-s1] gen 9: best 0.852735 (p0053, wide); deep 0.852596 (1/3 gained), wide 0.852735 (2/3 gained); 359 s
+07:55:32 [v45-s1] gen 10: best 0.853049 (p0057, deep); deep 0.853049 (1/3 gained), wide 0.852748 (1/3 gained); 400 s
+08:01:36 [v45-s1] gen 11: best 0.853263 (p0065, deep); deep 0.853263 (2/3 gained), wide 0.853076 (2/3 gained); 364 s
+08:08:08 [v45-s1] resuming after generation 11 (dropped 4 programs of the unfinished one)
+08:20:44 [v45-s1] gen 12: best 0.853368 (p0071, deep); deep 0.853368 (2/3 gained), wide 0.853290 (3/3 gained); 756 s
+08:53:42 [v45-s1] resuming after generation 12 (dropped 0 programs of the unfinished one)
+09:04:35 [v45-s1] gen 13: best 0.855086 (p0075, wide); deep 0.853391 (1/3 gained), wide 0.855086 (3/3 gained); 653 s
+09:16:04 [v45-s1] gen 14: best 0.855711 (p0083, deep); deep 0.855711 (2/3 gained), wide 0.855289 (3/3 gained); 690 s
+09:32:44 [v45-s1] gen 15: best 0.855953 (p0087, deep); deep 0.855953 (2/3 gained), wide 0.855520 (3/3 gained); 1000 s
