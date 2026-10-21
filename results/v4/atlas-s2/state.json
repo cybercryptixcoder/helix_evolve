@@ -1,5 +1,5 @@
 {
- "gen_done": 19,
+ "gen_done": 20,
  "config": {
   "condition": "atlas",
   "seed": 2,
@@ -16,5 +16,5 @@
   "problem": "ac2",
   "label": ""
  },
- "t": 1792560327.6118703
+ "t": 1792560676.8388186
 }

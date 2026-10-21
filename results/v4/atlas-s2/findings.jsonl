@@ -235,3 +235,23 @@
 {"op": "evidence", "id": "F89", "gen": 19, "programs": ["p0110", "p0111"]}
 {"op": "evidence", "id": "F59", "gen": 19, "programs": ["p0112"]}
 {"op": "evidence", "id": "F63", "gen": 19, "programs": ["p0112"]}
+{"op": "new", "id": "F115", "gen": 20, "kind": "fails", "claim": "Running the coordinate/window-tilt/scale descent plus projected-gradient steps at N=544 (start repeated 4x, identical score, fine-unit window sizes) and returning the fine array without downsampling gained only +0.000002 (0.892271 -> 0.892273) at N=544 in 28.5 s. Fixing the step-indexed window widths did not unlock fine-grid freedom: the 0.892271 basin is a fixed-resolution optimum even when score", "evidence": ["p0119"], "links": [{"to": "F92", "type": "refines"}, {"to": "F79", "type": "refines"}, {"to": "F114", "type": "combines-with"}]}
+{"op": "new", "id": "F116", "gen": 20, "kind": "fails", "claim": "A compact K-box sum representation (K=6/8/12 overlapping non-negative boxes, greedy init, golden-section search on box edges and amplitudes, then base polish) produced zero gain: R stayed at 0.892271 (start unchanged) at N=136 in 25.8 s. The box family is not rich enough to reach the current optimum, so reducing parameters does not smooth the ridge.", "evidence": ["p0118"], "links": [{"to": "F110", "type": "refines"}, {"to": "F87", "type": "combines-with"}, {"to": "F114", "type": "combines-with"}]}
+{"op": "new", "id": "F117", "gen": 20, "kind": "fails", "claim": "Replacing the hard max with an annealed top-k-mean surrogate (frac 0.40 down to 1/(2N+1), coordinate/window/bump sweeps per stage, then true-R sweeps) produced zero gain: R stayed at 0.892271 (start unchanged) at N=136 in 28.0 s, and the 0.1%-of-max knot share stayed at 28.57%. Flattening the f*f plateau via a top-k surrogate does not move the converged basin.", "evidence": ["p0120"], "links": [{"to": "F20", "type": "contradicts"}, {"to": "F51", "type": "refines"}, {"to": "F114", "type": "combines-with"}]}
+{"op": "new", "id": "F118", "gen": 20, "kind": "fails", "claim": "Multi-scale refinement (interpolating the start to 2x-4x N, locally optimizing each candidate, keeping the best) gained 0.000000 at N=136 in 29.0 s. Consistent with the other gen-20 fine-grid attempts, upsampling-then-optimizing does not escape the fixed-N optimum.", "evidence": ["p0117"], "links": [{"to": "F52", "type": "refines"}, {"to": "F46", "type": "refines"}, {"to": "F79", "type": "combines-with"}]}
+{"op": "new", "id": "F119", "gen": 20, "kind": "fails", "claim": "Adding an analytic-gradient ascent phase (correct dm/dh indexing) before the coordinate/window descent on the 0.892271 basin gained 0.000000 and consumed only 6.2 s of the 30 s budget. Gradient ascent converges immediately to the same point, confirming the basin is gradient-flat as well as coordinate-flat.", "evidence": ["p0116"], "links": [{"to": "F89", "type": "refines"}, {"to": "F105", "type": "combines-with"}, {"to": "F78", "type": "explains"}]}
+{"op": "new", "id": "F120", "gen": 20, "kind": "question", "claim": "Generation 20's four independent escapes on the 0.892271 basin \u2014 fine-grid N=544 descent with corrected physical window widths (p0119, +2e-6), compact K-box parametrization (p0118, +0), annealed top-k plateau surrogate (p0120, +0), and multi-scale upsample-then-optimize (p0117, +0) \u2014 plus gradient-first descent (p0116, +0) all returned essentially zero. The 0.892271 basin now resists every move ty", "evidence": ["p0119", "p0118", "p0120", "p0117", "p0116"], "links": [{"to": "F96", "type": "refines"}, {"to": "F90", "type": "refines"}, {"to": "F78", "type": "combines-with"}]}
+{"op": "evidence", "id": "F114", "gen": 20, "programs": ["p0119", "p0118", "p0120"]}
+{"op": "evidence", "id": "F92", "gen": 20, "programs": ["p0119"]}
+{"op": "evidence", "id": "F79", "gen": 20, "programs": ["p0119", "p0117"]}
+{"op": "evidence", "id": "F20", "gen": 20, "programs": ["p0120"]}
+{"op": "evidence", "id": "F51", "gen": 20, "programs": ["p0120"]}
+{"op": "evidence", "id": "F52", "gen": 20, "programs": ["p0117"]}
+{"op": "evidence", "id": "F46", "gen": 20, "programs": ["p0117"]}
+{"op": "evidence", "id": "F89", "gen": 20, "programs": ["p0116"]}
+{"op": "evidence", "id": "F105", "gen": 20, "programs": ["p0116"]}
+{"op": "evidence", "id": "F78", "gen": 20, "programs": ["p0116", "p0119", "p0118", "p0120", "p0117"]}
+{"op": "evidence", "id": "F110", "gen": 20, "programs": ["p0118"]}
+{"op": "evidence", "id": "F87", "gen": 20, "programs": ["p0118"]}
+{"op": "evidence", "id": "F96", "gen": 20, "programs": ["p0119", "p0118", "p0120", "p0117", "p0116"]}
+{"op": "evidence", "id": "F90", "gen": 20, "programs": ["p0119", "p0118", "p0120", "p0117", "p0116"]}

@@ -18,3 +18,5 @@
 01:02:22 [atlas-s2] gen 17: best 0.892271 (p0098, deep); deep 0.892271 (2/3 gained), wide 0.892266 (3/3 gained); 803 s
 01:16:59 [atlas-s2] gen 18: best 0.892271 (p0106, wide); deep 0.892271 (2/3 gained), wide 0.892271 (2/3 gained); 876 s
 01:25:27 [atlas-s2] gen 19: best 0.892271 (p0114, deep); deep 0.892271 (1/3 gained), wide 0.892271 (1/3 gained); 508 s
+01:31:16 [atlas-s2] gen 20: best 0.892273 (p0119, deep); deep 0.892273 (1/3 gained), wide 0.892271 (1/3 gained); 349 s
+01:31:16 done: atlas-s2 (atlas, seed 2): best 0.892273 (p0119) after 20 generations, 121 programs, 180 model calls
