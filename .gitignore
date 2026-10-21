@@ -11,3 +11,6 @@ __pycache__/
 
 # meta loop runs (copy the ones worth keeping to results/meta/)
 /meta_runs/
+
+v5_jobs*.log
+v4cont.log
