@@ -51,6 +51,23 @@ All nine final constructions were re-scored three ways (`tools/verify_ac2.py`).
 Four new tests (21 in all). `docs/V5_DESIGN.md` was rewritten: the behavioural problems, their causes, and the
 structure that answers each.
 
+### Checked
+- All 42 tests pass (v5 21, v4 21).
+- A fake rehearsal of `scripts/run_v5_jobs.sh` (2 seeds × both systems, 3 generations) ran end to end, including the
+  report and the verification.
+- The wait for v4 was tested with stand-ins. The job waited until the stand-in of the v4 job script exited
+  (02:07:05), then set its deadline (02:08:06) and ran.
+- **Short real test with the new engine** (seed 2, 3 generations):
+  - all 36 programs call `keep_best`, and 34 print stage lines;
+  - no program reached the CPU limit;
+  - v4.5 reached 0.828 and v5 0.882.
+
+  v5 again reached for x^(-1/2) in its first round (an explore slot, 0.881 at once). The structure is built to get
+  out of that attractor (threads go due, conjectures are challenged, the elimination list, explore and branch every
+  round), not to stop the model from visiting it. Whether it gets out is what the job will show.
+- `results/v4/VERIFICATION.md` was written with the job's own verification code and pushed, so the job won't
+  repeat it.
+
 ---
 
 ## October 21, 2026 (night): the AlphaEvolve claim checked; Helix v4.5 and v5 built
