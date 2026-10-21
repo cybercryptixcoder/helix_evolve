@@ -16,3 +16,7 @@
 00:18:31 [atlas-s3] gen 15: best 0.882391 (p0089, deep); deep 0.882391 (3/3 gained), wide 0.882221 (3/3 gained); 417 s
 00:29:03 [atlas-s3] gen 16: best 0.882421 (p0095, wide); deep 0.882414 (2/3 gained), wide 0.882421 (3/3 gained); 632 s
 00:46:35 [atlas-s3] gen 17: best 0.882425 (p0100, deep); deep 0.882425 (3/3 gained), wide 0.882415 (3/3 gained); 1051 s
+01:02:02 [atlas-s3] gen 18: best 0.882425 (p0105, wide); deep 0.882425 (3/3 gained), wide 0.882425 (3/3 gained); 928 s
+01:13:47 [atlas-s3] gen 19: best 0.882428 (p0111, wide); deep 0.882428 (3/3 gained), wide 0.882428 (3/3 gained); 704 s
+01:24:56 [atlas-s3] gen 20: best 0.882442 (p0119, deep); deep 0.882442 (3/3 gained), wide 0.882429 (3/3 gained); 670 s
+01:24:56 done: atlas-s3 (atlas, seed 3): best 0.882442 (p0119) after 20 generations, 121 programs, 185 model calls
