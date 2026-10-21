@@ -30,6 +30,11 @@ svg text{font-family:Inter,system-ui,sans-serif;fill:var(--ink)}
 .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;border-top:1px solid var(--light);padding-top:14px;margin-top:6px}
 .facts div{font-size:16px;line-height:1.35}
 .facts b{display:block;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 28px;margin-top:22px}
+.stat{border-top:1px solid var(--light);padding-top:10px}
+.stat .n{font-size:30px;font-weight:700;letter-spacing:-.5px}
+.stat .l{font-size:14px;color:#555;line-height:1.35;margin-top:2px}
+.sect{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);font-weight:700;grid-column:1/-1;margin-top:8px}
 </style>
 </head>
 <body>
@@ -90,6 +95,34 @@ svg text{font-family:Inter,system-ui,sans-serif;fill:var(--ink)}
     <div><b>Compute</b>30 s of CPU per program, 6 programs per generation, one 2-core cloud machine shared with other runs</div>
     <div><b>Time</b>about 6 hours for 30 generations; no training, no fine-tuning</div>
     <div><b>AlphaEvolve, for scale</b>Gemini 2.0 Flash + Pro ensemble, 1,000 s per program, Google's infrastructure</div>
+  </div>
+</section>
+
+<!-- 7: the numbers -->
+<section class="slide" data-steps="0">
+  <h2>The run in numbers</h2>
+  <div class="sub">atlas-s1, generations 1–55, measured from its logs.</div>
+  <div class="stats">
+    <div class="sect">Scale</div>
+    <div class="stat"><div class="n">55</div><div class="l">generations</div></div>
+    <div class="stat"><div class="n">330</div><div class="l">programs written (6 per generation); 304 ran successfully</div></div>
+    <div class="stat"><div class="n">496</div><div class="l">LLM calls: 165 Mutator, 165 Coder, 57 Researcher, 55 Distiller, 54 Navigator</div></div>
+    <div class="stat"><div class="n">329</div><div class="l">findings in Atlas, with 737 links between them</div></div>
+    <div class="sect">Time and cost</div>
+    <div class="stat"><div class="n">7.3 h</div><div class="l">total wall-clock time for 55 generations</div></div>
+    <div class="stat"><div class="n">≈ 8 min</div><div class="l">per generation on average (median 6 min; 13 min while sharing the machine with 8 other runs, 5 min later)</div></div>
+    <div class="stat"><div class="n">≈ 5.8 M</div><div class="l">tokens: 4.6 M in, 1.3 M out (of which 0.3 M thinking)</div></div>
+    <div class="stat"><div class="n">≈ $3</div><div class="l">at DeepSeek's list price ($0.30 / M in, $1.20 / M out); about half that off-peak</div></div>
+    <div class="sect">Limits I set</div>
+    <div class="stat"><div class="n">30 s</div><div class="l">of CPU per program (hard stop at 47 s), 1.5 GB of memory, one thread</div></div>
+    <div class="stat"><div class="n">2</div><div class="l">programs evaluated at a time, machine-wide; 3 planned + 3 mutated per generation</div></div>
+    <div class="stat"><div class="n">1 thinker</div><div class="l">only the Researcher thinks (at "low"); every other agent answers directly</div></div>
+    <div class="stat"><div class="n">≤ 6</div><div class="l">items the Navigator may open per generation; the rest stays in Atlas</div></div>
+    <div class="sect">Machine and model</div>
+    <div class="stat"><div class="n">2 cores</div><div class="l">one ARM cloud VM (Oracle), ~4 GB free RAM, shared with other jobs and agents</div></div>
+    <div class="stat"><div class="n">2.3 h</div><div class="l">of CPU spent running programs in total (27 s each on average)</div></div>
+    <div class="stat"><div class="n">1 model</div><div class="l">DeepSeek V4.1 Flash for every role, through Luminal; no training or fine-tuning</div></div>
+    <div class="stat"><div class="n">0.9408</div><div class="l">final score, checked three ways, including exact arithmetic</div></div>
   </div>
 </section>
 
