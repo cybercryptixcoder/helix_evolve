@@ -11,3 +11,7 @@
 23:31:42 [atlas-s1] gen 10: best 0.907612 (p0057, deep); deep 0.907612 (3/3 gained), wide 0.879614 (3/3 gained); 683 s
 23:36:53 [atlas-s1] gen 11: best 0.928246 (p0064, deep); deep 0.928246 (2/3 gained), wide 0.923544 (3/3 gained); 311 s
 23:57:50 [atlas-s1] gen 12: best 0.928987 (p0070, deep); deep 0.928987 (3/3 gained), wide 0.919465 (3/3 gained); 1257 s
+00:08:01 [atlas-s1] gen 13: best 0.932212 (p0075, wide); deep 0.928987 (2/3 gained), wide 0.932212 (3/3 gained); 611 s
+00:24:50 [atlas-s1] gen 14: best 0.936012 (p0081, deep); deep 0.936012 (2/3 gained), wide 0.935623 (3/3 gained); 1009 s
+00:40:12 [atlas-s1] gen 15: best 0.937490 (p0089, deep); deep 0.937490 (1/3 gained), wide 0.932216 (2/3 gained); 922 s
+00:46:02 [atlas-s1] gen 16: best 0.938012 (p0097, wide); deep 0.937491 (3/3 gained), wide 0.938012 (1/3 gained); 350 s

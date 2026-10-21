@@ -8,3 +8,7 @@
 23:36:47 [journal-s1] gen 7: best 0.882179 (p0039, deep); deep 0.882179 (1/3 gained), wide 0.882115 (3/3 gained); 1150 s
 23:48:21 [journal-s1] gen 8: best 0.882185 (p0048, deep); deep 0.882185 (3/3 gained), wide 0.882096 (3/3 gained); 694 s
 23:58:19 [journal-s1] gen 9: best 0.892255 (p0053, deep); deep 0.892255 (2/3 gained), wide 0.882187 (2/3 gained); 598 s
+00:10:01 [journal-s1] gen 10: best 0.895595 (p0056, wide); deep 0.895036 (3/3 gained), wide 0.895595 (3/3 gained); 702 s
+00:24:03 [journal-s1] gen 11: best 0.895992 (p0063, deep); deep 0.895992 (3/3 gained), wide 0.895991 (3/3 gained); 842 s
+00:32:21 [journal-s1] gen 12: best 0.898545 (p0069, wide); deep 0.896170 (2/3 gained), wide 0.898545 (3/3 gained); 498 s
+00:43:14 [journal-s1] gen 13: best 0.898646 (p0078, wide); deep 0.898619 (3/3 gained), wide 0.898646 (3/3 gained); 653 s
