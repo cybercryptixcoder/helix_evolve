@@ -16,3 +16,7 @@
 00:56:22 [journal-s3] gen 15: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (0/3 gained); 1275 s
 01:07:50 [journal-s3] gen 16: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (0/3 gained); 688 s
 01:19:55 [journal-s3] gen 17: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (1/3 gained); 725 s
+01:30:41 [journal-s3] gen 18: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (1/3 gained); 646 s
+01:37:14 [journal-s3] gen 19: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (1/3 gained); 393 s
+01:43:38 [journal-s3] gen 20: best 0.882542 (p0066, deep); deep 0.882542 (0/3 gained), wide 0.882542 (0/3 gained); 384 s
+01:43:38 done: journal-s3 (journal, seed 3): best 0.882542 (p0066) after 20 generations, 121 programs, 163 model calls
