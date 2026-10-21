@@ -36,3 +36,7 @@
 09:47:40 [v5-s1] gen 15: best 0.858671 (p0091, deep); deep 0.858671 (3/3 gained), wide 0.857567 (3/3 gained); 648 s
 09:57:11 [v5-s1] gen 16: best 0.860002 (p0095, wide); deep 0.859398 (3/3 gained), wide 0.860002 (3/3 gained); 571 s
 10:02:32 [v5-s1] gen 17: best 0.860953 (p0101, deep); deep 0.860953 (2/3 gained), wide 0.857850 (3/3 gained); 321 s
+10:22:17 [v5-s1] gen 18: best 0.861334 (p0104, deep); deep 0.861334 (3/3 gained), wide 0.858798 (3/3 gained); 1185 s
+10:30:25 [v5-s1] gen 19: best 0.864798 (p0113, deep); deep 0.864798 (2/3 gained), wide 0.861677 (2/3 gained); 489 s
+10:37:10 [v5-s1] gen 20: best 0.872336 (p0121, deep); deep 0.872336 (2/3 gained), wide 0.858050 (2/3 gained); 405 s
+10:37:10 done: v5-s1 (v5, seed 1): best 0.872336 (p0121) after 20 generations, 121 programs, 82 model calls
