@@ -76,6 +76,23 @@ def _direct_obj_grad(h, beta):
     return obj, grad
 
 
+def _clip_obj_grad(h, c):
+    num, dq, Lf = _num_and_dq(h)
+    gLf = (Lf - c) * (Lf > c)
+    gLf[0] = 0.0
+    gLf[-1] = 0.0
+    obj = 0.5 * np.sum(gLf * gLf)
+    grad = _backprop(gLf, h)
+    return obj, grad
+
+
+def _make_cb(deadline):
+    def cb(xk):
+        if time.process_time() > deadline:
+            raise TimeoutError
+    return cb
+
+
 def run_direct(h0, beta, maxiter, maxfun, deadline):
     if time.process_time() >= deadline - 1.0:
         return h0
@@ -83,12 +100,43 @@ def run_direct(h0, beta, maxiter, maxfun, deadline):
         xc = np.clip(x, 0, None)
         o, g = _direct_obj_grad(xc, beta)
         return o, g * (x > 0)
+    cb = _make_cb(deadline - 0.5)
     try:
         res = minimize(f, h0, jac=True, method='L-BFGS-B',
                        bounds=[(0, None)] * h0.size,
+                       callback=cb,
                        options={'maxiter': maxiter, 'maxfun': maxfun,
                                 'ftol': 1e-17, 'gtol': 1e-13})
         return _rescale_maxL(res.x)
+    except TimeoutError:
+        try:
+            return _rescale_maxL(res.x)
+        except Exception:
+            return h0
+    except Exception:
+        return h0
+
+
+def run_clip(h0, c, maxiter, maxfun, deadline):
+    if time.process_time() >= deadline - 1.0:
+        return h0
+    def f(x):
+        xc = np.clip(x, 0, None)
+        o, g = _clip_obj_grad(xc, c)
+        return o, g * (x > 0)
+    cb = _make_cb(deadline - 0.5)
+    try:
+        res = minimize(f, h0, jac=True, method='L-BFGS-B',
+                       bounds=[(0, None)] * h0.size,
+                       callback=cb,
+                       options={'maxiter': maxiter, 'maxfun': maxfun,
+                                'ftol': 1e-17, 'gtol': 1e-13})
+        return _rescale_maxL(res.x)
+    except TimeoutError:
+        try:
+            return _rescale_maxL(res.x)
+        except Exception:
+            return h0
     except Exception:
         return h0
 
@@ -136,65 +184,70 @@ def _exact_lbfgs(h0, maxiter, maxfun, deadline, free=None):
         g = _norm_eq_grad(hh)[active] * hh[active]
         return val, g
 
+    cb = _make_cb(deadline - 0.5)
     try:
         res = minimize(f, u0, jac=True, method='L-BFGS-B',
                        bounds=[(-30.0, 30.0)] * active.size,
+                       callback=cb,
                        options={'maxiter': maxiter, 'maxfun': maxfun,
                                 'ftol': 1e-20, 'gtol': 1e-16})
         h2 = np.zeros(n)
         h2[active] = np.exp(np.clip(res.x, -30.0, 30.0))
         return _rescale_maxL(h2)
+    except TimeoutError:
+        try:
+            h2 = np.zeros(n)
+            h2[active] = np.exp(np.clip(res.x, -30.0, 30.0))
+            return _rescale_maxL(h2)
+        except Exception:
+            return h0
     except Exception:
         return h0
 
 
-def _zoh_double(h):
-    return np.repeat(h, 2)
-
-
-def _block_avg(h, k):
+def _upsample(h, factor):
     n = h.size
-    m = n // k
-    if m * k != n:
-        h = h[:m * k]
-    return h.reshape(m, k).mean(axis=1)
+    m = (n - 1) * factor + 1
+    xo = np.linspace(0.0, n - 1, m)
+    return np.interp(xo, np.arange(n), h)
 
 
-def _refine_subcell(h, deadline, rounds=1):
-    """For each cell, allow splitting into 2 subcells with a linear split of mass,
-    optimise the split fraction locally. This is a cheap local refinement that
-    can improve R without doubling the whole grid."""
+def _prune(h, frac):
+    h = np.asarray(h, dtype=float)
+    out = h * (h > frac * h.max())
+    return _rescale_maxL(out)
+
+
+def _unzero(h, frac):
+    h = np.asarray(h, dtype=float)
+    m = h.mean()
+    out = h.copy()
+    out[h <= 0] += frac * m
+    return out
+
+
+def _window_polish(h, deadline):
+    """Exact L-BFGS restricted to indices near the argmax-knot region, then full."""
     if time.process_time() >= deadline - 1.0:
         return h
     n = h.size
-    # build doubled grid with split fraction 0.5 initially
-    h2 = np.repeat(h, 2) * 0.5
-    # free indices are all (both children), but we tie them: mass conserving
-    # We parametrise by fraction t_i in (0,1) with children = h_i*(t_i, 1-t_i).
-    # Optimise t via a coarse grid search using exact objective on the doubled grid.
-    # Cheap: just try a few common fractions and pick best.
-    best = h2.copy()
-    bestR = R_of(best)
-    for frac in [0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65]:
-        cand = np.empty(2 * n)
-        cand[0::2] = h * frac
-        cand[1::2] = h * (1.0 - frac)
-        r = R_of(cand)
-        if r > bestR + 1e-15:
-            best = cand
-            bestR = r
-    if bestR > R_of(h) + 1e-15:
-        # polish with exact LBFGS on doubled grid
-        h3 = _exact_lbfgs(best, 300, 600, deadline)
-        if R_of(h3) > bestR:
-            return h3
-        return best
-    return h
+    Lf = _knots(h)
+    m = int(np.argmax(Lf))
+    lo = max(0, m - 1 - (n - 1))
+    hi = min(n - 1, m - 1)
+    if hi <= lo:
+        return h
+    pad = max(8, (hi - lo) // 2)
+    lo = max(0, lo - pad)
+    hi = min(n - 1, hi + pad)
+    free = np.arange(lo, hi + 1)
+    h2 = _exact_lbfgs(h, 400, 800, deadline, free=free)
+    return h2
 
 
 def construct(budget_seconds, start):
     t0 = time.process_time()
-    deadline = t0 + budget_seconds * 0.85
+    deadline = t0 + budget_seconds * 0.80
 
     if start is not None:
         base = np.clip(np.asarray(start, dtype=float).copy(), 0, None)
@@ -208,71 +261,109 @@ def construct(budget_seconds, start):
     bestR = R_of(best)
     print("start R=%.6f (N=%d)" % (bestR, best.size))
 
-    N0 = base.size
-    low = None
-    if N0 % 4 == 0 and N0 >= 8:
-        low = _rescale_maxL(_block_avg(base, 4))
-        print("downsampled to N=%d R=%.7f" % (low.size, R_of(low)))
-    else:
-        low = base.copy()
-
-    low_best = low.copy()
-    low_bestR = R_of(low_best)
-
-    for beta in [200, 1000, 5000, 20000]:
+    # --- NEW: clip (peak-shaving) ladder ---
+    for _pass in range(3):
         if time.process_time() >= deadline - 2.0:
             break
-        h = run_direct(low_best, beta, 400, 800, deadline)
-        r = R_of(h)
-        if r > low_bestR + 1e-15:
-            low_best, low_bestR = h.copy(), r
-            print("low beta=%d R=%.7f" % (beta, low_bestR))
+        pass_improved = False
+        for eps in [3e-2, 1e-2, 3e-3, 1e-3]:
+            if time.process_time() >= deadline - 2.0:
+                break
+            c = (1.0 - eps) * _knots(best).max()
+            cand = run_clip(best, c, 300, 600, deadline)
+            cand = _exact_lbfgs(cand, 300, 600, deadline)
+            r = R_of(cand)
+            if r > bestR + 1e-15:
+                best, bestR = cand.copy(), r
+                pass_improved = True
+                print("clip eps=%.0e R=%.7f" % (eps, bestR))
+        if not pass_improved:
+            break
 
-    # NEW: subcell refinement at low res (split each cell into 2)
-    for rnd in range(2):
+    if best.size < 120000:
+        for factor in (2, 3):
+            cand = _rescale_maxL(_upsample(best, factor))
+            if cand.size > 200000:
+                continue
+            r = R_of(cand)
+            if r > bestR - 2e-6:
+                best, bestR = cand, max(r, bestR)
+                print("upsample x%d R=%.7f (N=%d)" % (factor, bestR, best.size))
+                break
+
+    betas = [1e5, 1e6, 1e7, 1e8, 3e8, 1e9]
+    cycle = 0
+    while time.process_time() < deadline - 2.0:
+        cycle += 1
+        improved = False
+        for beta in betas:
+            if time.process_time() >= deadline - 2.0:
+                break
+            h = run_direct(best, beta, 1000, 2000, deadline)
+            r = R_of(h)
+            if r > bestR + 1e-15:
+                best, bestR = h.copy(), r
+                improved = True
+            if time.process_time() >= deadline - 2.0:
+                break
+            h2 = _exact_lbfgs(best, 500, 1000, deadline)
+            r2 = R_of(h2)
+            if r2 > bestR + 1e-15:
+                best, bestR = h2.copy(), r2
+                improved = True
+                print("cycle %d beta %.0e R=%.7f" % (cycle, beta, bestR))
+        h3 = _window_polish(best, deadline)
+        r3 = R_of(h3)
+        if r3 > bestR + 1e-15:
+            best, bestR = h3.copy(), r3
+            improved = True
+            print("window R=%.7f" % bestR)
+        if not improved:
+            break
+
+    # Shake ladder: 1 round.
+    for rnd in range(1):
         if time.process_time() >= deadline - 2.0:
             break
-        h = _refine_subcell(low_best, deadline)
-        r = R_of(h)
-        if r > low_bestR + 1e-15:
-            low_best, low_bestR = h.copy(), r
-            print("low refine rnd=%d R=%.7f (N=%d)" % (rnd, low_bestR, low_best.size))
+        round_best = best.copy()
+        round_bestR = bestR
+        improved = False
+        for thresh in [1e-4, 1e-3, 1e-2]:
+            if time.process_time() >= deadline - 2.0:
+                break
+            hh = _prune(round_best, thresh)
+            hh = _exact_lbfgs(hh, 500, 1000, deadline)
+            r = R_of(hh)
+            if r > round_bestR + 1e-15:
+                round_best, round_bestR = hh.copy(), r
+                improved = True
+        for frac in [1e-3, 1e-2]:
+            if time.process_time() >= deadline - 2.0:
+                break
+            hh2 = _unzero(round_best, frac)
+            hh2 = _exact_lbfgs(hh2, 500, 1000, deadline)
+            if time.process_time() < deadline - 2.0:
+                hh2 = run_direct(hh2, 1e6, 600, 1200, deadline)
+                hh2 = _exact_lbfgs(hh2, 500, 1000, deadline)
+            r = R_of(hh2)
+            if r > round_bestR + 1e-15:
+                round_best, round_bestR = hh2.copy(), r
+                improved = True
+        if round_bestR > bestR + 1e-15:
+            best, bestR = round_best, round_bestR
+            print("shake round %d R=%.7f" % (rnd + 1, bestR))
+        if not improved:
+            break
+
+    hard = t0 + budget_seconds * 0.92
+    while time.process_time() < hard - 1.0:
+        h2 = _exact_lbfgs(best, 1500, 3000, hard - 0.5)
+        r2 = R_of(h2)
+        if r2 > bestR + 1e-16:
+            best, bestR = h2.copy(), r2
+            print("final polish R=%.7f" % bestR)
         else:
             break
-
-    cand = low_best
-    while cand.size < N0:
-        cand = _zoh_double(cand)
-    if cand.size > N0:
-        cand = cand[:N0]
-    cand = _rescale_maxL(cand)
-    r = R_of(cand)
-    print("redoubled R=%.7f (N=%d)" % (r, cand.size))
-    if r > bestR + 1e-15:
-        best, bestR = cand.copy(), r
-
-    if time.process_time() < deadline - 1.0:
-        h = _exact_lbfgs(best, 800, 1600, deadline)
-        r = R_of(h)
-        if r > bestR + 1e-15:
-            best, bestR = h.copy(), r
-            print("full exact R=%.7f" % bestR)
-
-    for beta in [2000, 5000, 20000, 100000]:
-        if time.process_time() >= deadline - 0.5:
-            break
-        h = run_direct(best, beta, 300, 600, deadline)
-        r = R_of(h)
-        if r > bestR + 1e-15:
-            best, bestR = h.copy(), r
-            print("full lse beta=%d R=%.7f" % (beta, bestR))
-
-    if time.process_time() < deadline - 0.5:
-        h = _exact_lbfgs(best, 400, 800, deadline)
-        r = R_of(h)
-        if r > bestR + 1e-15:
-            best, bestR = h.copy(), r
-            print("final exact R=%.7f" % bestR)
 
     if bestR < R_of(base):
         best = base
