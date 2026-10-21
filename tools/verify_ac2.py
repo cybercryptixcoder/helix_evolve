@@ -11,7 +11,7 @@ score is computed three independent ways:
 2. A line-by-line port of DeepMind's own verification cell (google-deepmind/alphaevolve_results,
    mathematical_results.ipynb, section B.2, and alphaevolve_repository_of_problems, autocorrelation_problems.ipynb):
    piecewise-linear integration on [-1/2, 1/2] with N+1 equal intervals.
-3. Exact rational arithmetic, no floating point at all: up to 2,500 steps on the float heights themselves (every
+3. Exact rational arithmetic, no floating point at all: up to 12,000 steps on the float heights themselves (every
    float is an exact dyadic rational); above that on a copy with the heights rounded to integers, which is itself a
    valid construction, so its exact value is a certified lower bound (rounding moves the score by ~1e-6).
 
@@ -69,12 +69,12 @@ def _ratio(conv_ints, l1):
 def exact_score(heights):
     """(Fraction, how) - the exact value of the construction, or of a rounded copy of it (itself a valid construction).
 
-    N <= 2,500: the float heights themselves, exactly (each float is a dyadic rational; scaled to integers).
+    N <= 12,000: the float heights themselves, exactly (each float is a dyadic rational; scaled to integers).
     larger: heights rounded to integers at 2^30, exact integer convolution (three 10-bit limbs by FFT, checked).
     """
     h = np.asarray(heights, dtype=float)
     n = len(h)
-    if n <= 2500:
+    if n <= 12000:
         fr = [Fraction(float(x)) for x in h]
         den = max(f.denominator for f in fr)
         hi = [int(f * den) for f in fr]
