@@ -44,7 +44,16 @@ returned a worse construction than they had found; program logs carried a key cl
 - v5 wrote "the true maximum of R is 4 ln2/π ≈ 0.8825" as a belief after reaching the 1/√x shape: a confident
   wrong belief can freeze a researcher with a persistent theory. Guards added (prompt, review, code flag on limit
   claims), on top of the escape rule.
-- v5's decision call thought past 24k tokens once (now 42k room).
+- v5's decision call thought past 24k tokens once; later a v4.5 planning call thought 42k tokens and the client's
+  doubled retry made one generation take 8 minutes. Planning calls are now capped (`helix5/llm.py`): a cut-off think
+  falls back at once to an answer without thinking.
+- Second real test (6 generations each): v5 climbed 0.667 → 0.869 steadily (111-185 s per generation); its
+  generation-5 review downgraded its own "a closed form is impossible" belief and added an escape item. v4.5 reached
+  0.8647 by generation 2 and stalled there; from generation 4 on it planned fresh-start escapes itself every
+  generation (the forced rule never had to fire), with its analysis naming the plateau ("0.8647 is a deep
+  attractor: eight optimizer upgrades moved it ≤ 3e-6"). Fresh starts with 30 s reached 0.82-0.85, so an escape
+  only pays if the planner keeps building on it for several generations.
+- Verified: journal-s2's final construction (4,000 steps) is exactly 0.924182240140321 (C2 ≥ 0.92418224).
 
 ---
 
