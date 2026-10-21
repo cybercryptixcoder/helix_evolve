@@ -1,0 +1,20 @@
+{
+ "gen_done": 3,
+ "config": {
+  "condition": "atlas",
+  "seed": 2,
+  "gens": 20,
+  "deep": 3,
+  "wide": 3,
+  "budget": 30.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "t": 1792548149.105734
+}
