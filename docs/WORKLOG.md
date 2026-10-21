@@ -4,6 +4,20 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 21, 2026 (03:15): two leaks of v4 wording removed from the prompts; the job restarted clean
+
+An audit of every prompt the model sees, asked for by Shreyas (03:11), found wording that came from the v4 traces:
+- v5's lookup prompt used "search: penalty continuation" and "search: resolution ladder" as examples. Those are the
+  names of atlas-s1's two key techniques; the text was written at 00:49 while v4's traces were being read.
+- The stall check's examples of kinds of change ("a constraint or reformulation, more resolution, ...") were picked
+  after seeing what worked on this problem.
+
+Both are now neutral ("search: <words>"; no examples of kinds of change). The coder rules' stage examples ("a
+schedule, a resolution level") were removed too. The problem statement and the score feedback were already identical
+to v4's. The job started at 02:51 was stopped, and the job was restarted from nothing.
+
+---
+
 ## October 21, 2026 (02:00-03:00): the finished v4 job analysed from its traces; the lessons built into v4.5 and v5
 
 ### What was asked

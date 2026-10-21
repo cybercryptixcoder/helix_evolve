@@ -203,10 +203,9 @@ class Run:
             if tried:
                 lines.append(f"\nWhat the planned experiments tried since generation {last} (the last rise), newest first:")
                 lines += tried
-                lines.append("Before planning, group these by the kind of change they made (for example: a different "
-                             "objective or surrogate, a constraint or reformulation, more resolution, a new search "
-                             "method, a new starting family, more budget for a stage). At least one experiment this "
-                             "round must make a kind of change that none of them made; say which kind in its hypothesis.")
+                lines.append("Before planning, group these by the kind of change they made. At least one experiment "
+                             "this round must make a kind of change that none of them made; say which kind in its "
+                             "hypothesis.")
         return "\n".join(lines)
 
     def best_line(self):
