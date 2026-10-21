@@ -93,7 +93,7 @@ for f in sorted(root.glob("*/best.npy")):
     rows.append(verify(np.load(f), f.parent.name))
 lines = [f"# {title}", "", "Every best construction re-scored three independent ways (`tools/verify_ac2.py`): Helix's evaluator, "
          "DeepMind's own verification code (ported line by line), and exact rational arithmetic (on the float heights "
-         "themselves up to 2,500 steps; above that on a copy rounded to integers at 2^30, itself a valid construction). "
+         "themselves up to 12,000 steps; above that on a copy rounded to integers at 2^30, itself a valid construction). "
          "Digits are truncated, not rounded.", "",
          "| Construction | Steps | Helix | DeepMind's code | Exact | All agree |", "|---|---|---|---|---|---|"]
 for r in rows:

@@ -18,6 +18,18 @@ and verification to be added when the job finishes):
 
 Four runs passed AlphaEvolve's May 2025 bound (0.8962); five passed the 2010 record (0.88922).
 
+**Verified (final constructions, re-scored three ways with `tools/verify_ac2.py`):**
+
+| Run | Steps | Helix | DeepMind's verification code | Exact rational value of the construction itself |
+|---|---|---|---|---|
+| journal-s2 (finished, 20 generations) | 4,000 | 0.924182240140 | 0.924182240140 | **0.924182240140321** |
+| control-s3 (finished, 20 generations) | 4,096 | 0.882489095934 | 0.882489095934 | 0.882489095933 |
+| AlphaEvolve, May 2025 (for comparison) | 50 | 0.896279944155 | 0.896279944155 | 0.896279944155 |
+
+So journal-s2's step function certifies **C2 ≥ 0.92418224**, computed in exact rational arithmetic on the float
+heights themselves (no rounding anywhere). The other runs are added as they finish (the next job writes
+`results/v4/VERIFICATION.md` for all of them).
+
 ### The claim, and how far it holds
 
 **What can be said:** *On the identical problem, scored with DeepMind's own verification formula, Helix v4 found a
