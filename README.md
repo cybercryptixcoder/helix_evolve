@@ -4,12 +4,16 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
-> **Helix v4.5 and v5 (October 21, 2026)**: v4.5 is v4's Atlas fixed where the v4 overnight run showed it was weak
-> (stall escapes, its own reasoning carried forward, real-gain counting); v5 is a continuing researcher with a
-> versioned theory, agenda and notebook, continuity built from links, and explicit lookups. Mid-run, Helix v4 found a
-> construction scoring 0.936 on the second autocorrelation inequality (independent verification pending), above
-> AlphaEvolve's first published result for it (0.8962); see [docs/MILESTONES.md](docs/MILESTONES.md), [docs/V5_DESIGN.md](docs/V5_DESIGN.md) and
-> [docs/V5_JOB.md](docs/V5_JOB.md).
+> **Helix v4.5 and v5 (October 21, 2026)**: the v4 job finished with a construction certifying **C2 ≥ 0.9390161**
+> on the second autocorrelation inequality (atlas-s1, 42,496 steps, verified in exact arithmetic), above
+> AlphaEvolve's first published result for it (0.8963); 4 of its 9 runs passed that value
+> ([docs/MILESTONES.md](docs/MILESTONES.md); how the runs climbed, stalled and escaped, from their traces:
+> [docs/V4_ANALYSIS.md](docs/V4_ANALYSIS.md)). v4.5 is v4's Atlas with what those traces showed it needed; v5 is a
+> continuing researcher (a falsifiable theory, an agenda of threads with stop rules, a notebook with continuity
+> built from links, explicit lookups). Both run on one new engine: a portfolio of slot roles every generation
+> (deepen / branch / explore), programs that keep their best construction at the CPU limit, stage lines, shared
+> gains not counted as evidence, and an elimination check when the search stalls. See
+> [docs/V5_DESIGN.md](docs/V5_DESIGN.md) and [docs/V5_JOB.md](docs/V5_JOB.md).
 
 > **Helix v4 (October 20, 2026)** evolves whole programs instead of feature weights, keeps a population (a tree of
 > every program) instead of one champion, describes each result in detail, and tests whether **memory across
