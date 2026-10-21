@@ -4,6 +4,24 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 21, 2026 (11:30): v4.5 and v5 results; atlas-s1 to generation 40
+
+`docs/V5_RESULTS.md`.
+- **Final scores:** v4.5 0.875 / 0.897 / 0.926; v5 0.872 / 0.872 / 0.934. That is within the v4 spread: no
+  difference in score is shown.
+- **Behaviour:** no run fell into the 0.8825 attractor. They started slower, and fresh lines took over late (5 of
+  6 final best lines). The constructions were shallower (450-4,096 steps), and the runs were still climbing at
+  generation 20.
+- **Engine fixes:** they worked (fewer wasted children, no spirals, 12 programs saved at the CPU limit). The
+  max-as-constraint idea was found again with clean prompts.
+- **atlas-s1:** reached 0.940521 at generation 40 (verified). It was flat from g29 to g38; the break came from the
+  wide loop on a lower-resolution line.
+- **Atlas graph:** fully tracked (an event log). 239 findings, 6 per generation by quota. Only 51 were ever opened,
+  and in the plateau retrieval circled on the same four findings.
+- **Backup:** the complete v4 data was sent as a file. atlas-s1 is being continued to generation 55.
+
+---
+
 ## October 21, 2026 (03:15): two leaks of v4 wording removed from the prompts; the job restarted clean
 
 An audit of every prompt the model sees, asked for by Shreyas (03:11), found wording that came from the v4 traces:
