@@ -29,7 +29,10 @@ def test_alphaevolve_may_2025_reproduced_three_ways():
 
 
 def test_exact_check_for_large_constructions():
-    h = np.abs(np.random.default_rng(0).standard_normal(6000)) ** 3
+    h = np.abs(np.random.default_rng(0).standard_normal(3000)) ** 3
+    r = V.verify(h)
+    assert r["agree"] and "float heights themselves" in r["exact_how"]
+    h = np.abs(np.random.default_rng(1).standard_normal(15000)) ** 3
     r = V.verify(h)
     assert r["agree"] and "2^30" in r["exact_how"]
 
