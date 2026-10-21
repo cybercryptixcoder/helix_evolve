@@ -13,17 +13,18 @@ verification formula, exact arithmetic; all three agree for every run):
 | Run | Steps | Exact value of the construction | Passed AlphaEvolve May 2025 (0.8963)? |
 |---|---|---|---|
 | **atlas-s1** | 42,496 | **0.939016147** | yes |
-| journal-s1 | 73,322 | 0.934184690 | yes |
+| journal-s1 | 6,000 | 0.934184689791 | yes |
 | journal-s2 | 4,000 | 0.924182240140321 | yes |
-| control-s2 | 102,400 | 0.913581645 | yes |
-| atlas-s2 | 200,000 | 0.892272819 | no |
-| journal-s3, control-s1, control-s3, atlas-s3 | 25,600-200,000 | 0.88244-0.88254 | no |
+| control-s2 | 25,600 | 0.913581645 | yes |
+| atlas-s2 | 544 | 0.892272819244 | no |
+| journal-s3, control-s1, control-s3, atlas-s3 | 4,096-200,000 | 0.88244-0.88254 | no |
 | AlphaEvolve, May 2025 (for comparison) | 50 | 0.896279944155 | |
 
 For N ≤ 12,000 the exact value is that of the float heights themselves (exact rationals). Above that, the heights are
 rounded to integers below 2^30 and the convolution is done in exact integer arithmetic; the rounded step function is
 itself a valid construction, so its exact value is a certified bound. So atlas-s1's step function certifies
-**C2 ≥ 0.9390161**, and journal-s2's certifies C2 ≥ 0.92418224 with no rounding at all.
+**C2 ≥ 0.9390161**, and journal-s1's certifies C2 ≥ 0.93418468 with no rounding at all. The full table:
+`results/v4/VERIFICATION.md`.
 
 ### The claim, and how far it holds
 
