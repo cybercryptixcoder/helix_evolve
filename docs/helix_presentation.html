@@ -6,74 +6,91 @@
 <title>Helix</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fff;--ink:#111;--grey:#8a8a8a;--light:#e4e4e4;--acc:#e0245e}
+:root{--ink:#111;--grey:#8a8a8a;--light:#e4e4e4;--acc:#e0245e}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+html,body{height:100%;background:#fff;color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden}
 .slide{position:absolute;inset:0;padding:40px 56px 56px;display:none;flex-direction:column}
 .slide.on{display:flex}
-h1{font-size:40px;font-weight:700;letter-spacing:-1px}
+h1{font-size:44px;font-weight:700;letter-spacing:-1px}
 h2{font-size:30px;font-weight:700;letter-spacing:-.5px}
-.sub{font-size:18px;color:var(--grey);margin-top:6px}
-.viz{flex:1;min-height:0;margin-top:14px}
+.sub{font-size:19px;color:var(--grey);margin-top:8px}
+.viz{flex:1;min-height:0;margin-top:12px}
 svg{width:100%;height:100%}
 svg text{font-family:Inter,system-ui,sans-serif;fill:var(--ink)}
-.cap{min-height:56px;font-size:19px;line-height:1.4;margin-top:8px;max-width:1100px}
+.cap{min-height:58px;font-size:19px;line-height:1.4;margin-top:6px;max-width:1150px}
 .cap b{color:var(--acc)}
 .nav{position:fixed;bottom:14px;right:56px;font-size:13px;color:var(--grey)}
-.rows{margin:auto 0;display:flex;flex-direction:column;gap:44px;max-width:1250px}
-.row{display:grid;grid-template-columns:1fr 50px 1fr;align-items:center;font-size:26px;line-height:1.3;opacity:0;transition:opacity .4s}
-.row.shown{opacity:1}
+.rows{margin:auto 0;display:flex;flex-direction:column;gap:40px;max-width:1250px}
+.row{display:grid;grid-template-columns:1fr 50px 1fr;align-items:center;font-size:25px;line-height:1.3}
 .row .p{color:var(--grey)} .row .a{text-align:center;color:var(--grey)} .row .f{font-weight:600}
-.io{margin-top:auto;display:flex;gap:60px;font-size:18px;border-top:1px solid var(--light);padding-top:18px;opacity:0;transition:opacity .4s}
-.io.shown{opacity:1}
-.io b{display:block;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);margin-bottom:4px}
+.list{margin-top:34px;display:flex;flex-direction:column;gap:22px;font-size:24px;max-width:1150px}
+.list div span{color:var(--grey)}
 .step{opacity:0;transition:opacity .45s}
 .step.shown{opacity:1}
-button{font:600 14px Inter,sans-serif;border:1px solid var(--ink);background:#fff;border-radius:6px;padding:5px 14px;cursor:pointer}
-.ctl{display:flex;gap:12px;align-items:center;margin-top:6px}
-input[type=range]{flex:1;accent-color:var(--acc)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;border-top:1px solid var(--light);padding-top:14px;margin-top:6px}
+.facts div{font-size:16px;line-height:1.35}
+.facts b{display:block;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);margin-bottom:4px;font-weight:600}
 </style>
 </head>
 <body>
 
-<!-- 1: the result -->
-<section class="slide" data-steps="0">
+<!-- 1: what I built -->
+<section class="slide" data-steps="3">
   <h1>Helix</h1>
-  <div class="sub">An evolutionary loop that keeps making progress. One run, 55 generations, starting from a constant function.</div>
-  <div class="viz"><svg id="climb" viewBox="0 0 1280 560"></svg></div>
+  <div class="sub">An evolutionary loop that writes programs to solve hard problems, and keeps making progress over many generations.</div>
+  <div class="rows">
+    <div class="row step"><span class="p">Evolutionary loops only go <i>wide</i>: random variations of the best code</span><span class="a">→</span><span class="f">I added a loop that goes <i>deep</i>: a researcher that tests one idea at a time</span></div>
+    <div class="row step"><span class="p">Every generation starts fresh, shown only the best programs</span><span class="a">→</span><span class="f">Continuity: the system keeps building on what it already learned</span></div>
+    <div class="row step"><span class="p">A context window can't hold everything that was tried</span><span class="a">→</span><span class="f">Atlas: a memory the agent navigates, opening only what it needs</span></div>
+  </div>
 </section>
 
-<!-- 2: why -->
-<section class="slide" data-steps="4">
-  <h2>What existing evolutionary loops lack, and what I built for it</h2>
-  <div class="rows">
-    <div class="row step"><span class="p">They only go <i>wide</i>: random variations of the best code</span><span class="a">→</span><span class="f">Add a loop that goes <i>deep</i>: a researcher that tests one idea at a time</span></div>
-    <div class="row step"><span class="p">Every generation starts fresh, shown only the best programs</span><span class="a">→</span><span class="f">Continuity: the agent keeps working on the problem across generations</span></div>
-    <div class="row step"><span class="p">But a context window can't hold everything that was tried</span><span class="a">→</span><span class="f">Atlas: progress stored as a graph the agent navigates, opening only what it needs</span></div>
+<!-- 2: the problem -->
+<section class="slide" data-steps="0">
+  <h2>The problem I tested it on</h2>
+  <div class="sub">The second autocorrelation inequality: a known open problem in mathematics (analysis).</div>
+  <div class="list">
+    <div><b>Type:</b> <span>optimisation. Find a function that makes a score as high as possible. The true maximum is unknown.</span></div>
+    <div><b>A solution:</b> <span>a list of numbers (a step function), plus the program that found it.</span></div>
+    <div style="margin-top:14px"><b>Why this problem</b></div>
+    <div>Every solution is a <b>proof</b> <span>: its score is a certified bound, so nothing can be faked</span></div>
+    <div>Scoring is <b>exact and cheap</b> <span>: no LLM judges the results</span></div>
+    <div>It is <b>open-ended</b> <span>: there is always room to climb, so I can see whether progress continues</span></div>
+    <div>There is a <b>public record</b> <span>: human mathematicians and AI systems (AlphaEvolve) to compare against</span></div>
   </div>
-  <div class="io step"><div><b>In</b>a problem: statement, exact scorer, a trivial starting program</div><div><b>Out</b>the best program and its construction, every attempt, and what was learned</div><div><b>Model</b>one inexpensive LLM · 30 s per program · 2 CPU cores · no training</div></div>
 </section>
 
 <!-- 3: one generation -->
 <section class="slide" data-steps="6">
-  <h2>One generation, step by step</h2>
+  <h2>One generation of Helix</h2>
   <div class="viz"><svg id="gen" viewBox="0 0 1280 560"></svg></div>
   <div class="cap" id="genCap"></div>
 </section>
 
-<!-- 4: atlas -->
+<!-- 4: memory -->
 <section class="slide" data-steps="4">
-  <h2>Atlas: how progress is stored</h2>
-  <div class="viz"><svg id="atlas" viewBox="0 0 1280 560"></svg></div>
-  <div class="cap" id="atlasCap"></div>
+  <h2>What the memory stores, and how it is used</h2>
+  <div class="viz"><svg id="mem" viewBox="0 0 1280 560"></svg></div>
+  <div class="cap" id="memCap"></div>
 </section>
 
-<!-- 5: branching -->
-<section class="slide" data-steps="4">
-  <h2>How it behaves: every program it wrote</h2>
-  <div class="viz"><svg id="tree" viewBox="0 0 1280 520"></svg></div>
-  <div class="ctl"><button id="play">▶ Play</button><input type="range" id="tg" min="0" max="55" value="55"><span id="tl" style="width:140px;font-variant-numeric:tabular-nums">gen 55</span></div>
-  <div class="cap" id="treeCap"></div>
+<!-- 5: progression -->
+<section class="slide" data-steps="2">
+  <h2>Generation by generation</h2>
+  <div class="viz"><svg id="prog" viewBox="0 0 1280 520"></svg></div>
+  <div class="cap" id="progCap"></div>
+</section>
+
+<!-- 6: the result -->
+<section class="slide" data-steps="1">
+  <h2>The result</h2>
+  <div class="viz"><svg id="climb" viewBox="0 0 1280 470"></svg></div>
+  <div class="facts step">
+    <div><b>Model</b>DeepSeek V4.1 Flash, one inexpensive model for every role; only the Researcher thinks</div>
+    <div><b>Compute</b>30 s of CPU per program, 6 programs per generation, one 2-core cloud machine shared with other runs</div>
+    <div><b>Time</b>about 6 hours for 30 generations; no training, no fine-tuning</div>
+    <div><b>AlphaEvolve, for scale</b>Gemini 2.0 Flash + Pro ensemble, 1,000 s per program, Google's infrastructure</div>
+  </div>
 </section>
 
 <div class="nav" id="pg"></div>
@@ -83,193 +100,177 @@ const DATA = {"hist":[[0,0.666667,0,0,"p0001"],[1,0.837037,0.796296,0.837037,"p0
 const NS = 'http://www.w3.org/2000/svg', ACC = '#e0245e', GREY = '#8a8a8a', LIGHT = '#e4e4e4', INK = '#111';
 function el(t, a = {}, p) { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
 function tx(p, x, y, s, a = {}) { const t = el('text', { x, y, 'font-size': 14, ...a }, p); t.textContent = s; return t; }
-function multi(p, x, y, lines, a = {}, lh = 18) { lines.forEach((l, i) => tx(p, x, y + i * lh, l, a)); }
-function stepG(svg, k) { const g = el('g', { class: 'step', 'data-step': k }, svg); return g; }
-function arrowDefs(svg) { const d = el('defs', {}, svg); [['a', INK], ['g', GREY], ['r', ACC]].forEach(([id, c]) => { const m = el('marker', { id: svg.id + id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, d); el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m); }); }
+function lines(p, x, y, ls, a = {}, lh = 18) { ls.forEach((l, i) => tx(p, x, y + i * lh, l, a)); }
+function stepG(svg, k) { return el('g', { class: 'step', 'data-step': k }, svg); }
+function defs(svg) { const d = el('defs', {}, svg); [['a', INK], ['g', GREY], ['r', ACC]].forEach(([id, c]) => { const m = el('marker', { id: svg.id + id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, d); el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m); }); }
 function arr(svg, p, d, c = 'a', dash) { return el('path', { d, fill: 'none', stroke: c === 'a' ? INK : c === 'g' ? GREY : ACC, 'stroke-width': 1.8, 'marker-end': `url(#${svg.id}${c})`, 'stroke-dasharray': dash ? '5 5' : 'none' }, p); }
-function box(p, x, y, w, h, title, sub, opts = {}) {
-  el('rect', { x, y, width: w, height: h, rx: 8, fill: '#fff', stroke: opts.c || INK, 'stroke-width': opts.bold ? 2.4 : 1.5, 'stroke-dasharray': opts.dash ? '5 4' : 'none' }, p);
-  tx(p, x + 12, y + 24, title, { 'font-size': 16, 'font-weight': 700 });
-  if (sub) multi(p, x + 12, y + 44, sub.split('\n'), { 'font-size': 13.5, fill: '#444' });
+function box(p, x, y, w, h, title, sub, o = {}) {
+  el('rect', { x, y, width: w, height: h, rx: 8, fill: '#fff', stroke: o.c || INK, 'stroke-width': o.bold ? 2.4 : 1.5, 'stroke-dasharray': o.dash ? '5 4' : 'none' }, p);
+  tx(p, x + 12, y + 23, title, { 'font-size': 16, 'font-weight': 700 });
+  if (sub) lines(p, x + 12, y + 43, sub.split('\n'), { 'font-size': 13, fill: '#444' }, 17);
 }
-function chip(p, x, y, label, score, rec, w = 92) {
-  el('rect', { x, y, width: w, height: 26, rx: 13, fill: rec ? ACC : '#fff', stroke: rec ? ACC : INK }, p);
-  tx(p, x + w / 2, y + 17.5, score ? label + '  ' + score : label, { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 600, fill: rec ? '#fff' : INK });
+function chip(p, x, y, label, rec, w = 64) {
+  el('rect', { x, y, width: w, height: 24, rx: 12, fill: rec ? ACC : '#fff', stroke: rec ? ACC : INK }, p);
+  tx(p, x + w / 2, y + 16.5, label, { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 600, fill: rec ? '#fff' : INK });
 }
+const label = (p, x, y, s, a = {}) => tx(p, x, y, s, { 'font-size': 12.5, fill: '#555', ...a });
 
-/* ---------- slide mechanics: right arrow reveals the next step, then the next slide ---------- */
+/* slide mechanics: → reveals the next step, then moves on */
 const slides = [...document.querySelectorAll('.slide')]; let cur = 0; const st = slides.map(() => 0); const hooks = {};
 function render() {
   slides.forEach((s, i) => s.classList.toggle('on', i === cur));
-  const s = slides[cur];
-  s.querySelectorAll('.step').forEach(e => { const k = +(e.dataset.step || [...s.querySelectorAll('.step')].indexOf(e) + 1); e.classList.toggle('shown', k <= st[cur]); });
+  const s = slides[cur], all = [...s.querySelectorAll('.step')];
+  all.forEach((e, i) => e.classList.toggle('shown', +(e.dataset.step || i + 1) <= st[cur]));
   document.getElementById('pg').textContent = (cur + 1) + ' / ' + slides.length;
   hooks[cur] && hooks[cur](st[cur]);
 }
-function go(d) {
-  const max = +slides[cur].dataset.steps;
-  if (d > 0) { if (st[cur] < max) st[cur]++; else if (cur < slides.length - 1) cur++; }
-  else { if (st[cur] > 0) st[cur]--; else if (cur > 0) cur--; }
-  render();
-}
+function go(d) { const max = +slides[cur].dataset.steps;
+  if (d > 0) { if (st[cur] < max) st[cur]++; else if (cur < slides.length - 1) cur++; } else { if (st[cur] > 0) st[cur]--; else if (cur > 0) cur--; } render(); }
 document.addEventListener('keydown', e => { if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); go(1); } if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(-1); } if (e.key === 'f') document.documentElement.requestFullscreen?.(); });
-document.addEventListener('click', e => { if (e.target.closest('button,input')) return; go(e.clientX > innerWidth * .3 ? 1 : -1); });
-
-/* ---------- 1: the climb, with the milestones on it ---------- */
-(function () {
-  const s = document.getElementById('climb'), H = DATA.hist;
-  const x0 = 70, x1 = 930, X = g => x0 + g / 55 * (x1 - x0), lo = .82, hi = .97, Y = v => 520 - (Math.max(lo, v) - lo) / (hi - lo) * 490;
-  for (let v = .83; v < .975; v += .02) { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: LIGHT }, s); tx(s, x0 - 8, Y(v) + 4, v.toFixed(2), { 'text-anchor': 'end', 'font-size': 12, fill: GREY }); }
-  [0, 10, 20, 30, 40, 50, 55].forEach(g => tx(s, X(g), 542, 'gen ' + g, { 'text-anchor': 'middle', 'font-size': 12, fill: GREY }));
-  const ms = [[.9626, 'Best ever (EinsteinArena, 2026)', '0.9626'], [.961, 'AlphaEvolve, later runs (Nov 2025)', '0.961'], [.9414, 'Best human (Jaech & Joseph, 2025)', '0.9414'], [.9016, 'Human (Boyer & Li, 2025)', '0.9016'], [.8963, 'AlphaEvolve (May 2025)', '0.8963'], [.8892, 'Human record (2010)', '0.8892']];
-  let last = -99;
-  ms.forEach(([v, n, vs]) => { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: GREY, 'stroke-dasharray': '4 4' }, s); let ty = Math.max(Y(v) + 4, last + 16); last = ty; tx(s, x1 + 10, ty, vs + '  ' + n, { 'font-size': 12.5, fill: '#444' }); });
-  let d = ''; H.forEach((h, i) => { d += (i ? ' L' : 'M') + X(h[0]) + ',' + Y(h[1]); if (i < H.length - 1) d += ' L' + X(H[i + 1][0]) + ',' + Y(h[1]); });
-  el('path', { d, fill: 'none', stroke: ACC, 'stroke-width': 3 }, s);
-  const end = H[H.length - 1][1];
-  el('circle', { cx: X(55), cy: Y(end), r: 5, fill: ACC }, s);
-  tx(s, X(55) - 8, Y(end) - 12, 'Helix 0.94079', { 'text-anchor': 'end', 'font-size': 17, 'font-weight': 700, fill: ACC });
-  tx(s, X(0) + 6, 514, 'starts at 0.667', { 'font-size': 12, fill: GREY });
-  // gaps
-  tx(s, X(36), Y(.951), '0.0006 below the best human result · 0.022 below the best ever', { 'text-anchor': 'middle', 'font-size': 13, fill: '#444' });
-  tx(s, X(16), Y(.912), 'passes AlphaEvolve (May 2025) at generation 10', { 'font-size': 13, fill: '#444' });
-})();
+document.addEventListener('click', e => go(e.clientX > innerWidth * .3 ? 1 : -1));
 
 /* ---------- 3: one generation ---------- */
 (function () {
-  const s = document.getElementById('gen'); arrowDefs(s);
-  // static frame: the two loops
-  tx(s, 40, 26, 'WIDE LOOP  ·  no memory', { 'font-size': 13, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.5 });
-  tx(s, 900, 26, 'DEEP LOOP  ·  with memory', { 'font-size': 13, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.5 });
-  el('line', { x1: 380, x2: 380, y1: 10, y2: 545, stroke: LIGHT }, s); el('line', { x1: 880, x2: 880, y1: 10, y2: 545, stroke: LIGHT }, s);
-  // step 0: population with Code Zero
-  const g0 = el('g', {}, s);
-  box(g0, 470, 420, 340, 110, 'Population', 'every program ever written\n(nothing is deleted)');
-  const popCount = tx(g0, 795, 444, '1 program', { 'text-anchor': 'end', 'font-size': 14, 'font-weight': 700 });
-  chip(g0, 484, 492, 'Code Zero', '0.667', false, 130);
-  // step 1: wide
+  const s = document.getElementById('gen'); defs(s);
+  // always visible: the population and the memory (the two things that persist)
+  box(s, 30, 205, 250, 120, 'Population', 'every program ever written\nnothing is ever deleted');
+  const pc = tx(s, 268, 228, '1 program', { 'text-anchor': 'end', 'font-size': 13.5, 'font-weight': 700 });
+  chip(s, 44, 288, 'Code Zero  0.667', false, 140);
+  box(s, 30, 430, 250, 100, 'Atlas  (memory)', 'what was tried, what worked,\nwhat failed, and why', { dash: true });
+  const ac = tx(s, 268, 453, 'empty', { 'text-anchor': 'end', 'font-size': 13.5, 'font-weight': 700, fill: GREY });
+  // 1: wide loop
   const g1 = stepG(s, 1);
-  arr(s, g1, 'M470,470 C420,470 390,420 344,400');
-  tx(g1, 368, 470, 'picks 3 parents', { 'font-size': 13, fill: '#444' });
-  box(g1, 40, 330, 300, 104, 'Mutator  ×3', '"Here is a program.\nWrite a better version."\nsees one program, nothing else');
-  [0, 1, 2].forEach(i => chip(g1, 40 + i * 100, 270, ['A', 'B', 'C'][i]));
-  arr(s, g1, 'M190,328 L190,300');
-  // step 2: deep
+  tx(g1, 360, 28, 'WIDE LOOP · no memory', { 'font-size': 12.5, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.4 });
+  arr(s, g1, 'M250,203 C250,120 280,90 356,90');
+  label(g1, 262, 150, 'picks 3 parents');
+  box(g1, 360, 40, 300, 100, 'Mutator  ×3', '"Here is a program. Make it better."\nsees only that program');
+  arr(s, g1, 'M660,90 L706,90');
+  ['A', 'B', 'C'].forEach((l, i) => chip(g1, 712 + i * 72, 78, l));
+  // 2: deep loop
   const g2 = stepG(s, 2);
-  box(g2, 900, 50, 310, 64, 'Navigator', '"What should I look at?"  opens ≤ 6 items');
-  box(g2, 900, 140, 310, 64, 'Researcher  (thinks)', '"What should we try next, and why?"');
-  box(g2, 900, 230, 310, 82, 'Coder  ×3', 'writes each planned experiment:\nbuild on X · change one thing · predict');
-  arr(s, g2, 'M1055,114 L1055,136'); arr(s, g2, 'M1055,204 L1055,226');
-  [0, 1, 2].forEach(i => chip(g2, 940 + i * 100, 330, ['D', 'E', 'F'][i]));
-  box(g2, 900, 420, 310, 110, 'Atlas', 'the memory\n(empty in generation 1;\n329 findings by generation 55)', { dash: true });
-  arr(s, g2, 'M1210,470 C1252,470 1252,82 1214,82', 'g', true); tx(g2, 1240, 280, 'map', { 'font-size': 13, fill: GREY });
-  // step 3: evaluator
+  tx(g2, 360, 368, 'DEEP LOOP · with memory', { 'font-size': 12.5, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.4 });
+  box(g2, 360, 380, 190, 92, 'Navigator', 'decides what to\nlook at');
+  box(g2, 580, 380, 190, 92, 'Researcher', 'thinks: what to try next\nand why; predicts results');
+  box(g2, 800, 380, 170, 92, 'Coder  ×3', 'writes each\nexperiment');
+  arr(s, g2, 'M550,426 L576,426'); arr(s, g2, 'M770,426 L796,426');
+  arr(s, g2, 'M282,300 C320,330 330,410 356,412'); label(g2, 292, 352, 'best programs');
+  arr(s, g2, 'M282,470 C320,470 330,446 356,444', 'g', true); label(g2, 290, 494, 'its map', { fill: GREY });
+  ['D', 'E', 'F'].forEach((l, i) => chip(g2, 800 + i * 58, 488, l, false, 50));
+  // 3: evaluator
   const g3 = stepG(s, 3);
-  box(g3, 470, 60, 340, 120, 'Evaluator', 'plain code, no LLM\nruns each program 30 s, from its parent\'s result\nscores it exactly · describes the result', { bold: true });
-  arr(s, g3, 'M240,268 C300,180 400,130 466,120'); arr(s, g3, 'M936,343 C860,343 870,150 814,150');
-  const sc = [['A', '0.824'], ['B', '0.788'], ['C', '0.837'], ['D', '0.667'], ['E', '0.796'], ['F', '0.724']];
-  sc.forEach(([l, v], i) => chip(g3, 438 + (i % 3) * 136, 210 + Math.floor(i / 3) * 38, l, v, l === 'C'));
-  // step 4: into the population
+  box(g3, 1010, 200, 240, 130, 'Evaluator', 'plain code, no LLM\nruns each program 30 s\nscores it exactly\ndescribes the result', { bold: true });
+  arr(s, g3, 'M930,90 C1000,90 1100,120 1120,196');
+  arr(s, g3, 'M966,500 C1000,500 985,330 1006,316');
+  // 4: back to the population
   const g4 = stepG(s, 4);
-  arr(s, g4, 'M640,286 L640,414');
-  tx(g4, 652, 330, 'all 6 kept', { 'font-size': 13, fill: '#444' });
-  // step 5: distiller -> atlas
+  arr(s, g4, 'M1006,262 L286,262');
+  const sc = [['A 0.824'], ['B 0.788'], ['C 0.837', 1], ['D 0.667'], ['E 0.796'], ['F 0.724']];
+  sc.forEach(([l, r], i) => chip(g4, 340 + i * 108, 226, l, r, 92));
+  label(g4, 646, 290, 'all 6 are kept; C is the new record', { 'text-anchor': 'middle' });
+  // 5: distiller -> atlas
   const g5 = stepG(s, 5);
-  arr(s, g5, 'M806,262 C860,262 860,480 896,480', 'r');
-  tx(g5, 760, 300, 'Distiller:', { 'font-size': 13, 'font-weight': 700, fill: ACC, 'text-anchor': 'start' });
-  tx(g5, 760, 316, '"what did we learn?"', { 'font-size': 13, fill: ACC });
-  // step 6: next generation
+  box(g5, 1010, 400, 240, 92, 'Distiller', 'reads all 6 results,\nwrites down what was learned');
+  arr(s, g5, 'M1130,332 L1130,396');
+  arr(s, g5, 'M1130,494 C1130,552 600,552 286,520', 'r');
+  el('rect', { x: 420, y: 504, width: 360, height: 30, rx: 6, fill: '#fff', stroke: ACC }, g5);
+  tx(g5, 600, 524, '"flatter top → higher score"  evidence: C, A, E', { 'text-anchor': 'middle', 'font-size': 12.5, fill: ACC, 'font-weight': 600 });
+  // 6: next generation
   const g6 = stepG(s, 6);
-  el('path', { d: 'M470,520 C300,556 90,540 80,438', fill: 'none', stroke: ACC, 'stroke-width': 2.4, 'stroke-dasharray': '7 5', 'marker-end': `url(#${s.id}r)` }, g6);
-  tx(g6, 150, 530, 'next generation  ×55', { 'font-size': 15, 'font-weight': 700, fill: ACC });
+  el('rect', { x: 22, y: 196, width: 266, height: 344, rx: 12, fill: 'none', stroke: ACC, 'stroke-width': 2.5 }, g6);
+  tx(g6, 30, 186, 'carried to generation 2', { 'font-size': 13, 'font-weight': 700, fill: ACC });
   const caps = [
-    'Generation 1 starts with a single program, <b>Code Zero</b>: a constant function, scoring 0.667.',
-    'The <b>wide loop</b>: 3 parents are picked from the population, and a Mutator rewrites each one into a variant. It has no memory and no plan. This is classic evolution.',
-    'The <b>deep loop</b>: the Navigator reads Atlas\'s map and opens what matters; the Researcher plans 3 experiments, each one change with a prediction; Coders write them.',
-    'The <b>evaluator</b> runs all 6 new programs, each starting from its parent\'s construction, and scores them exactly. C is the new record: <b>0.837</b>.',
-    'Every program goes into the <b>population</b> (1 → 7 here; 331 by generation 55). Next round\'s parents are sampled from all of them, favouring strong ones that haven\'t been built on much.',
-    'The <b>Distiller</b> reads the 6 results and writes findings into Atlas, e.g. <i>"flatter f∗f top → higher score (evidence: C, A, E)"</i>. Code checks every citation.',
-    'Only the <b>population and Atlas</b> carry over. No agent keeps a conversation. The next generation starts from them, 55 times.'
+    'Generation 1 starts with one program, <b>Code Zero</b>: a trivial solution scoring 0.667. The memory is empty.',
+    '<b>Wide loop</b>: 3 parents are picked from the population. A Mutator rewrites each one into a variant, with no memory and no plan. This is classic evolution.',
+    '<b>Deep loop</b>: the Navigator reads the population\'s best programs and Atlas\'s map, and opens what it needs. The Researcher plans 3 experiments, and Coders write them.',
+    'All 6 new programs go to the <b>evaluator</b>. Each runs 30 s, starting from its parent\'s solution, and is scored exactly.',
+    'Every program goes back into the <b>population</b> with its score. Nothing is deleted. C becomes the record that the next generation builds on.',
+    'A separate agent, the <b>Distiller</b>, turns the results into findings, each tied to the programs that prove it, and stores them in <b>Atlas</b>.',
+    'Only the <b>population and Atlas</b> carry over. Generation 2 starts here, with 7 programs and its first findings. By generation 30: 181 programs and 179 findings.'
   ];
-  hooks[2] = k => { document.getElementById('genCap').innerHTML = caps[k]; popCount.textContent = k >= 4 ? '7 programs' : '1 program'; };
+  hooks[2] = k => { document.getElementById('genCap').innerHTML = caps[k]; pc.textContent = k >= 4 ? '7 programs' : '1 program'; ac.textContent = k >= 5 ? '6 findings' : 'empty'; ac.setAttribute('fill', k >= 5 ? ACC : GREY); };
 })();
 
-/* ---------- 4: atlas ---------- */
+/* ---------- 4: the memory, as a story ---------- */
 (function () {
-  const s = document.getElementById('atlas'); arrowDefs(s);
-  // layer labels
-  tx(s, 20, 70, 'FINDINGS', { 'font-size': 13, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.5 });
-  tx(s, 20, 88, 'what was learned', { 'font-size': 12.5, fill: GREY });
-  tx(s, 20, 392, 'ATTEMPTS', { 'font-size': 13, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.5 });
-  tx(s, 20, 410, 'every program, a tree', { 'font-size': 12.5, fill: GREY });
-  el('line', { x1: 20, x2: 1260, y1: 260, y2: 260, stroke: LIGHT }, s);
-  // step 1: the tree of attempts (generations 4-10 of the real run)
-  const P = { p24: [170, 380, 'gen 4', '0.878', 'smooth the max'], p37: [330, 480, 'gen 6', '+0', 'softmax'], p46: [540, 480, 'gen 8', '+0', 'top-k mean'], p47: [750, 480, 'gen 8', '+0', 'annealing'], p53: [980, 380, 'gen 9', '0.879', 'max → constraint'], p57: [1150, 380, 'gen 10', '0.908', 'push it'] };
+  const s = document.getElementById('mem'); defs(s);
+  const node = (p, x, y, t, sub, kind) => { const c = kind === 'ok' ? INK : kind === 'rec' ? ACC : GREY;
+    el('rect', { x, y, width: 190, height: 50, rx: 8, fill: kind === 'rec' ? ACC : '#fff', stroke: c, 'stroke-width': 1.6 }, p);
+    tx(p, x + 12, y + 21, t, { 'font-size': 14.5, 'font-weight': 700, fill: kind === 'rec' ? '#fff' : kind === 'no' ? GREY : INK });
+    tx(p, x + 12, y + 39, sub, { 'font-size': 12.5, fill: kind === 'rec' ? '#fff' : '#555' }); };
+  const note = (p, x, y, w, t, c = INK) => { el('rect', { x, y, width: w, height: 30, rx: 5, fill: '#f5f5f5', stroke: 'none' }, p); tx(p, x + 10, y + 20, t, { 'font-size': 12.5, fill: c }); };
+  tx(s, 850, 50, 'WHAT IS WRITTEN DOWN', { 'font-size': 12.5, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.2 });
+  tx(s, 30, 28, 'ATTEMPTS (what was tried, and what each was built on)', { 'font-size': 12.5, 'font-weight': 700, fill: GREY, 'letter-spacing': 1.2 });
+  // 1: a working idea
   const g1 = stepG(s, 1);
-  const pe = [['p24', 'p37'], ['p24', 'p46'], ['p24', 'p47'], ['p24', 'p53'], ['p53', 'p57']];
-  pe.forEach(([a, b]) => { const A = P[a], B = P[b]; if (B[1] > A[1]) arr(s, g1, `M${A[0] + 56},${A[1] + 31} C${A[0] + 56},${B[1] + 15} ${B[0] - 40},${B[1] + 15} ${B[0] - 4},${B[1] + 15}`, 'g'); else arr(s, g1, `M${A[0] + 113},${A[1] + 15} L${B[0] - 4},${B[1] + 15}`, 'g'); });
-  for (const k in P) { const [x, y, g, v, n] = P[k]; const rec = k === 'p53' || k === 'p57'; el('rect', { x, y, width: 112, height: 30, rx: 15, fill: rec ? ACC : '#fff', stroke: rec ? ACC : INK }, g1); tx(g1, x + 56, y + 19, n, { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 600, fill: rec ? '#fff' : INK }); tx(g1, x + 56, y + 46, g + ' · ' + v, { 'text-anchor': 'middle', 'font-size': 11.5, fill: GREY }); }
-  // step 2: findings, each citing its evidence
-  const F = { F19: [120, 150, 'F19 · works', 'smooth stand-in for the max: +0.033', 'p24'], F33: [330, 20, 'F33 · fails', 'softmax instead: no change', 'p37'], F44: [530, 150, 'F44 · fails', 'top-k mean instead: no change', 'p46'], F45: [760, 20, 'F45 · fails', 'annealing: no change', 'p47'], F49: [980, 150, 'F49 · works', 'move the max into a constraint', 'p53'] };
+  node(g1, 30, 60, 'Start  0.845', 'generation 3', 'ok');
+  arr(s, g1, 'M220,85 L276,85');
+  node(g1, 280, 60, 'Smooth the max  ✓', '0.878 · generation 4', 'ok');
+  note(g1, 850, 70, 260, 'stored: "smoothing the max works"');
+  // 2: three branches that fail
   const g2 = stepG(s, 2);
-  for (const k in F) { const [x, y, t, c, ev] = F[k]; const w = 200; const good = t.includes('works');
-    el('line', { x1: x + w / 2, y1: y + 56, x2: P[ev][0] + 56, y2: P[ev][1] - 2, stroke: GREY, 'stroke-dasharray': '2 4' }, g2);
-    el('rect', { x, y, width: w, height: 56, rx: 6, fill: '#fff', stroke: k === 'F49' ? ACC : INK, 'stroke-width': k === 'F49' ? 2.2 : 1.3 }, g2);
-    tx(g2, x + 10, y + 20, t, { 'font-size': 13, 'font-weight': 700, fill: k === 'F49' ? ACC : INK }); tx(g2, x + 10, y + 40, c, { 'font-size': 12, fill: '#444' }); }
-  tx(g2, 1090, 236, 'dotted: cites its evidence', { 'text-anchor': 'middle', 'font-size': 12, fill: GREY });
-  // step 3: links between findings
+  [['Softmax instead  ✗', 'no change · gen 6'], ['Top-k average  ✗', 'no change · gen 8'], ['Annealing  ✗', 'no change · gen 8']].forEach(([t, sub], i) => {
+    const y = 190 + i * 80; arr(s, g2, `M470,85 C520,85 510,${y + 25} 556,${y + 25}`, 'g'); node(g2, 560, y, t, sub, 'no');
+    note(g2, 850, y + 10, 260, ['stored: "softmax does not help"', 'stored: "top-k average does not help"', 'stored: "annealing does not help"'][i], GREY); });
+  // 3: backtrack, try the opposite
   const g3 = stepG(s, 3);
-  const lk = (d, lab, lx, ly, red) => { arr(s, g3, d, red ? 'r' : 'a'); tx(g3, lx, ly, lab, { 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600, fill: red ? ACC : '#444' }); };
-  lk('M330,48 C240,48 220,100 220,146', 'contradicts', 250, 70);
-  lk('M530,178 L324,178', 'contradicts', 427, 170);
-  lk('M980,178 L734,178', 'contradicts', 857, 170);
-  lk('M1080,150 C1080,122 220,122 220,146', 'refines', 650, 117, true);
-  // step 4: what the researcher sees
+  el('path', { d: 'M375,112 C375,470 420,476 556,476', fill: 'none', stroke: ACC, 'stroke-width': 2.2, 'marker-end': `url(#${s.id}r)` }, g3);
+  label(g3, 386, 440, 'back to its best solution, a different kind of change', { fill: ACC, 'font-weight': 600 });
+  node(g3, 560, 450, 'Max as a constraint  ✓', '0.908 · generations 9–10', 'rec');
+  note(g3, 850, 460, 260, 'stored: "this breaks the plateau"', ACC);
+  // 4: how the researcher reads it
   const g4 = stepG(s, 4);
-  el('rect', { x: 920, y: 460, width: 330, height: 76, rx: 6, fill: '#f6f6f6', stroke: LIGHT }, g4);
-  multi(g4, 934, 482, ['Generation 9 · the Researcher opened:', 'F19, F44 and the program behind them', '→ "all of these smooth the objective"'], { 'font-size': 12.5 }, 17);
+  el('rect', { x: 1128, y: 180, width: 146, height: 250, rx: 8, fill: '#fff', stroke: INK }, g4);
+  tx(g4, 1140, 204, 'The Researcher', { 'font-size': 14, 'font-weight': 700 });
+  lines(g4, 1140, 228, ['reads a map of', 'all of this, opens', 'the 3 failures,', 'and sees they are', 'the same kind of', 'change.', '', 'So it tries the', 'opposite.'], { 'font-size': 12.5, fill: '#444' }, 18);
   const caps = [
-    'Progress isn\'t a straight line, so it can\'t be stored as a log or a summary. Atlas stores it in two connected layers.',
-    '<b>Attempts</b>: every program, and the program it was built on. It forms a tree, because ideas branch. This is the real run, generations 4–10.',
-    '<b>Findings</b>: after each generation, the Distiller writes down what was learned. Every finding must cite the programs that prove it, and code computes whether it holds from their measured scores.',
-    'Findings link to each other (<b>refines</b>, <b>contradicts</b>, explains), across branches. That makes it a <b>graph</b>, not a tree: lessons connect even when the attempts behind them didn\'t.',
-    'The researcher never reads all of it. It gets a <b>map</b> (an index and the last generation) and <b>opens</b> what it needs. That is how continuity survives a limited context window. Here, it saw that every failure had smoothed the objective, tried the opposite, and broke the plateau.'
+    'Atlas keeps a record of the <b>work</b>, not a transcript: every attempt, what it was built on, its result, and what was learned from it. This is the real run, generations 3–10.',
+    'An idea works. The program is kept, and the lesson is <b>written down with its evidence</b>, so it can be checked.',
+    'Three follow-ups fail. Each failure is also written down, so it is <b>not retried</b>, and it is clear what didn\'t work.',
+    'So it <b>backtracks</b> to its best solution and tries a different kind of change. That broke the plateau: 0.879 → 0.928 in three generations.',
+    'It never reads everything. It sees a <b>map</b> (the attempts and their findings) and opens only what it needs. That is how continuity survives a limited context window.'
   ];
-  hooks[3] = k => document.getElementById('atlasCap').innerHTML = caps[k];
+  hooks[3] = k => document.getElementById('memCap').innerHTML = caps[k];
 })();
 
-/* ---------- 5: the tree ---------- */
+/* ---------- 5: generation by generation (to 30) ---------- */
 (function () {
-  const s = document.getElementById('tree'); const P = DATA.progs, line = new Set(DATA.line), by = {}; P.forEach(p => by[p[0]] = p);
-  const X = g => 60 + g / 55 * 1180, lo = .70, hi = .945, Y = v => v == null ? 505 : 480 - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * 460;
-  [.7, .8, .85, .9, .94].forEach(v => { el('line', { x1: 60, x2: 1240, y1: Y(v), y2: Y(v), stroke: LIGHT }, s); tx(s, 52, Y(v) + 4, v.toFixed(2), { 'text-anchor': 'end', 'font-size': 11, fill: GREY }); });
-  tx(s, 52, 509, 'failed', { 'text-anchor': 'end', 'font-size': 11, fill: GREY });
-  const jit = id => (parseInt(id.slice(1)) * 7919 % 13) / 13 - .5;
-  const back = el('g', {}, s), front = el('g', {}, s), items = [];
-  P.forEach(p => { const [id, g, par, role, sc] = p; const x = X(g) + jit(id) * 14, y = Y(sc); let e = null;
-    const onl = line.has(id);
-    if (par && by[par]) { const q = by[par]; const px = X(q[1]) + jit(q[0]) * 14, py = Y(q[4]);
-      e = el('path', { d: `M${px},${py} C${(px + x) / 2},${py} ${(px + x) / 2},${y} ${x},${y}`, fill: 'none', stroke: onl && line.has(par) ? ACC : role === 'd' ? '#555' : '#bbb', 'stroke-width': onl && line.has(par) ? 2.4 : .8, 'stroke-opacity': onl && line.has(par) ? 1 : .5 }, onl ? front : back); }
-    const n = el('circle', { cx: x, cy: y, r: onl ? 4.2 : 2.8, fill: onl ? ACC : sc == null ? '#fff' : role === 'd' ? INK : '#fff', stroke: onl ? ACC : role === 'd' ? INK : GREY, 'stroke-width': 1.2 }, onl ? front : back);
-    items.push([g, n, e]); });
-  const lg = el('g', {}, s); [[INK, INK, 'planned by the researcher (deep)'], ['#fff', GREY, 'free mutation (wide)'], [ACC, ACC, 'the line that holds the record']].forEach(([f, c, t], i) => { el('circle', { cx: 80 + i * 300, cy: 14, r: 5, fill: f, stroke: c }, lg); tx(lg, 92 + i * 300, 18, t, { 'font-size': 13 }); });
-  // annotations (steps)
-  const ann = [[1, 4, .878, 'tries several directions at once'], [2, 16.6, null, 'dead ends: tested, recorded, abandoned'], [3, 13, .9322, 'backtracks: the record moves to an older sibling branch'], [4, 39, .9405, 'stuck for 10 generations; a side branch finds the way out']];
-  ann.forEach(([k, g, v, t]) => { const a = stepG(s, k); const x = X(g), y = Y(v) + (k === 2 ? -30 : 0);
-    el('circle', { cx: x, cy: Y(v), r: 16, fill: 'none', stroke: ACC, 'stroke-width': 2 }, a);
-    const right = g < 30; tx(a, x + (right ? 22 : -22), Y(v) + (k === 3 ? 34 : k === 4 ? 74 : -20), t, { 'font-size': 14, 'font-weight': 600, fill: ACC, 'text-anchor': right ? 'start' : 'end' }); });
-  const tl = document.getElementById('tl'), rg = document.getElementById('tg');
-  function upto(G) { items.forEach(([g, n, e]) => { const v = g <= G ? '' : 'none'; n.style.display = v; if (e) e.style.display = v; }); tl.textContent = 'gen ' + G + ' · ' + DATA.hist[G][1].toFixed(4); }
-  rg.oninput = () => upto(+rg.value); upto(55);
-  let timer = null; const b = document.getElementById('play');
-  b.onclick = () => { if (timer) { clearInterval(timer); timer = null; b.textContent = '▶ Play'; return; } let G = +rg.value >= 55 ? 0 : +rg.value; b.textContent = '❚❚ Pause';
-    timer = setInterval(() => { rg.value = G; upto(G); if (++G > 55) { clearInterval(timer); timer = null; b.textContent = '▶ Play'; } }, 220); };
-  const caps = ['331 programs, by generation and score, each joined to the program it was built on.',
-    'It behaves like a researcher: it <b>tries several directions</b> from the same point…',
-    '…abandons the ones that fail (each failure becomes a finding, so it isn\'t retried)…',
-    '…and <b>backtracks</b>: in generation 13 the record came from an older sibling branch, not from the latest best.',
-    'When the main line stalls, breadth rescues it: after 10 flat generations, a <b>side branch</b> found the way out. Two thirds of the record line was planned by the researcher; one third came from free mutation.'];
-  hooks[4] = k => document.getElementById('treeCap').innerHTML = caps[k];
+  const s = document.getElementById('prog'); const G = 30;
+  const X = g => 70 + (g - 0.5) / G * 1170, lo = .80, hi = .945, Y = v => 470 - (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * 430;
+  [.8, .85, .9, .94].forEach(v => { el('line', { x1: 60, x2: 1250, y1: Y(v), y2: Y(v), stroke: LIGHT }, s); tx(s, 52, Y(v) + 4, v.toFixed(2), { 'text-anchor': 'end', 'font-size': 11.5, fill: GREY }); });
+  for (let g = 1; g <= G; g++) if (g % 5 === 0 || g === 1) tx(s, X(g), 498, 'gen ' + g, { 'text-anchor': 'middle', 'font-size': 11.5, fill: GREY });
+  tx(s, 52, Y(.80) + 18, 'below', { 'text-anchor': 'end', 'font-size': 10.5, fill: GREY });
+  // the record
+  let d = ''; DATA.hist.slice(0, G + 1).forEach((h, i) => { const x = i === 0 ? 70 : X(h[0]) + 12; d += (i ? ' L' : 'M') + (i ? X(h[0]) - 12 : 70) + ',' + Y(h[1]) + ' L' + x + ',' + Y(h[1]); });
+  el('path', { d, fill: 'none', stroke: ACC, 'stroke-width': 2.4 }, s);
+  // the 6 programs of each generation
+  DATA.progs.forEach(p => { const [id, g, par, role, sc] = p; if (g < 1 || g > G) return; const deep = role === 'd';
+    const x = X(g) + (deep ? -6 : 6), y = sc == null ? 488 : Y(sc);
+    el('circle', { cx: x, cy: y, r: 4, fill: deep ? INK : '#fff', stroke: deep ? INK : GREY, 'stroke-width': 1.4, opacity: sc == null ? .5 : 1 }, s); });
+  const lg = el('g', {}, s);
+  [[INK, INK, 'planned by the Researcher (deep loop)'], ['#fff', GREY, 'from the Mutator (wide loop)'], [ACC, ACC, 'the record']].forEach(([f, c, t], i) => { el('circle', { cx: 80 + i * 330, cy: 12, r: 5, fill: f, stroke: c }, lg); tx(lg, 92 + i * 330, 16, t, { 'font-size': 13 }); });
+  const g1 = stepG(s, 1); [4, 10, 11, 14].forEach(g => el('circle', { cx: X(g), cy: Y(DATA.hist[g][1]), r: 13, fill: 'none', stroke: INK, 'stroke-width': 2 }, g1));
+  const g2 = stepG(s, 2); [1, 13].forEach(g => el('circle', { cx: X(g), cy: Y(DATA.hist[g][1]), r: 13, fill: 'none', stroke: GREY, 'stroke-width': 2, 'stroke-dasharray': '3 3' }, g2));
+  const caps = ['Each column is one generation: 3 programs planned by the Researcher (black) and 3 from the Mutator (white), each at its score. The pink line is the best so far.',
+    'Most of the big jumps came from <b>planned experiments</b> (generations 4, 10, 11, 14): 18 of the 26 new records up to generation 30.',
+    'The mutation loop matters too: it found the first step and the generation-13 jump (8 records). <b>Both loops are needed.</b>'];
+  hooks[4] = k => document.getElementById('progCap').innerHTML = caps[k];
+})();
+
+/* ---------- 6: the result ---------- */
+(function () {
+  const s = document.getElementById('climb'), G = 30, H = DATA.hist.slice(0, G + 1);
+  const x0 = 70, x1 = 880, X = g => x0 + g / G * (x1 - x0), lo = .82, hi = .97, Y = v => 430 - (Math.max(lo, v) - lo) / (hi - lo) * 410;
+  for (let v = .83; v < .975; v += .02) { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: LIGHT }, s); tx(s, x0 - 8, Y(v) + 4, v.toFixed(2), { 'text-anchor': 'end', 'font-size': 12, fill: GREY }); }
+  [0, 5, 10, 15, 20, 25, 30].forEach(g => tx(s, X(g), 452, 'gen ' + g, { 'text-anchor': 'middle', 'font-size': 12, fill: GREY }));
+  const ms = [[.9626, 'Best ever (EinsteinArena, 2026)'], [.961, 'AlphaEvolve, later runs (Nov 2025)'], [.9414, 'Best human (Jaech & Joseph, 2025)'], [.9016, 'Human (Boyer & Li, 2025)'], [.8963, 'AlphaEvolve (May 2025)'], [.8892, 'Human record (2010)']];
+  let last = -99; ms.forEach(([v, n]) => { el('line', { x1: x0, x2: x1, y1: Y(v), y2: Y(v), stroke: GREY, 'stroke-dasharray': '4 4' }, s); let ty = Math.max(Y(v) + 4, last + 16); last = ty; tx(s, x1 + 10, ty, v + '  ' + n, { 'font-size': 12.5, fill: '#444' }); });
+  let d = ''; H.forEach((h, i) => { d += (i ? ' L' : 'M') + X(h[0]) + ',' + Y(h[1]); if (i < H.length - 1) d += ' L' + X(H[i + 1][0]) + ',' + Y(h[1]); });
+  el('path', { d, fill: 'none', stroke: ACC, 'stroke-width': 3 }, s);
+  const end = H[G][1]; el('circle', { cx: X(G), cy: Y(end), r: 5, fill: ACC }, s);
+  tx(s, X(G) - 8, Y(end) - 12, 'Helix ' + end.toFixed(4), { 'text-anchor': 'end', 'font-size': 17, 'font-weight': 700, fill: ACC });
+  tx(s, x0 + 6, 424, 'starts at 0.667', { 'font-size': 12, fill: GREY });
+  tx(s, X(10) + 8, Y(.912), 'passes AlphaEvolve (May 2025) at generation 10', { 'font-size': 13, fill: '#444' });
+  tx(s, X(18), Y(.952), '0.001 below the best human result · 0.022 below the best ever', { 'text-anchor': 'middle', 'font-size': 13, fill: '#444' });
 })();
 
 render();
