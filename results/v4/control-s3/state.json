@@ -1,5 +1,5 @@
 {
- "gen_done": 16,
+ "gen_done": 20,
  "config": {
   "condition": "control",
   "seed": 3,
@@ -16,5 +16,5 @@
   "problem": "ac2",
   "label": ""
  },
- "t": 1792557086.3854403
+ "t": 1792559500.2585151
 }
