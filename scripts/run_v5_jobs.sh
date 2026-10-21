@@ -44,8 +44,14 @@ mkdir -p "$ROOT_RUNS" "$HELIX4_SLOTS_DIR" "$RESULTS"
 echo "== Helix v4.5 + v5 job: conditions [$CONDITIONS] x seeds [$SEEDS], $GENS generations, $BUDGET s per program, $HELIX4_EVAL_SLOTS evaluation slots"
 
 # ------------------------------------------------------------------ never run alongside the v4 job
+# a v4 run is a python process started with "-m helix4.run"; the v4 job itself runs as "bash runs/.v4_job_snapshot.sh"
+# (and keeps running through its final report and push, after the last run ends). Match exactly those, so that
+# unrelated processes that merely mention the names (a shell, a grep) never hold this job back.
+v4_running() {
+  pgrep -f "^[^ ]*python[0-9.]* -m helix4\.run( |$)" > /dev/null 2>&1 || pgrep -f "^bash runs/\.v4_job_snapshot\.sh" > /dev/null 2>&1
+}
 waited=0
-while pgrep -f "helix4.run" > /dev/null 2>&1 || pgrep -f "v4_job_snapshot" > /dev/null 2>&1; do
+while v4_running; do
   [ "$waited" -ge "${MAX_WAIT_MIN:-240}" ] && { echo "   (the v4 job is still running after $waited minutes; starting anyway)"; break; }
   [ $((waited % 30)) -eq 0 ] && echo "   (waiting for the v4 job to finish before starting: $waited min so far)"
   sleep 60; waited=$((waited + 1))

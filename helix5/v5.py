@@ -643,22 +643,22 @@ class Researcher:
                 if not st:
                     rejected.append("belief add without a statement")
                     continue
-                kind = op.get("kind") if op.get("kind") in KINDS else "mechanism"
+                bkind = op.get("kind") if op.get("kind") in KINDS else "mechanism"
                 refuted_if = short(op.get("refuted_if"), 300)
-                if LIMIT_WORDS.search(st) and kind != "conjecture":
-                    kind = "conjecture"                  # a claim about a limit is a conjecture, whatever it was called
+                if LIMIT_WORDS.search(st) and bkind != "conjecture":
+                    bkind = "conjecture"                 # a claim about a limit is a conjecture, whatever it was called
                     refuted_if = refuted_if or "a construction that does better than this statement says is possible"
                     applied.append(f"(filed as a conjecture: a claim about the problem's limits)")
-                if kind in ("mechanism", "conjecture") and not refuted_if:
-                    rejected.append(f"belief '{short(st, 60)}': a {kind} must say what would refute it (refuted_if)")
+                if bkind in ("mechanism", "conjecture") and not refuted_if:
+                    rejected.append(f"belief '{short(st, 60)}': a {bkind} must say what would refute it (refuted_if)")
                     continue
-                if kind in ("works", "fails") and not ev_ids:
+                if bkind in ("works", "fails") and not ev_ids:
                     rejected.append(f"belief '{short(st, 60)}': an observation must cite the programs that show it")
                     continue
                 bid = self.next_id("B", self.beliefs)
-                ev.update(id=bid, statement=st, kind=kind, confidence=str(op.get("confidence") or "medium")[:10],
+                ev.update(id=bid, statement=st, kind=bkind, confidence=str(op.get("confidence") or "medium")[:10],
                           evidence=ev_ids, refuted_if=refuted_if)
-                applied.append(f"belief {bid} ({kind}): {short(st, 100)}")
+                applied.append(f"belief {bid} ({bkind}): {short(st, 100)}")
             else:
                 bid = str(op.get("id"))
                 if bid not in self.beliefs:

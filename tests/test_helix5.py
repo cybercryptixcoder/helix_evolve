@@ -256,3 +256,14 @@ def test_planning_call_is_capped_and_falls_back(tmp_path):
     r = Run(tmp_path / "cut", Config(condition="v45", gens=1, budget=2), llm=CutLLM(), log=lambda m: None)
     plan, info = r.researcher("sys", "user", 1)
     assert plan is not None and info["retried"] and r.llm.calls == 2
+
+
+def test_v5_step_kind_is_not_overwritten_by_belief_kinds(tmp_path):
+    r, m = v5_with_steps(tmp_path)
+    pid = r.archive.best().id
+    sid, _, _, _ = m.apply_step(2, "round", {"thinking": "t", "gist": "g", "beliefs": [
+        {"op": "add", "kind": "conjecture", "statement": "s", "refuted_if": "r"},
+        {"op": "add", "kind": "works", "statement": "w", "evidence": [pid]}]}, [])
+    assert m.steps[sid]["kind"] == "round"
+    from helix5.v5 import Researcher
+    assert Researcher(r).steps[sid]["kind"] == "round"
