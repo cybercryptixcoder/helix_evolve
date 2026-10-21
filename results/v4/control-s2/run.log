@@ -16,3 +16,7 @@
 00:20:11 [control-s2] gen 15: best 0.904765 (p0089, deep); deep 0.904765 (3/3 gained), wide 0.904647 (3/3 gained); 815 s
 00:38:04 [control-s2] gen 16: best 0.904853 (p0093, deep); deep 0.904853 (2/3 gained), wide 0.904522 (3/3 gained); 1073 s
 00:45:22 [control-s2] gen 17: best 0.904936 (p0099, deep); deep 0.904936 (3/3 gained), wide 0.904647 (2/3 gained); 438 s
+01:00:14 [control-s2] gen 18: best 0.905071 (p0107, wide); deep 0.905027 (3/3 gained), wide 0.905071 (2/3 gained); 892 s
+01:14:07 [control-s2] gen 19: best 0.913580 (p0115, deep); deep 0.913580 (3/3 gained), wide 0.905150 (3/3 gained); 833 s
+01:23:50 [control-s2] gen 20: best 0.913582 (p0121, deep); deep 0.913582 (3/3 gained), wide 0.905186 (3/3 gained); 583 s
+01:23:50 done: control-s2 (control, seed 2): best 0.913582 (p0121) after 20 generations, 121 programs, 140 model calls
