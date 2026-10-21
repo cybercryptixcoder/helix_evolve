@@ -36,7 +36,8 @@ from pathlib import Path
 import numpy as np
 
 from helix4.archive import Archive, Program, make_diff, short
-from helix4.llm import FakeLLM, LLM, LLMError
+from helix4.llm import FakeLLM, LLMError
+from helix5.llm import LLM
 from helix5 import prompts as P
 from helix5.evaluate import GAIN_EPS, evaluate, gain_label
 
@@ -121,10 +122,11 @@ class Run:
             self.trace.write(json.dumps(call) + "\n")
             self.trace.flush()
 
-    def call(self, role, system, user, temperature=0.7, max_tokens=4000, effort="none", gen=None):
+    def call(self, role, system, user, temperature=0.7, max_tokens=4000, effort="none", gen=None, grow=True):
+        kw = {"grow": grow} if getattr(self.llm, "supports_grow", False) else {}
         try:
             return self.llm.chat(role, system, user, temperature=temperature, max_tokens=max_tokens, effort=effort,
-                                 meta={"gen": gen}).text
+                                 meta={"gen": gen}, **kw).text
         except LLMError as exc:
             self.log(f"[{self.name}] gen {gen}: {role} call failed: {exc}")
             return ""
@@ -168,10 +170,12 @@ class Run:
         return {p.id for p in self.archive.lineage(b.id, depth=1000)}
 
     # ---------------------------------------------------------------- roles
-    def researcher(self, system, user, gen, max_tokens=30000, effort=None, role="researcher", need="experiments"):
+    def researcher(self, system, user, gen, max_tokens=20000, effort=None, role="researcher", need="experiments"):
+        """A planning call at the planner's effort, capped: if it thinks past its budget (20k answer + 12k thinking
+        room) or replies unreadably, it is asked once more without thinking, which answers in seconds."""
         t0 = time.time()
         text = self.call(role, system, user, temperature=0.7, max_tokens=max_tokens,
-                         effort=effort or self.cfg.researcher_effort, gen=gen)
+                         effort=effort or self.cfg.researcher_effort, gen=gen, grow=False)
         plan = P.extract_json(text)
         retried = False
         ok = lambda pl: isinstance(pl, dict) and (need is None or (isinstance(pl.get(need), list) and pl[need]))  # noqa: E731

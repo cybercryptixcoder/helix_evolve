@@ -174,3 +174,22 @@ def test_combined_report_builds(tmp_path):
     out = R5.build([tmp_path / "runs", tmp_path / "missing"], tmp_path / "out")
     html = Path(out).read_text()
     assert "v5 (the researcher)" in html and "0.896280" in html and "What the v5 researcher kept" in html
+
+
+def test_planning_call_is_capped_and_falls_back(tmp_path):
+    """A planner that thinks past its budget is asked once more without thinking, instead of thinking twice as long."""
+    from helix3.llm import Reply
+
+    class CutLLM:
+        supports_grow, calls, on_call = True, 0, None
+
+        def chat(self, role, system, user, temperature=0.7, max_tokens=4000, effort="none", meta=None, tries=5, grow=True):
+            self.calls += 1
+            assert grow is False or effort == "none"
+            if effort != "none":
+                return Reply("", "x", 0, 0, 0, 1.0, "length")
+            return Reply('{"experiments": [{"base": "p0001", "hypothesis": "h", "change": "c"}]}', "", 0, 0, 0, 1.0, "stop")
+
+    r = Run(tmp_path / "cut", Config(condition="v45", gens=1, budget=2), llm=CutLLM(), log=lambda m: None)
+    plan, info = r.researcher("sys", "user", 1)
+    assert plan is not None and info["retried"] and r.llm.calls == 2
