@@ -32,3 +32,7 @@
 08:59:24 [v5-s1] gen 11: best 0.842618 (p0066, deep); deep 0.842618 (2/3 gained), wide 0.842042 (2/3 gained); 357 s
 09:09:38 [v5-s1] gen 12: best 0.852421 (p0072, deep); deep 0.852421 (2/3 gained), wide 0.841205 (2/3 gained); 614 s
 09:20:11 [v5-s1] gen 13: best 0.856207 (p0076, deep); deep 0.856207 (2/3 gained), wide 0.854805 (2/3 gained); 633 s
+09:36:52 [v5-s1] gen 14: best 0.857804 (p0081, deep); deep 0.857804 (3/3 gained), wide 0.857181 (3/3 gained); 1001 s
+09:47:40 [v5-s1] gen 15: best 0.858671 (p0091, deep); deep 0.858671 (3/3 gained), wide 0.857567 (3/3 gained); 648 s
+09:57:11 [v5-s1] gen 16: best 0.860002 (p0095, wide); deep 0.859398 (3/3 gained), wide 0.860002 (3/3 gained); 571 s
+10:02:32 [v5-s1] gen 17: best 0.860953 (p0101, deep); deep 0.860953 (2/3 gained), wide 0.857850 (3/3 gained); 321 s
