@@ -56,14 +56,14 @@ arithmetic. All agree.
 | Run | N | Final R (exact) | Passed 0.8963 (AlphaEvolve, May 2025)? |
 |---|---|---|---|
 | atlas-s1 | 42,496 | **0.939016147** | yes, at generation 10 |
-| journal-s1 | 73,322 | 0.934184690 | yes, at generation 12 |
+| journal-s1 | 6,000 | 0.934184690 | yes, at generation 12 |
 | journal-s2 | 4,000 | 0.924182240 | yes, at generation 9 |
-| control-s2 | 102,400 | 0.913581645 | yes, at generation 13 |
-| atlas-s2 | 200,000 | 0.892272819 | no (0.8923) |
+| control-s2 | 25,600 | 0.913581645 | yes, at generation 13 |
+| atlas-s2 | 544 | 0.892272819 | no (0.8923) |
 | journal-s3 | 200,000 | 0.882541740 | no |
-| control-s1 | 200,000 | 0.882531730 | no |
-| control-s3 | 25,600 | 0.882489096 | no |
-| atlas-s3 | 200,000 | 0.882442130 | no |
+| control-s1 | 160,000 | 0.882531730 | no |
+| control-s3 | 4,096 | 0.882489096 | no |
+| atlas-s3 | 20,000 | 0.882442130 | no |
 
 How the exact value was computed:
 - **N ≤ 12,000:** exact rationals of the float heights themselves.
