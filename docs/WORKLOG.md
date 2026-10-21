@@ -4,6 +4,55 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 21, 2026 (02:00-03:00): the finished v4 job analysed from its traces; the lessons built into v4.5 and v5
+
+### What was asked
+(02:12, verbatim in `docs/BRIEF_2026-10-21.md`) The v4 job is done: analyse it in depth, from the traces and runs and
+not just the scores. Cover how each run progressed, atlas-s1's steady climb, the model's behaviour, failure points
+and stalls. Then carry the lessons into v4.5 and v5, and finish the other deliverables.
+
+### Verified
+All nine final constructions were re-scored three ways (`tools/verify_ac2.py`).
+- atlas-s1 certifies **C2 ≥ 0.9390161** (42,496 steps, exact integer arithmetic on heights rounded below 2^30).
+- journal-s1 0.9341847, journal-s2 0.9241822 (exact on the floats themselves), control-s2 0.9135816, atlas-s2
+  0.8922728.
+- The other four runs are at 0.88244-0.88254.
+- Four of nine runs passed AlphaEvolve May 2025 (0.8963). `docs/MILESTONES.md` is updated.
+
+### Found (`docs/V4_ANALYSIS.md`, tables from `tools/analyse_runs.py`)
+- **atlas-s1 climbed in three phases:**
+  1. free-form search (0.845);
+  2. a smoothed max (0.878), then four flat generations;
+  3. elimination ("all those smooth the objective; put the max into a constraint"), giving 0.879 → 0.928 in three
+     generations, then a resolution ladder through warm starts (N 1,328 → 42,496, each doubling paying about half the
+     last) to 0.939.
+- **Its weak points:**
+  - one base in 19 of 20 generations;
+  - a third of planned children with no effect;
+  - credit given to the wrong idea when siblings shared code;
+  - inherited stages eating the budget;
+  - 8 programs killed at the CPU limit late on (all four children of the record in generation 19).
+- **The four stuck runs sat at 4 ln 2 / π ≈ 0.88254 (f = x^(-1/2)).** Three of them recalled it in generations 1-2.
+  Their planners used 2.5-3.5 times the reasoning tokens of the climbers, deriving integrals in their heads, with 6-9
+  cut-offs each.
+- **Three runs escaped the attractor:**
+  - a constraint on the max (found independently in three runs);
+  - a fresh random start;
+  - the current method applied to another line (via the wide loop).
+
+### Built (both systems, one engine)
+- anytime results (`keep_best`, scored at the CPU limit; `helix5/sandbox.py`);
+- stage lines always returned;
+- shared gains marked and not counted as evidence;
+- an elimination list when stalled, demanding a new kind of change;
+- two deepen slots while the line keeps paying (the record rose ≥ 0.001 last generation, or ≥ 0.0001 in each of the
+  last two), and they must differ in mechanism.
+
+Four new tests (21 in all). `docs/V5_DESIGN.md` was rewritten: the behavioural problems, their causes, and the
+structure that answers each.
+
+---
+
 ## October 21, 2026 (night): the AlphaEvolve claim checked; Helix v4.5 and v5 built
 
 ### What was asked

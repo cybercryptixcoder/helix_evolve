@@ -1,8 +1,8 @@
 # The Helix v4.5 + v5 overnight job
 
 What it runs: the second autocorrelation inequality; v5 (the researcher) and v4.5 (Atlas+) × three seeds = 6 runs,
-20 generations each, side by side, 30 s of CPU per program. The 9 runs of the v4 job are the baselines. Design:
-`docs/V5_DESIGN.md`.
+20 generations each, side by side, 30 s of CPU per program. The 9 runs of the v4 job are the baselines (analysed in
+`docs/V4_ANALYSIS.md`). Design: `docs/V5_DESIGN.md`.
 
 ## Running it
 
@@ -21,8 +21,9 @@ nohup bash scripts/run_v5_jobs.sh > v5_jobs.log 2>&1 &
   model call.
 - **Load**: six Python processes of about 40 MB each; programs evaluated at most two at a time machine-wide, at low
   priority, only with 600 MB free.
-- **Time**: about 4 to 5 hours once it starts (estimated from the v4 job's pace with nine runs and from test runs:
-  v5's planner thinks longer than v4's). A deadline (6 hours after the first start, kept across restarts) stops every
+- **Time**: about 3.5 to 4.5 hours once it starts. The v4 job (9 runs) took 4.3 hours, almost exactly its evaluation
+  time on 2 slots (9 runs × 20 generations × 6 programs × 30 s / 2); this job has 6 runs, so about 3 hours of
+  evaluation, plus model time. A deadline (6 hours after the first start, kept across restarts) stops every
   run after its current generation.
 - **Resuming**: if the machine restarts or the script dies, run the same command again; finished runs are skipped,
   unfinished ones resume from their last completed generation.
@@ -52,7 +53,7 @@ Knobs: `GENS` (20), `SEEDS` ("1 2 3"), `CONDITIONS` ("v5 v45"), `BUDGET` (30), `
 >    that reason, tell me the error and do nothing else. Don't change GENS, SEEDS, EVAL_SLOTS or any other setting:
 >    other agents share this machine, and the job is sized for it.
 > 5. If the machine restarts or the script dies for any other reason, run the same command again. Finished runs are
->    skipped and unfinished ones resume. Repeat until v5_jobs.log ends with "== all jobs done". Expect about 4 to 5
+>    skipped and unfinished ones resume. Repeat until v5_jobs.log ends with "== all jobs done". Expect about 3.5 to 4.5
 >    hours after it starts (plus any wait for the v4 job); it stops itself 6 hours after starting at the latest.
 >    Lines like "(waiting: ... MB available)" are normal: it is waiting for free memory.
 > 6. The job pushes its results to GitHub by itself (results/v5/ and results/v4/VERIFICATION.md), every 40 minutes

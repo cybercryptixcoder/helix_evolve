@@ -11,7 +11,13 @@ Rules that matter for the score:
   example with restarts or perturbations from the best found so far. A program that stops early wastes its budget.
 - Keep the best construction found anywhere in the run (any restart, any resolution) and return that one, never a
   later, worse one. When `start` is given, never return something worse than `start` unless told to start over.
-- Print a few short progress lines (what was tried, scores reached): the last lines are shown back to the team."""
+- The program is stopped when its CPU time passes 1.25 x budget_seconds + 10 s. Call keep_best(h) (predefined, no \
+import needed) each time your best construction improves (not every iteration): if the program is stopped, the \
+construction it last kept is scored instead of nothing. Check the clock inside long loops, and before starting a \
+stage that may not finish.
+- For each stage (a schedule, a resolution level, a restart, a polish), print one line that starts with "stage": \
+stage <name>: <score before> -> <score after>, <seconds> s. These lines are always shown back to the team, so they \
+can see where the budget goes and which stage pays. Print a few other short progress lines as well."""
 
 CODER_SYSTEM = """You are an expert Python programmer and numerical optimiser. You implement one planned \
 experiment as a change to a base program, faithfully, and return the complete new program. The program must define \
@@ -39,7 +45,8 @@ keeps several lines alive, so a young line gets the chance to mature.
 - explore: a genuinely different construction, started from scratch. This starts a new line; it is not expected to \
 beat the best at once, only to open a different region that branch slots can develop later.
 - challenge (when present): an experiment designed to break one of your beliefs.
-Use every slot for its role. The roles change with progress: on a hot streak you get two deepen slots."""
+Use every slot for its role. The roles change with progress: while the best line keeps paying you get two deepen \
+slots, and they must test different mechanisms (two settings of one knob are one experiment)."""
 
 MEASURE = """Reason about evidence and plans, not proofs: don't derive formulas or limits in your head. When you suspect \
 something (a formula, a limit, why a shape works), design an experiment that measures it."""

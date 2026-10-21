@@ -5,6 +5,9 @@
 - Unused budget is stated plainly, since programs that stop early were a recurring waste in v4.
 - Gains are labelled by size, so that +0.000001 of polishing isn't reported the same way as +0.03.
 - Fresh starts: a program can be run with no start (start=None) to build a construction from scratch.
+- From the finished v4 job (docs/V4_ANALYSIS.md): a program stopped at the CPU limit is scored on the construction it
+  last kept (keep_best, see helix5/sandbox.py) instead of nothing, and its "stage" lines (where the budget went, what
+  each stage gained) come back first, whatever else it printed.
 """
 from __future__ import annotations
 
@@ -13,7 +16,7 @@ import time
 import numpy as np
 
 from helix4.evaluate import eval_slot
-from helix4.sandbox import run_program
+from helix5.sandbox import run_program
 
 GAIN_EPS = 1e-5          # below this, a change in score is treated as no real change (numerical polishing)
 BIG_GAIN = 1e-3
@@ -41,11 +44,15 @@ def evaluate(problem, code, start, budget, mem_mb=1500, log_lines=8):
     if start is not None:
         h0, _ = problem.check(start)
         out["start_score"] = problem.score(h0) if h0 is not None else None
-    tail = [t[:200] for t in (info.get("stdout_tail") or "").strip().splitlines()[-log_lines:]]
+    stages = info.get("stage_lines") or []
+    rest = [t[:200] for t in (info.get("stdout_tail") or "").strip().splitlines()
+            if not t.strip().lower().startswith("stage")]
+    tail = rest[-(4 if stages else log_lines):]
     if not info.get("ok"):
         tb = (info.get("traceback") or "").strip().splitlines()
         out["error"] = info.get("error") or "failed"
         out["feedback"] = [f"FAILED: {out['error']}"] + ([f"traceback (end): {' | '.join(tb[-3:])}"] if tb else []) \
+            + ([f"its stage lines: {' | '.join(stages)}"] if stages else []) \
             + ([f"its last printed lines: {' | '.join(tail)}"] if tail else [])
         return out
     h, problem_text = problem.check(arr)
@@ -65,9 +72,15 @@ def evaluate(problem, code, start, budget, mem_mb=1500, log_lines=8):
         out["delta"] = s - out["start_score"]
         lines[0] += f" [{gain_label(out['delta'])}]"
     cpu = info.get("cpu")
+    if info.get("stopped") == "cpu":
+        lines.append(f"it was stopped at the CPU limit ({info.get('cpu_cap', '?')} s); this is the construction it last "
+                     f"kept with keep_best (it kept {info.get('kept', '?')} times)")
     if isinstance(cpu, (int, float)) and cpu < 0.6 * budget:
         lines.append(f"it stopped after {cpu:.1f} s of its {budget:.0f} s budget ({100 * (1 - cpu / budget):.0f}% unused)")
+    if stages:
+        lines.append(f"its stage lines: {' | '.join(stages)}")
     if tail:
         lines.append(f"its last printed lines: {' | '.join(tail)}")
+    out["stopped"] = info.get("stopped")
     out.update(valid=True, score=s, feedback=lines, n=int(len(h)), construction=h)
     return out

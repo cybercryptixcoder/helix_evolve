@@ -267,3 +267,61 @@ def test_v5_step_kind_is_not_overwritten_by_belief_kinds(tmp_path):
     assert m.steps[sid]["kind"] == "round"
     from helix5.v5 import Researcher
     assert Researcher(r).steps[sid]["kind"] == "round"
+
+
+# ---------------------------------------------------------------------------------------------- lessons of the v4 job
+def test_steady_climb_keeps_two_deepen_slots(tmp_path):
+    r = fake_run(tmp_path, "v45", gens=2)
+    r.go()
+    best = r.archive.best()
+    for g, v in ((3, best.score + 0.0002), (4, best.score + 0.0005)):     # two small real rises in a row
+        r._append("history.jsonl", {"gen": g, "best": v, "best_id": best.id})
+    r._roles_cache = {}
+    assert r.roles(5)[:2] == ["deepen", "deepen"]
+    r._append("history.jsonl", {"gen": 5, "best": best.score + 0.0005, "best_id": best.id})   # then flat
+    assert r.roles(6) == ["deepen", "branch", "explore"]
+
+
+def test_shared_gains_are_marked_and_not_counted_as_evidence(tmp_path):
+    from helix5 import v45, v5
+    r = fake_run(tmp_path, "v45", gens=1)
+    r.go()
+    zero = r.archive.programs["p0001"]
+    code = "import numpy as np\ndef construct(b, start):\n    return (np.arange(50) + 0.5) ** -0.5\n"
+    a = r.child(2, "deep", zero, code + "# change A\n", "change A", {"role": "deepen"}, "")
+    b = r.child(2, "deep", zero, code + "# change B\n", "change B", {"role": "branch"}, "")
+    assert a.valid and b.valid and a.delta > 1e-3 and a.score == b.score
+    assert r.mark_shared([a, b]) == 2
+    assert a.plan["shared_gain_with"] == [b.id] and "code they share" in a.feedback[-1]
+    assert v45.outcome(a) == "shared" and v5.outcome(b) == "shared" and "shared code" in v45.result_text(a)
+    again = [json.loads(l) for l in (r.dir / "programs.jsonl").read_text().splitlines()]
+    assert next(x for x in again if x["id"] == a.id)["plan"]["shared_gain_with"] == [b.id]
+    assert r.mark_shared([a]) == 0
+
+
+def test_tried_since_the_last_rise_is_listed_when_stalled(tmp_path):
+    r = fake_run(tmp_path, "v45", gens=2)
+    r.go()
+    best = r.archive.best()
+    code = "import numpy as np\ndef construct(b, start):\n    return start\n"
+    r.child(3, "deep", best, code, "a different surrogate for the max", {"role": "deepen"}, "")
+    for g in (3, 4):
+        r._append("history.jsonl", {"gen": g, "best": best.score, "best_id": best.id})
+    text = r.progress_block(5)
+    assert "since generation" in text and "a different surrogate for the max" in text and "kind of change" in text
+
+
+def test_stage_lines_come_back_and_the_cpu_limit_keeps_the_best(tmp_path):
+    from helix4.problems import ac2
+    from helix5.evaluate import evaluate
+    noisy = ("import numpy as np\ndef construct(b, start):\n    print('stage coarse: 0.66 -> 0.80, 1.0 s')\n"
+             "    for i in range(200):\n        print('progress line', i, 'x' * 40)\n"
+             "    print('stage polish: 0.80 -> 0.81, 2.0 s')\n    return np.array([1.0, 0.4, 0.4, 1.0])\n")
+    res = evaluate(ac2, noisy, None, 2)
+    assert res["valid"] and any("its stage lines: stage coarse" in l and "stage polish" in l for l in res["feedback"])
+    forever = ("import numpy as np\ndef construct(b, start):\n    keep_best(np.array([1.0, 0.4, 0.4, 1.0]))\n"
+               "    while True:\n        sum(range(1000))\n")
+    res = evaluate(ac2, forever, None, 1)
+    assert res["valid"] and res["stopped"] == "cpu" and any("stopped at the CPU limit" in l for l in res["feedback"])
+    res = evaluate(ac2, forever.replace("    keep_best(np.array([1.0, 0.4, 0.4, 1.0]))\n", ""), None, 1)
+    assert not res["valid"] and "nothing kept" in res["error"]

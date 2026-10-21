@@ -152,17 +152,38 @@ class Run:
         return p
 
     # ---------------------------------------------------------------- progress facts (computed, shown to planners)
+    def last_rise(self, gen):
+        """The last generation (before gen) in which the best score rose by at least STALL_EPS over the record."""
+        hist = [h for h in self.history() if h["gen"] < gen]
+        last, record = 0, hist[0]["best"] if hist else 0.0
+        for h in hist[1:]:
+            if h["best"] >= record + STALL_EPS:
+                last, record = h["gen"], h["best"]
+        return last
+
     def stall(self, gen):
         """Generations (up to gen-1) since the best score last rose by at least STALL_EPS over the previous record."""
         hist = [h for h in self.history() if h["gen"] < gen]
         if len(hist) < 2:
             return 0
-        last_rise, record = 0, hist[0]["best"]
-        for h in hist[1:]:
-            if h["best"] >= record + STALL_EPS:
-                last_rise = h["gen"]
-                record = h["best"]
-        return hist[-1]["gen"] - last_rise
+        return hist[-1]["gen"] - self.last_rise(gen)
+
+    def tried_since_rise(self, gen, k=12):
+        """The planned experiments since the last rise of the record, with results (newest first, at most k)."""
+        last = self.last_rise(gen)
+        ps = [p for p in self.archive.programs.values() if p.role == "deep" and last < p.gen < gen]
+        ps.sort(key=lambda p: (-p.gen, p.id))
+        out = []
+        for p in ps[:k]:
+            if not p.valid:
+                res = "failed"
+            elif p.delta is None:
+                res = f"{p.score:.6f} (fresh start)"
+            else:
+                res = f"{p.score:.6f} ({p.delta:+.6f}, {gain_label(p.delta)})"
+            role = (p.plan or {}).get("role", "")
+            out.append(f"- {p.id} (gen {p.gen}{', ' + role if role else ''}) on {p.parent}: {short(p.intent, 150)} -> {res}")
+        return last, out
 
     def progress_block(self, gen):
         hist = [h for h in self.history() if h["gen"] < gen]
@@ -177,6 +198,15 @@ class Run:
                  f"{back:.6f} ({cur - back:+.6f})."]
         if s >= 1:
             lines.append(f"The best score has not risen by {STALL_EPS} or more for {s} generation(s).")
+        if s >= 2:
+            last, tried = self.tried_since_rise(gen)
+            if tried:
+                lines.append(f"\nWhat the planned experiments tried since generation {last} (the last rise), newest first:")
+                lines += tried
+                lines.append("Before planning, group these by the kind of change they made (for example: a different "
+                             "objective or surrogate, a constraint or reformulation, more resolution, a new search "
+                             "method, a new starting family, more budget for a stage). At least one experiment this "
+                             "round must make a kind of change that none of them made; say which kind in its hypothesis.")
         return "\n".join(lines)
 
     def best_line(self):
@@ -215,7 +245,8 @@ class Run:
             roles = ["deepen", "explore", "explore"]
         else:
             hist = [h for h in self.history() if h["gen"] < gen]
-            hot = len(hist) >= 2 and hist[-1]["best"] - hist[-2]["best"] >= HOT_EPS
+            rises = [b["best"] - a["best"] for a, b in zip(hist, hist[1:])]
+            hot = bool(rises) and (rises[-1] >= HOT_EPS or (len(rises) >= 2 and min(rises[-2:]) >= STALL_EPS))
             roles = ["deepen", "deepen", "branch" if gen % 2 == 0 else "explore"] if hot else ["deepen", "branch", "explore"]
         roles = (roles + ["explore"] * self.cfg.deep)[: self.cfg.deep]
         return self.memory.adjust_roles(gen, roles) if hasattr(self.memory, "adjust_roles") else roles
@@ -432,6 +463,32 @@ class Run:
         tmp.write_text(json.dumps({"gen_done": gen, "config": asdict(self.cfg), "t": time.time()}, indent=1))
         os.replace(tmp, self.state_path)
 
+    def mark_shared(self, children):
+        """Children of one base that gained and landed on the same score made different changes but got the same
+        result, so the gain came from code they share (in v4's atlas-s1, generation 12, three different experiments
+        all scored 0.928987, and each was counted as support for its own idea). Each gets a feedback line and
+        plan["shared_gain_with"]; memories don't count such a gain as evidence for the change. Returns how many."""
+        groups = {}
+        for c in children:
+            if c.valid and c.parent and c.delta is not None and c.delta >= GAIN_EPS:
+                groups.setdefault(c.parent, []).append(c)
+        n = 0
+        for base, cs in groups.items():
+            for c in cs:
+                same = [d.id for d in cs if d is not c and abs(d.score - c.score) <= 1e-9 * max(1.0, abs(c.score))]
+                if same:
+                    c.plan = {**(c.plan or {}), "shared_gain_with": same}
+                    c.feedback = list(c.feedback) + [
+                        f"the same score as {', '.join(same)} (also built on {base} this generation, with a different "
+                        f"change): the gain most likely came from code they share, not from this change"]
+                    n += 1
+        if n:
+            with self.lock:
+                tmp = self.archive.path.with_suffix(".tmp")
+                tmp.write_text("".join(json.dumps(asdict(p)) + "\n" for p in self.archive.programs.values()))
+                os.replace(tmp, self.archive.path)
+        return n
+
     def generation(self, gen):
         t0, calls0 = time.time(), self.llm.calls
         rng = random.Random(self.cfg.seed * 7919 + gen)
@@ -451,6 +508,7 @@ class Run:
             self.memory.scheduled(gen, plan, exps)
             deep = [ex.submit(self.deep_child, gen, e) for e in exps]
             children = [f.result() for f in deep + wide]
+        shared = self.mark_shared(children)
         t_mem = time.time()
         mem_info = self.memory.update(gen, plan, children) or {}
         best = self.archive.best()
@@ -470,7 +528,7 @@ class Run:
                "deep_gains": gains(dc), "wide_gains": gains(wc), "deep_big_gains": gains(dc, 1e-3),
                "wide_big_gains": gains(wc, 1e-3),
                "deep_failed": sum(1 for c in dc if not c.valid), "wide_failed": sum(1 for c in wc if not c.valid),
-               "duplicates": sum(1 for c in children if c.duplicate_of),
+               "duplicates": sum(1 for c in children if c.duplicate_of), "shared_gains": shared,
                "new_best": best.score > record_before + 1e-12, "record_rise": best.score - record_before,
                "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
                "fallback_experiments": sum(1 for e in exps if e.get("fallback")),

@@ -3,37 +3,32 @@
 ## October 20-21, 2026: Helix v4 passes AlphaEvolve's first published result on the second autocorrelation inequality
 
 ### What happened
-The v4 overnight job (`results/v4/`, `docs/V4_DESIGN.md`) ran 9 runs (3 memory conditions × 3 seeds) on the second
-autocorrelation inequality, each starting from a constant function (0.667). Mid-run (October 21, 00:31; final numbers
-and verification to be added when the job finishes):
+The v4 overnight job (`results/v4/`, `docs/V4_DESIGN.md`, analysed in `docs/V4_ANALYSIS.md`) ran 9 runs (3 memory
+conditions × 3 seeds, 20 generations each) on the second autocorrelation inequality, each starting from a constant
+function (0.667). It finished on October 21 at about 01:45.
 
-| Run | Generation | Best |
-|---|---|---|
-| atlas-s1 | 14 | **0.93601** |
-| journal-s2 | 16 | 0.92394 |
-| control-s2 | 15 | 0.90477 |
-| journal-s1 | 11 | 0.89599 |
-| atlas-s2 | 14 | 0.89226 |
-| atlas-s3, control-s1, control-s3, journal-s3 | 10-15 | 0.8824-0.8825 |
+**Final constructions, verified** (re-scored three ways with `tools/verify_ac2.py`: the Helix evaluator, DeepMind's
+verification formula, exact arithmetic; all three agree for every run):
 
-Four runs passed AlphaEvolve's May 2025 bound (0.8962); five passed the 2010 record (0.88922).
+| Run | Steps | Exact value of the construction | Passed AlphaEvolve May 2025 (0.8963)? |
+|---|---|---|---|
+| **atlas-s1** | 42,496 | **0.939016147** | yes |
+| journal-s1 | 73,322 | 0.934184690 | yes |
+| journal-s2 | 4,000 | 0.924182240140321 | yes |
+| control-s2 | 102,400 | 0.913581645 | yes |
+| atlas-s2 | 200,000 | 0.892272819 | no |
+| journal-s3, control-s1, control-s3, atlas-s3 | 25,600-200,000 | 0.88244-0.88254 | no |
+| AlphaEvolve, May 2025 (for comparison) | 50 | 0.896279944155 | |
 
-**Verified (final constructions, re-scored three ways with `tools/verify_ac2.py`):**
-
-| Run | Steps | Helix | DeepMind's verification code | Exact rational value of the construction itself |
-|---|---|---|---|---|
-| journal-s2 (finished, 20 generations) | 4,000 | 0.924182240140 | 0.924182240140 | **0.924182240140321** |
-| control-s3 (finished, 20 generations) | 4,096 | 0.882489095934 | 0.882489095934 | 0.882489095933 |
-| AlphaEvolve, May 2025 (for comparison) | 50 | 0.896279944155 | 0.896279944155 | 0.896279944155 |
-
-So journal-s2's step function certifies **C2 ≥ 0.92418224**, computed in exact rational arithmetic on the float
-heights themselves (no rounding anywhere). The other runs are added as they finish (the next job writes
-`results/v4/VERIFICATION.md` for all of them).
+For N ≤ 12,000 the exact value is that of the float heights themselves (exact rationals). Above that, the heights are
+rounded to integers below 2^30 and the convolution is done in exact integer arithmetic; the rounded step function is
+itself a valid construction, so its exact value is a certified bound. So atlas-s1's step function certifies
+**C2 ≥ 0.9390161**, and journal-s2's certifies C2 ≥ 0.92418224 with no rounding at all.
 
 ### The claim, and how far it holds
 
 **What can be said:** *On the identical problem, scored with DeepMind's own verification formula, Helix v4 found a
-construction certifying C2 ≥ 0.936: above AlphaEvolve's first published result for this problem (0.8962, May 2025)
+construction certifying C2 ≥ 0.9390: above AlphaEvolve's first published result for this problem (0.8962, May 2025)
 and above the human-optimised construction of Boyer & Li (0.9016, 2025); below Jaech & Joseph (0.9414, 2025) and the
 best known value (0.9626, 2026), which includes AlphaEvolve's own later result (0.961).*
 
@@ -48,7 +43,7 @@ best known value (0.9626, 2026), which includes AlphaEvolve's own later result (
   --alphaevolve-may-2025`; Boyer & Li independently report 0.89628 for it).
 - Every one of our constructions is checked the same three ways (`tools/verify_ac2.py`; the next job writes
   `results/v4/VERIFICATION.md` automatically). A lower bound is a fact about the construction, not about how it was
-  found: if the exact value of our step function is 0.936, then C2 ≥ 0.936, whoever or whatever produced it.
+  found: if the exact value of our step function is 0.939, then C2 ≥ 0.939, whoever or whatever produced it.
 
 **The set-ups, side by side:**
 
@@ -60,7 +55,7 @@ best known value (0.9626, 2026), which includes AlphaEvolve's own later result (
 | Start | "a simple or a random construction" | a constant function (0.667) |
 | Generations / samples | not published for this problem; called "a quick experiment" (Georgiev, Gómez-Serrano, Tao, Wagner 2025) | 20 generations × 6 programs ≈ 120 programs per run; 9 runs |
 | Hardware | Google's (not published) | one 2-core ARM cloud VM shared by all 9 runs |
-| Result | 0.8962 (50 steps); later, with more time, 0.961 (50,000 steps) | 0.936 (mid-run; verification pending) |
+| Result | 0.8962 (50 steps); later, with more time, 0.961 (50,000 steps) | 0.9390 (42,496 steps), verified exactly; 4 of 9 runs above 0.8963 |
 
 **What should not be said:**
 - "Helix beat AlphaEvolve." AlphaEvolve's later runs reached 0.961 on this very problem; the May 2025 number came

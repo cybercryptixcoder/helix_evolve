@@ -51,6 +51,8 @@ def outcome(p):
         return "error"
     if p.delta is None:
         return "fresh"
+    if p.delta >= GAIN_EPS and (p.plan or {}).get("shared_gain_with"):
+        return "shared"          # siblings with different changes got the same score: not evidence for this change
     return "gain" if p.delta >= GAIN_EPS else "no gain"
 
 
@@ -61,7 +63,12 @@ def result_text(p):
         return f"FAILED: {short(p.error, 160)}"
     if p.delta is None:
         return f"{p.score:.6f} (fresh start)"
-    return f"{p.score:.6f} ({p.delta:+.6f} on its start, {gain_label(p.delta)})"
+    return f"{p.score:.6f} ({p.delta:+.6f} on its start, {gain_label(p.delta)}{shared_note(p)})"
+
+
+def shared_note(p):
+    sw = (p.plan or {}).get("shared_gain_with")
+    return f"; the same score as {', '.join(sw)}: shared code, not this change" if sw else ""
 
 
 def jl(path):
