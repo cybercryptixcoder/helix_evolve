@@ -20,3 +20,20 @@
 11:11:41 [atlas-s1] gen 39: best 0.940476 (p0234, deep); deep 0.940476 (3/3 gained), wide 0.940255 (2/3 gained); 151 s
 11:13:33 [atlas-s1] gen 40: best 0.940521 (p0237, wide); deep 0.940476 (0/3 gained), wide 0.940521 (1/3 gained); 112 s
 11:13:33 done: atlas-s1 (atlas, seed 1): best 0.940521 (p0237) after 40 generations, 241 programs, 181 model calls
+11:32:56 [atlas-s1] resuming after generation 40 (dropped 0 programs of the unfinished one)
+11:34:54 [atlas-s1] gen 41: best 0.940542 (p0245, deep); deep 0.940542 (3/3 gained), wide 0.940532 (2/3 gained); 118 s
+11:36:37 [atlas-s1] gen 42: best 0.940542 (p0245, deep); deep 0.940542 (0/3 gained), wide 0.940530 (1/3 gained); 103 s
+11:39:22 [atlas-s1] gen 43: best 0.940606 (p0257, deep); deep 0.940606 (2/3 gained), wide 0.940196 (2/3 gained); 165 s
+11:41:32 [atlas-s1] gen 44: best 0.940646 (p0260, wide); deep 0.940639 (3/3 gained), wide 0.940646 (3/3 gained); 131 s
+11:44:03 [atlas-s1] gen 45: best 0.940673 (p0267, wide); deep 0.940673 (3/3 gained), wide 0.940673 (3/3 gained); 150 s
+11:46:58 [atlas-s1] gen 46: best 0.940697 (p0272, wide); deep 0.940678 (3/3 gained), wide 0.940697 (3/3 gained); 175 s
+11:49:27 [atlas-s1] gen 47: best 0.940721 (p0281, deep); deep 0.940721 (2/3 gained), wide 0.940712 (2/3 gained); 149 s
+11:51:33 [atlas-s1] gen 48: best 0.940754 (p0289, deep); deep 0.940754 (3/3 gained), wide 0.940738 (3/3 gained); 126 s
+11:53:34 [atlas-s1] gen 49: best 0.940765 (p0290, wide); deep 0.940765 (3/3 gained), wide 0.940765 (2/3 gained); 121 s
+11:56:48 [atlas-s1] gen 50: best 0.940787 (p0300, deep); deep 0.940787 (3/3 gained), wide 0.940778 (3/3 gained); 194 s
+11:59:59 [atlas-s1] gen 51: best 0.940793 (p0306, deep); deep 0.940793 (3/3 gained), wide 0.940789 (3/3 gained); 191 s
+12:03:21 [atlas-s1] gen 52: best 0.940793 (p0306, deep); deep 0.000000 (0/3 gained), wide 0.940681 (2/3 gained); 202 s
+12:06:42 [atlas-s1] gen 53: best 0.940793 (p0316, wide); deep 0.940793 (0/3 gained), wide 0.940793 (1/3 gained); 201 s
+12:09:43 [atlas-s1] gen 54: best 0.940793 (p0316, wide); deep 0.940793 (0/3 gained), wide 0.940789 (1/3 gained); 181 s
+12:14:42 [atlas-s1] gen 55: best 0.940794 (p0329, deep); deep 0.940794 (2/3 gained), wide 0.940793 (3/3 gained); 300 s
+12:14:42 done: atlas-s1 (atlas, seed 1): best 0.940794 (p0329) after 55 generations, 331 programs, 135 model calls
