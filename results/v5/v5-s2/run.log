@@ -1,0 +1,23 @@
+03:23:10 [v5-s2] gen 0: Code Zero scores 0.666667
+03:25:38 [v5-s2] gen 1: best 0.844368 (p0005, deep); deep 0.844368 (1/3 gained), wide 0.807651 (3/3 gained); 148 s
+03:35:38 [v5-s2] resuming after generation 1 (dropped 3 programs of the unfinished one)
+03:46:37 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+03:58:38 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+04:09:48 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+04:21:42 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+04:33:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+04:45:37 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+04:57:42 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+05:09:41 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+05:21:37 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+05:33:43 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+05:45:37 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+05:58:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+06:10:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+06:22:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+06:34:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+06:46:39 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+06:58:42 [v5-s2] resuming after generation 1 (dropped 0 programs of the unfinished one)
+07:05:41 [v5-s2] gen 2: best 0.852098 (p0008, wide); deep 0.844368 (1/3 gained), wide 0.852098 (3/3 gained); 419 s
+07:16:40 [v5-s2] gen 3: best 0.857717 (p0018, deep); deep 0.857717 (3/3 gained), wide 0.852291 (2/3 gained); 659 s
+07:30:30 [v5-s2] gen 4: best 0.857813 (p0020, deep); deep 0.857813 (3/3 gained), wide 0.857717 (1/3 gained); 830 s

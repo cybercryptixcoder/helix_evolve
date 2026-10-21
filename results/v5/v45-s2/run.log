@@ -1,0 +1,20 @@
+03:24:12 [v45-s2] gen 0: Code Zero scores 0.666667
+03:46:52 [v45-s2] resuming after generation 0 (dropped 6 programs of the unfinished one)
+04:33:54 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+04:45:52 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+04:57:57 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+05:09:56 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+05:21:52 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+05:33:58 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+05:45:52 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+05:58:54 [v45-s2] resuming after generation 0 (dropped 2 programs of the unfinished one)
+06:10:54 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+06:22:54 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+06:34:54 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+06:46:54 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+06:58:57 [v45-s2] resuming after generation 0 (dropped 0 programs of the unfinished one)
+07:08:34 [v45-s2] gen 1: best 0.832821 (p0004, wide); deep 0.795235 (1/3 gained), wide 0.832821 (3/3 gained); 578 s
+07:16:22 [v45-s2] gen 2: best 0.833771 (p0012, deep); deep 0.833771 (1/3 gained), wide 0.795235 (1/3 gained); 468 s
+07:23:27 [v45-s2] gen 3: best 0.848602 (p0019, deep); deep 0.848602 (2/3 gained), wide 0.832823 (1/3 gained); 425 s
+07:31:16 [v45-s2] gen 4: best 0.868524 (p0024, deep); deep 0.868524 (3/3 gained), wide 0.849410 (3/3 gained); 469 s
+07:36:51 [v45-s2] gen 5: best 0.872542 (p0031, deep); deep 0.872542 (2/3 gained), wide 0.868893 (1/3 gained); 336 s

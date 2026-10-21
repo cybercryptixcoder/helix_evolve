@@ -1,0 +1,21 @@
+{
+ "gen_done": 7,
+ "config": {
+  "condition": "v45",
+  "seed": 1,
+  "gens": 20,
+  "deep": 3,
+  "wide": 3,
+  "budget": 30.0,
+  "researcher_effort": "low",
+  "open_k": 6,
+  "lookup_k": 5,
+  "review_every": 5,
+  "stall_gens": 3,
+  "challenge_every": 3,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "t": 1792582668.2267332
+}
