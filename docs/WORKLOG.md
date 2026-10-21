@@ -4,6 +4,50 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 21, 2026 (night): the AlphaEvolve claim checked; Helix v4.5 and v5 built
+
+### What was asked
+`docs/BRIEF_2026-10-21.md` (verbatim). Check the claim "we beat AlphaEvolve's May 2025 result" rigorously; explain
+seeds; document model settings and the milestone; build v4.5 (v4 fixed from its traces) and v5 (the researcher);
+test; package one overnight job for both.
+
+### The claim (`docs/MILESTONES.md`)
+- AlphaEvolve's May 2025 result for this problem is 0.8962 (exactly 0.896279944155), a 50-step function, published in
+  DeepMind's `alphaevolve_results` notebook (B.2) with their verification code. Their problem statement and scoring are
+  the same as ours: our evaluator reproduces their code on their construction to 12 digits, and exact rational
+  arithmetic agrees (`tools/verify_ac2.py`).
+- Their set-up for these problems (DeepMind's published prompt): evolve a search program with 1000 s, shown the best
+  construction so far; Gemini 2.0 Flash + Pro; generations not published ("a quick experiment"); later AlphaEvolve
+  runs reached 0.961. Ours: DeepSeek V4.1 Flash, 30 s per program, ~120 programs per run, 2 ARM cores.
+- Fair wording: Helix v4's construction (0.936 mid-run, verification pending) is above AlphaEvolve's first published
+  result and Boyer & Li's, below Jaech & Joseph and the best known. Not "beat AlphaEvolve", not "with a dumber model".
+
+### Seeds
+Only the wide loop's parent-sampling seed; every run starts from the same constant function. Replicates.
+
+### What the v4 run showed (`docs/V5_DESIGN.md` section 1)
+The planner put all 3 experiments on the current best in most generations; stalled runs polished the 1/√x shape
+(≈ 0.8825) for many generations; breakouts needed genuinely different methods; programs wasted budget and once
+returned a worse construction than they had found; program logs carried a key clue.
+
+### Built (`helix5/`, `tests/test_helix5.py`, `scripts/run_v5_jobs.sh`)
+- Shared engine fixes: fresh starts, a stall-triggered escape rule enforced by code, real-gain counting, 8 log lines
+  back, unused budget stated, coders told to use the whole budget and return their best.
+- v4.5: Atlas + its own recent reasoning with if/then and outcomes + progress check.
+- v5: theory / agenda / notebook as versioned event logs changed only by explicit operations; constructed continuity
+  from links recorded at write time; lookups with version histories and search; reviews every 5 rounds; interrupts.
+- Report: v4, v4.5 and v5 on one page with AlphaEvolve's May 2025 line; verification tables in the job.
+
+### Test findings
+- Programs now use 27-28 s of 30 (v4: often 7-13 s). v4.5 plans fresh escapes unprompted.
+- v5 round 2 closed an item with its outcome, dropped one, opened one, and looked up the two programs it built on.
+- v5 wrote "the true maximum of R is 4 ln2/π ≈ 0.8825" as a belief after reaching the 1/√x shape: a confident
+  wrong belief can freeze a researcher with a persistent theory. Guards added (prompt, review, code flag on limit
+  claims), on top of the escape rule.
+- v5's decision call thought past 24k tokens once (now 42k room).
+
+---
+
 ## October 20, 2026 (evening): Helix v4, program evolution with memory, and the overnight job
 
 ### What was asked
