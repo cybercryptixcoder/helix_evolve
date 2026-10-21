@@ -8,10 +8,10 @@ What changes, and why (evidence from results/v4, October 20-21):
    (which did) produced the cleanest example of continuity. v4.5 shows the planner its last 3 analyses, each bet, the
    if/then it committed to, and what came of it.
 2. If/then follow-up (from the v5 idea): every experiment states what to do next if it gains and if it doesn't.
-3. A computed progress check, and an escape rule. Stalled v4 runs polished the same construction for 5-10
-   generations; the planner put all 3 experiments on the current best in most generations. After `stall_gens`
-   generations without a rise of 1e-4, at least one experiment must start fresh or leave the best line (enforced by
-   the engine).
+3. A portfolio of slot roles every generation (deepen / branch / explore, assigned by the engine, see helix5/run.py):
+   v4's planner put all 3 experiments on the current best in most generations and stalled runs polished one
+   construction for 5-10 generations. Now depth and breadth are both guaranteed every generation, branch slots get a
+   list of other lines and fork points, and a computed progress check opens the context.
 4. Real gains only. A finding counts as supported only by gains of at least 1e-5 (v4 counted +1e-9 polishing).
 5. Engine fixes shared with v5: fresh starts, 8 printed lines back, unused budget stated, coders told to use the whole
    budget and return the best they found.
@@ -77,7 +77,7 @@ class AtlasPlus(Atlas):
             for e in r.get("experiments", []):
                 p = by_eid.get(e.get("eid"))
                 tag = " [fresh start]" if e.get("fresh") else ""
-                out.append(f"- {p.id if p else '?'} on {e.get('base')}{tag}: bet: {short(e.get('hypothesis'), 160)}\n"
+                out.append(f"- {p.id if p else '?'} ({e.get('role', '?')}) on {e.get('base')}{tag}: bet: {short(e.get('hypothesis'), 160)}\n"
                            f"  if it gains: {short(e.get('if_gain'), 120)} | if not: {short(e.get('if_not'), 120)}\n"
                            f"  -> {result_text(p)}")
         return "\n".join(out)
@@ -86,6 +86,7 @@ class AtlasPlus(Atlas):
         run = self.run
         stall = run.stall(gen)
         system = P.RESEARCHER45_SYSTEM.format(k=run.cfg.deep, budget=run.cfg.budget)
+        slots, roles = run.portfolio_block(gen)
         base = (header(run, gen) + "\n" + best_block(run) + "\n\n" + run.progress_block(gen) + "\n\n" + self.map(gen))
         rr = self.recent_reasoning(gen)
         if rr:
@@ -105,10 +106,9 @@ class AtlasPlus(Atlas):
         user = base
         if opened:
             user += "\n\n## What you opened\n" + "\n\n".join(opened)
-        rule = P.ESCAPE_RULE.format(stall=stall) if stall >= run.cfg.stall_gens else ""
-        user += "\n\n" + P.PLAN45_FORMAT.format(k=run.cfg.deep, rule=rule)
+        user += "\n\n" + slots + "\n\n" + P.PLAN45_FORMAT.format(k=run.cfg.deep, roles=", ".join(roles), first_role=roles[0])
         plan, info = run.researcher(system, user, gen)
-        info.update(opened=asked, open_why=why, stall=stall)
+        info.update(opened=asked, open_why=why, stall=stall, roles=roles)
         return plan, info
 
     def scheduled(self, gen, plan, exps):

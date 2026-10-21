@@ -79,19 +79,40 @@ def test_resume_drops_unfinished_generation_v5(tmp_path):
     assert r2.go()["gens_done"] == 4
 
 
-# ---------------------------------------------------------------------------------------------- the escape rule
-def test_stalled_run_forces_an_escape(tmp_path):
-    r = fake_run(tmp_path, "v45", gens=1, stall_gens=3)
+# ---------------------------------------------------------------------------------------------- the portfolio
+def test_portfolio_roles_and_their_enforcement(tmp_path):
+    r = fake_run(tmp_path, "v45", gens=2)
     r.go()
+    assert r.roles(1) == ["deepen", "explore", "explore"]
     best = r.archive.best()
-    for g in range(2, 7):                                    # five generations without a rise of 1e-4
-        r._append("history.jsonl", {"gen": g, "best": best.score + 1e-7 * g, "best_id": best.id})
-    assert r.stall(7) >= 3
-    plan = {"experiments": [{"base": best.id, "hypothesis": f"h{i}", "change": "polish"} for i in range(3)]}
-    exps = r.experiments(plan, 7)
-    assert sum(e["fresh"] for e in exps) == 1 and exps[-1]["forced_escape"]
-    plan["experiments"][0]["fresh"] = True                    # the planner already escaped: nothing forced
-    assert not any(e.get("forced_escape") for e in r.experiments(plan, 7))
+    line = [q.id for q in r.archive.lineage(best.id, depth=100)]
+    # history decides: flat -> one of each; a rise of >= 0.001 -> two deepen slots
+    for g, v in ((3, best.score), (4, best.score + 0.002)):
+        r._append("history.jsonl", {"gen": g, "best": v, "best_id": best.id})
+    r._roles_cache = {}
+    assert r.roles(4) == ["deepen", "branch", "explore"]
+    assert r.roles(5) == ["deepen", "deepen", "explore"] and r.roles(6) == ["deepen", "deepen", "branch"]
+    off = next(q for q in r.archive.ranked() if q.id not in line)
+    plan = {"experiments": [{"role": "explore", "base": best.id, "hypothesis": "x", "change": "c"},
+                            {"role": "deepen", "base": off.id, "hypothesis": "d", "change": "c"},     # not on the line
+                            {"role": "branch", "base": best.id, "hypothesis": "b", "change": "c"}]}   # the best itself
+    exps = r.experiments(plan, 4)
+    by = {e["role"]: e for e in exps}
+    assert [e["role"] for e in exps] == ["deepen", "branch", "explore"]
+    assert by["deepen"]["base"] in line and not by["deepen"]["fresh"]
+    assert by["branch"]["base"] != best.id and not by["branch"]["fresh"]
+    assert by["explore"]["fresh"] and by["explore"]["hypothesis"] == "x"
+
+
+def test_lines_and_branch_candidates_favour_young_lines(tmp_path):
+    r = fake_run(tmp_path, "v45", gens=2)
+    r.go()
+    base = r.archive.best()
+    code = "import numpy as np\ndef construct(b, start):\n    return np.ones(12)\n"
+    young = r.child(3, "deep", base, code, "fresh line", {"fresh": True, "role": "explore"}, "", fresh=True)
+    assert r.root_of(young) == young.id and len(r.lines()) >= 2
+    cands = r.branch_candidates(4)
+    assert cands[0][0].id == young.id and "line started by" in cands[0][1]
 
 
 def test_fresh_child_runs_without_a_start(tmp_path):
@@ -113,11 +134,13 @@ def v5_with_steps(tmp_path):
 def test_v5_operations_versioning_and_no_drift(tmp_path):
     r, m = v5_with_steps(tmp_path)
     pid = r.archive.best().id
-    js = {"thinking": "t", "gist": "g", "agenda": [{"op": "add", "ref": "n1", "purpose": "find X", "plan": "if a then b"}],
+    js = {"thinking": "t", "gist": "g", "agenda": [{"op": "add", "ref": "n1", "question": "find X", "plan": "if a then b n1"}],
           "beliefs": [{"op": "add", "kind": "works", "statement": "X helps", "evidence": [pid, "p9999"]},
                       {"op": "add", "kind": "fails", "statement": "Y hurts", "evidence": [pid]}]}
     sid, applied, rejected, refmap = m.apply_step(2, "round", js, [])
     new_item = refmap["n1"]
+    assert "n1" not in m.items[new_item]["plan"] and new_item in m.items[new_item]["plan"]   # refs become ids
+    assert m.items[new_item]["stop"]                                                          # a default stop rule
     b_x = [b for b in m.beliefs.values() if b["statement"] == "X helps"][0]
     b_y = [b for b in m.beliefs.values() if b["statement"] == "Y hurts"][0]
     assert b_x["evidence"] == [pid]                           # unknown program ids never become evidence
@@ -129,14 +152,51 @@ def test_v5_operations_versioning_and_no_drift(tmp_path):
     assert any("A777" in x for x in rejected2)
     it = m.items[new_item]
     assert it["plan"] == "new plan" and [v["op"] for v in it["versions"]] == ["add", "revise"]
-    assert it["versions"][0]["plan"] == "if a then b"        # the old version stays reachable
+    assert "if a then b" in it["versions"][0]["plan"]         # the old version stays reachable
     assert json.dumps(m.beliefs[b_y["id"]], sort_keys=True) == before_y   # untouched: word for word
-    # a fresh load replays the same state
     from helix5.v5 import Researcher
     m2 = Researcher(r)
     assert m2.items[new_item]["plan"] == "new plan" and m2.beliefs[b_x["id"]]["confidence"] == "high"
     hist = m.lookup(new_item)
     assert "if a then b" in hist and "new plan" in hist and "evidence" in hist
+
+
+def test_v5_beliefs_are_falsifiable_and_limit_claims_are_conjectures(tmp_path):
+    r, m = v5_with_steps(tmp_path)
+    pid = r.archive.best().id
+    js = {"thinking": "t", "gist": "g", "beliefs": [
+        {"op": "add", "kind": "mechanism", "statement": "flat tops help"},                          # no refuted_if
+        {"op": "add", "kind": "works", "statement": "observation without evidence"},               # no evidence
+        {"op": "add", "kind": "mechanism", "statement": "flat tops help", "refuted_if": "a peaked f*f scoring higher"},
+        {"op": "add", "kind": "works", "statement": "The true maximum of R is 0.8825", "confidence": "high",
+         "evidence": [pid]}]}
+    _, applied, rejected, _ = m.apply_step(2, "round", js, [])
+    assert len(rejected) == 2 and any("refuted_if" in x for x in rejected) and any("cite" in x for x in rejected)
+    conj = [b for b in m.beliefs.values() if "maximum" in b["statement"]][0]
+    assert conj["kind"] == "conjecture" and m.effective_confidence(conj) == "low" and conj["refuted_if"]
+    for g in (3, 4):                                           # it survives two challenges: confidence can rise
+        m.apply_step(g, "round", {"thinking": "c", "gist": "c", "beliefs": [
+            {"op": "revise", "id": conj["id"], "challenge_outcome": "held", "why": "held"}]}, [])
+    assert m.effective_confidence(m.beliefs[conj["id"]]) == "high"
+    assert "challenge" in m.adjust_roles(3, ["deepen", "branch", "explore"])
+
+
+def test_v5_due_threads_are_parked_by_their_stop_rule(tmp_path):
+    r, m = v5_with_steps(tmp_path)
+    best = r.archive.best()
+    sid, _, _, ref = m.apply_step(2, "round", {"thinking": "t", "gist": "g", "agenda": [
+        {"op": "add", "ref": "a", "question": "does X help?", "plan": "try X"}]}, [])
+    iid = ref["a"]
+    from helix4.archive import Program
+    for i in range(3):                                          # three experiments without a real gain
+        r.add(Program(id="", gen=3 + i, role="deep", parent=best.id, intent="x", code=f"# {i}\n", valid=True,
+                      score=best.score, delta=0.0, plan={"item": iid, "step": sid, "eid": f"g{3 + i}x0"}))
+    assert m.thread_stats(m.items[iid])["due"]
+    m._due_shown = []
+    assert "DUE" in m.agenda_block() and iid in m._due_shown
+    m.apply_step(6, "round", {"thinking": "ignored it", "gist": "ignored", "_due_shown": [iid]}, [])
+    assert m.auto_park(7) == [iid] and m.items[iid]["status"] == "parked"
+    assert m.items[iid]["versions"][-1]["step"] == "system"
 
 
 def test_v5_continuity_follows_links_not_a_window(tmp_path):
