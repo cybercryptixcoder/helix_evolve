@@ -1,0 +1,7 @@
+01:49:45 [v6-s1] gen 0: Code Zero scores 0.666667
+01:52:30 [v6-s1] gen 1: best 0.878848 (p0003, deep); deep 0.878848 (2/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 166 s
+02:02:40 [v6-s1] gen 2: best 0.878927 (p0004, deep); deep 0.878927 (2/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 610 s
+02:09:52 [v6-s1] gen 3: best 0.879057 (p0007, deep); deep 0.879057 (1/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 432 s
+02:12:38 [v6-s1] gen 4: best 0.879194 (p0009, deep); deep 0.879194 (2/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 165 s
+02:20:30 [v6-s1] gen 5: best 0.879205 (p0010, deep); deep 0.879205 (1/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 472 s
+02:25:46 [v6-s1] gen 6: best 0.879205 (p0013, deep); deep 0.879205 (0/2 gained), wide 0.000000 (0/0 gained, 0 near the record); 316 s

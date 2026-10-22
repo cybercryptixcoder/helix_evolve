@@ -1,0 +1,24 @@
+{"id": "p0002", "gen": 1, "state": "p0001", "seconds": 90.0, "fresh": false, "kind": "direct height optimization", "eid": "g1a0", "inconclusive": false}
+{"id": "p0002", "gen": 1, "action_id": "g1a0", "thread": "T1", "record_before": 0.6666666666666666}
+{"id": "p0003", "gen": 1, "state": "p0001", "seconds": 90.0, "fresh": false, "kind": "parametric shape search", "eid": "g1a1", "inconclusive": false}
+{"id": "p0003", "gen": 1, "action_id": "g1a1", "thread": "T2", "record_before": 0.6666666666666666}
+{"id": "p0004", "gen": 2, "state": "p0003", "seconds": 90.0, "fresh": false, "kind": "parametric shape search", "eid": "g2a1", "inconclusive": false}
+{"id": "p0004", "gen": 2, "action_id": "g2a1", "thread": "T2", "record_before": 0.8788484247837459}
+{"id": "p0005", "gen": 2, "state": "p0003", "seconds": 90.0, "fresh": false, "kind": "direct height optimization", "eid": "g2a0", "inconclusive": false}
+{"id": "p0005", "gen": 2, "action_id": "g2a0", "thread": "T1", "record_before": 0.8788484247837459}
+{"id": "p0006", "gen": 3, "state": "p0004", "seconds": 90.0, "fresh": false, "kind": "combinatorial flat-sum search", "eid": "g3a0", "inconclusive": false}
+{"id": "p0006", "gen": 3, "action_id": "g3a0", "thread": "T3", "record_before": 0.8789271206448501}
+{"id": "p0007", "gen": 3, "state": "p0004", "seconds": 90.0, "fresh": false, "kind": "asymmetric profile search", "eid": "g3a1", "inconclusive": false}
+{"id": "p0007", "gen": 3, "action_id": "g3a1", "thread": "T4", "record_before": 0.8789271206448501}
+{"id": "p0008", "gen": 4, "state": "p0007", "seconds": 90.0, "fresh": false, "kind": "asymmetric profile search", "eid": "g4a1", "inconclusive": false}
+{"id": "p0008", "gen": 4, "action_id": "g4a1", "thread": "T4", "record_before": 0.8790568384033508}
+{"id": "p0009", "gen": 4, "state": "p0007", "seconds": 90.0, "fresh": false, "kind": "direct height optimization", "eid": "g4a0", "inconclusive": false}
+{"id": "p0009", "gen": 4, "action_id": "g4a0", "thread": "T5", "record_before": 0.8790568384033508}
+{"id": "p0010", "gen": 5, "state": "p0009", "seconds": 90.0, "fresh": false, "kind": "direct height optimization", "eid": "g5a0", "inconclusive": false}
+{"id": "p0010", "gen": 5, "action_id": "g5a0", "thread": "T6", "record_before": 0.8791942142286363}
+{"id": "p0011", "gen": 5, "state": "p0009", "seconds": 90.0, "fresh": false, "kind": "direct height optimization", "eid": "g5a1", "inconclusive": false}
+{"id": "p0011", "gen": 5, "action_id": "g5a1", "thread": "T5", "record_before": 0.8791942142286363}
+{"id": "p0012", "gen": 6, "state": null, "seconds": 90.0, "fresh": true, "kind": "multi-start from scratch", "eid": "g6a1", "inconclusive": false}
+{"id": "p0012", "gen": 6, "action_id": "g6a1", "thread": "T7", "record_before": 0.8792054903116295}
+{"id": "p0013", "gen": 6, "state": "p0010", "seconds": 90.0, "fresh": false, "kind": "basin hopping / large smooth perturbations", "eid": "g6a0", "inconclusive": false}
+{"id": "p0013", "gen": 6, "action_id": "g6a0", "thread": "T7", "record_before": 0.8792054903116295}
