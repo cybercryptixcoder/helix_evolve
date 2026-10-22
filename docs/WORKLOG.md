@@ -4,6 +4,80 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 22, 2026 (00:06-01:30): the traces read in depth; v4.6 and v6 built, tested and packaged
+
+### What was asked
+`docs/BRIEF_2026-10-22.md` (verbatim). Read every trace in depth: v4 atlas-s1 to generation 55, and v4.5 and v5 to
+generation 20. Make the wide loop a halo around the deep loop again. Build two versions:
+- a conservative v4 successor that improves it strictly and substantially (v4.6);
+- an ambitious agentic one (v6).
+
+Say what is being built before building it, test everything including real end-to-end runs, and package an
+overnight job for Hermes with no kill or cron instructions.
+
+### What was found
+`docs/TRACE_STUDY.md`, sections 1-11:
+- **The loops were decoupled.** The parent-sampling rule decoupled them: 25 of 60 wide parents in generations 1-20
+  were more than 0.01 below the record.
+- **Failures were often time-outs.** Many "failures" were experiments that ran out of time (20 of 54 in
+  generations 21-40), and the Distiller recorded mechanism-level negatives from them.
+- **The fixed 30 s didn't scale** with the state.
+- **Atlas filled with knob tweaks** by quota.
+- **Findings were unscoped.**
+- **The breakthrough came from structural reasoning.**
+- **Programs re-implemented the scorer**, once wrongly.
+- **Prompts were bloated.**
+- **Late fresh lines won** in v4.5 and v5.
+- **v5's thread stop rule never fired** in a slow polishing tail.
+
+### What was built
+`helix6/`, with the design in `docs/V6_DESIGN.md`:
+- **The shared engine:**
+  - method × state: a program's code runs on any program's construction, or from scratch;
+  - the problem's exact scorer as an importable toolkit;
+  - an INCONCLUSIVE label (no change after at least 90% of the budget);
+  - a planner-controlled time split;
+  - plateaus measured by rate of return (a polishing tail).
+- **v4.6:**
+  - the mutation halo: frontier parents, a stale parent moved onto the record's state, and one donor method
+    transplanted onto the record;
+  - Atlas around ideas: a table of kinds of change, key findings always on the map, scoped findings, a merge-first
+    Distiller with at most 4 new findings and tags;
+  - a prompt diet.
+- **v6:** an agent spends 6 units of 30 s per round with three actions:
+  - experiment;
+  - mutate (including transplants);
+  - continue (more time for a program, with no new code).
+
+  It keeps a theory (limit claims are forced to low-confidence conjectures) and threads. A thread is due when its
+  last 3 actions, over 2 rounds or more, raised the record by less than 3e-4; it is parked after 2 rounds due.
+- **The report:** `helix6/report.py`, every version on one page.
+- **The job:** `scripts/run_v6_jobs.sh` (v4.6 × 3 and v6 × 3, 30 generations, 8 h deadline, one copy at a time,
+  waits for any earlier Helix job, never stops anything). The Hermes prompt is in `docs/V6_JOB.md`.
+
+### Checked
+- **Unit tests:** `tests/test_helix6.py`, 15 tests; every older suite still passes (76 in all).
+- **A prompt audit for wording from earlier traces.** Three examples were removed: "a higher resolution, a long
+  schedule", "a reformulation", and a finding example that named v4's max-as-constraint technique. The first real
+  test, one generation old, was discarded.
+- **Real end-to-end tests:**
+  - v4.6, seed 7 (4 generations): 0.667 → 0.864, halo 12 of 12 near the record, time splits used, 3 inconclusive
+    flagged;
+  - v6, seed 7 (4 generations): 0.667 → 0.858, all three action kinds used, and a `continue` gave +0.0024;
+  - after the fixes: v4.6 seeds 8 and 9 reached 0.881 and 0.8819; v6 seed 8 reached 0.8813, with its threads
+    closing with stated outcomes.
+- **Fixes from those tests:**
+  - plan ids resolve among the programs the planner saw (a race with same-generation wide children);
+  - v5's "measure, don't derive" guard restored, plus "your job is to decide what to try, not to solve the
+    problem". Before, 3 of 8 v4.6 planner calls hit the 32k thinking cap, deriving the textbook construction in
+    their head; after, 0 of 3;
+  - a `continue` that finds nothing is CONVERGED, not inconclusive;
+  - thread counts sort past round 9, and rewording a thread doesn't reset its count;
+  - only 3 opened programs per prompt show their code (prompts had reached 60 KB by generation 4).
+- **A fake rehearsal of the whole job:** six runs, the report, the verification; all done.
+
+---
+
 ## October 21, 2026 (11:30): v4.5 and v5 results; atlas-s1 to generation 40
 
 `docs/V5_RESULTS.md`.

@@ -96,8 +96,8 @@ def build(roots, out_dir: Path):
     page = page.replace(".k-v5{", ".k-v6{background:var(--c-v6)}.k-v46{background:var(--c-v46)}.k-v5{")
     page = page.replace("<title>Helix v4.5 and v5</title>", "<title>Helix, every version</title>")
     page = page.replace("<h1>Helix: v4, v4.5 and v5</h1>", "<h1>Helix: v4, v4.5, v5, v4.6 and v6</h1>")
-    page = page.replace("and v5 (the researcher), several seeds each",
-                        "v5 (the researcher), v4.6 (Atlas around ideas, with the mutation halo) and v6 (the agent), "
+    page = page.replace(" and v5 (the researcher), several seeds each",
+                        ", v5 (the researcher), v4.6 (Atlas around ideas, with the mutation halo) and v6 (the agent), "
                         "several seeds each")
     page = page.replace("<div id=\"tip\"></div>", v6_section(data["runs"]) + "\n<div id=\"tip\"></div>", 1)
     path.write_text(page)
