@@ -19,9 +19,8 @@ FRESH_NOTE = ("This experiment starts over: `start` will be None, so the program
               "scratch (it may reuse the base program's methods).")
 
 # ---------------------------------------------------------------------------------------------- guidance for planners
-STRUCTURE = """How to reason: think about the structure of the objective and of your search (what makes progress hard \
-here, what an equivalent or better-conditioned formulation would be, where the time goes): that is where big gains \
-come from. But measure values, never assume them: don't compute a construction's score, a limit or an optimum in your \
+STRUCTURE = """How to reason: think about the objective and about your search (what limits progress now, and why): that \
+is where big gains come from. But measure values, never assume them: don't compute a construction's score, a limit or an optimum in your \
 head; if you need a number, let a program measure it. A claim that something is optimal, a ceiling or impossible is a \
 hypothesis: nobody knows the true maximum of this problem, so never stop searching because of one."""
 
@@ -37,8 +36,7 @@ up to {k} experiments. An experiment applies a METHOD to a STATE:
 - the state is the construction the new program starts from: by default the best construction so far, or any \
 program's construction (to try a method on another state), or none (to start from scratch).
 You also split {total:.0f} s of CPU among your experiments (each between {lo:.0f} and {total:.0f} s): give more time \
-to an experiment whose change needs it (a higher resolution, a long schedule, a new stage that must finish before it \
-pays) and less to cheap ones. One well-funded experiment is better than three that run out of time.
+to an experiment whose change needs time to take effect, and less to cheap ones. One well-funded experiment is better than three that run out of time.
 
 A memoryless mutation loop runs beside you on the frontier: it mutates the strongest recent programs, including your \
 latest experiments, and transplants methods from older programs onto the best construction. Its results are shown to \
@@ -82,8 +80,9 @@ DISTILLER46_ASK = """## Your task
 Record what generation {gen} taught.
 - Merge first: when a result bears on an existing finding, attach it as evidence to that finding instead of writing a \
 new one. Write a new finding only for something new: at most 4, and none at all if nothing new was learned.
-- Write findings at the level of ideas and mechanisms, not settings: "moving the max into a constraint breaks the \
-plateau (p0053, +0.00095)", not "mu up to 3e13 gave +0.00001". Record a settings tweak only when it matters.
+- Write findings at the level of ideas and mechanisms, not settings: what kind of change it was, what it did on \
+which construction (in numbers, with the program ids) and the likely reason, not a list of parameter values. Record \
+a settings tweak only when it matters.
 - A program marked INCONCLUSIVE ran out of time before its change could act: never record it as a failure of its \
 idea (at most as a question, saying it needs more time).
 - Give each new finding a "tag": the kind of change it is about, a short phrase. Reuse a tag from the list below if it \

@@ -7,7 +7,7 @@ It spends them with actions:
 - mutate: k Mutator variants of a state's own program, run on that state (a halo on demand), or of a donor method
   transplanted onto it; 1 unit each;
 - continue: run a program again from its own construction for 1-3 more units, with no new code, so an investment
-  (a new resolution, a long schedule) can mature. In v4, 20 of 54 planned experiments in generations 21-40 ran out of
+  (an idea that needs a long run) can mature. In v4, 20 of 54 planned experiments in generations 21-40 ran out of
   time and their work was thrown away.
 Units it leaves unspent go to mutations of the record (the halo).
 
@@ -49,13 +49,13 @@ construction is a STATE, and any method can run on any state.
 Your actions:
 - experiment (1-3 units): a coder changes a method (a base program) the way you describe, and it runs on a state you \
 choose (default: the best construction; "none": from scratch). Use it for an idea that needs new code. Give it the \
-units it needs: a high-resolution or long-schedule idea needs 2-3 units, or it runs out of time.
+units it needs: an idea that needs a long run gets 2-3 units, or it runs out of time.
 - mutate (1 unit each): a memoryless mutator writes variants of a state's own program and runs them on that state: \
 cheap variations around a construction. With "method", the mutator instead adapts another program's method to that \
 state (a transplant).
 - continue (1-3 units): run a program again, unchanged, from its own construction, for more time. Use it when a \
 program ran out of time with its idea unfinished (INCONCLUSIVE, or still improving at the end), or when a new state \
-(a new resolution, a fresh line) needs more polishing before it can compete. It costs no code.
+(a fresh line, say) needs more time before it can compete. It costs no code.
 Units you leave unspent go to mutations of the best program.
 
 You keep a theory (mechanisms and conjectures, each saying what would refute it) and threads (the questions you are \
@@ -64,7 +64,7 @@ raised the record by less than {tail}: close it with what you learned, or revise
 ignore is parked by the system.
 
 How to spend a round: keep depth where the record is rising; when it only creeps, change the kind of move rather than \
-tuning the same one: a different method on the best state, the best method on another state, a reformulation, a \
+tuning the same one: a different method on the best state, the best method on another state, a \
 fresh line, or time for an unfinished idea. A few well-funded actions beat many starved ones.
 
 """ + P.STRUCTURE + "\n\n" + P.EVIDENCE + "\n\n" + P.SCORE_SCALE

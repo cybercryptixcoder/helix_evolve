@@ -42,6 +42,11 @@ NICE_CMD="nice -n 10"
 command -v ionice >/dev/null && NICE_CMD="ionice -c 3 nice -n 10"
 FAKE_FLAG=""; [ "$FAKE" = "1" ] && FAKE_FLAG="--fake"
 mkdir -p "$ROOT_RUNS" "$HELIX4_SLOTS_DIR" "$RESULTS"
+# one copy at a time: a second start while the job runs (by hand or by an agent) exits at once and touches nothing
+if command -v flock >/dev/null; then
+  exec 8> "$ROOT_RUNS/.job.lock"
+  flock -n 8 || { echo "== this job is already running (another copy holds $ROOT_RUNS/.job.lock); this copy exits and changes nothing"; exit 0; }
+fi
 
 echo "== Helix v4.6 + v6 job: conditions [$CONDITIONS] x seeds [$SEEDS], $GENS generations, $BUDGET s per program, $HELIX4_EVAL_SLOTS evaluation slots"
 
