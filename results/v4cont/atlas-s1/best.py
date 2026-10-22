@@ -4,12 +4,14 @@ from scipy.optimize import minimize
 from scipy.signal import fftconvolve
 
 
-def _knots(h):
+def _conv(h):
     if h.size > 1500:
-        L = fftconvolve(h, h)
-    else:
-        L = np.convolve(h, h)
-    return np.concatenate(([0.0], L, [0.0]))
+        return fftconvolve(h, h)
+    return np.convolve(h, h)
+
+
+def _knots(h):
+    return np.concatenate(([0.0], _conv(h), [0.0]))
 
 
 def R_of(h):
@@ -19,7 +21,7 @@ def R_of(h):
         return 0.0
     L = _knots(h)
     a = L[:-1]; b = L[1:]
-    num = np.sum(a*a + a*b + b*b) / 3.0
+    num = np.sum(a * a + a * b + b * b) / 3.0
     den = s * s * L.max()
     if den <= 0:
         return 0.0
@@ -27,16 +29,12 @@ def R_of(h):
 
 
 def _num_and_dq(h):
-    if h.size > 1500:
-        L = fftconvolve(h, h)
-    else:
-        L = np.convolve(h, h)
-    Lf = np.concatenate(([0.0], L, [0.0]))
+    Lf = _knots(h)
     a = Lf[:-1]; b = Lf[1:]
-    num = np.sum(a*a + a*b + b*b) / 3.0
+    num = np.sum(a * a + a * b + b * b) / 3.0
     dq = np.zeros_like(Lf)
-    dq[:-1] += (2*a + b)
-    dq[1:] += (a + 2*b)
+    dq[:-1] += (2 * a + b)
+    dq[1:] += (a + 2 * b)
     dq /= 3.0
     return num, dq, Lf
 
@@ -49,7 +47,7 @@ def _backprop(gLf, h):
     return 2.0 * np.correlate(gL, h, mode='valid')[:n]
 
 
-def _rescale_maxL(h):
+def _rescale(h):
     h = np.clip(h, 0, None)
     if h.sum() <= 0:
         return h
@@ -59,31 +57,18 @@ def _rescale_maxL(h):
     return h / np.sqrt(mx)
 
 
-def _direct_obj_grad(h, beta):
+def _fun_grad(h):
     s = h.sum()
     if s <= 0:
         return 1e18, np.zeros(h.size)
     num, dq, Lf = _num_and_dq(h)
-    mx = Lf.max()
-    e = np.exp(np.clip(beta * (Lf - mx), -50, 0))
-    Z = e.sum()
-    logM = mx + np.log(Z) / beta
-    w = e / Z
-    obj = -np.log(num) + 2.0 * np.log(s) + logM
-    gLf = -dq / num + w
-    grad = _backprop(gLf, h)
-    grad += 2.0 / s
-    return obj, grad
-
-
-def _clip_obj_grad(h, c):
-    num, dq, Lf = _num_and_dq(h)
-    gLf = (Lf - c) * (Lf > c)
-    gLf[0] = 0.0
-    gLf[-1] = 0.0
-    obj = 0.5 * np.sum(gLf * gLf)
-    grad = _backprop(gLf, h)
-    return obj, grad
+    m = int(np.argmax(Lf))
+    Lm = Lf[m]
+    gLf = -dq / num
+    gLf[m] += 1.0 / Lm
+    grad = _backprop(gLf, h) + 2.0 / s
+    val = -np.log(num) + 2.0 * np.log(s) + np.log(Lm)
+    return val, grad
 
 
 def _make_cb(deadline):
@@ -93,85 +78,15 @@ def _make_cb(deadline):
     return cb
 
 
-def run_direct(h0, beta, maxiter, maxfun, deadline):
-    if time.process_time() >= deadline - 1.0:
-        return h0
-    def f(x):
-        xc = np.clip(x, 0, None)
-        o, g = _direct_obj_grad(xc, beta)
-        return o, g * (x > 0)
-    cb = _make_cb(deadline - 0.5)
-    try:
-        res = minimize(f, h0, jac=True, method='L-BFGS-B',
-                       bounds=[(0, None)] * h0.size,
-                       callback=cb,
-                       options={'maxiter': maxiter, 'maxfun': maxfun,
-                                'ftol': 1e-17, 'gtol': 1e-13})
-        return _rescale_maxL(res.x)
-    except TimeoutError:
-        try:
-            return _rescale_maxL(res.x)
-        except Exception:
-            return h0
-    except Exception:
-        return h0
-
-
-def run_clip(h0, c, maxiter, maxfun, deadline):
-    if time.process_time() >= deadline - 1.0:
-        return h0
-    def f(x):
-        xc = np.clip(x, 0, None)
-        o, g = _clip_obj_grad(xc, c)
-        return o, g * (x > 0)
-    cb = _make_cb(deadline - 0.5)
-    try:
-        res = minimize(f, h0, jac=True, method='L-BFGS-B',
-                       bounds=[(0, None)] * h0.size,
-                       callback=cb,
-                       options={'maxiter': maxiter, 'maxfun': maxfun,
-                                'ftol': 1e-17, 'gtol': 1e-13})
-        return _rescale_maxL(res.x)
-    except TimeoutError:
-        try:
-            return _rescale_maxL(res.x)
-        except Exception:
-            return h0
-    except Exception:
-        return h0
-
-
-def _norm_eq_grad(h):
-    s = h.sum()
-    num, dq, Lf = _num_and_dq(h)
-    m = int(np.argmax(Lf))
-    Lm = Lf[m]
-    gLf = -dq / num
-    gLf[m] += 1.0 / Lm
-    grad = _backprop(gLf, h) + 2.0 / s
-    return grad
-
-
-def _norm_eq_fun(h):
-    s = h.sum()
-    if s <= 0:
-        return 1e18
-    num, dq, Lf = _num_and_dq(h)
-    return -np.log(num) + 2.0 * np.log(s) + np.log(Lf.max())
-
-
-def _exact_lbfgs(h0, maxiter, maxfun, deadline, free=None):
-    if time.process_time() >= deadline - 1.0:
+def _lbfgs_log(h0, maxiter, deadline):
+    if time.process_time() >= deadline - 0.3:
         return h0
     h = np.clip(h0, 0, None)
     if h.sum() <= 0:
         return h0
     n = h.size
-    if free is None:
-        thresh = 1e-13 * h.max()
-        active = np.flatnonzero(h > thresh)
-    else:
-        active = np.asarray(free, dtype=int)
+    thresh = 1e-13 * h.max()
+    active = np.flatnonzero(h > thresh)
     if active.size == 0:
         return h0
     u0 = np.log(np.clip(h[active], 1e-300, None))
@@ -180,194 +95,213 @@ def _exact_lbfgs(h0, maxiter, maxfun, deadline, free=None):
         uu = np.clip(u, -30.0, 30.0)
         hh = np.zeros(n)
         hh[active] = np.exp(uu)
-        val = _norm_eq_fun(hh)
-        g = _norm_eq_grad(hh)[active] * hh[active]
-        return val, g
+        val, g = _fun_grad(hh)
+        return val, g[active] * hh[active]
 
-    cb = _make_cb(deadline - 0.5)
+    cb = _make_cb(deadline - 0.2)
     try:
         res = minimize(f, u0, jac=True, method='L-BFGS-B',
                        bounds=[(-30.0, 30.0)] * active.size,
                        callback=cb,
-                       options={'maxiter': maxiter, 'maxfun': maxfun,
+                       options={'maxiter': maxiter, 'maxfun': 2 * maxiter,
                                 'ftol': 1e-20, 'gtol': 1e-16})
-        h2 = np.zeros(n)
-        h2[active] = np.exp(np.clip(res.x, -30.0, 30.0))
-        return _rescale_maxL(h2)
-    except TimeoutError:
-        try:
-            h2 = np.zeros(n)
-            h2[active] = np.exp(np.clip(res.x, -30.0, 30.0))
-            return _rescale_maxL(h2)
-        except Exception:
-            return h0
-    except Exception:
+    except (TimeoutError, Exception):
         return h0
+    if res is None:
+        return h0
+    h2 = np.zeros(n)
+    h2[active] = np.exp(np.clip(res.x, -30.0, 30.0))
+    return _rescale(h2)
 
 
-def _upsample(h, factor):
-    n = h.size
-    m = (n - 1) * factor + 1
-    xo = np.linspace(0.0, n - 1, m)
-    return np.interp(xo, np.arange(n), h)
+def _lbfgs_block(h0, free, maxiter, deadline):
+    if time.process_time() >= deadline - 0.3:
+        return h0
+    h = np.clip(h0, 0, None)
+    if h.sum() <= 0:
+        return h0
+    active = np.asarray(free, dtype=int)
+    if active.size == 0:
+        return h0
+    x0 = h[active].copy()
+
+    def f(x):
+        hh = h.copy()
+        hh[active] = np.clip(x, 0.0, None)
+        val, g = _fun_grad(hh)
+        return val, g[active]
+
+    cb = _make_cb(deadline - 0.2)
+    try:
+        res = minimize(f, x0, jac=True, method='L-BFGS-B',
+                       bounds=[(0.0, None)] * active.size,
+                       callback=cb,
+                       options={'maxiter': maxiter, 'maxfun': 2 * maxiter,
+                                'ftol': 1e-20, 'gtol': 1e-16})
+    except (TimeoutError, Exception):
+        return h0
+    if res is None:
+        return h0
+    h2 = h.copy()
+    h2[active] = np.clip(res.x, 0.0, None)
+    return _rescale(h2)
 
 
-def _prune(h, frac):
-    h = np.asarray(h, dtype=float)
-    out = h * (h > frac * h.max())
-    return _rescale_maxL(out)
-
-
-def _unzero(h, frac):
-    h = np.asarray(h, dtype=float)
-    m = h.mean()
-    out = h.copy()
-    out[h <= 0] += frac * m
-    return out
-
-
-def _window_polish(h, deadline):
-    """Exact L-BFGS restricted to indices near the argmax-knot region, then full."""
-    if time.process_time() >= deadline - 1.0:
-        return h
-    n = h.size
+def _peak_region(h, tol=0.999):
     Lf = _knots(h)
-    m = int(np.argmax(Lf))
-    lo = max(0, m - 1 - (n - 1))
-    hi = min(n - 1, m - 1)
-    if hi <= lo:
-        return h
-    pad = max(8, (hi - lo) // 2)
+    mx = Lf.max()
+    if mx <= 0:
+        return 0, h.size - 1
+    idx = np.flatnonzero(Lf >= tol * mx)
+    lo = max(0, idx.min() - 1)
+    hi = min(h.size - 1, idx.max())
+    return lo, hi
+
+
+def _window_polish_peak(h, deadline, frac, extra, maxiter=400):
+    n = h.size
+    lo, hi = _peak_region(h)
+    span = hi - lo
+    pad = max(extra, int(span * frac))
     lo = max(0, lo - pad)
     hi = min(n - 1, hi + pad)
     free = np.arange(lo, hi + 1)
-    h2 = _exact_lbfgs(h, 400, 800, deadline, free=free)
-    return h2
+    return _lbfgs_block(h, free, maxiter=maxiter, deadline=deadline)
+
+
+def _prolongate(h_small, N_big):
+    n = h_small.size
+    if n == N_big:
+        return h_small.copy()
+    S = np.concatenate(([0.0], np.cumsum(h_small)))
+    xs = np.linspace(0.0, 1.0, n + 1)
+    xb = np.linspace(0.0, 1.0, N_big + 1)
+    Sb = np.interp(xb, xs, S)
+    Sb = np.maximum.accumulate(Sb)
+    h = np.clip(np.diff(Sb), 0.0, None)
+    if h.sum() <= 0:
+        return np.ones(N_big)
+    return h
+
+
+def _coarse(h, Nc):
+    n = h.size
+    if n == Nc:
+        return h.copy()
+    S = np.concatenate(([0.0], np.cumsum(h)))
+    xs = np.linspace(0.0, 1.0, n + 1)
+    xb = np.linspace(0.0, 1.0, Nc + 1)
+    Sb = np.interp(xb, xs, S)
+    Sb = np.maximum.accumulate(Sb)
+    hc = np.clip(np.diff(Sb), 0.0, None)
+    if hc.sum() <= 0:
+        return np.ones(Nc)
+    return hc
+
+
+def _phase_shift(h, delta):
+    n = h.size
+    C = np.concatenate(([0.0], np.cumsum(h)))
+    edges = np.arange(n + 1, dtype=float) - delta
+    edges = np.clip(edges, 0.0, float(n))
+    Cq = np.interp(edges, np.arange(n + 1, dtype=float), C)
+    return np.diff(Cq)
 
 
 def construct(budget_seconds, start):
     t0 = time.process_time()
-    deadline = t0 + budget_seconds * 0.80
+    deadline = t0 + budget_seconds * 0.90
 
     if start is not None:
         base = np.clip(np.asarray(start, dtype=float).copy(), 0, None)
-        if base.size == 0 or base.sum() <= 0:
-            base = np.ones(50)
-    else:
-        base = np.ones(50)
-    base = _rescale_maxL(base)
-
-    best = base.copy()
-    bestR = R_of(best)
-    print("start R=%.6f (N=%d)" % (bestR, best.size))
-
-    # --- NEW: clip (peak-shaving) ladder ---
-    for _pass in range(3):
-        if time.process_time() >= deadline - 2.0:
-            break
-        pass_improved = False
-        for eps in [3e-2, 1e-2, 3e-3, 1e-3]:
-            if time.process_time() >= deadline - 2.0:
-                break
-            c = (1.0 - eps) * _knots(best).max()
-            cand = run_clip(best, c, 300, 600, deadline)
-            cand = _exact_lbfgs(cand, 300, 600, deadline)
-            r = R_of(cand)
-            if r > bestR + 1e-15:
-                best, bestR = cand.copy(), r
-                pass_improved = True
-                print("clip eps=%.0e R=%.7f" % (eps, bestR))
-        if not pass_improved:
-            break
-
-    if best.size < 120000:
-        for factor in (2, 3):
-            cand = _rescale_maxL(_upsample(best, factor))
-            if cand.size > 200000:
-                continue
-            r = R_of(cand)
-            if r > bestR - 2e-6:
-                best, bestR = cand, max(r, bestR)
-                print("upsample x%d R=%.7f (N=%d)" % (factor, bestR, best.size))
-                break
-
-    betas = [1e5, 1e6, 1e7, 1e8, 3e8, 1e9]
-    cycle = 0
-    while time.process_time() < deadline - 2.0:
-        cycle += 1
-        improved = False
-        for beta in betas:
-            if time.process_time() >= deadline - 2.0:
-                break
-            h = run_direct(best, beta, 1000, 2000, deadline)
-            r = R_of(h)
-            if r > bestR + 1e-15:
-                best, bestR = h.copy(), r
-                improved = True
-            if time.process_time() >= deadline - 2.0:
-                break
-            h2 = _exact_lbfgs(best, 500, 1000, deadline)
-            r2 = R_of(h2)
-            if r2 > bestR + 1e-15:
-                best, bestR = h2.copy(), r2
-                improved = True
-                print("cycle %d beta %.0e R=%.7f" % (cycle, beta, bestR))
-        h3 = _window_polish(best, deadline)
-        r3 = R_of(h3)
-        if r3 > bestR + 1e-15:
-            best, bestR = h3.copy(), r3
-            improved = True
-            print("window R=%.7f" % bestR)
-        if not improved:
-            break
-
-    # Shake ladder: 1 round.
-    for rnd in range(1):
-        if time.process_time() >= deadline - 2.0:
-            break
-        round_best = best.copy()
-        round_bestR = bestR
-        improved = False
-        for thresh in [1e-4, 1e-3, 1e-2]:
-            if time.process_time() >= deadline - 2.0:
-                break
-            hh = _prune(round_best, thresh)
-            hh = _exact_lbfgs(hh, 500, 1000, deadline)
-            r = R_of(hh)
-            if r > round_bestR + 1e-15:
-                round_best, round_bestR = hh.copy(), r
-                improved = True
-        for frac in [1e-3, 1e-2]:
-            if time.process_time() >= deadline - 2.0:
-                break
-            hh2 = _unzero(round_best, frac)
-            hh2 = _exact_lbfgs(hh2, 500, 1000, deadline)
-            if time.process_time() < deadline - 2.0:
-                hh2 = run_direct(hh2, 1e6, 600, 1200, deadline)
-                hh2 = _exact_lbfgs(hh2, 500, 1000, deadline)
-            r = R_of(hh2)
-            if r > round_bestR + 1e-15:
-                round_best, round_bestR = hh2.copy(), r
-                improved = True
-        if round_bestR > bestR + 1e-15:
-            best, bestR = round_best, round_bestR
-            print("shake round %d R=%.7f" % (rnd + 1, bestR))
-        if not improved:
-            break
-
-    hard = t0 + budget_seconds * 0.92
-    while time.process_time() < hard - 1.0:
-        h2 = _exact_lbfgs(best, 1500, 3000, hard - 0.5)
-        r2 = R_of(h2)
-        if r2 > bestR + 1e-16:
-            best, bestR = h2.copy(), r2
-            print("final polish R=%.7f" % bestR)
+        if base.size > 0 and base.sum() > 0:
+            best = _rescale(base)
+            bestR = R_of(best)
         else:
-            break
+            best, bestR = None, 0.0
+    else:
+        best, bestR = None, 0.0
 
-    if bestR < R_of(base):
-        best = base
-        bestR = R_of(base)
+    if best is None:
+        N = 8192
+        i = np.arange(N, dtype=float)
+        h = 2.0 * np.sqrt(N) * (np.sqrt(i + 1.0) - np.sqrt(i))
+        best = _rescale(h)
+        bestR = R_of(best)
+
+    print("base R=%.7f (N=%d)" % (bestR, best.size))
+
+    N = best.size
+
+    # NEW: resolution sweep upward from a coarse solve. Optimising at higher
+    # resolution than the start often unlocks extra R; we grow N gradually
+    # so L-BFGS converges at each stage before prolongating.
+    if time.process_time() < deadline - 8.0:
+        for Nt in (N, int(N * 1.5), int(N * 2.0)):
+            if Nt <= best.size:
+                continue
+            if Nt > 200000:
+                Nt = 200000
+            if time.process_time() >= deadline - 6.0:
+                break
+            hp = _prolongate(best, Nt)
+            hp = _rescale(hp)
+            hp = _lbfgs_log(hp, 400, deadline)
+            r = R_of(hp)
+            print("grow %d -> R=%.7f" % (Nt, r))
+            if r > bestR + 1e-15:
+                best, bestR = hp, r
+
+    # Peak-focused multi-scale polish at full resolution.
+    for frac, extra in ((0.10, 4), (0.20, 8), (0.35, 16), (0.50, 32), (0.75, 64)):
+        if time.process_time() >= deadline - 2.0:
+            break
+        h = _window_polish_peak(best, deadline, frac, extra)
+        h = _lbfgs_log(h, 500, deadline)
+        r = R_of(h)
+        if r > bestR + 1e-15:
+            best, bestR = h, r
+            print("peak(%.2f) R=%.7f" % (frac, bestR))
+
+    # Phase exploration around best.
+    for delta in (-0.5, -0.25, 0.25, 0.5):
+        if time.process_time() >= deadline - 2.0:
+            break
+        hp = _phase_shift(best, delta)
+        hp = _rescale(hp)
+        if hp.sum() <= 0:
+            continue
+        hp = _lbfgs_log(hp, 600, deadline)
+        hp = _window_polish_peak(hp, deadline, 0.35, 16)
+        r = R_of(hp)
+        print("phase %+.2f R=%.7f" % (delta, r))
+        if r > bestR + 1e-15:
+            best, bestR = hp, r
+
+    # Final loop: alternate full and peak polish until budget exhausted.
+    stall = 0
+    while time.process_time() < deadline - 1.0:
+        improved = False
+        h = _lbfgs_log(best, 800, deadline)
+        r = R_of(h)
+        if r > bestR + 1e-15:
+            best, bestR = h, r
+            improved = True
+            print("full R=%.7f" % bestR)
+        if time.process_time() >= deadline - 1.5:
+            break
+        h = _window_polish_peak(best, deadline, 0.40, 24)
+        r = R_of(h)
+        if r > bestR + 1e-15:
+            best, bestR = h, r
+            improved = True
+            print("win R=%.7f" % bestR)
+        if not improved:
+            stall += 1
+            if stall >= 2:
+                break
+        else:
+            stall = 0
 
     print("final R=%.7f (N=%d)" % (bestR, best.size))
     return best
