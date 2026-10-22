@@ -19,10 +19,10 @@ FRESH_NOTE = ("This experiment starts over: `start` will be None, so the program
               "scratch (it may reuse the base program's methods).")
 
 # ---------------------------------------------------------------------------------------------- guidance for planners
-STRUCTURE = """How to reason: think about the objective and about your search (what limits progress now, and why): that \
-is where big gains come from. But measure values, never assume them: don't compute a construction's score, a limit or an optimum in your \
-head; if you need a number, let a program measure it. A claim that something is optimal, a ceiling or impossible is a \
-hypothesis: nobody knows the true maximum of this problem, so never stop searching because of one."""
+STRUCTURE = """How to reason: about evidence and plans, not proofs. Don't derive formulas, constructions or limits in \
+your head: when you suspect something (a formula, a limit, why a shape works), design an experiment that measures it. \
+A claim that something is optimal, a ceiling or impossible is a hypothesis: nobody knows the true maximum of this \
+problem, so never stop searching because of one."""
 
 EVIDENCE = """How to read evidence: a result labelled INCONCLUSIVE returned its start unchanged after using its whole \
 budget, so its change may never have acted: it is not a failure; if the idea matters, give it more time. A finding \

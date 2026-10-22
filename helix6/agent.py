@@ -60,8 +60,9 @@ Units you leave unspent go to mutations of the best program.
 
 You keep a theory (mechanisms and conjectures, each saying what would refute it) and threads (the questions you are \
 pursuing; each action names its thread). A thread is DUE when its last 3 actions (over at least 2 rounds) together \
-raised the record by less than {tail}: close it with what you learned, or revise it with a genuinely different approach. A due thread you \
-ignore is parked by the system.
+raised the record by less than {tail}: close it with what you learned, or revise it with a genuinely different approach \
+(that starts its count afresh; rewording a thread that is not due does not). A due thread you ignore is parked by the \
+system.
 
 How to spend a round: keep depth where the record is rising; when it only creeps, change the kind of move rather than \
 tuning the same one: a different method on the best state, the best method on another state, a \
@@ -123,8 +124,12 @@ class Agent(AtlasIdeas):
                                           "outcome": "", "due_since": None}
             elif t is not None:
                 if ev["op"] == "revise":
-                    t.update({k: ev[k] for k in ("question", "stop") if ev.get(k)}, revised=ev["gen"],
-                             version=t["version"] + 1, status="open", due_since=None)
+                    # a revision answers a DUE thread and starts its count afresh; revising a thread that is not
+                    # due rewords it but keeps its count, so rewording can't postpone the stop rule
+                    t.update({k: ev[k] for k in ("question", "stop") if ev.get(k)}, version=t["version"] + 1,
+                             status="open")
+                    if t.get("due_since") is not None:
+                        t.update(revised=ev["gen"], due_since=None)
                 elif ev["op"] in ("close", "park"):
                     t.update(status="closed" if ev["op"] == "close" else "parked", outcome=ev.get("outcome", ""))
                 elif ev["op"] == "due":
@@ -149,7 +154,8 @@ class Agent(AtlasIdeas):
         t = self.threads[tid]
         ps = sorted(self.thread_programs(tid), key=lambda p: p.gen)
         since = [p for p in ps if p.gen >= t["revised"]]
-        actions = sorted({self.run.meta.get(p.id, {}).get("action_id") for p in since if self.run.meta.get(p.id, {}).get("action_id")})
+        actions = sorted({self.run.meta.get(p.id, {}).get("action_id") for p in since
+                          if self.run.meta.get(p.id, {}).get("action_id")}, key=action_order)
         last3 = actions[-3:]
         rise = 0.0
         for aid in last3:
@@ -160,7 +166,7 @@ class Agent(AtlasIdeas):
             if r is not None and top is not None and top > r + GAIN_EPS:
                 rise += top - r
         best = max((p.score for p in ps if p.valid), default=None)
-        rounds = {int(a[1:].split("a")[0]) for a in last3 if a.startswith("g") and "a" in a[1:]}
+        rounds = {action_order(a)[0] for a in last3}
         return {"actions": len(actions), "programs": len(ps), "rise_last3": rise, "best": best,
                 "due": len(actions) >= 3 and len(rounds) >= 2 and rise < self.run_tail_eps()}
 
@@ -438,11 +444,7 @@ class Agent(AtlasIdeas):
             js = P.extract_json(nav) or {}
             asked = [str(x).strip() for x in (js.get("open") or []) if isinstance(x, (str, int))][: run.cfg.open_k]
             why = str(js.get("why", ""))[:300]
-            for item in asked:
-                if item in run.archive.programs:
-                    opened.append(self.open_program(item))
-                elif item in self.findings:
-                    opened.append(self.open_finding(item))
+            opened = self.open_items(asked)
         user = base + ("\n\n## What you opened\n" + "\n\n".join(opened) if opened else "") + "\n\n" + \
             AGENT_FORMAT.format(units=run.cfg.units)
         decision, info = run.researcher(system, user, gen, role="agent", need="actions")
@@ -469,6 +471,14 @@ class Agent(AtlasIdeas):
         st.update(threads=len(self.threads), threads_open=sum(1 for t in self.threads.values() if t["status"] == "open"),
                   theory=sum(1 for h in self.theory.values() if h["status"] == "active"))
         return st
+
+
+def action_order(aid):
+    """Sort key for action ids "g{round}a{i}" and "g{round}auto": by round, then position (auto last)."""
+    m = re.match(r"g(\d+)(?:a(\d+)|auto)$", str(aid))
+    if not m:
+        return (10 ** 6, 0)
+    return (int(m.group(1)), int(m.group(2)) if m.group(2) is not None else 10 ** 3)
 
 
 def clamp_int(x, lo, hi, default):

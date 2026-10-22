@@ -96,6 +96,11 @@ def test_experiments_parse_state_seconds_and_kind(tmp_path):
     assert exps[0]["seconds"] > exps[1]["seconds"] >= r.cfg.min_seconds
     fb = r.experiments6(None, 3)
     assert len(fb) == r.cfg.deep and all(e.get("fallback") for e in fb)
+    # a wide child of this generation that finished before the plan arrived is not what "best" meant
+    late = r.child6(3, "wide", best, GOOD + "# late\n", "late", {}, "", seconds=2)
+    assert late.valid
+    exps = r.experiments6({"experiments": [{"base": late.id, "state": "best", "change": "c"}]}, 3)
+    assert exps[0]["state"] == best.id and exps[0]["base"] == best.id and exps[0]["base_requested"] == late.id
 
 
 def test_the_wide_loop_works_on_the_frontier(tmp_path):
@@ -145,6 +150,10 @@ def test_atlas_ideas_kinds_scopes_and_inconclusive(tmp_path):
             "    while time.process_time() - t < 0.95 * b:\n        sum(range(1000))\n    return start\n")
     inc = r.child6(3, "deep", good, busy, "slow idea", {"hypothesis": "h"}, "", seconds=2, meta={"kind": "slow idea"})
     assert r.meta[inc.id]["inconclusive"] and a.outcome(inc) == "inconclusive" and a.outcome(good) == "gain"
+    # the same program continued from its own output and finding nothing has converged: conclusive, not inconclusive
+    conv = r.child6(3, "continue", inc, busy, "continue", {}, "", state=inc, seconds=2, allow_same=True)
+    assert not r.meta[conv.id]["inconclusive"] and r.meta[conv.id]["converged"] and a.outcome(conv) == "no gain"
+    assert "converged" in conv.feedback[0] and not any(f.startswith("INCONCLUSIVE") for f in conv.feedback)
     ks = a.kinds()
     assert ks["power law"]["gains"] == 1 and ks["slow idea"]["inconclusive"] == 1
     assert "slow idea" in a.kinds_table(4)
@@ -163,6 +172,10 @@ def test_atlas_ideas_kinds_scopes_and_inconclusive(tmp_path):
     assert "kinds of change tried" in m and "Key findings" in m and "Latest findings" in m
     best = r.archive.best()
     assert "shown above" in a.open_program(best.id)
+    others = [p.id for p in r.archive.ranked() if p.id != best.id][:5]
+    opened = a.open_items([best.id] + others + ["F1", "nonsense"])
+    assert len(opened) == 7 and sum("```python" in t for t in opened) == a.OPEN_CODE
+    assert sum("not shown: only the first" in t for t in opened) == len(others) - a.OPEN_CODE
 
 
 def test_plan_prompt_has_the_new_structure(tmp_path):
@@ -233,6 +246,27 @@ def test_agent_theory_threads_due_and_park(tmp_path):
     assert ag.threads[tid]["status"] == "open" and ag.threads[tid]["due_since"] == 4
     ag.auto_park(6)
     assert ag.threads[tid]["status"] == "parked"
+
+
+def test_agent_thread_count_survives_rewording_and_round_ten(tmp_path):
+    from helix6.agent import action_order
+    assert sorted(["g10a0", "g9auto", "g9a1", "g2a0"], key=action_order) == ["g2a0", "g9a1", "g9auto", "g10a0"]
+    r = fake_run(tmp_path, "v6", gens=1)
+    r.go()
+    ag = r.memory
+    refs, _ = ag.apply_ops(2, {"threads": [{"op": "open", "ref": "t1", "question": "q", "stop": "s"}]})
+    tid = refs["t1"]
+    best = r.archive.best()
+    for g, i in ((8, 0), (9, 0), (10, 0)):     # three flat actions over three rounds, crossing round 10
+        p = r.child6(g, "deep", best, KEEP + f"#{g}{i}\n", "x", {"hypothesis": "h"}, "", seconds=2)
+        r.set_meta(p, action_id=f"g{g}a{i}", thread=tid, record_before=best.score)
+    assert ag.thread_stats(tid)["due"]
+    ag.apply_ops(10, {"threads": [{"op": "revise", "id": tid, "question": "q, reworded", "why": "w"}]})
+    assert ag.thread_stats(tid)["due"], "rewording a thread that was not marked due must not reset its count"
+    ag.auto_park(11)                                  # now it is marked due; a revision answers it
+    assert ag.threads[tid]["due_since"] == 11
+    ag.apply_ops(11, {"threads": [{"op": "revise", "id": tid, "question": "a different approach", "why": "w"}]})
+    assert not ag.thread_stats(tid)["due"] and ag.threads[tid]["revised"] == 11
 
 
 def test_agent_round_runs_every_action_kind(tmp_path):
