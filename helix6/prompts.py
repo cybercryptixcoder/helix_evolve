@@ -19,8 +19,10 @@ FRESH_NOTE = ("This experiment starts over: `start` will be None, so the program
               "scratch (it may reuse the base program's methods).")
 
 # ---------------------------------------------------------------------------------------------- guidance for planners
-STRUCTURE = """How to reason: about evidence and plans, not proofs. Don't derive formulas, constructions or limits in \
-your head: when you suspect something (a formula, a limit, why a shape works), design an experiment that measures it. \
+STRUCTURE = """How to reason: about evidence and plans, not proofs. Your job is to decide what to try, not to solve the \
+problem yourself: keep your thinking on which experiments to run and why, and let the programs do the mathematics. \
+Don't derive formulas, constructions or limits in your head: when you suspect something (a formula, a limit, why a \
+shape works), design an experiment that measures it. \
 A claim that something is optimal, a ceiling or impossible is a hypothesis: nobody knows the true maximum of this \
 problem, so never stop searching because of one."""
 

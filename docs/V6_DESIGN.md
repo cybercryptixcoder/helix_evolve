@@ -41,10 +41,10 @@ are in `helix6/`, share one engine, and run the same problem, evaluator and mode
 |---|---|---|
 | Method × state | `child6(base, state)`: the coder changes `base`'s code, and the program starts from `state`'s construction (or `None` for a fresh start). The delta is measured against the state, so a gain is a real gain. | §1, §9 |
 | Problem toolkit | Programs can `from helix_problem import score`, the evaluator's own formula (identical to 1e-12), instead of writing their own scorer. | §7 (a wrong (A+B)/3 steered v4.5-s3) |
-| INCONCLUSIVE | No change after ≥ 90% of the budget. The feedback says the idea may never have acted and should get more time. | §2 (20 of 54 deep experiments in gens 21-40) |
-| Structure vs values | The planners are told to reason about the objective's structure (invariances, better-conditioned formulations) but to measure values with programs. A claimed limit is a hypothesis. | §6 (the gen-9 breakthrough came from structural reasoning) |
+| INCONCLUSIVE and CONVERGED | No change after ≥ 90% of the budget is INCONCLUSIVE: the idea may never have acted and should get more time. The same program continued from its own output and finding nothing is CONVERGED: more time doesn't help that method on that state. | §2 (20 of 54 deep experiments in gens 21-40) |
+| Plan, don't solve | The planners are told their job is to decide what to try, not to solve the problem: no formulas, constructions or limits derived in their head (v5's guard), and a claimed limit is a hypothesis. A first version that invited "reasoning about structure" made 3 of 8 planner calls hit the 32k thinking cap in the real tests, one of them deriving the textbook construction; with this wording, 0 of 3. | §6, §11 |
 | Scoped evidence | Findings are true of the state they were tested on. | §5 |
-| Prompt diet | The record's code is shown once. An opened finding shows its latest 8 pieces of evidence. | §8 (76 KB prompts) |
+| Prompt diet | The record's code is shown once; only the first 3 opened programs show their code (the others show plan, result and diff); an opened finding shows its latest 8 pieces of evidence. | §8 (76 KB prompts; 60 KB by generation 4 in the first real test) |
 | Kept from v4.5 | keep_best and SIGXCPU, stage lines in the printout, shared gains, the planner's recent reasoning, capped planning, the epistemic guards. | §11 |
 
 ## v4.6 (helix6/atlas.py, `--condition v46`)
@@ -95,7 +95,8 @@ The agent keeps three things, all as append-only event logs:
   guard, which kept all six v4.5/v5 runs out of the textbook trap.
 - **Threads** (`threads.jsonl`): the questions it is pursuing. Each action names its thread. A thread is DUE when
   its last 3 actions, over at least 2 rounds, raised the record by less than 3e-4. The agent must close it or
-  revise it with a genuinely different approach. A due thread ignored for 2 rounds is parked by the system.
+  revise it with a genuinely different approach. Only a revision of a due thread restarts its count, so rewording
+  can't postpone the rule. A due thread ignored for 2 rounds is parked by the system.
 - **Atlas** (as in v4.6): the findings graph, the kinds-of-change table and the scoped statuses, written by the
   Distiller after every round.
 
@@ -142,10 +143,45 @@ construction three ways.
 python -m helix6.run --condition v46 --seed 1 --gens 30 --budget 30 --out runs/v6/v46-s1     # one run
 python -m helix6.run --condition v6  --seed 1 --gens 30 --budget 30 --out runs/v6/v6-s1
 python -m helix6.run --condition v6 --gens 3 --budget 2 --fake --out /tmp/t                   # no model calls
-python -m pytest tests/test_helix6.py -q                                                       # 14 tests
+python -m pytest tests/test_helix6.py -q                                                       # 15 tests
 nohup bash scripts/run_v6_jobs.sh > v6_jobs.log 2>&1 &                                          # the overnight job
 ```
 
 Files per run: v4's (`programs.jsonl`, `history.jsonl`, `plans.jsonl`, `findings.jsonl`, `trace.jsonl`,
 `state.json`, `summary.json`, `best.py`, `best.npy`), plus `meta.jsonl` (each program's state, seconds, kind,
 inconclusive flag, action and thread) and, for v6, `threads.jsonl` and `theory.jsonl`.
+
+## Real end-to-end tests (October 22, before the job)
+
+Four short runs with the real model (30 s units):
+
+| Run | Generations | Best by generation |
+|---|---|---|
+| v4.6, seed 7 | 4 | 0.838, 0.856, 0.858, 0.864 |
+| v4.6, seed 8 | 4 | 0.796, 0.829, 0.874, 0.881 |
+| v4.6, seed 9 | 3 | 0.8815, 0.8818, 0.8819 |
+| v6, seed 7 | 4 | 0.853, 0.856, 0.858, 0.858 |
+| v6, seed 8 | 4 | 0.877, 0.881, 0.8812, 0.8813 |
+
+**What they showed:**
+- **The halo works.** Wide parents come from within 0.002 of the record or are moved onto its construction. The
+  wide children land around the record, above and below it.
+- **The time splits are used:** 45/30/15, 50/40, 25/40/25 and so on.
+- **The inconclusive flag fires.**
+- **The agent uses every action kind:**
+  - multi-unit experiments;
+  - continues of programs whose logs showed late gains (one gave +0.0024, more than that round's new code);
+  - transplants and self-mutations.
+- **The agent's threads open and close with stated outcomes.** For example: "N=8000 and N=16000 both gained less
+  than continuing at N=4000: higher resolution is not the limiter."
+
+**What they caught, all fixed before the job:**
+- wording from earlier traces in the prompts;
+- thinking spirals;
+- a race between wide children and the plan;
+- the converged label for continues;
+- thread counts past round 9, and rewording that reset them;
+- prompt size.
+
+Two of the five runs reached about 0.881 within two generations (v4.6 seed 9 in generation 1, v6 seed 8 in
+generation 2). That is the model's prior, the textbook power-law shape. Whether a run escapes that basin is what the 30-generation job will show.
