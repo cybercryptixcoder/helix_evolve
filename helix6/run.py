@@ -316,8 +316,7 @@ class Run(Run5):
             lines.append("Tuning these further will most likely creep. At least one experiment this generation must be a "
                          "kind of change that is not on this list, for example: a different method on the best "
                          "construction, the best method on a different construction (another program's, or from "
-                         "scratch), a reformulation of what the program optimises, or giving an inconclusive idea the "
-                         "time it needs. Say which kind in its \"kind\".")
+                         "scratch), or giving an inconclusive idea the time it needs. Say which kind in its \"kind\".")
         return "\n".join(lines)
 
     def memory_result(self, p):
@@ -410,20 +409,22 @@ class Run(Run5):
         mem_info = self.memory.update(gen, plan, children) or {}
         best = self.archive.best()
         dc = [c for c in children if c.role == "deep"]
-        wc = [c for c in children if c.role != "deep"]
+        wc = [c for c in children if c.role == "wide"]
+        cc = [c for c in children if c.role == "continue"]
+        rec = record_before
 
         def best_of(cs):
             ok = [c.score for c in cs if c.valid]
             return max(ok) if ok else None
 
-        def gains(cs, eps=GAIN_EPS):
-            return sum(1 for c in cs if c.valid and c.delta is not None and c.delta >= eps)
+        def gains(cs, eps=GAIN_EPS):    # beat its start; a fresh start (no start) counts if it beat the record
+            return sum(1 for c in cs if c.valid and ((c.delta if c.delta is not None else c.score - rec) >= eps))
 
-        rec = record_before
         row = {"gen": gen, "best": best.score, "best_id": best.id, "best_role": best.role,
                "deep_best": best_of(dc), "wide_best": best_of(wc),
                "deep_gains": gains(dc), "wide_gains": gains(wc), "deep_big_gains": gains(dc, 1e-3),
-               "wide_big_gains": gains(wc, 1e-3),
+               "wide_big_gains": gains(wc, 1e-3), "continue_best": best_of(cc), "continue_gains": gains(cc),
+               "continues": len(cc),
                "deep_failed": sum(1 for c in dc if not c.valid), "wide_failed": sum(1 for c in wc if not c.valid),
                "duplicates": sum(1 for c in children if c.duplicate_of), "shared_gains": shared,
                "new_best": best.score > record_before + 1e-12, "record_rise": best.score - record_before,
@@ -448,8 +449,9 @@ class Run(Run5):
         self.checkpoint(gen)
         self.log(f"[{self.name}] gen {gen}: best {best.score:.6f} ({best.id}, {best.role}); deep "
                  f"{row['deep_best'] or 0:.6f} ({row['deep_gains']}/{len(dc)} gained), wide {row['wide_best'] or 0:.6f} "
-                 f"({row['wide_gains']}/{len(wc)} gained, {row['wide_near_record']} near the record); "
-                 f"{row['seconds_total']:.0f} s")
+                 f"({row['wide_gains']}/{len(wc)} gained, {row['wide_near_record']} near the record)"
+                 + (f", continue {row['continue_best'] or 0:.6f} ({row['continue_gains']}/{len(cc)} gained)" if cc else "")
+                 + f"; {row['seconds_total']:.0f} s")
         return row
 
 
