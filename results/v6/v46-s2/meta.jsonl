@@ -19,3 +19,35 @@
 {"id": "p0020", "gen": 4, "state": "p0014", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
 {"id": "p0021", "gen": 4, "state": "p0014", "seconds": 55.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g4x0", "inconclusive": false}
 {"id": "p0022", "gen": 4, "state": "p0014", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0023", "gen": 4, "state": "p0014", "seconds": 35.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g4x1", "inconclusive": true}
+{"id": "p0024", "gen": 4, "state": "p0014", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0025", "gen": 5, "state": "p0021", "seconds": 25.0, "fresh": false, "kind": "resolution sweep", "eid": "g5x1", "inconclusive": false}
+{"id": "p0026", "gen": 5, "state": "p0021", "seconds": 45.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g5x0", "inconclusive": false}
+{"id": "p0027", "gen": 5, "state": "p0021", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0028", "gen": 5, "state": "p0021", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0029", "gen": 5, "state": "p0021", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0030", "gen": 5, "state": "p0021", "seconds": 20.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g5x2", "inconclusive": false}
+{"id": "p0031", "gen": 6, "state": "p0026", "seconds": 25.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g6x1", "inconclusive": false}
+{"id": "p0032", "gen": 6, "state": "p0026", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0033", "gen": 6, "state": "p0026", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0034", "gen": 6, "state": "p0026", "seconds": 45.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g6x0", "inconclusive": false}
+{"id": "p0035", "gen": 6, "state": "p0026", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0036", "gen": 6, "state": "p0026", "seconds": 20.0, "fresh": false, "kind": "resolution sweep", "eid": "g6x2", "inconclusive": false}
+{"id": "p0037", "gen": 7, "state": "p0032", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0038", "gen": 7, "state": "p0034", "seconds": 15.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g7x2", "inconclusive": false}
+{"id": "p0039", "gen": 7, "state": "p0032", "seconds": 30.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g7x1", "inconclusive": false}
+{"id": "p0040", "gen": 7, "state": "p0033", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0041", "gen": 7, "state": "p0032", "seconds": 45.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g7x0", "inconclusive": false}
+{"id": "p0042", "gen": 7, "state": "p0032", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0043", "gen": 8, "state": "p0041", "seconds": 50.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g8x0", "inconclusive": false}
+{"id": "p0044", "gen": 8, "state": "p0042", "seconds": 20.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g8x2", "inconclusive": false}
+{"id": "p0045", "gen": 8, "state": "p0041", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0046", "gen": 8, "state": "p0041", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0047", "gen": 8, "state": "p0041", "seconds": 20.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g8x1", "inconclusive": false}
+{"id": "p0048", "gen": 8, "state": "p0041", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0049", "gen": 9, "state": "p0043", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0050", "gen": 9, "state": "p0048", "seconds": 20.0, "fresh": false, "kind": "coordinate/pattern search refinement", "eid": "g9x2", "inconclusive": false}
+{"id": "p0051", "gen": 9, "state": "p0048", "seconds": 30.0, "fresh": false, "kind": "resolution sweep", "eid": "g9x1", "inconclusive": false}
+{"id": "p0052", "gen": 9, "state": "p0048", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0053", "gen": 9, "state": "p0048", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0054", "gen": 9, "state": "p0048", "seconds": 40.0, "fresh": false, "kind": "shape warp / skew sweep", "eid": "g9x0", "inconclusive": false}

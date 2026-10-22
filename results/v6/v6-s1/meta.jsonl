@@ -22,3 +22,23 @@
 {"id": "p0012", "gen": 6, "action_id": "g6a1", "thread": "T7", "record_before": 0.8792054903116295}
 {"id": "p0013", "gen": 6, "state": "p0010", "seconds": 90.0, "fresh": false, "kind": "basin hopping / large smooth perturbations", "eid": "g6a0", "inconclusive": false}
 {"id": "p0013", "gen": 6, "action_id": "g6a0", "thread": "T7", "record_before": 0.8792054903116295}
+{"id": "p0014", "gen": 7, "state": "p0012", "seconds": 90.0, "fresh": false, "kind": "best method on a different construction", "eid": "g7a1", "inconclusive": false}
+{"id": "p0014", "gen": 7, "action_id": "g7a1", "thread": "T9", "record_before": 0.8792054995905686}
+{"id": "p0015", "gen": 7, "state": "p0013", "seconds": 90.0, "fresh": false, "kind": "different method on the best construction", "eid": "g7a0", "inconclusive": false}
+{"id": "p0015", "gen": 7, "action_id": "g7a0", "thread": "T8", "record_before": 0.8792054995905686}
+{"id": "p0016", "gen": 8, "state": "p0014", "seconds": 90.0, "fresh": false, "kind": "best method on a different construction", "eid": "g8a1", "inconclusive": false}
+{"id": "p0016", "gen": 8, "action_id": "g8a1", "thread": "T11", "record_before": 0.8792055060187092}
+{"id": "p0017", "gen": 8, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "inverse-design / spectral shaping", "eid": "g8a0", "inconclusive": true}
+{"id": "p0017", "gen": 8, "action_id": "g8a0", "thread": "T10", "record_before": 0.8792055060187092}
+{"id": "p0018", "gen": 9, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "giving an inconclusive idea the time it needs", "eid": "g9a0", "inconclusive": false}
+{"id": "p0018", "gen": 9, "action_id": "g9a0", "thread": "T10", "record_before": 0.8792055060187092}
+{"id": "p0019", "gen": 9, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "topology-changing homotopy / two-lobe mixture", "eid": "g9a1", "inconclusive": true}
+{"id": "p0019", "gen": 9, "action_id": "g9a1", "thread": "T12", "record_before": 0.8792055060187092}
+{"id": "p0020", "gen": 10, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "inverse-design / spectral shaping", "eid": "g10a0", "inconclusive": true}
+{"id": "p0020", "gen": 10, "action_id": "g10a0", "thread": "T10", "record_before": 0.8792055060187092}
+{"id": "p0021", "gen": 10, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "variable-width free-knot block global search", "eid": "g10a1", "inconclusive": true}
+{"id": "p0021", "gen": 10, "action_id": "g10a1", "thread": "T13", "record_before": 0.8792055060187092}
+{"id": "p0022", "gen": 11, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "coarse-to-fine DCT-subspace global search (new)", "eid": "g11a1", "inconclusive": true}
+{"id": "p0022", "gen": 11, "action_id": "g11a1", "thread": "T14", "record_before": 0.8792055060187092}
+{"id": "p0023", "gen": 11, "state": "p0015", "seconds": 90.0, "fresh": false, "kind": "topology-changing homotopy / two-lobe mixture", "eid": "g11a0", "inconclusive": false}
+{"id": "p0023", "gen": 11, "action_id": "g11a0", "thread": "T12", "record_before": 0.8792055060187092}
