@@ -1,0 +1,24 @@
+{"id": "p0002", "gen": 1, "state": "p0001", "seconds": 90.0, "fresh": false, "kind": "analytic family scan plus refinement", "eid": "g1a1", "inconclusive": false}
+{"id": "p0002", "gen": 1, "action_id": "g1a1", "thread": "T2", "record_before": 0.6666666666666666}
+{"id": "p0003", "gen": 1, "state": "p0001", "seconds": 90.0, "fresh": false, "kind": "direct height-array stochastic optimization", "eid": "g1a0", "inconclusive": false}
+{"id": "p0003", "gen": 1, "action_id": "g1a0", "thread": "T1", "record_before": 0.6666666666666666}
+{"id": "p0004", "gen": 2, "state": "p0003", "seconds": 90.0, "fresh": false, "kind": "direct height-array stochastic optimization", "eid": "g2a0", "inconclusive": false}
+{"id": "p0004", "gen": 2, "action_id": "g2a0", "thread": "T1", "record_before": 0.7844371183315196}
+{"id": "p0005", "gen": 2, "state": "p0002", "seconds": 60.0, "fresh": false, "kind": "best method on another state", "eid": "g2a1", "inconclusive": false}
+{"id": "p0005", "gen": 2, "action_id": "g2a1", "thread": "T2", "record_before": 0.7844371183315196}
+{"id": "p0006", "gen": 2, "state": "p0003", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0006", "gen": 2, "action_id": "g2a2", "thread": "T1", "record_before": 0.7844371183315196}
+{"id": "p0007", "gen": 3, "state": "p0006", "seconds": 90.0, "fresh": false, "kind": "low-dimensional global search", "eid": "g3a0", "inconclusive": false}
+{"id": "p0007", "gen": 3, "action_id": "g3a0", "thread": "T3", "record_before": 0.7846344164136605}
+{"id": "p0008", "gen": 3, "state": "p0006", "seconds": 60.0, "fresh": false, "kind": "gradient-based analytic polish", "eid": "g3a1", "inconclusive": false}
+{"id": "p0008", "gen": 3, "action_id": "g3a1", "thread": "T1", "record_before": 0.7846344164136605}
+{"id": "p0009", "gen": 3, "state": "p0006", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0009", "gen": 3, "action_id": "g3a2", "thread": "T1", "record_before": 0.7846344164136605}
+{"id": "p0010", "gen": 4, "state": "p0007", "seconds": 90.0, "fresh": false, "kind": "low-dimensional global search", "eid": "g4a0", "inconclusive": false}
+{"id": "p0010", "gen": 4, "action_id": "g4a0", "thread": "T4", "record_before": 0.8467901293960758}
+{"id": "p0011", "gen": 4, "state": "p0007", "seconds": 90.0, "fresh": false, "kind": "gradient-based analytic polish", "eid": "g4a1", "inconclusive": false}
+{"id": "p0011", "gen": 4, "action_id": "g4a1", "thread": "T5", "record_before": 0.8467901293960758}
+{"id": "p0012", "gen": 5, "state": "p0010", "seconds": 90.0, "fresh": false, "kind": "low-dimensional global search", "eid": "g5a0", "inconclusive": false}
+{"id": "p0012", "gen": 5, "action_id": "g5a0", "thread": "T4", "record_before": 0.8580757191360588}
+{"id": "p0013", "gen": 5, "state": "p0011", "seconds": 60.0, "fresh": false, "kind": "best method on another state", "eid": "g5a1", "inconclusive": true}
+{"id": "p0013", "gen": 5, "action_id": "g5a1", "thread": "T6", "record_before": 0.8580757191360588}

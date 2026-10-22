@@ -1,0 +1,25 @@
+{"id": "p0002", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0003", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0004", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0005", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "kind": "central gap / two-level shape", "eid": "g1x1", "inconclusive": false}
+{"id": "p0006", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "kind": "free-form hill climbing on heights", "eid": "g1x2", "inconclusive": false}
+{"id": "p0007", "gen": 1, "state": "p0001", "seconds": 30.0, "fresh": false, "kind": "parametric U-shape sweep", "eid": "g1x0", "inconclusive": false}
+{"id": "p0008", "gen": 2, "state": "p0002", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0009", "gen": 2, "state": "p0002", "seconds": 20.0, "fresh": false, "kind": "pairwise coordinate refinement", "eid": "g2x2", "inconclusive": false}
+{"id": "p0010", "gen": 2, "state": "p0002", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0011", "gen": 2, "state": "p0002", "seconds": 40.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g2x0", "inconclusive": false}
+{"id": "p0012", "gen": 2, "state": "p0002", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0013", "gen": 2, "state": "p0002", "seconds": 30.0, "fresh": false, "kind": "smooth-max gradient optimization (scipy L-BFGS-B)", "eid": "g2x1", "inconclusive": false}
+{"id": "p0014", "gen": 3, "state": "p0009", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0015", "gen": 3, "state": "p0009", "seconds": 15.0, "fresh": false, "kind": "pairwise coordinate refinement", "eid": "g3x2", "inconclusive": false}
+{"id": "p0016", "gen": 3, "state": "p0009", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0017", "gen": 3, "state": "p0009", "seconds": 30.0, "fresh": false, "kind": "pairwise coordinate refinement", "eid": "g3x1", "inconclusive": false}
+{"id": "p0018", "gen": 3, "state": "p0009", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0019", "gen": 3, "state": "p0009", "seconds": 45.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g3x0", "inconclusive": false}
+{"id": "p0020", "gen": 4, "state": "p0017", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0021", "gen": 4, "state": "p0017", "seconds": 30.0, "fresh": false, "kind": "smooth-max gradient optimization (scipy l-bfgs-b)", "eid": "g4x2", "inconclusive": false}
+{"id": "p0022", "gen": 4, "state": "p0017", "seconds": 35.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g4x0", "inconclusive": false}
+{"id": "p0023", "gen": 4, "state": "p0017", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0024", "gen": 4, "state": "p0017", "seconds": 25.0, "fresh": false, "kind": "pairwise coordinate refinement", "eid": "g4x1", "inconclusive": false}
+{"id": "p0025", "gen": 4, "state": "p0014", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0026", "gen": 5, "state": "p0022", "seconds": 25.0, "fresh": false, "kind": "continuous single-height line search", "eid": "g5x2", "inconclusive": false}

@@ -1,0 +1,23 @@
+{
+ "gen_done": 4,
+ "config": {
+  "condition": "v6",
+  "seed": 3,
+  "gens": 30,
+  "deep": 3,
+  "wide": 3,
+  "budget": 30.0,
+  "deep_seconds": 90.0,
+  "min_seconds": 15.0,
+  "max_seconds": 90.0,
+  "units": 6,
+  "researcher_effort": "low",
+  "open_k": 6,
+  "lookup_k": 5,
+  "review_every": 5,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": ""
+ },
+ "t": 1792650393.0533516
+}
