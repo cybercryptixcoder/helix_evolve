@@ -17,7 +17,8 @@ cd "$(dirname "$0")/.."
 # run from a snapshot: bash reads a script as it goes, so a `git pull` that changes this file mid-job (the job's own
 # pushes pull first) must not change what the running job does
 if [ -z "${V4_SNAPSHOT:-}" ]; then
-  mkdir -p runs && cp "$0" runs/.v4_job_snapshot.sh && V4_SNAPSHOT=1 exec bash runs/.v4_job_snapshot.sh "$@"
+  mkdir -p runs && cp "$0" runs/.v4_job_snapshot.sh.$$ && mv -f runs/.v4_job_snapshot.sh.$$ runs/.v4_job_snapshot.sh \
+    && V4_SNAPSHOT=1 exec bash runs/.v4_job_snapshot.sh "$@"   # a new file (cp + mv): a running copy keeps its own
 fi
 PY="${PYTHON:-$(command -v python3 || command -v python)}"
 GENS="${GENS:-20}"
@@ -134,7 +135,7 @@ print(time.strftime("== %H:%M progress: ") + (" | ".join(parts) or "starting"), 
 PY
 }
 
-( trap 'kill $SL 2>/dev/null; exit 0' TERM
+( SL=""; trap 'kill ${SL:-} 2>/dev/null; exit 0' TERM
   n=0
   while true; do sleep "${TICK:-600}" & SL=$!; wait $SL; status; n=$((n + 1)); [ $((n % 4)) -eq 0 ] && progress; done
 ) &   # a status line every 10 minutes; progress pushed every 40
