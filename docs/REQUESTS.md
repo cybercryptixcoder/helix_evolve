@@ -18,6 +18,8 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - **standing**: My own runs are small (one problem, 5 generations, at most 10-15). Big suite runs and meta runs are Shreyas's to run.
 - **standing**: Use the several Luminal keys in parallel, respecting the rate limits (keys live in `.env`, never committed).
 - **standing**: Keep this record: append every new request, including mid-run ones.
+- **standing** (2026-10-22): Prompts for job agents (Hermes) never tell the agent to stop, kill or restart processes, and never to create cron jobs, wake-ups or check-ins for itself: the agent starts the job, checks the start once and reports; Shreyas checks in himself. (An agent's own restart cron once killed a running job every 12 minutes.)
+- **standing** (2026-10-21): Prompts must not carry problem-specific solution hints: no wording, examples or kinds of change taken from what worked in earlier traces. Audit every new prompt for it before a job.
 
 ## 1. Understand the existing system (session start)
 

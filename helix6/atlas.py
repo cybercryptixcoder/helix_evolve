@@ -176,6 +176,28 @@ class AtlasIdeas(AtlasPlus):
             text = head + "Code: (shown above, as the best program)" + after
         return text
 
+    OPEN_CODE = 3      # opened programs that show their code; later ones show plan, result and diff only
+
+    def open_items(self, asked):
+        """The opened programs and findings, in the order asked. The prompt diet: the record's code is shown once (in
+        the best-program block), and only the first OPEN_CODE opened programs show their code."""
+        out, coded = [], 0
+        for item in asked:
+            if item in self.run.archive.programs:
+                text = self.open_program(item)
+                if "Code:\n```python" in text:
+                    if coded >= self.OPEN_CODE:
+                        head, rest = text.split("Code:\n```python", 1)
+                        after = rest.split("```", 1)[1] if "```" in rest else ""
+                        text = (head + f"Code: (not shown: only the first {self.OPEN_CODE} programs you open show their "
+                                "code; the diff above shows what it changed)" + after)
+                    else:
+                        coded += 1
+                out.append(text)
+            elif item in self.findings:
+                out.append(self.open_finding(item))
+        return out
+
     def open_finding(self, fid):
         f = self.findings[fid]
         if len(f["evidence"]) <= 8:
@@ -235,11 +257,7 @@ class AtlasIdeas(AtlasPlus):
             js = P.extract_json(nav) or {}
             asked = [str(x).strip() for x in (js.get("open") or []) if isinstance(x, (str, int))][: run.cfg.open_k]
             why = str(js.get("why", ""))[:300]
-            for item in asked:
-                if item in run.archive.programs:
-                    opened.append(self.open_program(item))
-                elif item in self.findings:
-                    opened.append(self.open_finding(item))
+            opened = self.open_items(asked)
         user = base
         if opened:
             user += "\n\n## What you opened\n" + "\n\n".join(opened)
@@ -303,5 +321,5 @@ class AtlasIdeas(AtlasPlus):
 
     def stats(self):
         st = super().stats()
-        st["kinds"] = len(self.kinds())
+        st["kinds_tried"] = len(self.kinds())
         return st

@@ -4,6 +4,19 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
+> **Helix v4.6 and v6 (October 22, 2026)**: two streams. v4.6 (the Atlas stream: v4 → v4.5 → v4.6) keeps v4's
+> two loops and fixes what the full traces showed ([docs/TRACE_STUDY.md](docs/TRACE_STUDY.md)):
+> - the wide loop is a halo around the record;
+> - every experiment names a method and the state it runs on;
+> - the planner splits the CPU among its experiments;
+> - an experiment that ran out of time is INCONCLUSIVE, not a failure;
+> - plateaus are measured by rate of return;
+> - Atlas is organised around ideas.
+>
+> v6 (the agentic stream: v5 → v6) is an agent that spends each round's compute itself, with three actions
+> (experiment, mutate, continue), plus a theory and threads with a rate-of-return stop rule. See
+> [docs/V6_DESIGN.md](docs/V6_DESIGN.md) and [docs/V6_JOB.md](docs/V6_JOB.md).
+
 > **Helix v4.5 and v5 (October 21, 2026)**: the v4 job finished with a construction certifying **C2 ≥ 0.9390161**
 > on the second autocorrelation inequality (atlas-s1, 42,496 steps, verified in exact arithmetic), above
 > AlphaEvolve's first published result for it (0.8963); 4 of its 9 runs passed that value

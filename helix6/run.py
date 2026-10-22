@@ -173,6 +173,14 @@ class Run(Run5):
         elif p.valid and state is not base:
             p.feedback = [f"(ran on {state.id}'s construction, {state.score:.6f}, not its base's)"] + p.feedback
         m["inconclusive"] = bool(res.get("inconclusive"))
+        if m["inconclusive"] and role == "continue":
+            # the same code again on its own output: no change after the whole budget means this method has
+            # converged on this state; that is a conclusive result, not an idea that lacked time
+            m["inconclusive"], m["converged"] = False, True
+            p.feedback = [f.replace(" [INCONCLUSIVE]", " [no gain: converged]") for f in p.feedback
+                          if not f.startswith("INCONCLUSIVE:")]
+            p.feedback.insert(1, f"CONVERGED: run again unchanged from its own construction for {p.cpu:.0f} s, it "
+                                 "found nothing more: more time does not help this method on this state.")
         self.add(p, res["construction"])
         self.set_meta(p, **m)
         return p
@@ -330,8 +338,11 @@ class Run(Run5):
 
     # ---------------------------------------------------------------- the planner's experiments
     def experiments6(self, plan, gen):
-        """Validated experiments: method (base), state, seconds (split of deep_seconds), kind."""
-        best = self.archive.best()
+        """Validated experiments: method (base), state, seconds (split of deep_seconds), kind. Ids resolve among the
+        programs the planner saw (earlier generations): this generation's wide children may already be in the archive
+        when the plan arrives, and "best" means the best construction the planner was shown."""
+        seen = lambda q: q is not None and q.valid and q.gen < gen     # noqa: E731
+        best = max((q for q in self.archive.programs.values() if seen(q)), key=lambda q: q.score)
         keep = ("base", "state", "seconds", "kind", "hypothesis", "change", "prediction", "if_gain", "if_not",
                 "builds_on", "item", "step", "thread")
         given = []
@@ -347,7 +358,7 @@ class Run(Run5):
         for e in given:
             base = str(e.get("base", "")).strip()
             p = self.archive.programs.get(base)
-            if not (p is not None and p.valid and p.code.strip()):
+            if not (seen(p) and p.code.strip()):
                 e["base_requested"], base = base, best.id
             e["base"] = base
             st = str(e.get("state", "best")).strip().lower()
@@ -355,7 +366,7 @@ class Run(Run5):
                 e["fresh"], e["state"] = True, None
             else:
                 q = self.archive.programs.get(str(e.get("state", "")).strip())
-                if q is not None and q.valid and self.archive.construction(q.id) is not None:
+                if seen(q) and self.archive.construction(q.id) is not None:
                     e["state"] = q.id
                 else:
                     e["state"] = best.id
