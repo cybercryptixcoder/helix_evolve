@@ -53,7 +53,7 @@ In v4.6, every deep experiment from generation 2 on ran on the best construction
 The wide loop, my "halo" fix, put all 3 mutations on the frontier or transplanted onto the record's state. So
 everything a run did each generation worked on one construction.
 
-v6 did the same by choice. 9 of its 10-12 rounds per run put all 6 units on the latest best (`state` = the record).
+v6 did the same by choice. In v6-s1, 8 of 11 rounds put all 6 units on the latest best (`state` = the record); the other runs look the same.
 
 In v4 the "erratic" wide loop was the only thing that kept other lines alive: it sampled stale parents. atlas-s1's
 generation-39 break came from the wide loop on a lower-resolution line. v4.5 had forced explore and challenge slots.
