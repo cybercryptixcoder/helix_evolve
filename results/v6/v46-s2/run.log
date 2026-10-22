@@ -2,3 +2,9 @@
 02:07:22 [v46-s2] gen 1: best 0.832871 (p0002, wide); deep 0.723881 (3/3 gained), wide 0.832871 (3/3 gained, 3 near the record); 895 s
 02:17:58 [v46-s2] gen 2: best 0.855301 (p0008, deep); deep 0.855301 (3/3 gained), wide 0.843187 (3/3 gained, 3 near the record); 636 s
 02:25:07 [v46-s2] gen 3: best 0.866872 (p0014, wide); deep 0.863689 (2/3 gained), wide 0.866872 (3/3 gained, 3 near the record); 429 s
+02:32:39 [v46-s2] gen 4: best 0.876128 (p0021, deep); deep 0.876128 (1/2 gained), wide 0.870706 (3/3 gained, 3 near the record); 452 s
+02:40:53 [v46-s2] gen 5: best 0.878330 (p0026, deep); deep 0.878330 (2/3 gained), wide 0.876257 (3/3 gained, 3 near the record); 494 s
+02:48:51 [v46-s2] gen 6: best 0.879377 (p0032, wide); deep 0.879199 (3/3 gained), wide 0.879377 (3/3 gained, 3 near the record); 478 s
+02:53:06 [v46-s2] gen 7: best 0.880880 (p0041, deep); deep 0.880880 (3/3 gained), wide 0.880187 (3/3 gained, 3 near the record); 254 s
+03:00:16 [v46-s2] gen 8: best 0.881543 (p0048, wide); deep 0.881400 (3/3 gained), wide 0.881543 (3/3 gained, 3 near the record); 430 s
+03:09:41 [v46-s2] gen 9: best 0.882369 (p0051, deep); deep 0.882369 (2/3 gained), wide 0.881893 (3/3 gained, 3 near the record); 565 s

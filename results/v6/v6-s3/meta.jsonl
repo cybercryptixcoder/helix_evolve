@@ -20,3 +20,27 @@
 {"id": "p0011", "gen": 4, "action_id": "g4a1", "thread": "T3", "record_before": 0.8521728583555058}
 {"id": "p0012", "gen": 5, "state": "p0011", "seconds": 90.0, "fresh": false, "kind": "aggressive-basin-hopping", "eid": "g5a1", "inconclusive": false}
 {"id": "p0012", "gen": 5, "action_id": "g5a1", "thread": "T3", "record_before": 0.8560413427145548}
+{"id": "p0013", "gen": 5, "state": "p0011", "seconds": 90.0, "fresh": false, "kind": "multi-resolution-exact-refine", "eid": "g5a0", "inconclusive": false}
+{"id": "p0013", "gen": 5, "action_id": "g5a0", "thread": "T2", "record_before": 0.8560413427145548}
+{"id": "p0014", "gen": 6, "state": "p0012", "seconds": 60.0, "fresh": false, "kind": "multi-resolution-exact-refine", "eid": "g6a1", "inconclusive": false}
+{"id": "p0014", "gen": 6, "action_id": "g6a1", "thread": "T2", "record_before": 0.8683852806351151}
+{"id": "p0015", "gen": 6, "state": "p0012", "seconds": 90.0, "fresh": false, "kind": "aggressive-basin-hopping", "eid": "g6a0", "inconclusive": false}
+{"id": "p0015", "gen": 6, "action_id": "g6a0", "thread": "T3", "record_before": 0.8683852806351151}
+{"id": "p0016", "gen": 6, "state": "p0012", "seconds": 30.0, "fresh": false, "action_id": "g6a2", "thread": "T3", "record_before": 0.8683852806351151, "continued": "p0012", "inconclusive": false}
+{"id": "p0017", "gen": 7, "state": "p0014", "seconds": 60.0, "fresh": false, "kind": "multi-resolution-exact-refine", "eid": "g7a1", "inconclusive": true}
+{"id": "p0017", "gen": 7, "action_id": "g7a1", "thread": "T2", "record_before": 0.873506856373135}
+{"id": "p0018", "gen": 7, "state": "p0014", "seconds": 90.0, "fresh": false, "kind": "aggressive-basin-hopping", "eid": "g7a0", "inconclusive": false}
+{"id": "p0018", "gen": 7, "action_id": "g7a0", "thread": "T3", "record_before": 0.873506856373135}
+{"id": "p0019", "gen": 7, "state": "p0014", "seconds": 30.0, "fresh": false, "action_id": "g7a2", "thread": "T3", "record_before": 0.873506856373135, "continued": "p0014", "inconclusive": false, "converged": true}
+{"id": "p0020", "gen": 8, "state": "p0018", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": true}
+{"id": "p0020", "gen": 8, "action_id": "g8a2", "thread": "T3", "record_before": 0.8735699828346559}
+{"id": "p0021", "gen": 8, "state": "p0018", "seconds": 90.0, "fresh": false, "kind": "multi-resolution-exact-refine", "eid": "g8a0", "inconclusive": false}
+{"id": "p0021", "gen": 8, "action_id": "g8a0", "thread": "T2", "record_before": 0.8735699828346559}
+{"id": "p0022", "gen": 8, "state": "p0018", "seconds": 60.0, "fresh": false, "kind": "fresh-multispike-basin", "eid": "g8a1", "inconclusive": false}
+{"id": "p0022", "gen": 8, "action_id": "g8a1", "thread": "T5", "record_before": 0.8735699828346559}
+{"id": "p0023", "gen": 9, "state": "p0022", "seconds": 90.0, "fresh": false, "kind": "multi-resolution-exact-refine", "eid": "g9a1", "inconclusive": false}
+{"id": "p0023", "gen": 9, "action_id": "g9a1", "thread": "T6", "record_before": 0.8735713232422215}
+{"id": "p0024", "gen": 9, "state": "p0022", "seconds": 90.0, "fresh": false, "kind": "global-coarse-multistart", "eid": "g9a0", "inconclusive": false}
+{"id": "p0024", "gen": 9, "action_id": "g9a0", "thread": "T3", "record_before": 0.8735713232422215}
+{"id": "p0025", "gen": 10, "state": "p0023", "seconds": 90.0, "fresh": false, "kind": "simulated-annealing-sparse-support", "eid": "g10a0", "inconclusive": true}
+{"id": "p0025", "gen": 10, "action_id": "g10a0", "thread": "T7", "record_before": 0.8735844281446332}

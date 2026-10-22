@@ -23,3 +23,26 @@
 {"id": "p0024", "gen": 4, "state": "p0017", "seconds": 25.0, "fresh": false, "kind": "pairwise coordinate refinement", "eid": "g4x1", "inconclusive": false}
 {"id": "p0025", "gen": 4, "state": "p0014", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
 {"id": "p0026", "gen": 5, "state": "p0022", "seconds": 25.0, "fresh": false, "kind": "continuous single-height line search", "eid": "g5x2", "inconclusive": false}
+{"id": "p0027", "gen": 5, "state": "p0022", "seconds": 30.0, "fresh": false, "kind": "top-m flatness surrogate objective", "eid": "g5x1", "inconclusive": false}
+{"id": "p0028", "gen": 5, "state": "p0022", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0029", "gen": 5, "state": "p0022", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0030", "gen": 5, "state": "p0022", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0031", "gen": 5, "state": "p0022", "seconds": 35.0, "fresh": false, "kind": "fast incremental scoring / higher-resolution ladder", "eid": "g5x0", "inconclusive": false}
+{"id": "p0032", "gen": 6, "state": "p0031", "seconds": 30.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g6x2", "inconclusive": false}
+{"id": "p0033", "gen": 6, "state": "p0027", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0034", "gen": 6, "state": "p0031", "seconds": 35.0, "fresh": false, "kind": "fast incremental scoring / higher-resolution ladder", "eid": "g6x0", "inconclusive": false}
+{"id": "p0035", "gen": 6, "state": "p0031", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0036", "gen": 6, "state": "p0031", "seconds": 25.0, "fresh": false, "kind": "continuous single-height line search", "eid": "g6x1", "inconclusive": false}
+{"id": "p0037", "gen": 6, "state": "p0028", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0038", "gen": 7, "state": "p0023", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0039", "gen": 7, "state": "p0034", "seconds": 40.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g7x1", "inconclusive": false}
+{"id": "p0040", "gen": 7, "state": "p0034", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0041", "gen": 7, "state": "p0034", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0042", "gen": 7, "state": "p0034", "seconds": 50.0, "fresh": false, "kind": "fast incremental scoring / higher-resolution ladder", "eid": "g7x0", "inconclusive": false}
+{"id": "p0043", "gen": 8, "state": "p0029", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0044", "gen": 8, "state": "p0041", "seconds": 30.0, "fresh": false, "transplant": true, "inconclusive": false}
+{"id": "p0045", "gen": 8, "state": "p0041", "seconds": 30.0, "fresh": false, "kind": "fast incremental scoring / higher-resolution ladder", "eid": "g8x0", "inconclusive": false}
+{"id": "p0046", "gen": 8, "state": "p0041", "seconds": 35.0, "fresh": false, "kind": "central gap / two-level shape", "eid": "g8x2", "inconclusive": false}
+{"id": "p0047", "gen": 8, "state": "p0024", "seconds": 30.0, "fresh": false, "transplant": false, "inconclusive": false}
+{"id": "p0048", "gen": 8, "state": "p0041", "seconds": 25.0, "fresh": false, "kind": "multi-resolution refinement", "eid": "g8x1", "inconclusive": false}
+{"id": "p0049", "gen": 9, "state": "p0047", "seconds": 20.0, "fresh": false, "kind": "best method on a different construction", "eid": "g9x2", "inconclusive": false}
