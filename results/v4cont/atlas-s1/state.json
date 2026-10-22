@@ -1,9 +1,9 @@
 {
- "gen_done": 55,
+ "gen_done": 150,
  "config": {
   "condition": "atlas",
   "seed": 1,
-  "gens": 55,
+  "gens": 150,
   "deep": 3,
   "wide": 3,
   "budget": 30.0,
@@ -16,5 +16,5 @@
   "problem": "ac2",
   "label": ""
  },
- "t": 1792599282.8405674
+ "t": 1792704497.6662426
 }
