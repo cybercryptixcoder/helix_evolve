@@ -6,6 +6,21 @@ Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 202
 
 > **Every version, what it tried and what happened: [docs/VERSIONS.md](docs/VERSIONS.md).**
 
+> **Helix v7 (October 23, 2026)**: v4's search with exploration that follows progress, and nothing ever closed
+> ([docs/V7_DESIGN.md](docs/V7_DESIGN.md)).
+> - While the record climbs at the run's usual pace, a generation is v4's: three planned experiments and three
+>   mutations.
+> - As the record stalls longer than usual, one and then two of the planned experiments turn to exploration:
+>   - revive an approach that failed on an earlier construction, on today's best;
+>   - go back to an earlier state (an alternative construction, the point before a big gain, another branch);
+>   - or try something bold.
+> - Each exploration opens a side track judged against its own best. It may start worse; it keeps its slot while it
+>   gains; and it becomes the main track if it beats the record.
+> - The main track always keeps at least one planned experiment.
+>
+> `helix7/`, `tests/test_helix7.py`. The jobs: the autocorrelation and the VRP runs side by side, both warm-started
+> ([docs/V7_JOB.md](docs/V7_JOB.md)).
+
 > **Helix v4.7 (October 23, 2026)**: v4 without the false ceiling ([docs/V47_DESIGN.md](docs/V47_DESIGN.md)).
 > The 150-generation v4 run stalled through mechanisms in the machinery, not the model's ideas
 > ([docs/V4_CEILING.md](docs/V4_CEILING.md)):
@@ -168,7 +183,7 @@ Any feature-engine run can be replayed as an interactive page: `python -m viz.ex
 | [docs/META_LOOP.md](docs/META_LOOP.md) | Plan for a meta loop that evolves Helix itself, scored by a multi-problem evaluator (not built yet) |
 | [viz/](viz/README.md) | The run viewer: replays a run as a factory floor, with every message, feature and champion readable |
 | [docs/WORKLOG.md](docs/WORKLOG.md) | What has been done since the handoff, what each step found, and what was decided |
-| [docs/VERSIONS.md](docs/VERSIONS.md) | **Start here:** every version (v1 to v4.7), what each tried, what worked, what failed, and links to its documents |
+| [docs/VERSIONS.md](docs/VERSIONS.md) | **Start here:** every version (v1 to v7), what each tried, what worked, what failed, and links to its documents |
 | [docs/RESEARCH_PLATEAUS.md](docs/RESEARCH_PLATEAUS.md) | Research question: do LLM-driven searches "grok" (long plateaus, then sudden climbs)? A planned experiment |
 
 ## Quick start
