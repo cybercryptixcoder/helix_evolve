@@ -2,9 +2,9 @@
 
 ## v7-s1
 
-- Generations 191-230: best 0.941229688 -> 0.941243010 (p0555, track T35); the main track now: L7.
-- Exploration levels: level 0: 4 generations, level 1: 2 generations, level 2: 34 generations.
-- Planned experiments by slot: main 50, track 43, revive 9, backtrack 9, bold 9.
+- Generations 191-236: best 0.941229688 -> 0.941243011 (p0573, track T38); the main track now: L7.
+- Exploration levels: level 0: 4 generations, level 1: 2 generations, level 2: 40 generations.
+- Planned experiments by slot: main 56, track 51, revive 11, backtrack 10, bold 10.
 
 ### Records (2)
 
@@ -13,7 +13,7 @@
 | 191 | 0.941240825 | p0297 | deep | main | L7 |
 | 192 | 0.941242923 | p0302 | deep | main | L7 |
 
-### Side tracks opened (27)
+### Side tracks opened (31)
 
 | Track | Kind | Opened | From | Experiments | Its best | Last gain |
 |---|---|---|---|---|---|---|
@@ -30,7 +30,7 @@
 | T21 | backtrack | 210 | p0211 | 4 | 0.940456 (p0443) | 213 |
 | T22 | bold | 210 | p0001 | 3 | 0.863873 (p0432) | 211 |
 | T23 | revive F293 | 212 | p0405 | 2 | 0.941243 (p0436) | 212 |
-| T24 | backtrack | 214 | p0209 | 3 | 0.941155 (p0542) | 229 |
+| T24 | backtrack | 214 | p0209 | 4 | 0.941155 (p0542) | 229 |
 | T25 | bold | 215 | p0001 | 3 | 0.842660 (p0462) | 216 |
 | T26 | revive F361 | 216 | p0405 | 3 | 0.941243 (p0468) | 217 |
 | T27 | backtrack | 218 | p0297 | 2 | 0.941241 (p0476) | 218 |
@@ -41,9 +41,13 @@
 | T32 | revive F66 | 224 | p0502 | 2 | 0.941243 (p0514) | 224 |
 | T33 | backtrack | 226 | p0495 | 2 | 0.941243 (p0527) | 226 |
 | T34 | bold | 226 | p0001 | 2 | 0.867513 (p0526) | 226 |
-| T35 | revive F342 | 228 | p0502 | 3 | 0.941243 (p0539) | 228 |
+| T35 | revive F342 | 228 | p0502 | 6 | 0.941243 (p0539) | 228 |
 | T36 | backtrack | 229 | p0527 | 2 | 0.941243 (p0547) | 229 |
-| T37 | bold | 230 | p0001 | 1 | 0.881990 (p0554) | 230 |
+| T37 | bold | 230 | p0001 | 4 | 0.881998 (p0563) | 232 |
+| T38 | revive F474 | 232 | p0555 | 5 | 0.941243 (p0566) | 232 |
+| T39 | backtrack | 234 | p0447 | 2 | 0.940995 (p0579) | 234 |
+| T40 | bold | 234 | p0001 | 3 | 0.881071 (p0583) | 235 |
+| T41 | revive F385 | 236 | p0573 | 1 | 0.941243 (p0588) | 236 |
 
 ### Generation by generation
 
@@ -89,3 +93,9 @@
 | 228 | 0.941243010 |  | 35 / 1 | 2 | main, track:L6, revive | 0.941243 | L6 paused (no gain on its own best); T35 opened (a revive of F342 on p0502) |
 | 229 | 0.941243010 |  | 36 / 1 | 2 | main, track:T35, backtrack | 0.941243 | T24 gained (0.941154 -> 0.941155); T35 paused (no gain on its own best); T36 opened (a backtrack to p0527) |
 | 230 | 0.941243010 |  | 37 / 1 | 2 | main, track:T36, bold | 0.941243 | T36 paused (no gain on its own best); T37 opened (a bold experiment from p0001) |
+| 231 | 0.941243010 |  | 38 / 1 | 2 | main, track:T37, track:T24 | 0.941156 | T24 paused (no gain on its own best); T37 gained (0.881990 -> 0.881994) |
+| 232 | 0.941243010 |  | 39 / 1 | 2 | main, track:T37, revive | 0.941243 | T37 gained (0.881994 -> 0.881998); T38 opened (a revive of F474 on p0555) |
+| 233 | 0.941243011 |  | 40 / 1 | 2 | main, track:T38, track:T37 | 0.941243 | T37 paused (no gain on its own best); T38 paused (no gain on its own best) |
+| 234 | 0.941243011 |  | 41 / 1 | 2 | main, backtrack, bold | 0.940995 | T39 opened (a backtrack to p0447); T40 opened (a bold experiment from p0001) |
+| 235 | 0.941243011 |  | 42 / 1 | 2 | main, track:T39, track:T40 | 0.940995 | T39 paused (no gain on its own best) |
+| 236 | 0.941243011 |  | 43 / 1 | 2 | main, track:T40, revive | 0.941243 | T40 paused (no gain on its own best); T41 opened (a revive of F385 on p0573) |
