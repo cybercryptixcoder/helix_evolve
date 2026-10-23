@@ -148,7 +148,8 @@ plug-in nor any data is in this repo; the runs use synthetic data in the real fo
 ## Open research questions
 
 - **Do LLM-driven searches grok?** Long plateaus followed by sudden climbs: luck, or hidden progress? Planned
-  experiment: `docs/RESEARCH_PLATEAUS.md`.
+  experiment: `docs/RESEARCH_PLATEAUS.md`. Checked against the literature on October 23: replay experiments for
+  potentiation exist for classical genetic programming, but no study was found for LLM-guided search or LLM memory.
 - **How much do seeds matter?** The seed only drives parent sampling, and the model isn't seeded, so the spread
   between runs (0.882–0.939 at generation 20) is the model's own randomness. Results need several runs
   (`docs/V4_CEILING.md`, "Seeds").
