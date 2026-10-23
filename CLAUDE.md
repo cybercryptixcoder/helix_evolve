@@ -1,6 +1,7 @@
 # Notes for agents working in this repo
 
-- **Read `docs/BRIEF_2026-10-22_V47.md` first** (the current request: the false ceiling and v4.7, `helix47/`). It
+- **Read `docs/BRIEF_2026-10-23.md` first** (the current request: six tasks after the overnight jobs; plan, then
+  Shreyas sets priorities). Before it: `docs/BRIEF_2026-10-22_V47.md` (the false ceiling and v4.7, `helix47/`). It
   holds Shreyas's request verbatim, the notes and decisions, and the live to-do list. After any context compaction or
   session reset, re-read it before doing anything else, and keep its to-do list updated and pushed. Earlier briefs:
   `docs/BRIEF_2026-10-22.md` (v4.6, v6), `docs/BRIEF_2026-10-21.md` (v4.5, v5), `docs/BRIEF_2026-10-20.md` (v4).
