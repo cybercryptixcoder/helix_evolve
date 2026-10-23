@@ -105,3 +105,4 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - 2026-10-23 00:21: v4.7's first draft only bolted on a third loop: fix the main loop itself (done: lines). Stop the VRP v4 job; run v4.7 on the VRP too.
 - 2026-10-23 03:34: do LLM-driven evolutionary searches grok (long plateaus, then sudden climbs; hidden progress)? Write it up as a planned experiment (docs/RESEARCH_PLATEAUS.md).
 - 2026-10-23 03:43: document everything on GitHub: v4.7's aims, every variant, what was tried, what worked, what failed; keep a project map current (docs/VERSIONS.md); point to the grokking question.
+- 2026-10-23 03:50: on the autocorrelation problem, first warm-start v4.7 from the 150-generation run's best and see how far it gets; the from-scratch v4.7 run later. Keep the old Atlas or start fresh? (Both, as two runs of one job: docs/V47_WARM.md.)

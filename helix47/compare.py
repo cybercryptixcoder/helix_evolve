@@ -32,13 +32,17 @@ def last_real_gain(hist, eps=1e-5):
 def build(root):
     root = Path(root)
     runs = sorted(d for d in root.glob("*-s*") if d.is_dir() and (d / "history.jsonl").exists())
-    marks = [5, 10, 15, 20, 25, 30, 40, 50]
     rows, by_cond = [], {}
     gmax = 0
     for d in runs:
         h = jl(d / "history.jsonl")
         if not h:
             continue
+        lrows = jl(d / "lines.jsonl")
+        start = 0
+        if lrows and lrows[0]["lines"] and lrows[0]["lines"][0].get("started", 1) > 1:
+            start = lrows[0]["lines"][0]["started"] - 1        # a warm start: count generations from there
+        h = [{**r, "gen": r["gen"] - start} for r in h if r["gen"] >= start]
         gmax = max(gmax, h[-1]["gen"])
         cond = d.name.rsplit("-s", 1)[0]
         by_cond.setdefault(cond, []).append(h)
@@ -55,9 +59,11 @@ def build(root):
                      f"{len(by_new)} by new lines; best now on {h[-1].get('best_line', '?')}; {alts} alternatives kept"
                      if first_close is not None else f"1 line, never closed; {alts} alternatives kept")
         rows.append((d.name, h, extra))
-    marks = [m for m in marks if m <= gmax] + ([gmax] if gmax not in marks else [])
+    marks = [m for m in (5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150) if m <= gmax] + \
+        ([gmax] if gmax not in (5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150) else [])
     out = [f"# v4.7 against v4 ({root})", "", "Best score by generation (the second autocorrelation inequality; higher is "
-           "better). 'Last real gain' is the last generation where the best rose by more than 1e-5 relative.", "",
+           "better). Generations are counted from each run's start (for a warm start, from the generation it started from). "
+           "'Last real gain' is the last generation where the best rose by more than 1e-5 relative.", "",
            "| Run | " + " | ".join(f"g{m}" for m in marks) + " | Last real gain | v4.7 mechanisms |",
            "|---|" + "---|" * len(marks) + "---|---|"]
     for name, h, extra in rows:
