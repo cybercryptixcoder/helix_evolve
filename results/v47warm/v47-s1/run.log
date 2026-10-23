@@ -39,3 +39,15 @@
 08:52:48 [v47-s1] gen 177: best 0.940795 (p0928, deep, line L1); lines L4 x2 0.919779, L6 x1 0.940038; deep 0/3 gained, wide 0/3 gained; L6 closed; L7 opened from an alternative construction (p1019, handed back by p1018); 312 s
 08:57:54 [v47-s1] gen 178: best 0.940795 (p0928, deep, line L1); lines L4 x1 0.919797, L7 x2 0.940710; deep 0/3 gained, wide 2/3 gained; 306 s
 09:04:33 [v47-s1] gen 179: best 0.940795 (p0928, deep, line L1); lines L4 x1 0.926360, L7 x2 0.940710; deep 0/3 gained, wide 1/3 gained; 400 s
+09:10:22 [v47-s1] gen 180: best 0.940795 (p0928, deep, line L1); lines L4 x2 0.931909, L7 x1 0.940710; deep 1/3 gained, wide 2/3 gained; 1 alternatives kept; 349 s
+09:17:56 [v47-s1] gen 181: line L7 closes (best 0.940710)
+09:17:56 [v47-s1] gen 182: line L8 opens from an alternative construction (p0974, handed back by p0973)
+09:17:56 [v47-s1] gen 181: best 0.940795 (p0928, deep, line L1); lines L4 x2 0.933305, L7 x1 0.940710; deep 2/3 gained, wide 1/3 gained; 1 alternatives kept; L7 closed; L8 opened from an alternative construction (p0974, handed back by p0973); 453 s
+09:22:17 [v47-s1] gen 182: best 0.940795 (p0928, deep, line L1); lines L4 x1 0.933305, L8 x2 0.940710; deep 0/3 gained, wide 1/3 gained; 1 alternatives kept; 262 s
+09:28:01 [v47-s1] gen 183: best 0.940795 (p0928, deep, line L1); lines L4 x1 0.933305, L8 x2 0.940728; deep 2/3 gained, wide 1/3 gained; 3 alternatives kept; 344 s
+09:34:36 [v47-s1] gen 184: best 0.940795 (p0928, deep, line L1); lines L4 x1 0.933377, L8 x2 0.940742; deep 3/3 gained, wide 3/3 gained; 1 alternatives kept; 395 s
+09:40:38 [v47-s1] gen 185: line L4 closes (best 0.933393)
+09:40:38 [v47-s1] gen 185: line L8 closes (best 0.940745)
+09:40:38 [v47-s1] gen 186: line L9 opens from another branch (p1033)
+09:40:38 [v47-s1] gen 186: line L10 opens from a fresh start (Code Zero)
+09:40:38 [v47-s1] gen 185: best 0.940795 (p0928, deep, line L1); lines L4 x2 0.933393, L8 x1 0.940745; deep 3/3 gained, wide 2/3 gained; 1 alternatives kept; L4 closed; L8 closed; L9 opened from another branch (p1033); L10 opened from a fresh start (Code Zero); 362 s

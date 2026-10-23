@@ -39,3 +39,14 @@
 08:51:01 [v47-s2] gen 177: best 0.940993 (p0196, deep, line L7); lines L6 x1 0.892925, L7 x2 0.940993; deep 3/3 gained, wide 2/3 gained; 458 s
 08:58:41 [v47-s2] gen 178: best 0.941100 (p0204, deep, line L7); lines L6 x1 0.893015, L7 x2 0.941100; deep 1/3 gained, wide 2/3 gained; 1 alternatives kept; 460 s
 09:04:12 [v47-s2] gen 179: best 0.941146 (p0209, wide, line L7); lines L6 x1 0.893015, L7 x2 0.941146; deep 2/3 gained, wide 2/3 gained; 1 alternatives kept; 330 s
+09:09:27 [v47-s2] gen 180: best 0.941172 (p0218, wide, line L7); lines L6 x1 0.893035, L7 x2 0.941172; deep 3/3 gained, wide 2/3 gained; 1 alternatives kept; 316 s
+09:13:33 [v47-s2] gen 181: line L6 closes (best 0.893035)
+09:13:33 [v47-s2] gen 182: line L8 opens from another branch (p0105)
+09:13:33 [v47-s2] gen 181: best 0.941230 (p0229, deep, line L7); lines L6 x1 0.893035, L7 x2 0.941230; deep 2/3 gained, wide 3/3 gained; 1 alternatives kept; L6 closed; L8 opened from another branch (p0105); 246 s
+09:19:01 [v47-s2] gen 182: line L7 closes (best 0.941230)
+09:19:01 [v47-s2] gen 183: line L9 opens from a fresh start (Code Zero)
+09:19:01 [v47-s2] gen 182: best 0.941230 (p0234, deep, line L7); lines L7 x1 0.941230, L8 x2 0.910395; deep 1/3 gained, wide 1/3 gained; L7 closed; L9 opened from a fresh start (Code Zero); 328 s
+09:24:48 [v47-s2] gen 183: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.910790, L9 x2 0.666667; deep 0/3 gained, wide 1/3 gained; 347 s
+09:30:17 [v47-s2] gen 184: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.910905, L9 x2 0.723158; deep 2/3 gained, wide 1/3 gained; 1 alternatives kept; 329 s
+09:35:38 [v47-s2] gen 185: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911256, L9 x2 0.723158; deep 1/3 gained, wide 3/3 gained; 320 s
+09:39:22 [v47-s2] gen 186: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911531, L9 x2 0.735536; deep 2/3 gained, wide 2/3 gained; 224 s
