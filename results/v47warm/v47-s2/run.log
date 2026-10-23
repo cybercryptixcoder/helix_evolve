@@ -1,0 +1,14 @@
+06:25:12 [v47-s2] resuming after generation 150 (dropped 0 programs of the unfinished one)
+06:29:00 [v47-s2] gen 151: best 0.940795 (p0002, warm, line L1); lines L1 x3 0.940795; deep 0/3 gained, wide 1/3 gained; 2 alternatives kept; 228 s
+06:33:07 [v47-s2] gen 152: best 0.940795 (p0002, warm, line L1); lines L1 x3 0.940795; deep 0/3 gained, wide 0/3 gained; 247 s
+06:37:09 [v47-s2] gen 153: best 0.940795 (p0002, warm, line L1); lines L1 x3 0.940795; deep 0/3 gained, wide 0/3 gained; 1 alternatives kept; 242 s
+06:42:12 [v47-s2] gen 154: line L1 closes (best 0.940795)
+06:42:12 [v47-s2] gen 155: line L2 opens from an alternative construction (p0028, handed back by p0027)
+06:42:12 [v47-s2] gen 155: line L3 opens from another branch (p0005)
+06:42:12 [v47-s2] gen 154: best 0.940795 (p0028, alt, line L1); lines L1 x3 0.940795; deep 0/3 gained, wide 0/3 gained; 3 alternatives kept; L1 closed; L2 opened from an alternative construction (p0028, handed back by p0027); L3 opened from another branch (p0005); 302 s
+06:45:10 [v47-s2] gen 155: best 0.940795 (p0028, alt, line L1); lines L2 x2 0.940795, L3 x1 0.825761; deep 0/3 gained, wide 2/3 gained; 178 s
+06:51:16 [v47-s2] gen 156: best 0.940795 (p0028, alt, line L1); lines L2 x2 0.940795, L3 x1 0.826789; deep 1/3 gained, wide 0/3 gained; 366 s
+06:56:25 [v47-s2] gen 157: best 0.940795 (p0028, alt, line L1); lines L2 x1 0.940795, L3 x2 0.826931; deep 2/3 gained, wide 0/3 gained; 1 alternatives kept; 309 s
+07:01:10 [v47-s2] gen 158: line L2 closes (best 0.940795)
+07:01:10 [v47-s2] gen 159: line L4 opens from a fresh start (Code Zero)
+07:01:10 [v47-s2] gen 158: best 0.940795 (p0052, wide, line L2); lines L2 x1 0.940795, L3 x2 0.880983; deep 1/3 gained, wide 1/3 gained; 1 alternatives kept; L2 closed; L4 opened from a fresh start (Code Zero); 285 s
