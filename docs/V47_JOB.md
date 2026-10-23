@@ -5,8 +5,7 @@
 - the versions: v4.7 (v4 without the false ceiling, `docs/V47_DESIGN.md`) and plain v4 (Atlas), side by side on the
   same machine and the same night, so the comparison is fair;
 - the size: 3 seeds each, so 6 runs, 30 generations each;
-- the compute: 30 s of CPU per program, as in every earlier job. v4.7's step-change and challenger experiments get
-  60 s, but only while a run is stalled.
+- the compute: 30 s of CPU per program, as in every earlier job, for both versions.
 
 ## Running it
 
@@ -17,8 +16,8 @@ setsid nohup bash scripts/run_v47_jobs.sh > v47_jobs.log 2>&1 < /dev/null &
 
 - **Preflight** (about a minute): numpy and scipy; a crash test of v4.7 and of v4 with a fake model; one real model
   call.
-- **It waits** for any other Helix job to finish, the VRP job included, however long that takes. It prints a line
-  every 30 minutes while it waits, and it never stops anything. `MAX_WAIT_MIN=n` starts it after n minutes anyway.
+- **It waits** for any other Helix job to finish, the VRP job included (the VRP v4.7 job runs first), however long
+  that takes. It prints a line every 30 minutes while it waits, and it never stops anything. `MAX_WAIT_MIN=n` starts it after n minutes anyway.
 - **One copy at a time.** A second start exits at once ("this job is already running").
 - **Time:** about 6 to 8 hours once it starts. The deadline is 10 hours after the start and is kept across restarts.
 - **Resuming:** run the same command again. Finished runs are skipped, and unfinished ones resume from their last

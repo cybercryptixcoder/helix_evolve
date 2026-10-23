@@ -4,6 +4,25 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (00:21-01:30): v4.7 redesigned around lines
+
+Shreyas pointed out that the first v4.7 was a third loop bolted beside an unchanged main loop: the deep loop still
+polished the stalled champion. He was right. The deep loop now works on lines:
+- each line is judged against itself;
+- code closes stalled lines and opens new ones (alternative → branch → fresh, diverse);
+- slots follow progress;
+- the planner sees only the active lines, and closed lines by name.
+
+The step slot and the challenger were removed.
+
+- **Real-model check** (lines forced to close quickly): L3, opened from another branch, took the record at
+  generation 6.
+- **On the VRP:** `run_vrp --version v47` (floors above the VRP's 0.2% evaluation noise), and
+  `VERSION=v47 run_vrp_job.sh`.
+- **The VRP v4 job was stopped at generation 41–42.** It was flat: s1 1.6436, s2 1.6345.
+
+---
+
 ## October 22, 2026 (22:36-00:30): the false ceiling; v4.7 built, tested and packaged
 
 ### What was asked

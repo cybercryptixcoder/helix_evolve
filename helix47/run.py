@@ -1,41 +1,48 @@
-"""One Helix v4.7 run: v4 (helix4/run.py, Atlas memory) with the false ceiling removed (docs/V47_DESIGN.md).
+"""One Helix v4.7 run: v4 (helix4/run.py, Atlas memory) with the deep loop organised in lines (docs/V47_DESIGN.md).
 
     python -m helix47.run --seed 1 --gens 30 --out runs/v47/v47-s1
     python -m helix47.run --out runs/v47/v47-s1                 # resumes (state.json is there)
     python -m helix47.run --gens 2 --fake --out /tmp/x          # no model calls
 
-While the search is moving, a generation is v4's: the wide loop (3 Mutator children from sampled parents) and the
-deep loop (the Researcher plans 3 experiments, Coders write them), all run, scored and recorded; the Atlas Distiller
-records findings. What changes always:
-  1. a program may hand back an alternative construction, which is scored and kept as its own program (role "alt"),
-     so a new idea that hasn't beaten its start yet isn't erased (in v4, 72% of late children returned their start
-     unchanged);
-  2. gains count only above a noise floor (`gain_floor`, relative), in the findings, the history and the feedback;
-  3. the memory map is balanced and failures are scoped to the construction they were tried on (helix47/memory.py);
-  4. the prompts ask for targets rather than confirm-or-refute predictions, drop the countdown, state the honest
-     room left, and allow up to `max_n` steps (helix47/prompts.py).
-What changes once the search has stalled (the best rose by less than `stall_gain` relative over `stall_gens`
-generations), and only then, so that a run that is climbing is left alone:
-  5. one of the planned experiments is a step-change, with `step_budget_mult` times the budget;
-  6. one deep slot goes to a challenger line: a lineage started fresh or from an alternative or another branch,
-     planned by its own planner, which sees its line and the shared findings but not the overall record, and is
-     judged against its own previous best. A line ends when it takes the record (merged), when it hasn't gained for
-     `line_patience` generations, or after `line_max_gens`; a new one starts if the search is still stalled.
+The roles, the two loops and the Atlas memory are v4's. What changes is what the deep loop works on.
+
+A line is one lineage of constructions with its own best score. A run starts with one line, L1, from Code Zero, and
+all `deep` planned experiments go to it, as in v4. Every experiment is judged against its line's best. The system,
+not the planner, manages the lines:
+- a line whose best rose by less than `stall_gain` (relative) over its last `line_patience` generations is closed:
+  its programs and findings stay, but it gets no more experiments;
+- when a line closes, new lines open, up to `lines_after_stall` active lines, each from a different starting point,
+  in turn: the best kept alternative construction (fix 1 below), the best program of another branch (one that does
+  not descend from any line's best), or a fresh start from Code Zero;
+- the `deep` slots are shared out each generation: one per active line, and the rest to the line that gained most
+  over its last two generations (a new line counts as gaining).
+The planner sees each active line against its own previous generations, and the closed lines by name only (helix47/
+memory.py). It is never asked whether a construction is saturated, so the model's habit of reading a plateau as a
+limit has nothing to act on: a stalled line is closed by code, and the effort moves.
+
+The wide loop is a halo around the active lines: its parents are sampled from their programs.
+
+Also always on:
+  1. a program may hand back an alternative construction, which is scored and kept as its own program (role "alt");
+     in v4, 72% of late children returned their start unchanged, so new ideas were invisible;
+  2. gains count only above a noise floor (`gain_floor`, relative), everywhere;
+  3. the findings are balanced and scoped to their line; no countdown; targets instead of confirm-or-refute;
+  4. up to `max_n` steps; base programs shown up to 30,000 characters; 16,000-token replies.
 """
 from __future__ import annotations
 
 import argparse
 import importlib
 import json
-import os
 import random
 import re
 import sys
 import threading
 import time
 import traceback
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, fields
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 from helix4 import prompts as P4
@@ -47,6 +54,7 @@ from helix47.evaluate import evaluate
 from helix47.memory import Atlas47, outcome, rel_floor
 
 UPPER_BOUNDS = {"ac2": 1.0}          # proven bounds that the problem text already states (ac2: Hoelder)
+SOURCES = ("alternative", "branch", "fresh")
 
 
 @dataclass
@@ -67,21 +75,19 @@ class Config:
     label: str = ""
     # ---- v4.7
     gain_floor: float = 1e-6         # a change is a gain only above this (relative to its start's score)
-    stall_gain: float = 2e-4         # stalled: the best rose by less than this (relative) over stall_gens generations
-    stall_gens: int = 3
-    step_gain: float = 1e-3          # what a step-change experiment aims for (relative)
-    step_budget_mult: float = 2.0    # budget of step-change and challenger experiments, times `budget`
-    line_patience: int = 4           # a challenger line ends after this many generations without a gain
-    line_max_gens: int = 12
+    stall_gain: float = 2e-4         # a line is closed if its best rose by less than this (relative) ...
+    line_patience: int = 4           # ... over this many generations
+    lines_after_stall: int = 2       # active lines once the first line has closed (at most `deep`)
+    branch_gap: float = 0.01         # another branch: it split from every line's best at a point this much lower (rel)
     alt_min_ratio: float = 0.9       # an alternative is kept if it scores at least this times its start's score
     max_n: int = 1_000_000           # the largest construction allowed (v4: 200,000)
+    line_code_chars: int = 12000     # how much of each line's best program the planner sees
     map_findings: int = 45
-    map_fails: int = 12
+    map_fails: int = 10
     map_works_best: int = 12
     map_works_new: int = 8
     map_questions: int = 6
     open_evidence: int = 12
-    challenger_findings: int = 30
 
 
 class ProblemView:
@@ -119,7 +125,7 @@ class ProblemView:
 
 
 class Run(Run4):
-    def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print):
+    def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         self.dir = Path(out)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.state_path = self.dir / "state.json"
@@ -136,7 +142,7 @@ class Run(Run4):
             cfg.gens = gens
         self.cfg = cfg
         self.name = cfg.label or self.dir.name
-        self.problem = ProblemView(importlib.import_module(f"helix4.problems.{cfg.problem}"), cfg.max_n)
+        self.problem = problem or ProblemView(importlib.import_module(f"helix4.problems.{cfg.problem}"), cfg.max_n)
         self.problem_text = self.problem.DESCRIPTION
         self.upper_bound = UPPER_BOUNDS.get(cfg.problem)
         self.archive = Archive(self.dir)
@@ -147,13 +153,14 @@ class Run(Run4):
         if getattr(self.llm, "on_call", None) is None:
             self.llm.on_call = self.record
         self.memory = Atlas47(self)
-        self.line, self.lines_closed = None, []
+        self.lines = []
         if state:
             dropped = self.archive.truncate(self.gen_done)
             self.memory.truncate(self.gen_done)
             for f in ("plans.jsonl", "history.jsonl", "lines.jsonl"):
                 self._truncate_jsonl(self.dir / f)
-            self._load_lines()
+            rows = self._jsonl("lines.jsonl")
+            self.lines = rows[-1]["lines"] if rows else []
             self.log(f"[{self.name}] resuming after generation {self.gen_done} (dropped {dropped} programs of the unfinished one)")
 
     # ---------------------------------------------------------------- bookkeeping
@@ -161,32 +168,135 @@ class Run(Run4):
         p = self.dir / name
         return [json.loads(l) for l in p.read_text().splitlines() if l.strip()] if p.exists() else []
 
-    def _load_lines(self):
-        rows = self._jsonl("lines.jsonl")
-        if rows:
-            self.line, self.lines_closed = rows[-1].get("active"), rows[-1].get("closed", [])
-
     def floor(self, ref):
         return rel_floor(self.cfg, ref)
 
-    def best_curve(self):
-        return [h["best"] for h in self._jsonl("history.jsonl")]
+    # ---------------------------------------------------------------- lines
+    def line_of(self, p):
+        if p is None:
+            return None
+        return (p.plan or {}).get("line") or "L1"
 
-    def stalled_for(self):
-        """How many generations in a row the search has been stalled (the best rose by less than stall_gain,
-        relative, over the last stall_gens generations), counted up to the last finished generation."""
-        b, k = self.best_curve(), self.cfg.stall_gens
-        n = 0
-        for i in range(len(b) - 1, k - 1, -1):
-            if b[i] - b[i - k] < self.cfg.stall_gain * max(abs(b[i - k]), 1e-12):
-                n += 1
+    def active_lines(self):
+        return [ln for ln in self.lines if ln["status"] == "active"]
+
+    def closed_lines(self):
+        return [ln for ln in self.lines if ln["status"] == "closed"]
+
+    def members(self, ln):
+        """The programs a line's experiments may build on: its own programs and its root."""
+        ids = {p.id for p in self.archive.programs.values() if p.valid and self.line_of(p) == ln["id"]}
+        return ids | {ln["root"]}
+
+    def line_moves(self, ln, k=6):
+        out, prev = [], None
+        for g, b in ln["curve"][-(k + 1):]:
+            if prev is None:
+                prev = b
+                continue
+            d = b - prev
+            out.append(f"g{g} {b:.6f} ({d:+.6f})" if d > self.floor(prev) else f"g{g} no gain")
+            prev = b
+        return out
+
+    def open_line(self, gen, root, source, kind="fresh"):
+        n = len(self.lines) + 1
+        ln = {"id": f"L{n}", "root": root.id, "source": source, "kind": kind, "started": gen, "status": "active",
+              "best": root.score, "best_id": root.id, "curve": [[gen - 1, root.score]], "ended": None, "why": None}
+        self.lines.append(ln)
+        self.log(f"[{self.name}] gen {gen}: line {ln['id']} opens from {source}")
+        return ln
+
+    def _distinct(self, p):
+        """True if p is on another branch: for every line's best b, p and b split at a program scoring at least
+        `branch_gap` (relative) below b, so p is not a polish of b, nor on b's own path."""
+        a = self.archive
+        mine = [q.id for q in reversed(a.lineage(p.id, depth=100000))]          # p first, then its ancestors
+        for ln in self.lines:
+            b = a.programs.get(ln["best_id"])
+            if b is None or b.score is None:
+                continue
+            anc = {q.id for q in a.lineage(b.id, depth=100000)}
+            lca = next((i for i in mine if i in anc), None)
+            if lca == p.id or (lca is not None and a.programs[lca].score is not None
+                               and a.programs[lca].score > b.score - self.cfg.branch_gap * abs(b.score)):
+                return False
+        return True
+
+    def pick_root(self, gen):
+        """The next starting point for a new line, taking the sources in turn (alternative, branch, fresh)."""
+        a = self.archive
+        used = {ln["root"] for ln in self.lines} | {ln["best_id"] for ln in self.lines}
+        opened = max(0, len(self.lines) - 1)
+        active = Counter(ln.get("kind") for ln in self.active_lines())
+        # the sources in turn, but a kind the active lines already have goes last, and never two fresh starts at once
+        order = sorted(range(len(SOURCES)), key=lambda i: (active[SOURCES[(opened + i) % len(SOURCES)]], i))
+        for i in order:
+            src = SOURCES[(opened + i) % len(SOURCES)]
+            if src == "fresh" and active["fresh"]:
+                continue
+            if src == "alternative":
+                cands = [p for p in a.valid() if p.role == "alt" and p.id not in used]
+                if cands:
+                    p = max(cands, key=lambda q: q.score)
+                    return p, f"an alternative construction ({p.id}, handed back by {p.parent})", src
+            elif src == "branch":
+                cands = [p for p in a.valid() if p.role not in ("alt", "seed") and p.id not in used and self._distinct(p)]
+                if cands:
+                    p = max(cands, key=lambda q: q.score)
+                    return p, f"another branch ({p.id})", src
             else:
+                seed = next((p for p in a.programs.values() if p.role == "seed"), None)
+                if seed is not None:
+                    return seed, "a fresh start (Code Zero)", src
+        return None, None, None
+
+    def update_lines(self, gen, children):
+        events = []
+        for ln in self.active_lines():
+            mine = [c for c in children if c is not None and c.valid and self.line_of(c) == ln["id"]]
+            for c in sorted(mine, key=lambda c: -c.score):
+                if c.score > ln["best"] + self.floor(ln["best"]):
+                    ln["best"], ln["best_id"] = c.score, c.id
                 break
-        return n + (k - 1 if n else 0)
+            ln["curve"].append([gen, ln["best"]])
+            k = self.cfg.line_patience
+            if len(ln["curve"]) > k:
+                old = ln["curve"][-1 - k][1]
+                if ln["best"] - old < self.cfg.stall_gain * max(abs(old), 1e-12):
+                    ln.update(status="closed", ended=gen,
+                              why=f"its best rose by less than {self.cfg.stall_gain:g} (relative) in {k} generations")
+                    events.append(f"{ln['id']} closed")
+                    self.log(f"[{self.name}] gen {gen}: line {ln['id']} closes (best {ln['best']:.6f})")
+        target = 1 if not self.closed_lines() else min(self.cfg.lines_after_stall, self.cfg.deep)
+        while len(self.active_lines()) < target:
+            root, source, kind = self.pick_root(gen + 1)
+            if root is None:
+                break
+            ln = self.open_line(gen + 1, root, source, kind)
+            events.append(f"{ln['id']} opened from {source}")
+        return events
+
+    def allocation(self):
+        act = self.active_lines()[: self.cfg.deep]
+        alloc = {ln["id"]: 1 for ln in act}
+
+        def rate(ln):
+            c = ln["curve"]
+            if len(c) < 3:
+                return float("inf")           # a new line counts as gaining
+            return (c[-1][1] - c[-3][1]) / max(abs(c[-3][1]), 1e-12)
+        if act:
+            lead = max(act, key=lambda ln: (rate(ln), ln["started"]))
+            alloc[lead["id"]] += self.cfg.deep - len(act)
+        return alloc
 
     # ---------------------------------------------------------------- roles
+    def researcher_system(self, k):
+        return P.RESEARCHER_SYSTEM.format(k=k, budget=self.cfg.budget)
+
     def researcher(self, user, gen, step="plan", system=None, role="researcher", k=None):
-        system = system or P.RESEARCHER_SYSTEM.format(k=k or self.cfg.deep, budget=self.cfg.budget)
+        system = system or self.researcher_system(k or self.cfg.deep)
         t0 = time.time()
         text = self.call(role, system, user, temperature=0.7, max_tokens=12000, effort=self.cfg.researcher_effort, gen=gen)
         plan = P4.extract_json(text)
@@ -201,30 +311,35 @@ class Run(Run4):
         return plan, {"prompt_chars": len(user), "parsed": plan is not None, "retried": retried,
                       "seconds": round(time.time() - t0, 1)}
 
-    def experiments(self, plan, k=None, step=False):
-        k = k or self.cfg.deep
-        best = self.archive.best()
+    def experiments(self, plan, alloc):
+        lines = {ln["id"]: ln for ln in self.active_lines()}
+        left = dict(alloc)
         out = []
-        for e in (plan or {}).get("experiments", [])[:k]:
-            if not isinstance(e, dict) or not (e.get("change") or e.get("hypothesis")):
+        for e in (plan or {}).get("experiments", []):
+            if not isinstance(e, dict) or not (e.get("change") or e.get("hypothesis")) or not any(left.values()):
                 continue
+            lid = str(e.get("line", "")).strip()
+            if left.get(lid, 0) <= 0:
+                e = {**e, "line_requested": lid}
+                lid = next(l for l, n in left.items() if n > 0)
+            ln = lines[lid]
             base = str(e.get("base", "")).strip()
-            p = self.archive.programs.get(base)
-            step_flag = e.get("step") is True or str(e.get("step")).lower() == "true"
-            e = {key: e.get(key) for key in ("base", "hypothesis", "change", "prediction", "builds_on")}
-            if p is None or not p.valid:
-                e["base_requested"], e["base"] = base, best.id
-            if not isinstance(e.get("builds_on"), list):
-                e["builds_on"] = [str(e["builds_on"])] if e.get("builds_on") else []
-            if step and step_flag and not any(x.get("step") for x in out):
-                e["step"] = True
-            out.append(e)
-        while len(out) < k:
-            out.append({"base": best.id, "hypothesis": "(no plan: the researcher's reply was unusable)",
-                        "change": "Improve the base program in the way you judge most promising.",
-                        "prediction": "", "builds_on": [], "fallback": True})
-        if step and not any(x.get("step") for x in out):       # the step-change slot is structural, not optional
-            out[-1]["step"], out[-1]["step_assigned"] = True, True
+            x = {key: e.get(key) for key in ("base", "hypothesis", "change", "prediction", "builds_on")}
+            x["line"] = lid
+            if "line_requested" in e:
+                x["line_requested"] = e["line_requested"]
+            if base not in self.members(ln):
+                x["base_requested"], x["base"] = base, ln["best_id"]
+            if not isinstance(x.get("builds_on"), list):
+                x["builds_on"] = [str(x["builds_on"])] if x.get("builds_on") else []
+            out.append(x)
+            left[lid] -= 1
+        for lid, n in left.items():
+            for _ in range(n):
+                out.append({"line": lid, "base": lines[lid]["best_id"],
+                            "hypothesis": "(no plan: the researcher's reply was unusable)",
+                            "change": "Improve the base program in the way you judge most promising.",
+                            "prediction": "", "builds_on": [], "fallback": True})
         return out
 
     def program_block(self, p, title):
@@ -243,8 +358,7 @@ class Run(Run4):
             code = P4.extract_code(text)
         return code, P4.extract_summary(text)
 
-    def child(self, gen, role, parent, code, intent, plan, summary, budget=None):
-        budget = budget or self.cfg.budget
+    def child(self, gen, role, parent, code, intent, plan, summary):
         p = Program(id="", gen=gen, role=role, parent=parent.id, intent=intent, code=code or "", plan=plan or {},
                     summary=summary)
         if code is None:
@@ -255,17 +369,16 @@ class Run(Run4):
             p.error, p.duplicate_of = f"identical to {dup} (same code on the same base): not run again", dup
             return self.add(p), None
         p.diff = make_diff(parent.code, code)
-        res = evaluate(self.problem, code, self.archive.construction(parent.id), budget, self.cfg.mem_mb)
+        res = evaluate(self.problem, code, self.archive.construction(parent.id), self.cfg.budget, self.cfg.mem_mb)
         p.valid, p.score, p.start_score, p.delta = res["valid"], res["score"], res["start_score"], res["delta"]
         p.feedback, p.error, p.cpu, p.n = res["feedback"], res["error"], res["cpu"], res["n"]
         if p.valid and p.delta is not None and 0 < p.delta <= self.floor(p.start_score) and p.feedback:
             p.feedback = [p.feedback[0] + " (below the noise floor: counts as no gain)"] + p.feedback[1:]
-        alt = res.get("alternative")
-        alt_note = None
+        alt, keep = res.get("alternative"), None
         if p.valid and alt is not None:
             ref = p.start_score if p.start_score is not None else p.score
             if alt["score"] >= self.cfg.alt_min_ratio * ref:
-                alt_note = alt
+                keep = alt
                 p.feedback = p.feedback + [f"it also handed back an alternative construction scoring {alt['score']:.6f}, "
                                            f"kept as its own program"]
             else:
@@ -273,41 +386,37 @@ class Run(Run4):
                                            f"{self.cfg.alt_min_ratio:g} of its start's score: not kept"]
         p = self.add(p, res["construction"])
         a = None
-        if alt_note is not None:
+        if keep is not None:
             a = Program(id="", gen=gen, role="alt", parent=p.id, code=p.code, summary=p.summary,
                         intent=f"alternative construction handed back by {p.id} ({short(intent, 150)})",
-                        plan={"alt_of": p.id, **({"line": plan["line"]} if (plan or {}).get("line") else {})},
-                        valid=True, score=alt_note["score"], start_score=p.start_score,
-                        delta=(alt_note["score"] - p.start_score) if p.start_score is not None else None,
-                        feedback=[f"score {alt_note['score']:.6f} (an alternative handed back by {p.id})"]
-                        + alt_note["feedback"][1:], cpu=0.0, n=alt_note["n"])
-            a = self.add(a, alt_note["construction"])
+                        plan={"alt_of": p.id, "line": (plan or {}).get("line") or "L1"},
+                        valid=True, score=keep["score"], start_score=p.start_score,
+                        delta=(keep["score"] - p.start_score) if p.start_score is not None else None,
+                        feedback=[f"score {keep['score']:.6f} (an alternative handed back by {p.id})"]
+                        + keep["feedback"][1:], cpu=0.0, n=keep["n"])
+            a = self.add(a, keep["construction"])
         return p, a
 
     def deep_child(self, gen, exp):
         try:
             base = self.archive.programs[exp["base"]]
-            budget = self.cfg.budget * (self.cfg.step_budget_mult if (exp.get("step") or exp.get("line")) else 1.0)
+            ln = next((l for l in self.lines if l["id"] == exp["line"]), None)
             note = ""
-            if exp.get("step"):
-                note = "\n\n" + P.STEP_CODER_NOTE.format(budget=budget)
-            elif exp.get("line"):
-                note = "\n\n" + P.CHALLENGER_CODER_NOTE.format(budget=budget)
+            if ln is not None and ln["id"] != "L1" and gen - ln["started"] < 2:
+                note = "\n\n" + P.NEW_LINE_NOTE.format(source=ln["source"])
             user = (f"{self.problem.DESCRIPTION}\n\n{self.program_block(base, 'The base program')}\n\n"
                     f"## The experiment to implement\nHypothesis: {exp.get('hypothesis')}\nChange: {exp.get('change')}\n"
                     f"Target: {exp.get('prediction')}\n\nImplement this experiment as a change to the base program. "
                     f"Keep what the base does well unless the experiment says otherwise. budget_seconds will be "
-                    f"{budget:.0f}; `start` will be the base's construction.{note}\n\n{P4.CODE_FORMAT}")
+                    f"{self.cfg.budget:.0f}; `start` will be the base's construction.{note}\n\n{P4.CODE_FORMAT}")
             code, summary = self.write_code("coder", P.CODER_SYSTEM, user, gen)
-            tag = f"[challenger {exp['line']}] " if exp.get("line") else "[step] " if exp.get("step") else ""
-            return self.child(gen, "deep", base, code, tag + short(exp.get("hypothesis") or exp.get("change"), 300),
-                              exp, summary, budget)
+            return self.child(gen, "deep", base, code, short(exp.get("hypothesis") or exp.get("change"), 300), exp, summary)
         except Exception as exc:                                     # noqa: BLE001  (never lose the run)
             self.log(f"[{self.name}] gen {gen}: deep child crashed: {exc}\n{traceback.format_exc()}")
             return self.add(Program(id="", gen=gen, role="deep", parent=exp.get("base"), intent="(crashed)", code="",
                                     plan=exp, error=f"internal error: {exc}")), None
 
-    def wide_child(self, gen, parent, inspiration):
+    def wide_child(self, gen, parent, inspiration, line_id):
         try:
             user = f"{self.problem.DESCRIPTION}\n\n{self.program_block(parent, 'The program to improve')}\n\n"
             if inspiration is not None:
@@ -316,137 +425,54 @@ class Run(Run4):
             user += (f"Write an improved version of the program to improve. budget_seconds will be {self.cfg.budget:.0f}; "
                      f"`start` will be its construction.\n\n{P4.CODE_FORMAT}")
             code, summary = self.write_code("mutator", P.MUTATOR_SYSTEM, user, gen)
-            return self.child(gen, "wide", parent, code, summary or "(no summary)", {}, summary)
+            return self.child(gen, "wide", parent, code, summary or "(no summary)", {"line": line_id}, summary)
         except Exception as exc:                                     # noqa: BLE001
             self.log(f"[{self.name}] gen {gen}: wide child crashed: {exc}\n{traceback.format_exc()}")
             return self.add(Program(id="", gen=gen, role="wide", parent=parent.id, intent="(crashed)", code="",
-                                    error=f"internal error: {exc}")), None
+                                    plan={"line": line_id}, error=f"internal error: {exc}")), None
 
-    # ---------------------------------------------------------------- the challenger line
-    def line_programs(self, line):
-        return [p for p in self.archive.programs.values() if (p.plan or {}).get("line") == line["id"]]
-
-    def line_summary(self):
-        ln = self.line
-        if ln is None:
-            return ""
-        best = self.archive.programs.get(ln.get("best_id") or "")
-        where = f"its best so far is {best.id} ({best.score:.6f})" if best is not None else "no valid program yet"
-        return (f"## The challenger line\nA challenger line ({ln['id']}, since generation {ln['started']}) explores a "
-                f"different region with one experiment per generation, planned separately: {where}. You plan the "
-                f"main line's experiments; any program, including the challenger's, can be your base.")
-
-    def _ancestors(self, pid):
-        return {p.id for p in self.archive.lineage(pid, depth=100000)}
-
-    def start_options(self):
-        a = self.archive
-        best = a.best()
-        anc = self._ancestors(best.id)
-        used = {r for ln in self.lines_closed for r in ln.get("roots", [])}
-        seed = next((p for p in a.programs.values() if p.role == "seed"), None)
-        opts, ids = [], []
-        if seed is not None:
-            opts.append(f"- {seed.id}: a fresh start (Code Zero, score {seed.score:.6f})")
-            ids.append(seed.id)
-        alts = sorted((p for p in a.valid() if p.role == "alt" and p.id not in used and p.id not in anc
-                       and not (p.plan or {}).get("line")), key=lambda p: -p.score)[:4]
-        for p in alts:
-            opts.append(f"- {p.id}: {p.score:.6f}, an alternative construction ({short(p.intent, 120)})")
-            ids.append(p.id)
-        others = sorted((p for p in a.valid() if p.role not in ("alt", "seed") and p.id not in anc and p.id not in used
-                         and best.id not in self._ancestors(p.id) and not (p.plan or {}).get("line")),
-                        key=lambda p: -p.score)[:3]
-        for p in others:
-            opts.append(f"- {p.id}: {p.score:.6f}, the best of another branch ({short(p.intent, 120)})")
-            ids.append(p.id)
-        return opts, ids
-
-    def start_line(self, gen):
-        n = len(self.lines_closed) + 1
-        self.line = {"id": f"C{n}", "started": gen, "best": None, "best_id": None, "last_gain_gen": gen,
-                     "roots": [], "programs": 0}
-        self.log(f"[{self.name}] gen {gen}: the search has stalled; challenger line {self.line['id']} starts")
-
-    def challenger_experiment(self, gen):
-        ln = self.line
-        options, ids = (self.start_options() if ln["best_id"] is None else (None, []))
-        user = self.memory.challenger_view(gen, ln, options) + "\n\n" + P.CHALLENGER_FORMAT.format(
-            start_hint=", or one of the starting options" if options else "")
-        system = P.CHALLENGER_SYSTEM.format(budget=self.cfg.budget * self.cfg.step_budget_mult)
-        plan, info = self.researcher(user, gen, system=system, role="challenger")
-        e = ((plan or {}).get("experiments") or [{}])[0]
-        e = e if isinstance(e, dict) else {}
-        line_ids = {p.id for p in self.line_programs(ln) if p.valid}
-        base = str(e.get("base", "")).strip()
-        if ln["best_id"] is None:
-            if base not in ids:
-                info["base_requested"], base = base, ids[0]
-            ln["roots"] = list(dict.fromkeys(ln["roots"] + [base]))
-        elif base not in line_ids:
-            info["base_requested"], base = base, ln["best_id"]
-        exp = {"base": base, "hypothesis": e.get("hypothesis") or "(no plan: the challenger's reply was unusable)",
-               "change": e.get("change") or "Improve the base program in the way you judge most promising.",
-               "prediction": e.get("prediction") or "", "builds_on": e.get("builds_on") if isinstance(e.get("builds_on"), list) else [],
-               "line": ln["id"]}
-        return exp, {"analysis": (plan or {}).get("analysis"), **info}
-
-    def update_line(self, gen, children):
-        ln = self.line
-        if ln is None:
-            return None
-        mine = [c for c in children if c is not None and (c.plan or {}).get("line") == ln["id"]]
-        ln["programs"] += len(mine)
-        for c in mine:
-            if c.valid and (ln["best"] is None or c.score > ln["best"] + self.floor(ln["best"])):
-                ln["best"], ln["best_id"], ln["last_gain_gen"] = c.score, c.id, gen
-        best = self.archive.best()
-        why = None
-        if ln["best_id"] is not None and best.id in {p.id for p in self.line_programs(ln)}:
-            why = "merged: it took the record"
-        elif gen - ln["last_gain_gen"] >= self.cfg.line_patience:
-            why = f"retired: no gain for {self.cfg.line_patience} generations"
-        elif gen - ln["started"] + 1 >= self.cfg.line_max_gens:
-            why = f"retired: {self.cfg.line_max_gens} generations"
-        if why:
-            ln.update(ended=gen, why=why)
-            self.lines_closed.append(ln)
-            self.log(f"[{self.name}] gen {gen}: challenger line {ln['id']} {why} (best {ln['best']})")
-            self.line = None
-        return why
+    def wide_parents(self, rng, gen):
+        """The halo: parents sampled from the active lines' programs (and their roots)."""
+        pools = []
+        for ln in self.active_lines():
+            ids = self.members(ln)
+            pools += [(p, ln["id"]) for p in self.archive.valid() if p.id in ids and p.gen < gen]
+        if not pools:
+            return []
+        line_of = {p.id: lid for p, lid in pools}
+        progs = list({p.id: p for p, _ in pools}.values())
+        out = []
+        for _ in range(self.cfg.wide):
+            par = self.archive.sample_parent(rng, progs)
+            out.append((par, line_of[par.id]))
+        return out
 
     # ---------------------------------------------------------------- the generation
     def generation(self, gen):
         t0, calls0 = time.time(), self.llm.calls
-        stalled = self.stalled_for()
-        if stalled >= self.cfg.stall_gens and self.line is None and gen >= 2:
-            self.start_line(gen)
-        line_now = self.line
-        k_main = self.cfg.deep - (1 if line_now is not None else 0)
+        if not self.lines:
+            seed = next(p for p in self.archive.programs.values() if p.role == "seed")
+            self.open_line(gen, seed, "Code Zero", "seed")
+        alloc = self.allocation()
         rng = random.Random(self.cfg.seed * 7919 + gen)
-        pool = [p for p in self.archive.valid() if p.gen < gen]
-        parents = [self.archive.sample_parent(rng, pool) for _ in range(self.cfg.wide)]
-        top = sorted(pool, key=lambda p: -p.score)[:5]
+        parents = self.wide_parents(rng, gen)
+        pool = [p for p, _ in parents]
+        top = sorted({p.id: p for p in self.archive.valid() if p.gen < gen and self.line_of(p) in alloc}.values(),
+                     key=lambda p: -p.score)[:5]
         prev_best = self.archive.best()
-        with ThreadPoolExecutor(max_workers=self.cfg.deep + self.cfg.wide + 1) as ex:
+        with ThreadPoolExecutor(max_workers=self.cfg.deep + self.cfg.wide) as ex:
             wide = []
-            for par in parents:
+            for par, lid in parents:
                 others = [q for q in top if q.id != par.id]
-                wide.append(ex.submit(self.wide_child, gen, par, rng.choice(others) if others else None))
-            cfut = ex.submit(self.challenger_experiment, gen) if line_now is not None else None
-            plan, info = self.memory.plan(gen, k_main, stalled)
-            exps = self.experiments(plan, k_main, step=info.get("step_asked", False))
+                wide.append(ex.submit(self.wide_child, gen, par, rng.choice(others) if others else None, lid))
+            plan, info = self.memory.plan(gen, alloc)
+            exps = self.experiments(plan, alloc)
             deep = [ex.submit(self.deep_child, gen, e) for e in exps]
-            cinfo = None
-            if cfut is not None:
-                cexp, cinfo = cfut.result()
-                exps.append(cexp)
-                deep.append(ex.submit(self.deep_child, gen, cexp))
             pairs = [f.result() for f in deep + wide]
         children = [c for c, _ in pairs] + [a for _, a in pairs if a is not None]
         t_mem = time.time()
         mem_info = self.memory.update(gen, plan, children) or {}
-        line_event = self.update_line(gen, children)
+        events = self.update_lines(gen, children)
         best = self.archive.best()
         dc = [c for c, _ in pairs[: len(deep)]]
         wc = [c for c, _ in pairs[len(deep):]]
@@ -456,48 +482,38 @@ class Run(Run4):
             ok = [c.score for c in cs if c is not None and c.valid]
             return max(ok) if ok else None
 
-        def gains(cs):
-            return sum(1 for c in cs if outcome(c, self.cfg) == "gain")
-
         refs = [r for e in exps for r in (e.get("builds_on") or [])]
-        rose = best.score > prev_best.score + self.floor(prev_best.score)
-        row = {"gen": gen, "best": best.score, "best_id": best.id, "best_role": best.role,
-               "deep_best": best_of(dc), "wide_best": best_of(wc), "deep_gains": gains(dc), "wide_gains": gains(wc),
+        row = {"gen": gen, "best": best.score, "best_id": best.id, "best_role": best.role, "best_line": self.line_of(best),
+               "deep_best": best_of(dc), "wide_best": best_of(wc),
+               "deep_gains": sum(1 for c in dc if outcome(c, self.cfg) == "gain"),
+               "wide_gains": sum(1 for c in wc if outcome(c, self.cfg) == "gain"),
                "deep_failed": sum(1 for c in dc if not c.valid), "wide_failed": sum(1 for c in wc if not c.valid),
-               "duplicates": sum(1 for c in dc + wc if c.duplicate_of), "new_best": rose,
+               "duplicates": sum(1 for c in dc + wc if c.duplicate_of),
+               "new_best": best.score > prev_best.score + self.floor(prev_best.score),
                "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
                "fallback_experiments": sum(1 for e in exps if e.get("fallback")),
                "base_fallbacks": sum(1 for e in exps if "base_requested" in e),
-               "bases": [e["base"] for e in exps], "builds_on_refs": len(refs),
+               "bases": [e["base"] for e in exps], "allocation": alloc, "line_events": events,
+               "lines": [{"id": ln["id"], "best": ln["best"], "status": ln["status"]} for ln in self.lines],
+               "alternatives_kept": [a.id for a in alts], "builds_on_refs": len(refs),
                "builds_on_known": sum(1 for r in refs if str(r) in self.archive.programs or str(r) in self.memory.findings),
-               "stalled": stalled, "step": [c.id for c, e in zip(dc, exps) if e.get("step")],
-               "challenger": ({"line": line_now["id"], "child": dc[-1].id, "score": dc[-1].score, "event": line_event}
-                              if line_now is not None else None),
-               "alternatives_kept": [a.id for a in alts],
                "researcher_prompt_chars": info.get("prompt_chars"), "researcher_seconds": info.get("seconds"),
                "memory_seconds": round(time.time() - t_mem, 1), "calls": self.llm.calls - calls0,
                "seconds": round(time.time() - t0, 1), **self.memory.stats()}
-        self._append("plans.jsonl", {"gen": gen, "plan": plan, "experiments": exps, "info": info,
-                                     "challenger": cinfo, "memory": mem_info})
+        self._append("plans.jsonl", {"gen": gen, "plan": plan, "experiments": exps, "info": info, "memory": mem_info})
         self._append("history.jsonl", row)
-        self._append("lines.jsonl", {"gen": gen, "active": self.line, "closed": self.lines_closed})
+        self._append("lines.jsonl", {"gen": gen, "lines": self.lines})
         self.checkpoint(gen)
-        extra = []
-        if line_now is not None:
-            extra.append(f"challenger {line_now['id']} {dc[-1].score:.6f}" if dc[-1].valid else f"challenger {line_now['id']} failed")
-        if row["step"]:
-            extra.append("step " + ",".join(row["step"]))
-        if alts:
-            extra.append(f"{len(alts)} alternatives kept")
-        self.log(f"[{self.name}] gen {gen}: best {best.score:.6f} ({best.id}, {best.role}); deep "
-                 f"{row['deep_best'] or 0:.6f} ({row['deep_gains']}/{len(dc)} gained), wide {row['wide_best'] or 0:.6f} "
-                 f"({row['wide_gains']}/{len(wc)} gained)" + (f"; {'; '.join(extra)}" if extra else "")
+        lines_txt = ", ".join(f"{lid} x{n} {next(l['best'] for l in self.lines if l['id'] == lid):.6f}" for lid, n in alloc.items())
+        self.log(f"[{self.name}] gen {gen}: best {best.score:.6f} ({best.id}, {best.role}, line {self.line_of(best)}); "
+                 f"lines {lines_txt}; deep {row['deep_gains']}/{len(dc)} gained, wide {row['wide_gains']}/{len(wc)} gained"
+                 + (f"; {len(alts)} alternatives kept" if alts else "") + (f"; {'; '.join(events)}" if events else "")
                  + f"; {row['seconds']:.0f} s")
         return row
 
     def finish(self, seconds=None, stopped_at=None):
         summary = super().finish(seconds, stopped_at)
-        summary["lines"] = self.lines_closed + ([self.line] if self.line else [])
+        summary["lines"] = self.lines
         summary["alternatives"] = sum(1 for p in self.archive.programs.values() if p.role == "alt")
         (self.dir / "summary.json").write_text(json.dumps(summary, indent=1, default=float))
         return summary
@@ -536,17 +552,15 @@ def construct(budget_seconds, start):
 def fake_answer(role, system, user):
     if role in ("coder", "mutator"):
         return "```python\n" + FAKE_CODE.replace("{tag}", str(random.randint(1, 10 ** 9))) + "```\nSUMMARY: fake search"
-    if role == "challenger":
-        ids = re.findall(r"\bp\d{4}\b", user)
-        exp = {"base": ids[0] if ids else "p0001", "hypothesis": "fake challenger hypothesis", "change": "perturb",
-               "prediction": "a gain on the line", "builds_on": []}
-        return "```json\n" + json.dumps({"analysis": "fake", "experiments": [exp]}) + "\n```"
     if role == "researcher":
-        k = int(m.group(1)) if (m := re.search(r"Give exactly (\d+) experiments", user)) else 3
-        ids = re.findall(r"\bp\d{4}\b", user)
-        base = ids[0] if ids else "p0001"
-        exps = [{"base": base, "hypothesis": f"fake hypothesis {i}", "change": f"perturb heights, variant {i}",
-                 "prediction": "a small gain", "builds_on": ids[:1]} for i in range(k)]
+        alloc = re.findall(r"(\d+) for line (L\d+)", user.split("Give exactly")[-1])
+        exps = []
+        for n, lid in alloc:
+            block = user.split(f"## Line {lid}:")[1] if f"## Line {lid}:" in user else user
+            ids = re.findall(r"\bp\d{4}\b", block)
+            for i in range(int(n)):
+                exps.append({"line": lid, "base": ids[0] if ids else "p0001", "hypothesis": f"fake hypothesis {i}",
+                             "change": f"perturb heights, variant {i}", "prediction": "a gain", "builds_on": ids[:1]})
         return "```json\n" + json.dumps({"analysis": "fake analysis", "experiments": exps}) + "\n```"
     return fake_answer4(role, system, user)
 

@@ -80,92 +80,78 @@ def test_gains_below_the_floor_are_no_gain():
     assert outcome(p, cfg) == "gain"
 
 
-def test_stall_detection(tmp_path):
-    r = Run(tmp_path, Config(), llm=FakeLLM(fake_answer), log=lambda m: None)
-    rows = [0.6667, 0.80, 0.85, 0.88, 0.88, 0.88001, 0.88001, 0.88002]
-    (tmp_path / "history.jsonl").write_text("".join(json.dumps({"gen": i, "best": b}) + "\n" for i, b in enumerate(rows)))
-    # windows of 3 generations: 5 vs 2 (+0.03) is moving; 6 vs 3 and 7 vs 4 are stalled: flat since generation 3
-    assert r.stalled_for() == 4
-    (tmp_path / "history.jsonl").write_text("".join(json.dumps({"gen": i, "best": b}) + "\n" for i, b in enumerate(rows[:5])))
-    assert r.stalled_for() == 0
-
-
-# ---------------------------------------------------------------------------------------------- whole runs
-def test_a_run_that_climbs_is_v4(tmp_path):
-    r = run(tmp_path / "climb", 4, stall_gain=0.0)        # never stalled
+# ---------------------------------------------------------------------------------------------- lines
+def test_a_climbing_run_is_v4_shaped(tmp_path):
+    r = run(tmp_path / "climb", 4, stall_gain=0.0)        # a line never closes
     hist = jl(tmp_path / "climb" / "history.jsonl")
     assert [h["gen"] for h in hist] == [0, 1, 2, 3, 4]
-    assert all(h.get("challenger") is None and not h.get("step") for h in hist[1:])
+    assert all(h["allocation"] == {"L1": 3} and not h["line_events"] for h in hist[1:])
     plans = jl(tmp_path / "climb" / "plans.jsonl")
-    assert all(len(p["experiments"]) == 3 for p in plans)
+    assert all(len(p["experiments"]) == 3 and {e["line"] for e in p["experiments"]} == {"L1"} for p in plans)
+    assert all(r.line_of(p) == "L1" for p in r.archive.programs.values())
     assert sum(1 for p in r.archive.programs.values() if p.role == "alt") > 0      # alternatives are kept
 
 
-def test_a_stalled_run_gets_a_challenger_line_and_a_step_slot(tmp_path):
+def test_a_stalled_line_closes_and_new_lines_take_its_slots(tmp_path):
     out = tmp_path / "stall"
-    r = run(out, 6, stall_gain=1.0, stall_gens=1, line_patience=2, line_max_gens=3)
+    r = run(out, 8, stall_gain=1.0, line_patience=2)          # every line closes 2 generations after it opens
     hist = jl(out / "history.jsonl")
-    lines = jl(out / "lines.jsonl")
+    lines = jl(out / "lines.jsonl")[-1]["lines"]
+    assert lines[0]["id"] == "L1" and lines[0]["status"] == "closed" and lines[0]["ended"] == 2
+    assert hist[3]["allocation"].keys() == {"L2", "L3"} and sum(hist[3]["allocation"].values()) == 3
+    sources = [ln["source"] for ln in lines[1:4]]
+    assert any("alternative" in s for s in sources) and any("fresh" in s or "branch" in s for s in sources)
+    # experiments go to their line, with bases from that line
     plans = jl(out / "plans.jsonl")
-    ch = [h for h in hist if h.get("challenger")]
-    assert ch and ch[0]["gen"] == 2
-    # one deep slot went to the line, and the main plan had one step-change experiment with twice the budget
-    p2 = [p for p in plans if p["gen"] == 2][0]
-    assert len(p2["experiments"]) == 3 and p2["experiments"][-1]["line"] == "C1"
-    assert sum(1 for e in p2["experiments"] if e.get("step")) == 1
-    step_child = r.archive.programs[hist[2]["step"][0]]
-    assert step_child.intent.startswith("[step]") and step_child.plan.get("step")
-    line_child = r.archive.programs[ch[0]["challenger"]["child"]]
-    assert line_child.intent.startswith("[challenger C1]") and line_child.plan["line"] == "C1"
-    # the challenger's planner saw its own view, without the overall record
+    for pl in plans:
+        for e in pl["experiments"]:
+            ln = next(l for l in lines if l["id"] == e["line"])
+            assert e["base"] == ln["root"] or r.line_of(r.archive.programs[e["base"]]) == e["line"]
+    # the planner sees the active lines and the closed ones by name, never a closed line's score
     trace = [json.loads(l) for l in (out / "trace.jsonl").read_text().splitlines()]
-    cview = [t for t in trace if t["role"] == "challenger"][0]["user"]
-    assert "challenger line C1" in cview and "The best program so far" not in cview and "Starting your line" in cview
-    # lines end and new ones start while the search stays stalled
-    closed = lines[-1]["closed"]
-    assert closed and all(c.get("why") for c in closed)
+    user = [t for t in trace if t["role"] == "researcher" and t.get("gen") == 4][0]["user"]
+    assert "## Line L2" in user or "## Line L3" in user or "## Line L4" in user
+    assert "## Closed lines" in user and "- L1: started at generation 1 from Code Zero" in user
+    l1_best = f"{lines[0]['best']:.6f}"
+    assert l1_best not in user.split("## Closed lines")[1].split("## Findings")[0]
+    assert "of 8" not in user and "Generation 4\n" in user
     s = json.loads((out / "summary.json").read_text())
-    assert s["lines"] and s["alternatives"] > 0
+    assert len(s["lines"]) >= 4 and s["best"] >= max(ln["best"] for ln in s["lines"]) - 1e-12
 
 
-def test_resume_keeps_the_line(tmp_path):
+def test_experiments_follow_the_allocation(tmp_path):
+    r = run(tmp_path / "a", 1, stall_gain=0.0)
+    r.lines.append({**r.lines[0], "id": "L2", "root": "p0001", "best_id": "p0001"})
+    plan = {"experiments": [{"line": "L1", "base": "p0001", "change": "x"}, {"line": "L1", "base": "p0001", "change": "y"},
+                            {"line": "L1", "base": "p9999", "change": "z"}]}
+    exps = r.experiments(plan, {"L1": 2, "L2": 1})
+    assert [e["line"] for e in exps] == ["L1", "L1", "L2"]
+    assert exps[2]["line_requested"] == "L1" and exps[2]["base"] == "p0001"
+
+
+def test_resume_keeps_the_lines(tmp_path):
     out = tmp_path / "res"
-    run(out, 3, stall_gain=1.0, stall_gens=1, line_patience=9, line_max_gens=9)
-    a = jl(out / "lines.jsonl")[-1]["active"]
-    assert a and re.fullmatch(r"C\d+", a["id"])
+    run(out, 3, stall_gain=1.0, line_patience=2)
+    before = jl(out / "lines.jsonl")[-1]["lines"]
     r = Run(out, llm=FakeLLM(fake_answer), gens=5, log=lambda m: None)
-    assert r.line["id"] == a["id"] and r.cfg.stall_gain == 1.0     # the line and the v4.7 settings survive a resume
+    assert [l["id"] for l in r.lines] == [l["id"] for l in before] and r.cfg.stall_gain == 1.0
     r.go()
     hist = jl(out / "history.jsonl")
     assert [h["gen"] for h in hist] == [0, 1, 2, 3, 4, 5]
-    assert hist[4]["challenger"] is not None and hist[4]["challenger"]["line"].startswith("C")
 
 
 # ---------------------------------------------------------------------------------------------- the map
-def test_the_map_is_balanced_and_failures_are_scoped(tmp_path):
-    r = run(tmp_path / "m", 1)
+def test_the_map_is_balanced_and_failures_are_grouped_by_line(tmp_path):
+    r = run(tmp_path / "m", 3, stall_gain=1.0, line_patience=2)
     mem = r.memory
-    base = r.archive.best()
-    ids = [p.id for p in r.archive.programs.values() if p.parent == base.parent or p.parent]
-    for i in range(60):
+    l1 = [p.id for p in r.archive.programs.values() if r.line_of(p) == "L1" and p.parent][:2]
+    for i in range(40):
         mem._append({"op": "new", "id": f"F{len(mem.events) + 1}", "gen": 1, "kind": "fails",
-                     "claim": f"failure {i} is confirmed saturated", "evidence": ids[:1], "links": []})
-    for i in range(5):
-        mem._append({"op": "new", "id": f"F{len(mem.events) + 1}", "gen": 1, "kind": "works",
-                     "claim": f"works {i}", "evidence": ids[:1], "links": []})
+                     "claim": f"failure {i}: the point is confirmed saturated", "evidence": l1[:1], "links": []})
     mem.rebuild()
     text, shown = mem.findings_view()
-    assert text.count("[fails") <= r.cfg.map_fails
-    assert text.count("[works") == 5 + sum(1 for f in mem.findings.values() if f["kind"] == "works") - 5
-    assert "more failures tried on the construction scoring" in text and "not about the problem" in text
-    assert "tried on p" in text
-
-
-def test_the_header_has_no_countdown_and_states_the_room(tmp_path):
-    r = run(tmp_path / "h", 1)
-    h = r.memory.header(2)
-    assert "# Generation 2\n" in h and " of 1" not in h
-    assert "proven upper bound is 1" in h and "% of the range is still open" in h
+    assert "Line L1 (closed): " in text and "not about the problem" in text
+    assert "confirmed saturated" not in text          # closed lines' failures are only counted, not listed
 
 
 # ---------------------------------------------------------------------------------------------- problem and prompts

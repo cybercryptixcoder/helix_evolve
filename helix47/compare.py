@@ -44,12 +44,16 @@ def build(root):
         by_cond.setdefault(cond, []).append(h)
         extra = ""
         if (d / "lines.jsonl").exists():
-            ln = jl(d / "lines.jsonl")[-1] if jl(d / "lines.jsonl") else {}
-            lines = (ln.get("closed") or []) + ([ln["active"]] if ln.get("active") else [])
-            merged = sum(1 for x in lines if str(x.get("why", "")).startswith("merged"))
+            rows_l = jl(d / "lines.jsonl")
+            lines = rows_l[-1]["lines"] if rows_l else []
             alts = sum(1 for p in jl(d / "programs.jsonl") if p.get("role") == "alt")
-            stalled = sum(1 for r in h if (r.get("stalled") or 0) >= 1)
-            extra = f"{len(lines)} lines ({merged} took the record), {alts} alternatives kept, stalled in {stalled} gens"
+            first_close = next((x["ended"] for x in lines if x.get("ended")), None)
+            records = [r for r in h[1:] if r.get("new_best")]
+            late = [r for r in records if first_close is not None and r["gen"] > first_close]
+            by_new = [r for r in late if r.get("best_line") not in (None, "L1")]
+            extra = (f"{len(lines)} lines (first closed at g{first_close}); records after it: {len(late)}, "
+                     f"{len(by_new)} by new lines; best now on {h[-1].get('best_line', '?')}; {alts} alternatives kept"
+                     if first_close is not None else f"1 line, never closed; {alts} alternatives kept")
         rows.append((d.name, h, extra))
     marks = [m for m in marks if m <= gmax] + ([gmax] if gmax not in marks else [])
     out = [f"# v4.7 against v4 ({root})", "", "Best score by generation (the second autocorrelation inequality; higher is "
