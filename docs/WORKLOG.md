@@ -4,6 +4,21 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (12:36): both v7 jobs started on the VM
+
+- **Autocorrelation:** continues v47-s2 from generation 190 to 290: 289 programs, 278 constructions, 547 findings
+  events, 10 v4.7 lines (now side tracks). The best is p0234 (0.941229688).
+- **VRP:** Code Zero scores 1.400694. The warm start atlas-s1/p0292 scores 1.644336, the median of 3 evaluations
+  (1.644322, 1.644336, 1.644342); that matches its earlier training-world score, 1.6443.
+- **The measured noise is 0.0012%, far below the 0.2% assumed earlier**, so the floor is the 0.05% minimum.
+  - Gains smaller than that are kept and built on, but they don't count as records or as a side track's own gain.
+  - So a slow creep counts as a stall, and the run explores.
+  - The minimum was set for the noise level assumed before; whether to lower it for later VRP runs is open.
+- **Both stop by Saturday 08:36 (EDT)**, the 20-hour deadline. The VM had about 7.9 GB free, and the load was 2.1 on
+  its 2 cores.
+
+---
+
 ## October 23, 2026 (11:30-12:30): v7, and its two jobs
 
 - **The request** (11:28) is in `docs/BRIEF_2026-10-23.md`: one new version; no closing rules; exploration that rises
