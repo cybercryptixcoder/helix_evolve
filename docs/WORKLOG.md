@@ -4,6 +4,24 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (03:34-04:00): the version map and the plateau question
+
+- **`docs/VERSIONS.md`** is the project's map: every version from v1 to v4.7, what each tried, what worked, what
+  failed, and links to its documents. It also covers the applied routing track (no private details) and the open
+  research questions.
+- **`docs/RESEARCH_PLATEAUS.md`** answers Shreyas's question: do LLM-driven searches grok?
+  - It sets out where hidden progress could live: potentiating code changes (the Lenski parallel), the Atlas, and the
+    population.
+  - It says what "generalisation" would mean here.
+  - It plans four experiments on existing data: whether breakouts get likelier the longer a plateau lasts, a code
+    replay, a memory replay, and hidden-progress signals.
+  - It notes why the answer matters for v4.7's line patience.
+- Pointers from the README and CLAUDE.md. A standing rule: keep the map current.
+- **Jobs on the VM:** VRP v4.7 (2 runs × 40 generations from Code Zero) started at 01:13. The v4.7-vs-v4 job on the
+  autocorrelation problem is queued behind it.
+
+---
+
 ## October 23, 2026 (00:21-01:30): v4.7 redesigned around lines
 
 Shreyas pointed out that the first v4.7 was a third loop bolted beside an unchanged main loop: the deep loop still
