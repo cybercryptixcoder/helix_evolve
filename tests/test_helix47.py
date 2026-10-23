@@ -176,3 +176,22 @@ def test_prompts_carry_no_problem_specific_hints():
 def test_v4_prompts_are_unchanged_by_importing_v47():
     from helix4 import prompts as P4
     assert "confirm or refute" in P4.RESEARCHER_SYSTEM and "alternative" not in P4.CODER_SYSTEM
+
+
+# ---------------------------------------------------------------------------------------------- warm starts
+def test_warm_starts_from_an_earlier_run(tmp_path):
+    from helix47.warm import prepare
+    from helix4.run import Config as Config4, Run as Run4, fake_answer as fake4
+    src = tmp_path / "v4"
+    Run4(src, Config4(gens=2, budget=2.0), llm=FakeLLM(fake4), gens=2, log=lambda m: None).go()
+    import shutil as _sh
+    best = max((json.loads(l) for l in (src / "programs.jsonl").read_text().splitlines()), key=lambda p: p["score"] or 0)
+    for mode, out in (("continue", tmp_path / "c"), ("best", tmp_path / "b")):
+        prepare(src, out, mode, budget=2.0)
+        r = Run(out, llm=FakeLLM(fake_answer), gens=3, log=lambda m: None)
+        assert r.gen_done == 2 and r.lines[0]["best"] == pytest.approx(best["score"]) and r.cfg.budget == 2.0
+        r.go()
+        hist = jl(out / "history.jsonl")
+        assert hist[-1]["gen"] == 3 and hist[-1]["best"] >= best["score"] - 1e-12
+    assert len(jl(tmp_path / "b" / "programs.jsonl")) < len(jl(tmp_path / "c" / "programs.jsonl"))
+    assert not (tmp_path / "b" / "findings.jsonl").exists() or len(jl(tmp_path / "b" / "findings.jsonl")) <= 6

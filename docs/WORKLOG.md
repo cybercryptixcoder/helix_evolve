@@ -4,6 +4,24 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (03:50-04:20): the warm-start job
+
+- **The request.** Shreyas wants v4.7 started from the best of the 150-generation run (0.940795), to see how far it
+  can go, before the from-scratch comparison.
+- **The tool.** `helix47/warm.py` prepares a v4.7 run folder from an earlier run, in one of two modes:
+  - **continue:** generation 151 of the same run (programs, constructions, findings and history kept; line L1 gets 4
+    generations under v4.7);
+  - **best:** the best program and its construction alone, with a fresh Atlas.
+- **The job.** `scripts/run_v47_warm.sh` finds the source run folder on the VM and runs one of each, as v47-s1 and
+  v47-s2. They get 40 generations at 60 s per program: compute per attempt is the binding limit above 0.94.
+- **What it answers.** Whether the old Atlas helps or hurts.
+- **Checks.** A test was added; the job ran end to end with a fake model. On the continued run, the planner's prompt
+  is 54,000–63,000 characters, against v4's 311,000. `helix47/compare.py` now counts generations from a warm start.
+- **Docs:** `docs/V47_WARM.md`, with the Hermes prompt. The queued from-scratch job is stopped first, so the two don't
+  start together.
+
+---
+
 ## October 23, 2026 (03:34-04:00): the version map and the plateau question
 
 - **`docs/VERSIONS.md`** is the project's map: every version from v1 to v4.7, what each tried, what worked, what

@@ -56,7 +56,11 @@ Helix's best is **0.9408** (v4 atlas-s1 by generation 50; it moved only in the 8
   Shreyas pointed out that it bolted a third loop beside an unchanged main loop.
 - **Status.**
   - A short real-model check worked: a new line took the record at generation 6.
-  - Job queued: v4.7 against v4, 3 seeds × 30 generations (`docs/V47_JOB.md`).
+  - **Next on the VM: the warm-start job** (`docs/V47_WARM.md`). Two v4.7 runs from the 0.940795 construction,
+    40 generations at 60 s per program. One continues the 150-generation run with its whole Atlas; the other starts
+    from the best program alone, with a fresh Atlas. They test how far past 0.9408 it can go, and whether the old
+    Atlas helps.
+  - After that: v4.7 against v4 from scratch, 3 seeds × 30 generations (`docs/V47_JOB.md`).
   - Also running on a private routing problem (below).
 - **Docs:** `docs/V47_DESIGN.md`, `docs/V4_CEILING.md`, `docs/BRIEF_2026-10-22_V47.md`. **Code:** `helix47/`.
 - **Risk to watch.** Closing a line after 4 generations without a real gain might end a line just before a late
