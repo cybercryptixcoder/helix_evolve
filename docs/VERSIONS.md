@@ -33,7 +33,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
-## v7: exploration that follows progress (October 23, 2026), job ready
+## v7: exploration that follows progress (October 23, 2026), running
 
 - **Why.** The v4.7 warm run broke the record from a line opened on an alternative construction (generations
   177–181). Rule 1 then closed that line at generation 182, while it was still climbing. Shreyas asked for the
@@ -56,7 +56,8 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - On the VRP, the noise floor is measured at the start.
 - **Status.**
   - 18 tests and 2 VRP tests pass, and both jobs ran end to end with a fake model.
-  - **The jobs** (`docs/V7_JOB.md`) run side by side on the VM, 100 generations each:
+  - **The jobs** (`docs/V7_JOB.md`) started at 12:36 on October 23 and run side by side on the VM, 100 generations
+    each (the deadline is Saturday 08:36 EDT):
     - the autocorrelation run continues v47-s2 from generation 190;
     - the VRP run starts from atlas-s1/p0292.
 - **Code:** `helix7/`. **Risks to watch** are listed at the end of `docs/V7_DESIGN.md`.
