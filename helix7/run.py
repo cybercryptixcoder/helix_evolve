@@ -213,7 +213,9 @@ class Run(Run47):
                 src = (f"line {tid} of the earlier v4.7 run (from {ln['source']})" if ln else
                        "the start of the run" if tid == FIRST_TRACK else f"line {tid} of an earlier run")
                 legacy = tid != FIRST_TRACK
-                t = self.tracks[tid] = {"id": tid, "kind": "line" if legacy else "seed", "root": p.id, "opened": p.gen,
+                t = self.tracks[tid] = {"id": tid, "kind": "line" if legacy else "seed",
+                                        "root": ln["root"] if ln and ln.get("root") else p.id,
+                                        "opened": ln["started"] if ln and ln.get("started") is not None else p.gen,
                                         "source": src, "revives": None, "best": None, "best_id": None,
                                         "misses": self.cfg.track_patience, "last_gain": p.gen, "closing": 0.0,
                                         "exps": 0, "synced": True}
