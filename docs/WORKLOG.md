@@ -28,7 +28,8 @@ A running record of the work on Helix since the handoff: what was asked, what wa
     a slot.
   - **Breadth guarantee:** at level 2, a new direction opens every other generation.
 - **Checks:**
-  - 18 tests (`tests/test_helix7.py`), and the whole suite passes (107 tests before v7's were added).
+  - 18 tests (`tests/test_helix7.py`); the whole suite passes (107 tests, v7's included), and so do the VRP
+    package's 61 tests (2 of them for v7).
   - A fake-model run warm-started from v47-s2 behaves as designed. It runs at level 0 for two generations, then
     level 1 and level 2; revive, backtrack and bold tracks open and pause. The planner's prompt is about 58,000
     characters.
