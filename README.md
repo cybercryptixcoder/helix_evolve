@@ -4,6 +4,21 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
+> **Helix v4.7 (October 22, 2026, night)**: v4 without the false ceiling ([docs/V47_DESIGN.md](docs/V47_DESIGN.md)).
+> The 150-generation v4 run stalled through mechanisms in the machinery, not the model's ideas
+> ([docs/V4_CEILING.md](docs/V4_CEILING.md)):
+> - new ideas were erased by the fallback to the start;
+> - every idea was judged against the champion at once;
+> - the memory map became 45 confirmed failures;
+> - 1e-9 changes counted as gains.
+>
+> v4.7 changes:
+> - **Always:** alternative constructions are kept, gains have a noise floor, failures are scoped to their
+>   construction, and plans aim at targets.
+> - **Only while stalled:** a step-change slot, and a challenger line judged against itself.
+>
+> `helix47/`, `tests/test_helix47.py`, job `scripts/run_v47_jobs.sh` ([docs/V47_JOB.md](docs/V47_JOB.md)).
+
 > **Helix v4.6 and v6 (October 22, 2026)**: two streams. v4.6 (the Atlas stream: v4 → v4.5 → v4.6) keeps v4's
 > two loops and fixes what the full traces showed ([docs/TRACE_STUDY.md](docs/TRACE_STUDY.md)):
 > - the wide loop is a halo around the record;

@@ -4,6 +4,43 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 22, 2026 (22:36-00:30): the false ceiling; v4.7 built, tested and packaged
+
+### What was asked
+`docs/BRIEF_2026-10-22_V47.md` (verbatim). Is v4 building a false ceiling for itself (the 150-generation atlas-s1
+run)? Then build v4.7, a variant of v4 with every fix, meant to be a strict improvement.
+
+### What was found (`docs/V4_CEILING.md`)
+- **Programs fall back to their start.** In generations 81-150, 72% of children handed back their start unchanged,
+  so a new idea that hadn't beaten the start yet was invisible: it looked like a failure.
+- **Every idea is judged against the champion after 30 s.** 16 of 210 late experiments tried a fresh start; the 2
+  late children below 0.93 were recorded as failures.
+- **The map became a wall of failures.** The Distiller wrote 389 failures and 6 successes in generations 81-150. At
+  generation 140, all 45 findings on the map were failures, many "confirmed saturated".
+- **Rounding-level gains counted.** 47 "new bests" added up to +1.4e-9.
+- **The planner's targets collapsed.** It aimed for +2% at generation 5 and +5e-6 by generation 30, and "saturated"
+  rose from 15% to 95% of its analyses. The history-free Mutator stalled at the same time, so the cause is
+  structural, not the planner's mood.
+- **v4 cut off programs.** Base programs over 12,000 characters were cut off for the coder (67 of 420 late programs).
+- **Seeds** only drive the wide loop's parent sampling. The model isn't seeded, so a "good seed" isn't reproducible.
+
+### What was built
+`helix47/` (`docs/V47_DESIGN.md`):
+- **Always on:**
+  - alternative constructions are kept;
+  - a 1e-6 noise floor;
+  - failures scoped to their construction, and a balanced map;
+  - targets instead of confirm-or-refute predictions;
+  - no countdown, and the honest room left;
+  - up to 1,000,000 steps, 30,000-character bases and 16,000-token replies.
+- **Only while stalled:** a step-change slot with twice the budget, and a challenger line that is judged against
+  itself and doesn't see the record.
+
+Tests: `tests/test_helix47.py`. The job: `scripts/run_v47_jobs.sh`, with v4.7 and v4 × 3 seeds × 30 generations.
+The Hermes prompt is in `docs/V47_JOB.md`.
+
+---
+
 ## October 22, 2026 (00:06-01:30): the traces read in depth; v4.6 and v6 built, tested and packaged
 
 ### What was asked
