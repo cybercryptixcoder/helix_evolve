@@ -32,8 +32,12 @@ A line is one lineage of constructions with its own best score.
   and the Mutator's parents come from it. While L1 is climbing, a generation is v4's.
 - **Each experiment is judged against its line's best.** The planner sees each line against its own previous
   generations ("g12 0.912345 (+0.0031); g13 no gain"), never against the overall record.
-- **Code, not the planner, closes a line that has stopped gaining.** A line closes when its best rose by less than
-  `stall_gain` (2e-4, relative) over its last `line_patience` (4) generations.
+- **Code, not the planner, closes a line that has stopped gaining.** A line is stalled when its best rose by less than
+  `stall_gain` (2e-4 relative; 2e-3 on the VRP) over its last `line_patience` (8) generations.
+  - A stalled line closes, except the line that holds the record.
+  - When the record's line stalls, a new line opens beside it. The record's line keeps a slot and closes only after
+    twice the patience without a gain.
+  - This is rule 2, from October 23 (see "What the first VRP run showed" below).
   - Its programs and findings stay, but it gets no more experiments.
   - The planner is never asked whether a construction is saturated. Its system prompt says closing lines is the
     system's job; its job is to make each line it is given climb.
@@ -112,3 +116,28 @@ and the search still moves on from it.
 **What "strict improvement" should look like:**
 - v4.7 tracks v4 until L1 closes.
 - After that, records keep coming, from new lines, where v4 flattens.
+
+## What the first VRP run showed, and rule 2 (October 23, 04:15)
+
+The VRP v4.7 job (2 runs from Code Zero) was behind v4 at generation 22–26: 1.577 and 1.503, against v4's 1.639 and
+1.591. The logs showed two things.
+
+1. **Rule 1 closed lines too early.**
+   - Run 1's L1 closed at generation 6, when it gained 0.18% in 4 generations. On the VRP, v4 often gained that slowly
+     and kept climbing for 30 generations.
+   - Its replacement L2 climbed well (1.49 → 1.57) and was closed at generation 20 after a 4-generation flat spell.
+     v4's runs had flat spells of 4–10 generations that ended in jumps.
+   - The fresh line from Code Zero (L3) climbed from 1.40 to 1.577 and became the best. So fresh lines aren't the
+     problem; closing lines too early is.
+
+   **Rule 2:** patience 8. The record's line is never simply dropped: a new line opens beside it, it keeps a slot, and
+   it closes only after 16 generations without a gain. That keeps the depth v4 had and still adds breadth when the
+   record stalls.
+2. **Both v4.7 runs were also slower in generations 1–5,** before any line had closed (1.466 and 1.469 at generation
+   5, against v4's 1.522 and 1.532). With two runs each this may be chance. If it isn't, it comes from the
+   always-on changes: the planner's view by line (without v4's tree of attempts), the line framing, or the targets.
+   The from-scratch autocorrelation job will tell (3 seeds each). If v4.7 is slower there too in its first
+   generations, the tree view comes back first.
+
+Runs started under rule 1 keep it when they resume (`line_rule`: 1). Runs prepared by `helix47.warm` but not yet
+started get rule 2.

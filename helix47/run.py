@@ -75,8 +75,11 @@ class Config:
     label: str = ""
     # ---- v4.7
     gain_floor: float = 1e-6         # a change is a gain only above this (relative to its start's score)
-    stall_gain: float = 2e-4         # a line is closed if its best rose by less than this (relative) ...
-    line_patience: int = 4           # ... over this many generations
+    stall_gain: float = 2e-4         # a line is stalled if its best rose by less than this (relative) ...
+    line_patience: int = 8           # ... over this many generations; a stalled line closes, except the line that
+                                     # holds the record, which gets a new line beside it and closes only after twice
+                                     # this many generations without a gain (rule 2, October 23)
+    line_rule: int = 2               # 1: the first rule (close any stalled line after 4 generations)
     lines_after_stall: int = 2       # active lines once the first line has closed (at most `deep`)
     branch_gap: float = 0.01         # another branch: it split from every line's best at a point this much lower (rel)
     alt_min_ratio: float = 0.9       # an alternative is kept if it scores at least this times its start's score
@@ -133,7 +136,13 @@ class Run(Run4):
         state = json.loads(self.state_path.read_text()) if self.state_path.exists() else None
         if state:
             known = {f.name for f in fields(Config)}
-            cfg = Config(**{k: v for k, v in state["config"].items() if k in known})
+            stored = dict(state["config"])
+            if "line_rule" not in stored:
+                if state.get("warm"):       # prepared by helix47.warm before rule 2 and not started yet: rule 2
+                    stored.pop("line_patience", None)
+                else:                       # a run started under rule 1 keeps it
+                    stored["line_rule"] = 1
+            cfg = Config(**{k: v for k, v in stored.items() if k in known})
             self.gen_done = state["gen_done"]
         else:
             cfg = cfg or Config()
@@ -260,15 +269,23 @@ class Run(Run4):
                     ln["best"], ln["best_id"] = c.score, c.id
                 break
             ln["curve"].append([gen, ln["best"]])
+        lead = self.line_of(self.archive.best())
+        for ln in self.active_lines():
             k = self.cfg.line_patience
-            if len(ln["curve"]) > k:
-                old = ln["curve"][-1 - k][1]
-                if ln["best"] - old < self.cfg.stall_gain * max(abs(old), 1e-12):
-                    ln.update(status="closed", ended=gen,
-                              why=f"its best rose by less than {self.cfg.stall_gain:g} (relative) in {k} generations")
-                    events.append(f"{ln['id']} closed")
-                    self.log(f"[{self.name}] gen {gen}: line {ln['id']} closes (best {ln['best']:.6f})")
-        target = 1 if not self.closed_lines() else min(self.cfg.lines_after_stall, self.cfg.deep)
+            if ln["id"] == lead and self.cfg.line_rule >= 2:
+                k = 2 * k                     # the line holding the record: a new line opens beside it first
+                if self.stalled(ln, self.cfg.line_patience) and not ln.get("stalled_since"):
+                    ln["stalled_since"] = gen
+                    events.append(f"{ln['id']} stalled (keeps a slot; a new line opens beside it)")
+                elif not self.stalled(ln, self.cfg.line_patience):
+                    ln.pop("stalled_since", None)
+            if self.stalled(ln, k):
+                ln.update(status="closed", ended=gen,
+                          why=f"its best rose by less than {self.cfg.stall_gain:g} (relative) in {k} generations")
+                events.append(f"{ln['id']} closed")
+                self.log(f"[{self.name}] gen {gen}: line {ln['id']} closes (best {ln['best']:.6f})")
+        widen = self.closed_lines() or any(ln.get("stalled_since") for ln in self.active_lines())
+        target = 1 if not widen else min(self.cfg.lines_after_stall, self.cfg.deep)
         while len(self.active_lines()) < target:
             root, source, kind = self.pick_root(gen + 1)
             if root is None:
@@ -276,6 +293,14 @@ class Run(Run4):
             ln = self.open_line(gen + 1, root, source, kind)
             events.append(f"{ln['id']} opened from {source}")
         return events
+
+    def stalled(self, ln, k):
+        """True if the line has had k generations and its best rose by less than stall_gain (relative) over them."""
+        c = ln["curve"]
+        if len(c) <= k:
+            return False
+        old = c[-1 - k][1]
+        return ln["best"] - old < self.cfg.stall_gain * max(abs(old), 1e-12)
 
     def allocation(self):
         act = self.active_lines()[: self.cfg.deep]

@@ -56,6 +56,11 @@ Helix's best is **0.9408** (v4 atlas-s1 by generation 50; it moved only in the 8
   Shreyas pointed out that it bolted a third loop beside an unchanged main loop.
 - **Status.**
   - A short real-model check worked: a new line took the record at generation 6.
+  - **First VRP run (from Code Zero): behind v4 at generation 22–26** (1.577 and 1.503, against 1.639 and 1.591).
+    - Rule 1 closed lines too early (after 4 generations at under 0.2%), including the record's line.
+    - Both runs were also slower in generations 1–5, before any line closed.
+    - Fixed with rule 2 (patience 8; the record's line keeps a slot while a new line opens beside it). See
+      `docs/V47_DESIGN.md`, last section.
   - **Next on the VM: the warm-start job** (`docs/V47_WARM.md`). Two v4.7 runs from the 0.940795 construction,
     40 generations at 60 s per program. One continues the 150-generation run with its whole Atlas; the other starts
     from the best program alone, with a fresh Atlas. They test how far past 0.9408 it can go, and whether the old

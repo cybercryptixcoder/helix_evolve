@@ -4,6 +4,21 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (04:10-04:30): the first VRP v4.7 numbers, and rule 2
+
+- **The numbers.** VRP v4.7 was behind v4 at generation 22–26 (1.577 and 1.503, against 1.639 and 1.591). From the
+  line log:
+  - Rule 1 closed lines too early: run 1's L1 at generation 6, after gaining 0.18% in 4 generations; L2 at generation
+    20 after a 4-generation flat spell.
+  - The fresh line from Code Zero climbed to the best, 1.577.
+  - Both runs were also slower before any line closed.
+- **Rule 2.** Patience 8; the record's line keeps a slot while a new line opens beside it, and closes after 16
+  generations without a gain. `line_rule` lets runs started under rule 1 keep it, and the prepared warm runs get rule
+  2 (they load their code when they start, after a `git pull`).
+- **The VRP package** also uses patience 8 now, for future runs. The running VRP job is unchanged.
+
+---
+
 ## October 23, 2026 (03:50-04:20): the warm-start job
 
 - **The request.** Shreyas wants v4.7 started from the best of the 150-generation run (0.940795), to see how far it
