@@ -94,11 +94,14 @@ def test_a_climbing_run_is_v4_shaped(tmp_path):
 
 def test_a_stalled_line_closes_and_new_lines_take_its_slots(tmp_path):
     out = tmp_path / "stall"
-    r = run(out, 8, stall_gain=1.0, line_patience=2)          # every line closes 2 generations after it opens
+    r = run(out, 8, stall_gain=1.0, line_patience=2)          # every line stalls 2 generations after it opens
     hist = jl(out / "history.jsonl")
     lines = jl(out / "lines.jsonl")[-1]["lines"]
-    assert lines[0]["id"] == "L1" and lines[0]["status"] == "closed" and lines[0]["ended"] == 2
-    assert hist[3]["allocation"].keys() == {"L2", "L3"} and sum(hist[3]["allocation"].values()) == 3
+    # L1 holds the record when it stalls (generation 2): it keeps a slot and a new line opens beside it;
+    # it closes after twice the patience (generation 4) or as soon as it no longer holds the record
+    assert hist[2]["line_events"][0].startswith("L1 stalled")
+    assert set(hist[3]["allocation"]) == {"L1", "L2"} and sum(hist[3]["allocation"].values()) == 3
+    assert lines[0]["id"] == "L1" and lines[0]["status"] == "closed" and 3 <= lines[0]["ended"] <= 4
     sources = [ln["source"] for ln in lines[1:4]]
     assert any("alternative" in s for s in sources) and any("fresh" in s or "branch" in s for s in sources)
     # experiments go to their line, with bases from that line
@@ -195,3 +198,17 @@ def test_warm_starts_from_an_earlier_run(tmp_path):
         assert hist[-1]["gen"] == 3 and hist[-1]["best"] >= best["score"] - 1e-12
     assert len(jl(tmp_path / "b" / "programs.jsonl")) < len(jl(tmp_path / "c" / "programs.jsonl"))
     assert not (tmp_path / "b" / "findings.jsonl").exists() or len(jl(tmp_path / "b" / "findings.jsonl")) <= 6
+
+
+def test_a_run_started_under_rule_1_keeps_it(tmp_path):
+    out = tmp_path / "old"
+    run(out, 1)
+    st = json.loads((out / "state.json").read_text())
+    st["config"].pop("line_rule"); st["config"]["line_patience"] = 4
+    (out / "state.json").write_text(json.dumps(st))
+    r = Run(out, llm=FakeLLM(fake_answer), gens=2, log=lambda m: None)
+    assert r.cfg.line_rule == 1 and r.cfg.line_patience == 4
+    st["warm"] = "continue"
+    (out / "state.json").write_text(json.dumps(st))
+    r = Run(out, llm=FakeLLM(fake_answer), gens=2, log=lambda m: None)
+    assert r.cfg.line_rule == 2 and r.cfg.line_patience == 8      # prepared warm runs get rule 2
