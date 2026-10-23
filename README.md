@@ -4,6 +4,8 @@
 
 Helix was built by Shreyas Naik and Sai Vikram at a hackathon on October 11, 2026, for Luminal's track *"Build a Self-Improving Agent Team"*, and developed further on October 12. This page explains what we set out to build and why. [HANDOFF.md](HANDOFF.md) has the full story: how it works, every run, what we learned, the mistakes, and what is still unknown.
 
+> **Every version, what it tried and what happened: [docs/VERSIONS.md](docs/VERSIONS.md).**
+
 > **Helix v4.7 (October 23, 2026)**: v4 without the false ceiling ([docs/V47_DESIGN.md](docs/V47_DESIGN.md)).
 > The 150-generation v4 run stalled through mechanisms in the machinery, not the model's ideas
 > ([docs/V4_CEILING.md](docs/V4_CEILING.md)):
@@ -166,6 +168,8 @@ Any feature-engine run can be replayed as an interactive page: `python -m viz.ex
 | [docs/META_LOOP.md](docs/META_LOOP.md) | Plan for a meta loop that evolves Helix itself, scored by a multi-problem evaluator (not built yet) |
 | [viz/](viz/README.md) | The run viewer: replays a run as a factory floor, with every message, feature and champion readable |
 | [docs/WORKLOG.md](docs/WORKLOG.md) | What has been done since the handoff, what each step found, and what was decided |
+| [docs/VERSIONS.md](docs/VERSIONS.md) | **Start here:** every version (v1 to v4.7), what each tried, what worked, what failed, and links to its documents |
+| [docs/RESEARCH_PLATEAUS.md](docs/RESEARCH_PLATEAUS.md) | Research question: do LLM-driven searches "grok" (long plateaus, then sudden climbs)? A planned experiment |
 
 ## Quick start
 

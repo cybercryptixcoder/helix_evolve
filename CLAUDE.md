@@ -4,6 +4,9 @@
   holds Shreyas's request verbatim, the notes and decisions, and the live to-do list. After any context compaction or
   session reset, re-read it before doing anything else, and keep its to-do list updated and pushed. Earlier briefs:
   `docs/BRIEF_2026-10-22.md` (v4.6, v6), `docs/BRIEF_2026-10-21.md` (v4.5, v5), `docs/BRIEF_2026-10-20.md` (v4).
+- `docs/VERSIONS.md` is the project's map: every version, what it tried, what worked and failed, with links. Update it
+  (and `docs/WORKLOG.md`) whenever a version, job or finding of consequence lands: Shreyas wants all of it tracked on
+  GitHub. Open research questions: `docs/RESEARCH_PLATEAUS.md`.
 - Then `docs/REQUESTS.md` (every request and standing rule) and `docs/WORKLOG.md` (what was done and found, newest first).
 - Commit and push often, as `Shreyas Naik <119774329+cybercryptixcoder@users.noreply.github.com>`, with no AI attribution.
 - Never commit `.env` or any Luminal key.
