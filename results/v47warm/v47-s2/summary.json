@@ -1,0 +1,588 @@
+{
+ "run": "v47-s2",
+ "condition": "v47",
+ "seed": 2,
+ "gens": 190,
+ "problem": "ac2",
+ "budget": 60.0,
+ "best": 0.9412296884718244,
+ "best_id": "p0234",
+ "best_n": 42496,
+ "best_lineage": "p0001 0.66667 -> p0002 0.94079 -> p0016 0.94079 (-0.00000: p0002's heights are locally optimal but its nonzero support\u2026) -> p0027 0.94079 (+0.00000: Added coarse-to-fine homotopy: coarsen start, optimise at l\u2026) -> p0028 0.94079 (+0.00000: alternative construction handed back by p0027 (Added coarse\u2026) -> p0041 0.94079 (+0.00000: Added height-interpolation upsampling to progressively fine\u2026) -> p0046 0.94079 (+0.00000: Replaced the max in the objective with a soft-max over the \u2026) -> p0047 0.93981 (-0.00099: alternative construction handed back by p0046 (Replaced the\u2026) -> p0196 0.94099 (+0.00119: p0047 has an unusually high 59.1% zero fraction; its f*f ma\u2026) -> p0204 0.94110 (+0.00011: On p0047, reviving zeros in the left window [0,0.40N) lifte\u2026) -> p0209 0.94115 (+0.00005: Removed the risky zero-revival step (which perturbed the go\u2026) -> p0218 0.94117 (+0.00003: Added a stochastic peak-window perturbation stage (random r\u2026) -> p0229 0.94123 (+0.00006: p0218 has 47% exact zeros, and single-side tail revival hel\u2026) -> p0234 0.94123 (+0.00000: F183's far-tail revival (+5.8e-5) worked by adding low-ampl\u2026)",
+ "best_by_gen": [
+  0.9407945443590465,
+  0.9407945443590465,
+  0.9407945443590465,
+  0.9407945443590465,
+  0.9407945443591095,
+  0.9407945443591095,
+  0.9407945443591095,
+  0.9407945443591095,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9407945443591099,
+  0.9409929901060927,
+  0.9410996252602598,
+  0.9411458904053102,
+  0.9411719385584193,
+  0.9412296462634139,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244,
+  0.9412296884718244
+ ],
+ "programs": 289,
+ "valid": 278,
+ "calls": 360,
+ "tokens_in": 3477319,
+ "tokens_out": 1197960,
+ "memory": {
+  "findings": 239,
+  "supported": 59,
+  "held": 109,
+  "refuted": 18,
+  "mixed": 48,
+  "links": 549
+ },
+ "config": {
+  "condition": "v47",
+  "seed": 2,
+  "gens": 190,
+  "deep": 3,
+  "wide": 3,
+  "budget": 60.0,
+  "researcher_effort": "low",
+  "journal_chars": 24000,
+  "journal_keep": 4,
+  "journal_summary_chars": 4000,
+  "open_k": 6,
+  "mem_mb": 1500,
+  "problem": "ac2",
+  "label": "",
+  "gain_floor": 1e-06,
+  "stall_gain": 0.0002,
+  "line_patience": 4,
+  "lines_after_stall": 2,
+  "branch_gap": 0.01,
+  "alt_min_ratio": 0.9,
+  "max_n": 1000000,
+  "line_code_chars": 12000,
+  "map_findings": 45,
+  "map_fails": 10,
+  "map_works_best": 12,
+  "map_works_new": 8,
+  "map_questions": 6,
+  "open_evidence": 12
+ },
+ "seconds_this_session": 13090.514124631882,
+ "gens_done": 190,
+ "stopped_by_deadline_at": null,
+ "lines": [
+  {
+   "id": "L1",
+   "root": "p0002",
+   "source": "the warm start (the best program of the earlier run)",
+   "kind": "seed",
+   "started": 151,
+   "status": "closed",
+   "best": 0.9407945443590465,
+   "best_id": "p0002",
+   "curve": [
+    [
+     150,
+     0.9407945443590465
+    ],
+    [
+     151,
+     0.9407945443590465
+    ],
+    [
+     152,
+     0.9407945443590465
+    ],
+    [
+     153,
+     0.9407945443590465
+    ],
+    [
+     154,
+     0.9407945443590465
+    ]
+   ],
+   "ended": 154,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L2",
+   "root": "p0028",
+   "source": "an alternative construction (p0028, handed back by p0027)",
+   "kind": "alternative",
+   "started": 155,
+   "status": "closed",
+   "best": 0.9407945443591095,
+   "best_id": "p0028",
+   "curve": [
+    [
+     154,
+     0.9407945443591095
+    ],
+    [
+     155,
+     0.9407945443591095
+    ],
+    [
+     156,
+     0.9407945443591095
+    ],
+    [
+     157,
+     0.9407945443591095
+    ],
+    [
+     158,
+     0.9407945443591095
+    ]
+   ],
+   "ended": 158,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L3",
+   "root": "p0005",
+   "source": "another branch (p0005)",
+   "kind": "branch",
+   "started": 155,
+   "status": "closed",
+   "best": 0.9090174246720268,
+   "best_id": "p0185",
+   "curve": [
+    [
+     154,
+     0.8199193602804429
+    ],
+    [
+     155,
+     0.8257607041020617
+    ],
+    [
+     156,
+     0.8267885598981073
+    ],
+    [
+     157,
+     0.8269306018153452
+    ],
+    [
+     158,
+     0.8809828927328154
+    ],
+    [
+     159,
+     0.8809828927328154
+    ],
+    [
+     160,
+     0.8812346908523644
+    ],
+    [
+     161,
+     0.8813871023473009
+    ],
+    [
+     162,
+     0.8814163372036407
+    ],
+    [
+     163,
+     0.8823237650292372
+    ],
+    [
+     164,
+     0.8823237650292372
+    ],
+    [
+     165,
+     0.9066855680841546
+    ],
+    [
+     166,
+     0.9076299602071847
+    ],
+    [
+     167,
+     0.9077833370684988
+    ],
+    [
+     168,
+     0.9085599650098068
+    ],
+    [
+     169,
+     0.9085599650098068
+    ],
+    [
+     170,
+     0.9086915539674182
+    ],
+    [
+     171,
+     0.9087385468536441
+    ],
+    [
+     172,
+     0.9089732672857211
+    ],
+    [
+     173,
+     0.9089732672857211
+    ],
+    [
+     174,
+     0.9090150464299276
+    ],
+    [
+     175,
+     0.9090174246720268
+    ],
+    [
+     176,
+     0.9090174246720268
+    ]
+   ],
+   "ended": 176,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L4",
+   "root": "p0001",
+   "source": "a fresh start (Code Zero)",
+   "kind": "fresh",
+   "started": 159,
+   "status": "closed",
+   "best": 0.8788718492535582,
+   "best_id": "p0088",
+   "curve": [
+    [
+     158,
+     0.6666666666666666
+    ],
+    [
+     159,
+     0.7887743037044334
+    ],
+    [
+     160,
+     0.7887743037044334
+    ],
+    [
+     161,
+     0.8738154694219967
+    ],
+    [
+     162,
+     0.877296699157123
+    ],
+    [
+     163,
+     0.8788718492535582
+    ],
+    [
+     164,
+     0.8788718492535582
+    ],
+    [
+     165,
+     0.8788718492535582
+    ],
+    [
+     166,
+     0.8788718492535582
+    ],
+    [
+     167,
+     0.8788718492535582
+    ]
+   ],
+   "ended": 167,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L5",
+   "root": "p0018",
+   "source": "an alternative construction (p0018, handed back by p0017)",
+   "kind": "alternative",
+   "started": 168,
+   "status": "closed",
+   "best": 0.9407235929094796,
+   "best_id": "p0155",
+   "curve": [
+    [
+     167,
+     0.9405587407651476
+    ],
+    [
+     168,
+     0.9405587407651476
+    ],
+    [
+     169,
+     0.9406116382048244
+    ],
+    [
+     170,
+     0.9406116382048244
+    ],
+    [
+     171,
+     0.9407235929094796
+    ]
+   ],
+   "ended": 171,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L6",
+   "root": "p0001",
+   "source": "a fresh start (Code Zero)",
+   "kind": "fresh",
+   "started": 172,
+   "status": "closed",
+   "best": 0.8930350326751327,
+   "best_id": "p0222",
+   "curve": [
+    [
+     171,
+     0.6666666666666666
+    ],
+    [
+     172,
+     0.8065857959755262
+    ],
+    [
+     173,
+     0.8772749017279077
+    ],
+    [
+     174,
+     0.8808032937038698
+    ],
+    [
+     175,
+     0.8918717466514511
+    ],
+    [
+     176,
+     0.8928395990832919
+    ],
+    [
+     177,
+     0.89292524328094
+    ],
+    [
+     178,
+     0.8930152647920154
+    ],
+    [
+     179,
+     0.8930152647920154
+    ],
+    [
+     180,
+     0.8930350326751327
+    ],
+    [
+     181,
+     0.8930350326751327
+    ]
+   ],
+   "ended": 181,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L7",
+   "root": "p0047",
+   "source": "an alternative construction (p0047, handed back by p0046)",
+   "kind": "alternative",
+   "started": 177,
+   "status": "closed",
+   "best": 0.9412296462634139,
+   "best_id": "p0229",
+   "curve": [
+    [
+     176,
+     0.9398075247427627
+    ],
+    [
+     177,
+     0.9409929901060927
+    ],
+    [
+     178,
+     0.9410996252602598
+    ],
+    [
+     179,
+     0.9411458904053102
+    ],
+    [
+     180,
+     0.9411719385584193
+    ],
+    [
+     181,
+     0.9412296462634139
+    ],
+    [
+     182,
+     0.9412296462634139
+    ]
+   ],
+   "ended": 182,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L8",
+   "root": "p0105",
+   "source": "another branch (p0105)",
+   "kind": "branch",
+   "started": 182,
+   "status": "closed",
+   "best": 0.9116279759498155,
+   "best_id": "p0278",
+   "curve": [
+    [
+     181,
+     0.8823771797481956
+    ],
+    [
+     182,
+     0.9103953184115955
+    ],
+    [
+     183,
+     0.9107898779993459
+    ],
+    [
+     184,
+     0.9109047569169849
+    ],
+    [
+     185,
+     0.9112560836539855
+    ],
+    [
+     186,
+     0.9115314524586763
+    ],
+    [
+     187,
+     0.9115384365656075
+    ],
+    [
+     188,
+     0.9115384365656075
+    ],
+    [
+     189,
+     0.9116279759498155
+    ],
+    [
+     190,
+     0.9116279759498155
+    ]
+   ],
+   "ended": 190,
+   "why": "its best rose by less than 0.0002 (relative) in 4 generations"
+  },
+  {
+   "id": "L9",
+   "root": "p0001",
+   "source": "a fresh start (Code Zero)",
+   "kind": "fresh",
+   "started": 183,
+   "status": "active",
+   "best": 0.7560454525581782,
+   "best_id": "p0271",
+   "curve": [
+    [
+     182,
+     0.6666666666666666
+    ],
+    [
+     183,
+     0.6666666666666666
+    ],
+    [
+     184,
+     0.7231576426313128
+    ],
+    [
+     185,
+     0.7231576426313128
+    ],
+    [
+     186,
+     0.7355359449490382
+    ],
+    [
+     187,
+     0.7355359449490382
+    ],
+    [
+     188,
+     0.7560454525581782
+    ],
+    [
+     189,
+     0.7560454525581782
+    ],
+    [
+     190,
+     0.7560454525581782
+    ]
+   ],
+   "ended": null,
+   "why": null
+  },
+  {
+   "id": "L10",
+   "root": "p0211",
+   "source": "an alternative construction (p0211, handed back by p0210)",
+   "kind": "alternative",
+   "started": 191,
+   "status": "active",
+   "best": 0.9404339566415781,
+   "best_id": "p0211",
+   "curve": [
+    [
+     190,
+     0.9404339566415781
+    ]
+   ],
+   "ended": null,
+   "why": null
+  }
+ ],
+ "alternatives": 47
+}

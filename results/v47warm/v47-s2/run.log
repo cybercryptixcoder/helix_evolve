@@ -50,3 +50,10 @@
 09:30:17 [v47-s2] gen 184: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.910905, L9 x2 0.723158; deep 2/3 gained, wide 1/3 gained; 1 alternatives kept; 329 s
 09:35:38 [v47-s2] gen 185: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911256, L9 x2 0.723158; deep 1/3 gained, wide 3/3 gained; 320 s
 09:39:22 [v47-s2] gen 186: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911531, L9 x2 0.735536; deep 2/3 gained, wide 2/3 gained; 224 s
+09:45:37 [v47-s2] gen 187: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911538, L9 x2 0.735536; deep 0/3 gained, wide 2/3 gained; 1 alternatives kept; 375 s
+09:49:56 [v47-s2] gen 188: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911538, L9 x2 0.756045; deep 1/3 gained, wide 0/3 gained; 1 alternatives kept; 259 s
+09:56:16 [v47-s2] gen 189: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911628, L9 x2 0.756045; deep 1/3 gained, wide 1/3 gained; 2 alternatives kept; 380 s
+10:03:22 [v47-s2] gen 190: line L8 closes (best 0.911628)
+10:03:22 [v47-s2] gen 191: line L10 opens from an alternative construction (p0211, handed back by p0210)
+10:03:22 [v47-s2] gen 190: best 0.941230 (p0234, deep, line L7); lines L8 x1 0.911628, L9 x2 0.756045; deep 0/3 gained, wide 0/3 gained; 1 alternatives kept; L8 closed; L10 opened from an alternative construction (p0211, handed back by p0210); 427 s
+10:03:23 done: v47-s2 (v47, seed 2): best 0.941230 (p0234) after 190 generations, 289 programs, 360 model calls
