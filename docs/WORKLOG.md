@@ -4,6 +4,44 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 23, 2026 (11:30-12:30): v7, and its two jobs
+
+- **The request** (11:28) is in `docs/BRIEF_2026-10-23.md`: one new version; no closing rules; exploration that rises
+  as progress stalls, including reviving earlier approaches on today's state and backtracking; the main path never
+  stops; a broad start. Then both problems warm-started, side by side, for many generations.
+- **v7** (`helix7/`, `docs/V7_DESIGN.md`):
+  - v4's loops and Atlas, with the tree view back, plus v4.7's measurement fixes;
+  - tracks instead of lines, and nothing is closed;
+  - the level of exploration (0, 1 or 2 of the 3 planned experiments) comes from the stall against the run's own
+    typical gap between records;
+  - exploration slots continue live side tracks, or open revive, backtrack or bold ones;
+  - side tracks are judged against themselves and get a follow-up even if they start worse;
+  - a side track that beats the record becomes the main track;
+  - the wide loop broadens when stalled;
+  - the VRP's noise floor is measured at the start.
+- **Changes made while testing it:**
+  - **The main track moves only on a real gain.** A sub-floor polish from a revive experiment was flipping it.
+  - **A finding is revived once per record, not once per best program.** Sub-floor polishes changed the best
+    program and let the same finding be revived again.
+  - **Live tracks are ordered:** first those owed their first follow-up, then by how much of their gap to the record
+    their last gain closed. A fresh start from Code Zero gains easily far below the record and would otherwise hold
+    a slot.
+  - **Breadth guarantee:** at level 2, a new direction opens every other generation.
+- **Checks:**
+  - 18 tests (`tests/test_helix7.py`), and the whole suite passes (107 tests before v7's were added).
+  - A fake-model run warm-started from v47-s2 behaves as designed. It runs at level 0 for two generations, then
+    level 1 and level 2; revive, backtrack and bold tracks open and pause. The planner's prompt is about 58,000
+    characters.
+  - Both job scripts ran end to end with a fake model.
+- **The jobs** (`docs/V7_JOB.md`):
+  - the autocorrelation run continues v47-s2 from generation 190, for 100 generations;
+  - the VRP run starts from atlas-s1/p0292, for 100 generations;
+  - they run side by side, sharing the 2 evaluation slots.
+- **The VRP package** (private, not in this repo) has `install7` and `--version v7`. `--seed-program` takes
+  `runs/x/programs.jsonl:p0292`. The job script takes `VERSION=v7` and `SEED_PROGRAM`.
+
+---
+
 ## October 23, 2026 (04:10-04:30): the first VRP v4.7 numbers, and rule 2
 
 - **The numbers.** VRP v4.7 was behind v4 at generation 22–26 (1.577 and 1.503, against 1.639 and 1.591). From the

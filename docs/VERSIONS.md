@@ -17,8 +17,8 @@ constant function (R = 0.667).
 | AlphaEvolve's later result | 0.9610 |
 | Best known (2026, warm-started from earlier records) | 0.9626 |
 
-Helix's best is **0.9408** (v4 atlas-s1 by generation 50; it moved only in the 8th decimal place over generations
-51–150).
+Helix's best is **0.9412296** (v4.7, warm-started from v4's best, generation 181). Before that it was 0.9408 (v4
+atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 
 ## The two streams
 
@@ -33,7 +33,35 @@ Helix's best is **0.9408** (v4 atlas-s1 by generation 50; it moved only in the 8
 
 ---
 
-## v4.7: the false ceiling removed (October 23, 2026), running
+## v7: exploration that follows progress (October 23, 2026), job ready
+
+- **Why.** The v4.7 warm run broke the record from a line opened on an alternative construction (generations
+  177–181). Rule 1 then closed that line at generation 182, while it was still climbing. Shreyas asked for the
+  following (`docs/BRIEF_2026-10-23.md`, task F and the request of 11:28):
+  - no closing rules;
+  - the main path continues even when flat;
+  - exploration rises as progress stalls, and includes reviving earlier approaches on today's state and going back
+    to earlier states;
+  - whatever picks up gets depth;
+  - a broad start.
+- **What it does** (`docs/V7_DESIGN.md`).
+  - v4's two loops and Atlas, with the tree of attempts restored, plus v4.7's measurement fixes. Every program is on
+    a track; nothing is ever closed.
+  - From the stall (generations since the last record) and the run's own typical gap between records, 0, 1 or 2 of
+    the 3 planned experiments are explorations. The main track always keeps one.
+  - An exploration continues a live side track, or opens one: revive, backtrack or bold.
+  - A side track is judged against its own best; it gets a follow-up even if it starts worse. One that beats the
+    record becomes the main track.
+  - The wide loop samples more broadly when stalled.
+  - On the VRP, the noise floor is measured at the start.
+- **Status.**
+  - 18 tests and 2 VRP tests pass, and both jobs ran end to end with a fake model.
+  - **The jobs** (`docs/V7_JOB.md`) run side by side on the VM, 100 generations each:
+    - the autocorrelation run continues v47-s2 from generation 190;
+    - the VRP run starts from atlas-s1/p0292.
+- **Code:** `helix7/`. **Risks to watch** are listed at the end of `docs/V7_DESIGN.md`.
+
+## v4.7: the false ceiling removed (October 23, 2026), finished
 
 - **Why.** The 150-generation v4 run climbed for about 40 generations, then polished one construction for 110. The
   analysis (`docs/V4_CEILING.md`) found the ceiling was built by the machinery, not by a lack of ideas:
@@ -61,12 +89,16 @@ Helix's best is **0.9408** (v4 atlas-s1 by generation 50; it moved only in the 8
     - Both runs were also slower in generations 1–5, before any line closed.
     - Fixed with rule 2 (patience 8; the record's line keeps a slot while a new line opens beside it). See
       `docs/V47_DESIGN.md`, last section.
-  - **Next on the VM: the warm-start job** (`docs/V47_WARM.md`). Two v4.7 runs from the 0.940795 construction,
-    40 generations at 60 s per program. One continues the 150-generation run with its whole Atlas; the other starts
-    from the best program alone, with a fresh Atlas. They test how far past 0.9408 it can go, and whether the old
-    Atlas helps.
-  - After that: v4.7 against v4 from scratch, 3 seeds × 30 generations (`docs/V47_JOB.md`).
-  - Also running on a private routing problem (below).
+  - **The warm-start job** (`docs/V47_WARM.md`, results in `results/v47warm/`). Two v4.7 runs started from the
+    0.940795 construction, 40 generations at 60 s per program. Both ran under rule 1: the `git pull` with rule 2
+    came after they started.
+    - **v47-s2** (the best program alone, a fresh Atlas) set the record, **0.9412296**. The record came from line L7,
+      opened at generation 176 from an alternative construction, rising every generation from 177 to 181. Rule 1
+      closed L7 at generation 182.
+    - **v47-s1** (the whole old Atlas) didn't move from 0.940795.
+  - **VRP from Code Zero:** v4.7's best scored 1.6420 on the held-out worlds, against v4's 1.6961.
+    Whether that gap is noise is an open question (task B of `docs/BRIEF_2026-10-23.md`).
+  - v4.7 against v4 from scratch (`docs/V47_JOB.md`) has not been run; v7 came first.
 - **Docs:** `docs/V47_DESIGN.md`, `docs/V4_CEILING.md`, `docs/BRIEF_2026-10-22_V47.md`. **Code:** `helix47/`.
 - **Risk to watch.** Closing a line after 4 generations without a real gain might end a line just before a late
   breakthrough (see `docs/RESEARCH_PLATEAUS.md`).
@@ -149,8 +181,9 @@ plug-in nor any data is in this repo; the runs use synthetic data in the real fo
   and children broke. The same bug existed in v4 at 12,000 characters, and v4.7 fixes it.
 - **Plateaus there broke from old, weaker branches**, not from the champion, one more reason for lines.
 - **Under a fixed time limit, speed is quality.** The biggest gains came from making the search cheaper per move.
-- **Status.** v4 ran for 49 generations, beating the current method by about 20% on held-out worlds. v4.7 is running
-  from Code Zero for comparison.
+- **Status.** v4 ran for 49 generations, beating the current method by about 20% on held-out worlds (atlas-s1/p0292:
+  1.6961, against 1.3865 for the best current method). v4.7 from Code Zero reached 1.6420. The v7 job starts from
+  p0292 for 100 generations (`docs/V7_JOB.md`).
 
 ---
 

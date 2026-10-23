@@ -1,8 +1,9 @@
 # Notes for agents working in this repo
 
-- **Read `docs/BRIEF_2026-10-23.md` first** (the current request: six tasks after the overnight jobs; plan, then
-  Shreyas sets priorities). Before it: `docs/BRIEF_2026-10-22_V47.md` (the false ceiling and v4.7, `helix47/`). It
-  holds Shreyas's request verbatim, the notes and decisions, and the live to-do list. After any context compaction or
+- **Read `docs/BRIEF_2026-10-23.md` first** (the current request: v7, `helix7/`, and its two jobs; the six tasks
+  after the overnight jobs). Before it: `docs/BRIEF_2026-10-22_V47.md` (the false ceiling and v4.7, `helix47/`). It
+  holds Shreyas's request, the notes and decisions, and the live to-do list. v7's design: `docs/V7_DESIGN.md`; its
+  jobs: `docs/V7_JOB.md`. After any context compaction or
   session reset, re-read it before doing anything else, and keep its to-do list updated and pushed. Earlier briefs:
   `docs/BRIEF_2026-10-22.md` (v4.6, v6), `docs/BRIEF_2026-10-21.md` (v4.5, v5), `docs/BRIEF_2026-10-20.md` (v4).
 - `docs/VERSIONS.md` is the project's map: every version, what it tried, what worked and failed, with links. Update it
