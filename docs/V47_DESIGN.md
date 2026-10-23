@@ -1,73 +1,114 @@
 # Helix v4.7: v4 without the false ceiling
 
-v4.7 is a variant of v4, not a new architecture. Its loop, roles and Atlas memory are v4's. It removes the
-mechanisms that `docs/V4_CEILING.md` found building a false ceiling in the 150-generation atlas-s1 run, together with
-the cut-off found in the VRP runs. Code: `helix47/` (it reuses helix4 and changes nothing in it). Tests:
-`tests/test_helix47.py`. The job: `scripts/run_v47_jobs.sh` and `docs/V47_JOB.md`.
+v4.7 keeps v4's architecture:
+- the Researcher plans, Coders write, and the history-free Mutator explores;
+- every program is run, scored and kept;
+- the Atlas Distiller records findings.
 
-## The design principle: leave a climbing run alone
+What changes is what the deep loop works on and what it is shown. It removes the mechanisms that
+`docs/V4_CEILING.md` found building a false ceiling in the 150-generation atlas-s1 run, and the cut-off found in the
+VRP runs.
 
-v4.5 turned on breadth (branch and explore slots) every generation, and it started slower than v4 (`docs/V5_RESULTS.md`).
-v4.7 avoids that by splitting its changes in two:
-- **Always on:** fixes to how results are measured, shown and kept. They don't take any experiment away from the
-  search.
-- **On only while the search is stalled:** a step-change slot and a challenger line. They take one deep slot each
-  from the main line, but only while the main line has stopped producing gains.
+Code: `helix47/`, which reuses helix4 and changes nothing in it. Tests: `tests/test_helix47.py`. The job:
+`scripts/run_v47_jobs.sh` and `docs/V47_JOB.md`. On the VRP: `run_vrp --version v47`, in the private package.
 
-A run is stalled when its best score rose by less than `stall_gain` (2e-4, relative) over the last `stall_gens` (3)
-generations. In the v4 run:
-- generations 1–40: rarely stalled;
-- generations 41–150: stalled throughout;
-- the early 0.8825 trap of four v4 runs: stalled within 3 generations of reaching it.
+## The crux, and why the first draft of v4.7 didn't fix it
 
-## The changes, one per mechanism
+The false ceiling lives in the main deep loop. All three planned experiments go to the champion every generation.
+Each is judged against the champion after 30 s. And the planner is shown only evidence about the champion.
+
+When the champion stops improving, every slot keeps polishing it, and the planner (DeepSeek V4.1 Flash, the same
+model behind Hermes, which calls every flat curve a ceiling) concludes it is saturated. It says so in 95% of its
+analyses by generations 101–120. It then designs experiments that confirm it.
+
+The first draft added a challenger loop beside the main loop. That left the main loop as it was, so it was a third
+loop, not a fix. This version changes the main loop itself.
+
+## Lines: the deep loop works on lineages, each judged against itself
+
+A line is one lineage of constructions with its own best score.
+
+- **One line at the start.** A run starts with one line, L1, from Code Zero. All 3 planned experiments go to it,
+  and the Mutator's parents come from it. While L1 is climbing, a generation is v4's.
+- **Each experiment is judged against its line's best.** The planner sees each line against its own previous
+  generations ("g12 0.912345 (+0.0031); g13 no gain"), never against the overall record.
+- **Code, not the planner, closes a line that has stopped gaining.** A line closes when its best rose by less than
+  `stall_gain` (2e-4, relative) over its last `line_patience` (4) generations.
+  - Its programs and findings stay, but it gets no more experiments.
+  - The planner is never asked whether a construction is saturated. Its system prompt says closing lines is the
+    system's job; its job is to make each line it is given climb.
+- **New lines open when one closes,** up to `lines_after_stall` (2) active lines. Each takes the next starting point
+  in turn:
+  - the best kept alternative construction (below);
+  - the best program of another branch: one that split from every line's best at a point at least 1% lower, so not
+    a polish of it;
+  - a fresh start from Code Zero.
+
+  A kind the active lines already have goes last, and two fresh starts never run at once.
+- **Slots follow progress.** Each active line gets one of the 3 slots, and the spare goes to the line that gained
+  most over its last two generations. A new line counts as gaining.
+- **The Mutator is a halo around the active lines.** Its parents are sampled from their programs.
+- **The overall best is simply the best of all lines.** It is what the run reports, but the deep loop isn't
+  chained to it.
+
+This is what makes the planner's pessimism harmless. A stalled line is closed by code and the effort moves, so a
+belief that the current construction is saturated leads nowhere. The model can stay pessimistic about a construction
+and the search still moves on from it.
+
+## The rest, always on
 
 | Mechanism in v4 (`docs/V4_CEILING.md`) | The change in v4.7 | Where |
 |---|---|---|
-| **New ideas are erased.** Programs fall back to their start when their idea doesn't beat it in 30 s; 72% of late children handed back the start unchanged. | `construct` may return `{"best": ..., "alternative": ...}`. The alternative is scored. If it is different from the result and from the start, and scores at least 0.9 of the start, it is kept as its own program (role `alt`, with its own construction), so later experiments can continue it. Coders and Mutators are told about it. | `helix47/evaluate.py`, `Run.child`, `prompts.ALTERNATIVE_RULE` |
-| **Everything is judged against the champion, at once.** A new region is compared with 0.9408 on its first try. | **The challenger line.** When stalled, one deep slot goes to a lineage started fresh (Code Zero), from an alternative, or from the best of another branch. It is planned by its own planner. That planner sees its line's programs and best, and the shared findings, but not the overall record. The line is judged against its own previous best, with twice the budget. It ends when it takes the record (merged into the main line), after `line_patience` (4) generations without a gain, or after `line_max_gens` (12). If the search is still stalled, a new line starts. | `Run.start_line`, `challenger_experiment`, `update_line`, `Atlas47.challenger_view` |
-| **The memory becomes a wall of failures.** At generation 140 all 45 findings on the map were failures, many "confirmed saturated". | Failures are scoped: each "fails" finding is shown with the construction it was tried on, and its status reads "held: N didn't gain" rather than "supported". The map has quotas: the 12 newest failures; the 12 best and 8 newest "works"/"mechanism" findings; 6 open questions. Older failures are grouped by construction into one line each: "31 more failures tried on the construction scoring 0.9408 … facts about that construction, not about the problem". The Distiller is asked to name the construction a failure was tried on and not generalise. An opened finding shows its 12 newest pieces of evidence (v4's opened items reached 262,000 of a 311,000-character prompt). | `helix47/memory.py` |
-| **Microscopic gains count as wins.** 47 "new bests" in generations 81–150 added up to +1.4e-9. | A noise floor, `gain_floor` = 1e-6 relative. A change counts as a gain only above it: in finding statuses, in the history's gain counts and `new_best`, in the lineage shown to the planner, and in the feedback ("below the noise floor: counts as no gain"). | `memory.outcome`, `Run.generation`, `Run.child` |
-| **The planner's targets collapse** (+2% at generation 5, +5e-6 by generation 30; later experiments were tests of saturation). | Predictions are targets: "the score this aims for". The system prompt says a failure is about the construction it was tried on, and that an experiment designed only to confirm the best can't be improved wastes a slot. When stalled, exactly one experiment per plan is a **step-change**: aimed at +1e-3 relative or more, with twice the budget. Its coder returns the new construction as the alternative, so it is kept either way. The step slot is enforced by code: if the plan marks none, the last experiment becomes it. | `helix47/prompts.py`, `Atlas47.plan`, `Run.experiments` |
-| **Framing.** "Generation 140 of 150"; a lineage line of "+0.00000" rows; "improving a good start is the main way progress is made". | No countdown ("Generation 140"). The lineage shows only the steps that gained, and counts the rest. The problem's own sentence becomes "building on it is one way to make progress; building a different construction is another". When the problem has a proven bound (ac2: R ≤ 1, already stated in its text), the header gives the honest room: "the best score so far is 0.940795, so up to 5.9% of the range is still open". | `Atlas47.header`, `lineage_gains`, `ProblemView` |
-| **The real limits.** At most 200,000 steps. Base programs over 12,000 characters were cut off for the coder (67 of 420 late programs in v4; the same bug stalled the VRP runs at 45,000), and replies were capped at 9,000 tokens. | Up to 1,000,000 steps (`max_n`; the problem module itself is unchanged). Base programs are shown up to 30,000 characters (the best program, for the planner, up to 14,000). Replies can be 16,000 tokens. Step-change and challenger experiments get twice the budget. | `ProblemView`, `Run.program_block`, `Run.write_code` |
+| **New ideas are erased.** Programs fall back to their start when their idea doesn't beat it within 30 s; 72% of late children handed back their start unchanged. | `construct` may return `{"best": ..., "alternative": ...}`. The alternative is scored. If it is different from the result and from the start, and scores at least 0.9 of the start, it is kept as its own program (role `alt`), and new lines can start from it. | `helix47/evaluate.py`, `Run.child`, `prompts.ALTERNATIVE_RULE` |
+| **A wall of failures.** At generation 140 all 45 findings on the map were failures. | The findings shown are balanced: the 12 best and 8 newest "works"/"mechanism" findings and 6 open questions; failures only from the active lines (the newest 10). A closed line's failures are only counted ("Line L1 (closed): 389 failures, facts about that line's constructions"). Each finding names its line, and a failure names the construction it was tried on; its status reads "held: N didn't gain", not "supported". | `helix47/memory.py` |
+| **Microscopic gains count.** 47 "new bests" in generations 81–150 added up to +1.4e-9. | A noise floor, `gain_floor` (1e-6 relative; 5e-4 on the VRP, where scores move by about 0.2% between evaluations). It applies to statuses, line bests, records and feedback. | `memory.outcome`, `Run.update_lines`, `Run.child` |
+| **Collapsing targets** (+2% at generation 5, +5e-6 by generation 30; late experiments tested saturation). | Predictions are targets: "the score this aims for on its line". "When a line's recent experiments haven't gained, change something bigger rather than something smaller." | `helix47/prompts.py` |
+| **Framing.** "Generation 140 of 150"; "improving a good start is the main way progress is made". | No countdown. The problem text becomes "building on it is one way to make progress; building a different construction is another". When the problem has a proven bound (ac2: R ≤ 1, already in its text), each line's block gives the honest room above that line's best. | `Atlas47.header`, `line_block`, `ProblemView` |
+| **The real limits.** At most 200,000 steps. Base programs over 12,000 characters were cut off for the coder (67 of 420 late programs; the same bug stalled the VRP runs at 45,000). Replies were capped at 9,000 tokens. | Up to 1,000,000 steps (`max_n`; the problem module itself is unchanged). Base programs are shown up to 30,000 characters (the VRP: whole), and each line's best up to 12,000 for the planner. Replies can be 16,000 tokens (the VRP: 32,000). | `ProblemView`, `Run.program_block`, `Run.write_code` |
 
-**Not in v4.7, on purpose:**
+**Left out, on purpose:**
 - **No outside information.** Nothing tells the model that better constructions are known to exist, and no record
   values appear in any prompt.
-- **No problem-specific hint.** The prompts were audited, and a test checks them for problem words.
+- **No problem-specific hints.** The prompts carry none, and a test audits them.
+- **No extra budget.** Every program gets the same 30 s as in v4, so the comparison with v4 is like for like.
 
-## Why the model needs this: it is also the model that says "it's hit a wall"
+## Why this should be a strict improvement
 
-The model in the loop, DeepSeek V4.1 Flash, is also the model behind Shreyas's Hermes agent. Hermes calls a
-flattening curve a ceiling every time it sees one, and the planner did the same: "saturated" appears in 15% of its
-analyses in generations 1–20 and 95% in generations 101–120.
+- **Until L1 stalls, v4.7 runs v4's generation.** The allocation is the same (3 planned experiments on the one line,
+  3 Mutator children from its programs), as is the budget. Only the measurement and the display differ.
+- **After L1 stalls, v4 has nothing to lose.** By definition of the stall, v4's champion was gaining less than 2e-4
+  (relative) per 4 generations. In the 150-generation run, generations 81–150 gained 1.4e-9 in total. v4.7 gives up
+  that trickle and spends the effort on new lines.
+- **The record is kept.** The final result is the best over all lines, so it can't end below the point where L1
+  stalled.
+- **The risk is honest.** A new line needs generations to climb, so within a short job it may not overtake. The job
+  is 30 generations, and v4's lines stalled from about generation 10 (the 0.8825 trap) to about generation 40.
 
-That looks like a stable disposition of the model: read a plateau as a limit. So v4.7 doesn't rely on persuading it.
-- The noise floor, the scoping and the balanced map change what it is shown.
-- The challenger's planner never sees the plateau at all.
-- The step slot and the challenger slot are assigned by code, not by its judgement.
+## Tests and checks
 
-Its belief can stay pessimistic, and the search still tries the things a pessimist wouldn't.
-
-## What v4.7 costs
-
-- **While climbing:** the same as v4. The same 6 programs and the same calls; replies may be longer.
-- **While stalled:** one extra planning call (the challenger), and two of the six programs at twice the budget. That
-  is about 1.33 times the evaluation time of a v4 generation.
+- `tests/test_helix47.py`, 11 tests:
+  - a climbing run is v4-shaped;
+  - a stalled line closes and new lines take its slots;
+  - experiments follow the allocation, with bases from their own line;
+  - the planner sees closed lines by name and not their scores;
+  - resuming keeps the lines;
+  - the findings are balanced and grouped by line;
+  - the problem view;
+  - the prompts are audited for problem words, and v4's prompts are unchanged.
+- **The VRP:** `test_v47_runs_on_the_vrp_with_a_fake_model` (private package).
+- **A real-model run** (6 generations, 10 s per program, lines forced to close quickly):
+  - L1 climbed 0.818 → 0.895 and closed at generation 4;
+  - two lines opened from other branches;
+  - the planner's view showed only those lines, against their own previous generations;
+  - its plan reasoned per line ("L2's N=480 attempts never tested the optimiser…");
+  - L3 took the record at generation 6 (0.9051).
 
 ## How to read the job
 
 `helix47/compare.py` writes `results/v47/COMPARISON.md` for each run:
-- the best score by generation;
-- the last generation with a real gain (more than 1e-5 relative);
-- for v4.7: the lines started, how many took the record, the alternatives kept, and the generations stalled.
+- the best score by generation, and the last generation with a real gain;
+- for v4.7: when L1 closed, the records set after that and how many by new lines, and the line holding the best.
 
 **What "strict improvement" should look like:**
-- While climbing (generations 1 to about 20), v4.7 tracks v4.
-- From the first stall on, v4.7 keeps having real gains where v4 flattens.
-- Lines take the record now and then.
-
-Three seeds per version is little, given how much runs vary (`docs/V4_CEILING.md`, "Seeds"). So the per-run
-mechanisms matter as much as the medians: alternatives kept and continued, lines that gained, records taken by
-lines or step-changes.
+- v4.7 tracks v4 until L1 closes.
+- After that, records keep coming, from new lines, where v4 flattens.
