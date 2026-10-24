@@ -268,6 +268,7 @@ class Run(Run7):
         if not near:
             if not self.hills and self.sig(pid) is not None:
                 hid = self.new_hill(gen, pid, t["id"], "the record when the map began")
+                self.hills[hid]["seeded"] = True
                 t["hill"], t["hill_status"] = hid, "founder"
             return
         r = self.radius()
@@ -298,6 +299,7 @@ class Run(Run7):
             return
         if seeding or t.get("exps", 0) >= 2 or t["id"] == self.main_track():
             hid = self.new_hill(gen, pid, t["id"], t["source"] + (" (an earlier run)" if seeding else ""), h["id"], d)
+            self.hills[hid]["seeded"] = seeding
             t["hill"], t["hill_status"] = hid, "founder"
             if not seeding:
                 events.append(f"new hill {hid}, found by {t['id']} ({t['kind']}): {p.score:.6f}, distance {d:.3f} from "
@@ -433,7 +435,9 @@ class Run(Run7):
         rows = []
         for h in hs[: self.cfg.map_hills]:
             tag = " (the record's hill)" if h["id"] == main_hill else ""
-            how = f"found at generation {h['found_gen']} by {h['founder']}" if h.get("founder") else "known from the start"
+            how = ("known from the start" if not h.get("founder") else
+                   f"known from earlier generations (by {h['founder']})" if h.get("seeded") else
+                   f"found at generation {h['found_gen']} by {h['founder']}")
             reached = f"; other tracks landed on it {h['reached']} times" if h["reached"] else ""
             rows.append(f"- {h['id']}{tag}: top {h['top']} ({h['top_score']:.6f}); {how}{reached}. "
                         f"{h.get('description') or '(not described yet)'}")
