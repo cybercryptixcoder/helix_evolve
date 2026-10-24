@@ -1,5 +1,5 @@
 {
- "gen_done": 379,
+ "gen_done": 387,
  "config": {
   "condition": "v8",
   "seed": 1,
@@ -42,7 +42,7 @@
   "survey_max": 12,
   "map_hills": 10
  },
- "t": 1792857930.6197143,
+ "t": 1792860482.133158,
  "version": "v8",
  "warm": "continue",
  "warm_gen": 290,
