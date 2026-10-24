@@ -2,11 +2,11 @@
 
 ## v8-s1
 
-- Generations 191-338: best 0.941229688 -> 0.941291345 (p1233, track T27); the main track now: T27.
-- Exploration levels: level 0: 49 generations, level 1: 6 generations, level 2: 93 generations.
-- Planned experiments by slot: main 252, track 117, revive 25, backtrack 25, bold 24, flip 1.
+- Generations 191-347: best 0.941229688 -> 0.941303573 (p1290, track T27); the main track now: T27.
+- Exploration levels: level 0: 58 generations, level 1: 6 generations, level 2: 93 generations.
+- Planned experiments by slot: main 279, track 117, revive 25, backtrack 25, bold 24, flip 1.
 
-### Records (27)
+### Records (31)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -37,6 +37,10 @@
 | 331 | 0.941286551 | p1193 | deep | main | T27 |
 | 335 | 0.941287660 | p1218 | deep | main | T27 |
 | 338 | 0.941291345 | p1233 | wide | mutation | T27 |
+| 339 | 0.941294715 | p1243 | deep | main | T27 |
+| 342 | 0.941299471 | p1256 | wide | mutation | T27 |
+| 343 | 0.941302338 | p1266 | deep | main | T27 |
+| 347 | 0.941303573 | p1290 | deep | main | T27 |
 
 ### Side tracks opened (74)
 
@@ -56,9 +60,9 @@
 | T22 | bold | 210 | p0001 | 3 | 0.863873 (p0432) | 211 |
 | T23 | revive F293 | 212 | p0405 | 2 | 0.941243 (p0436) | 212 |
 | T24 | backtrack | 214 | p0209 | 4 | 0.941156 (p0560) | 229 |
-| T25 | bold | 215 | p0001 | 3 | 0.842660 (p0462) | 216 |
+| T25 | bold | 215 | p0001 | 3 | 0.871436 (p1262) | 343 |
 | T26 | revive F361 | 216 | p0405 | 3 | 0.941243 (p0468) | 217 |
-| T27 | backtrack | 218 | p0297 | 140 | 0.941291 (p1233) | 338 |
+| T27 | backtrack | 218 | p0297 | 167 | 0.941304 (p1291) | 347 |
 | T28 | bold | 220 | p0001 | 4 | 0.881804 (p1195) | 332 |
 | T29 | revive F50 | 220 | p0478 | 2 | 0.941243 (p0487) | 220 |
 | T30 | backtrack | 222 | p0234 | 2 | 0.941232 (p0503) | 222 |
@@ -86,7 +90,7 @@
 | T52 | bold | 252 | p0001 | 2 | - | 252 |
 | T53 | revive F582 | 254 | p0670 | 2 | 0.941243 (p0838) | 254 |
 | T54 | backtrack | 255 | p0672 | 2 | 0.941243 (p0713) | 255 |
-| T55 | bold | 256 | p0001 | 3 | 0.817318 (p1085) | 314 |
+| T55 | bold | 256 | p0001 | 3 | 0.817366 (p1250) | 341 |
 | T56 | revive F511 | 257 | p0703 | 2 | 0.941243 (p0728) | 257 |
 | T57 | backtrack | 258 | p0710 | 2 | 0.941243 (p0733) | 258 |
 | T58 | bold | 259 | p0001 | 3 | 0.794099 (p0749) | 260 |
@@ -269,12 +273,21 @@
 | 336 | 0.941287763 |  | 0 / 2.5 | 0 | main, main, main |  | L4 gained (0.933153 -> 0.933314) |
 | 337 | 0.941287763 |  | 1 / 2.5 | 0 | main, main, main |  | L4 paused (no gain on its own best) |
 | 338 | 0.941291345 | yes | 2 / 2.5 | 0 | main, main, main |  |  |
+| 339 | 0.941294715 | yes | 0 / 3 | 0 | main, main, main |  |  |
+| 340 | 0.941295167 |  | 0 / 3 | 0 | main, main, main |  |  |
+| 341 | 0.941295167 |  | 1 / 3 | 0 | main, main, main |  | T55 gained (0.817318 -> 0.817366) |
+| 342 | 0.941299471 | yes | 2 / 3 | 0 | main, main, main |  |  |
+| 343 | 0.941302338 | yes | 0 / 3 | 0 | main, main, main |  | T25 gained (0.842660 -> 0.871436) |
+| 344 | 0.941302437 |  | 0 / 3 | 0 | main, main, main |  |  |
+| 345 | 0.941302814 |  | 1 / 3 | 0 | main, main, main |  |  |
+| 346 | 0.941303203 |  | 2 / 3 | 0 | main, main, main |  |  |
+| 347 | 0.941303573 |  | 3 / 3 | 0 | main, main, main |  |  |
 
 ### Hills (21: 21 on the map after its first generation, 0 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.941291 (p1233) | 291 | T27 (backtrack) | 47 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
+| H2 | 0.941304 (p1290) | 291 | T27 (backtrack) | 47 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
 | H3 | 0.940795 (p0028) | 291 | L1 (line) | 3 | This program abandons the record's zero-revival, tail-revival, and beta-softmax peak-window perturbation stages, instead running a coarse-to-fine homotopy: it coarsens the start to several lower resolutions, optimizes ea |
 | H4 | 0.940644 (p0608) | 291 | T21 (backtrack) | 0 | This program works almost entirely in log-space on the active support (L-BFGS on log heights with a fixed active set), whereas the record's program relies on linear-space global L-BFGS plus beta-softmax window polishing  |
 | H5 | 0.940517 (p0914) | 291 | T45 (backtrack) | 0 | This program runs a single continuous L-BFGS-B optimization in log-space over all active entries with a fixed 60s deadline and no coarse/refine cycles, zero-revival, pruning, or stochastic perturbation stages, relying in |
@@ -285,10 +298,10 @@
 | H9 | 0.892740 (p0708) | 291 | L9 (line) | 0 | This program fixes the knot count at 131072 and spends its budget on a single prolongation-then-polish pipeline (sharp L-BFGS, beta-softmax sweep, peak-window polishes) rather than the record's repeated alternation of li |
 | H10 | 0.882478 (p0831) | 291 | T37 (bold) | 6 | This program optimizes at a fixed low resolution (16384) and only doubles to 32768/65536 late, whereas the record's lineage repeatedly densifies and polishes at high N with linear-space global L-BFGS and knot-space desce |
 | H12 | 0.881804 (p1195) | 291 | T28 (bold) | 0 | This program optimizes at a single fixed resolution (N=16384) rather than climbing a resolution ladder from 8192 to 32768, and it uses a log-parameterized L-BFGS with a p-norm soft-max sweep (p=8, 32) instead of the reco |
+| H14 | 0.871436 (p1262) | 291 | T25 (bold) | 0 | This program builds its solution from scratch by rasterizing a small number of variable-width, variable-height blocks (K=6/10/16) onto a grid, then escalating resolution by integer replication, rather than starting from  |
 | H13 | 0.863873 (p0432) | 291 | T22 (bold) | 0 | This program builds its initial guess from a parametric sum of Gaussian bumps (random centres, widths, amplitudes) fitted by L-BFGS through a beta-softmax schedule, then escalates resolution 1024→16384, whereas the recor |
-| H14 | 0.842660 (p0462) | 291 | T25 (bold) | 0 | This program builds its solution from scratch by rasterizing a small number of variable-width, variable-height blocks (K=6/10/16) onto a grid, then escalating resolution by integer replication, rather than starting from  |
 | H15 | 0.842268 (p0645) | 291 | T46 (bold) | 0 | This program optimises a low-dimensional parametric family (capped power-law spike plus plateau, fit by differential evolution and least-squares) at N=2048 and then prolongates to N=8192, rather than starting from the re |
-| H16 | 0.817318 (p1085) | 291 | T55 (bold) | 0 | This program optimises a fixed-length vector by L-BFGS in log-height space to match a hand-built trapezoid target for f\*f, sweeping a small ladder of ramp widths (rho) rather than polishing the exact R with soft-max pea |
+| H16 | 0.817366 (p1250) | 291 | T55 (bold) | 0 | This program optimises a fixed-length vector by L-BFGS in log-height space to match a hand-built trapezoid target for f\*f, sweeping a small ladder of ramp widths (rho) rather than polishing the exact R with soft-max pea |
 | H17 | 0.796239 (p0875) | 291 | T76 (bold) | 0 | This program builds its candidate from a parametric two-pulse profile (power-law edges with epsilon smoothing and caps, plus gap and amplitude parameters) found by random search and Nelder-Mead on a coarse 8192 grid, the |
 | H18 | 0.794099 (p0749) | 291 | T58 (bold) | 0 | This program searches a low-dimensional parametric family (a constant base plus four capped rectangular blocks, 13 parameters) by random sampling and Nelder-Mead at N=1024, then rasterizes the winner upward, rather than  |
 | H19 | 0.786748 (p0664) | 291 | T49 (bold) | 0 | This program parameterizes f spectrally (raised-cosine band edges with low-frequency ripples and antisymmetric Fourier phases) and searches that low-dimensional space with a hand-rolled differential evolution plus Nelder |
