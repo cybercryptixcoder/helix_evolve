@@ -1,7 +1,8 @@
 # Notes for agents working in this repo
 
-- **Read `docs/BRIEF_2026-10-24.md` first** (the current request: how to explore more of the search space, concept
-  first; the v7 results are in `docs/V7_RESULTS.md`, the reasoning in `docs/SEARCH_SPACE.md`). Before it:
+- **Read `docs/BRIEF_2026-10-24.md` first** (the current request: v8, a register of hills, `helix8/`,
+  `docs/V8_DESIGN.md`, jobs in `docs/V8_JOB.md`; before it, how to explore more of the search space: the v7 results
+  are in `docs/V7_RESULTS.md`, the reasoning in `docs/SEARCH_SPACE.md`). Before it:
   `docs/BRIEF_2026-10-23.md` (v7, `helix7/`, and its two jobs) and `docs/BRIEF_2026-10-22_V47.md` (v4.7). It
   holds Shreyas's request, the notes and decisions, and the live to-do list. v7's design: `docs/V7_DESIGN.md`; its
   jobs: `docs/V7_JOB.md`. After any context compaction or

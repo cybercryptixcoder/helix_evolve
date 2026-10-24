@@ -108,6 +108,9 @@ class Config:
 
 
 class Run(Run47):
+    CONFIG = Config                  # a later version swaps in its own (helix8)
+    VERSION = "v7"
+
     def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         self.dir = Path(out)
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -115,11 +118,11 @@ class Run(Run47):
         self.log = log
         state = json.loads(self.state_path.read_text()) if self.state_path.exists() else None
         if state:
-            known = {f.name for f in fields(Config)}
-            cfg = Config(**{k: v for k, v in state["config"].items() if k in known})
+            known = {f.name for f in fields(self.CONFIG)}
+            cfg = self.CONFIG(**{k: v for k, v in state["config"].items() if k in known})
             self.gen_done = state["gen_done"]
         else:
-            cfg = cfg or Config()
+            cfg = cfg or self.CONFIG()
             self.gen_done = -1
         self.warm = (state or {}).get("warm")
         self.warm_gen = (state or {}).get("warm_gen")
@@ -163,7 +166,7 @@ class Run(Run47):
     def checkpoint(self, gen):
         self.gen_done = gen
         tmp = self.state_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps({"gen_done": gen, "config": asdict(self.cfg), "t": time.time(), "version": "v7",
+        tmp.write_text(json.dumps({"gen_done": gen, "config": asdict(self.cfg), "t": time.time(), "version": self.VERSION,
                                    "warm": self.warm, "warm_gen": self.warm_gen, "warm_source": self.warm_source},
                                   indent=1))
         os.replace(tmp, self.state_path)
@@ -744,7 +747,7 @@ class Run(Run47):
         hist = self._jsonl("history.jsonl")
         progs = list(self.archive.programs.values())
         start, recs = self.records()
-        summary = {"run": self.name, "version": "v7", "condition": self.cfg.condition, "seed": self.cfg.seed,
+        summary = {"run": self.name, "version": self.VERSION, "condition": self.cfg.condition, "seed": self.cfg.seed,
                    "gens": self.cfg.gens, "problem": self.cfg.problem, "budget": self.cfg.budget, "best": best.score,
                    "best_id": best.id, "best_n": best.n, "best_track": self.track_of(best),
                    "best_lineage": self.archive.lineage_line(best.id, depth=40),
@@ -762,7 +765,7 @@ class Run(Run47):
         if c is not None:
             import numpy as np
             np.save(self.dir / "best.npy", c)
-        self.log(f"done: {self.name} (v7, seed {self.cfg.seed}): best {best.score:.6f} ({best.id}, track "
+        self.log(f"done: {self.name} ({self.VERSION}, seed {self.cfg.seed}): best {best.score:.6f} ({best.id}, track "
                  f"{self.track_of(best)}) after {self.gen_done} generations, {len(progs)} programs, {self.llm.calls} "
                  f"model calls")
         return summary
