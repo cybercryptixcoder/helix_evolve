@@ -60,7 +60,9 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **Status.**
   - 12 tests pass, plus 2 VRP tests.
   - The autocorrelation job ran end to end with a fake model.
-  - A VRP v8 continuation of the real v7 run was tested with a fake model.
+  - A VRP v8 continuation of the real v7 run was tested with a fake model. Its map starts with 3 hills: T40's (the
+    record), the hill before it, on which 10 of v7's explorations had ended (9 of them at distance 0.000 or 0.001),
+    and Code Zero's.
   - The jobs (`docs/V8_JOB.md`) continue both v7 runs for 100 generations, side by side.
 
 ## v7: exploration that follows progress (October 23–24, 2026), finished: it did what it was built to do
