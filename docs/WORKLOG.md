@@ -4,6 +4,39 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 24, 2026 (03:12-04:30): the v7 results, and how to explore the search space
+
+- **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):
+  - analyse both v7 runs;
+  - reason, concept first, about how to discover new hills rather than climb the current one (what the search space
+    is; what machine learning does about local optima; Shreyas's ideas of probing approaches as axes and replaying
+    the improvement chain);
+  - then say how it would become add-ons to v7. Not built yet.
+- **The data:** the autocorrelation run was pushed by its job (`results/v7warm/`). The VRP run came as an archive; the
+  first copy was a partial download, and the second was complete.
+- **Findings** (`docs/V7_RESULTS.md`):
+  - v7 did what it was built to do.
+  - Its backtracks were short steps back, not restarts.
+  - Restarts from scratch all fell into the model's default basin: on the autocorrelation problem, 19 of 19 at or
+    below the textbook 0.8825.
+  - Revive gave almost nothing.
+  - 68% of autocorrelation children handed back their start unchanged.
+  - The one real change of hill (VRP, T40) came from replacing a component every program shared; it started worse
+    and climbed after a mutation woke it.
+  - VRP programs grew to 132,000 characters.
+- **Reasoning** (`docs/SEARCH_SPACE.md`):
+  - The search space to reason in is the space of design decisions.
+  - Some axes are frozen, and a maximum along the varied axes can be a slope along a frozen one.
+  - New options must be judged after a short climb.
+  - The probing idea holds with three corrections.
+  - The replay idea rebuilds the same hill, so: go sideways instead (keep the chain, change one key decision).
+  - Methods that escape local optima change the kind of move and keep solutions per region; restarts work only when
+    the starts are really diverse.
+  - The concept: a design map, probes that measure hills, regions, directed restarts, spending by knowledge.
+  - First step: an offline test of the map on the two archives.
+
+---
+
 ## October 23, 2026 (12:36): both v7 jobs started on the VM
 
 - **Autocorrelation:** continues v47-s2 from generation 190 to 290: 289 programs, 278 constructions, 547 findings

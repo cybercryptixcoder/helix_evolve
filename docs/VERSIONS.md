@@ -17,7 +17,7 @@ constant function (R = 0.667).
 | AlphaEvolve's later result | 0.9610 |
 | Best known (2026, warm-started from earlier records) | 0.9626 |
 
-Helix's best is **0.9412296** (v4.7, warm-started from v4's best, generation 181). Before that it was 0.9408 (v4
+Helix's best is **0.9412521** (v7, continuing v4.7's warm run, generation 290). Before that it was 0.9408 (v4
 atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 
 ## The two streams
@@ -33,7 +33,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
-## v7: exploration that follows progress (October 23, 2026), running
+## v7: exploration that follows progress (October 23–24, 2026), finished: it did what it was built to do
 
 - **Why.** The v4.7 warm run broke the record from a line opened on an alternative construction (generations
   177–181). Rule 1 then closed that line at generation 182, while it was still climbing. Shreyas asked for the
@@ -54,12 +54,17 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
     record becomes the main track.
   - The wide loop samples more broadly when stalled.
   - On the VRP, the noise floor is measured at the start.
-- **Status.**
-  - 18 tests and 2 VRP tests pass, and both jobs ran end to end with a fake model.
-  - **The jobs** (`docs/V7_JOB.md`) started at 12:36 on October 23 and run side by side on the VM, 100 generations
-    each (the deadline is Saturday 08:36 EDT):
-    - the autocorrelation run continues v47-s2 from generation 190;
-    - the VRP run starts from atlas-s1/p0292.
+- **Status: both runs finished** (`docs/V7_RESULTS.md`).
+  - **Autocorrelation:** 0.9412297 → **0.9412521** in 100 generations, verified three ways. The last record came from a
+    side track that had stepped back one generation.
+  - **VRP:** 1.6443 → 1.6505 on the training worlds, and 1.6960 → **1.7060** held out (21.6% better quality than the
+    best current method). The one change of hill came from a bold experiment that replaced a component every program
+    shared. It started worse, paused, was woken by a mutation 22 generations later, took the record and climbed.
+  - **v7 behaved as designed.** But its exploration didn't find new hills: backtracks were short steps back, and
+    restarts from scratch all fell into the model's default basin (19 of 19 at or below 0.8825 on the autocorrelation
+    problem). Revive contributed almost nothing.
+  - **Next:** a map of the design space, probes that measure hills, regions, directed restarts
+    (`docs/SEARCH_SPACE.md`, not built yet).
 - **Code:** `helix7/`. **Risks to watch** are listed at the end of `docs/V7_DESIGN.md`.
 
 ## v4.7: the false ceiling removed (October 23, 2026), finished
