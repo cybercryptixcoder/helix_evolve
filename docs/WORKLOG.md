@@ -4,6 +4,38 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 24, 2026 (03:45-05:00): v8, a register of hills
+
+- **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):
+  - surgical additions, at least as good as v4 and v7, not a new architecture;
+  - reliably discover new hills one after another, and test that each is new;
+  - no repeated work.
+- **Landed on:**
+  - A hill is defined by what the program produces, measured by code: the construction's shape, or the trips of the
+    VRP's solutions.
+  - Design decisions are where new hills come from.
+  - Regions are the hills.
+- **Calibration** before choosing the radii (`docs/V8_DESIGN.md`):
+  - On the bests of 19 earlier autocorrelation runs: the textbook constructions are within 0.04 of each other,
+    v4.7→v7 polishing moved 0.06, and different families are 0.09–0.6 apart.
+  - On 12 programs of the v7 VRP run evaluated again on the fake worlds: noise 0.02, climbing steps 0.03–0.08, the
+    change of hill 0.20.
+  - v7's bold "shared decision" changes of generations 44, 54 and 57 left the output unchanged (0.007, 0.007, 0.000).
+- **Built:**
+  - `helix8/`: hills, run, prompts, warm, report;
+  - small hooks in `helix7/` (the config class and the version as class attributes, a plan-field hook in the
+    Atlas);
+  - the v7 report now counts records as the runs do (4 on the VRP, not 1).
+- **The VRP package:** a trip-set signature in the evaluator (hashes only), `install8`, `--warm-from`, and
+  `VERSION=v8 WARM_FROM=` in the job script.
+- **Tests:** `tests/test_helix8.py` (12) and 2 VRP tests; the v7 tests still pass.
+- **Fake end-to-end runs:**
+  - The autocorrelation job continued `results/v7warm/v7-s1`. That folder has no constructions here, so its map has
+    one hill; on the VM all constructions exist.
+  - A VRP v8 run continued the real v7 archive on the fake worlds.
+
+---
+
 ## October 24, 2026 (03:12-04:30): the v7 results, and how to explore the search space
 
 - **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):

@@ -18,6 +18,21 @@ def jl(p):
     return [json.loads(l) for l in Path(p).read_text().splitlines() if l.strip()] if Path(p).exists() else []
 
 
+def record_gens(d, rows):
+    """The generations at which the record rose above the floor since the last record (the runs' own definition:
+    helix7.run.Run.records), so small rises that add up count, as they do for the stall clock."""
+    st = json.loads((Path(d) / "state.json").read_text()) if (Path(d) / "state.json").exists() else {}
+    nz = json.loads((Path(d) / "noise.json").read_text()) if (Path(d) / "noise.json").exists() else {}
+    fl = max(float((st.get("config") or {}).get("gain_floor", 1e-6)), float(nz.get("rel", 0.0)))
+    rows = sorted((r for r in rows if r.get("best") is not None), key=lambda r: r["gen"])
+    out, ref = [], rows[0]["best"] if rows else None
+    for r in rows[1:]:
+        if r["best"] > ref + fl * max(abs(ref), 1e-12):
+            out.append(r["gen"])
+            ref = r["best"]
+    return out
+
+
 def report_run(d):
     d = Path(d)
     hist = [h for h in jl(d / "history.jsonl") if "level" in h]
@@ -40,7 +55,7 @@ def report_run(d):
     out.append(f"- Exploration levels: " + ", ".join(f"level {k}: {lv[k]} generations" for k in sorted(lv)) + ".")
     kinds = Counter(s.split(":")[0] for h in hist for s in h["slots"])
     out.append("- Planned experiments by slot: " + ", ".join(f"{k} {n}" for k, n in kinds.most_common()) + ".")
-    recs = [h for h in hist if h.get("new_best")]
+    recs = [h for h in hist if h["gen"] in set(record_gens(d, start))]
     out += ["", f"### Records ({len(recs)})", ""]
     if recs:
         out += ["| Gen | Best | Program | Its role | Its slot | Track |", "|---|---|---|---|---|---|"]

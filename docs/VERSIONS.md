@@ -33,6 +33,36 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
+## v8: v7 plus a register of hills (October 24, 2026), job ready
+
+- **Why.** v7 explored in most generations but couldn't reliably find a new hill, or tell one from a hill it had
+  already found (`docs/V7_RESULTS.md`, `docs/SEARCH_SPACE.md`):
+  - restarts from scratch all fell into one well;
+  - revive tracks were judged against unchanged copies of the record;
+  - the one real change of hill was found by chance.
+
+  Shreyas asked for a surgical version, at least as good as v4 and v7, that discovers new hills one after another,
+  tests reliably that each is new, and doesn't redo work.
+- **What it adds** (`docs/V8_DESIGN.md`).
+  - **A hill is defined by what a program produces, measured by code:** the shape of the construction, or on the VRP
+    the trips its solutions are made of. The radii were calibrated on earlier runs.
+  - **A register of hills.** Each track's best is placed on the nearest known hill, or founds a new one after its
+    opening and a follow-up; a track that carries a hill moves its top as it climbs.
+  - **Moved-only track bests.** v7's revive was judged against unchanged copies of the record.
+  - **The exploration slots:**
+    - flip (change one decision every known hill shares, keeping the record's chain) replaces revive;
+    - restart (unlike every known hill, applying the whole chain at once; it stops if it lands on a known hill)
+      replaces bold;
+    - flips and restarts get 2 follow-ups.
+  - **A Cartographer call**, when needed, that describes new hills and lists the shared decisions.
+  - **The map in the planner's view.**
+- **Everything else is v7's;** while the record climbs, a generation is v7's.
+- **Status.**
+  - 12 tests pass, plus 2 VRP tests.
+  - The autocorrelation job ran end to end with a fake model.
+  - A VRP v8 continuation of the real v7 run was tested with a fake model.
+  - The jobs (`docs/V8_JOB.md`) continue both v7 runs for 100 generations, side by side.
+
 ## v7: exploration that follows progress (October 23–24, 2026), finished: it did what it was built to do
 
 - **Why.** The v4.7 warm run broke the record from a line opened on an alternative construction (generations

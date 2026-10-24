@@ -267,7 +267,9 @@ class Atlas7(Atlas):
         if opened:
             user += "\n\n## What you opened\n" + "\n\n".join(opened)
         revive = any(s["kind"] == "revive" for s in slots)
-        user += "\n\n" + P.PLAN_FORMAT.format(k=k, revive_field=', "revives": "<finding id, revive slot only>"' if revive else "")
+        extra = run.plan_fields(slots) if hasattr(run, "plan_fields") else (
+            ', "revives": "<finding id, revive slot only>"' if revive else "")
+        user += "\n\n" + P.PLAN_FORMAT.format(k=k, revive_field=extra)
         plan, info = run.researcher(user, gen, system=system)
         info.update(opened=asked, open_why=why)
         return plan, info
