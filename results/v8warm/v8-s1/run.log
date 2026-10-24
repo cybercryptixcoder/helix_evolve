@@ -64,3 +64,12 @@
 09:55:37 [v8-s1] gen 353: best 0.941375 (p1338, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 2/3 gained; 21 hills; 4 alternatives kept; 247 s
 10:00:08 [v8-s1] gen 354: best 0.941376 (p1343, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 2/3 gained, wide 2/3 gained; 21 hills; 3 alternatives kept; 270 s
 10:05:13 [v8-s1] gen 355: best 0.941378 (p1351, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 3 alternatives kept; 305 s
+10:09:25 [v8-s1] gen 356: best 0.941386 (p1362, wide, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 4 alternatives kept; 252 s
+10:14:31 [v8-s1] gen 357: best 0.941391 (p1371, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 2/3 gained, wide 1/3 gained; 21 hills; 4 alternatives kept; 306 s
+10:18:22 [v8-s1] gen 358: best 0.941396 (p1380, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 2/3 gained, wide 3/3 gained; 21 hills; 1 alternatives kept; 231 s
+10:22:31 [v8-s1] gen 359: best 0.941401 (p1389, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 2 alternatives kept; 249 s
+10:25:53 [v8-s1] gen 360: best 0.941405 (p1398, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 2 alternatives kept; T11 gained (0.941243 -> 0.941248); 202 s
+10:30:49 [v8-s1] gen 361: best 0.941408 (p1407, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 0/3 gained; 21 hills; 1 alternatives kept; 295 s
+10:36:10 [v8-s1] gen 362: best 0.941412 (p1410, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 2/3 gained; 21 hills; 321 s
+10:40:27 [v8-s1] gen 363: best 0.941415 (p1417, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 1 alternatives kept; 257 s
+10:45:45 [v8-s1] gen 364: best 0.941419 (p1424, deep, track T27, hill H2) RECORD; stall 0 (typical 1), level 0; slots 3 main; deep 3/3 gained, wide 1/3 gained; 21 hills; 2 alternatives kept; 317 s
