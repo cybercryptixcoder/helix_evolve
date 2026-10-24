@@ -2,11 +2,11 @@
 
 ## v8-s1
 
-- Generations 191-364: best 0.941229688 -> 0.941418670 (p1424, track T27); the main track now: T27.
-- Exploration levels: level 0: 75 generations, level 1: 6 generations, level 2: 93 generations.
-- Planned experiments by slot: main 330, track 117, revive 25, backtrack 25, bold 24, flip 1.
+- Generations 191-372: best 0.941229688 -> 0.941436834 (p1477, track T27); the main track now: T27.
+- Exploration levels: level 0: 83 generations, level 1: 6 generations, level 2: 93 generations.
+- Planned experiments by slot: main 354, track 117, revive 25, backtrack 25, bold 24, flip 1.
 
-### Records (47)
+### Records (54)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -57,6 +57,13 @@
 | 362 | 0.941412206 | p1410 | deep | main | T27 |
 | 363 | 0.941415021 | p1417 | deep | main | T27 |
 | 364 | 0.941418670 | p1424 | deep | main | T27 |
+| 365 | 0.941420993 | p1431 | deep | main | T27 |
+| 366 | 0.941423975 | p1437 | deep | main | T27 |
+| 367 | 0.941426562 | p1448 | deep | main | T27 |
+| 368 | 0.941428756 | p1453 | deep | main | T27 |
+| 369 | 0.941430696 | p1457 | deep | main | T27 |
+| 370 | 0.941433788 | p1464 | deep | main | T27 |
+| 372 | 0.941436834 | p1477 | wide | mutation | T27 |
 
 ### Side tracks opened (74)
 
@@ -78,7 +85,7 @@
 | T24 | backtrack | 214 | p0209 | 4 | 0.941156 (p0560) | 229 |
 | T25 | bold | 215 | p0001 | 3 | 0.871436 (p1262) | 343 |
 | T26 | revive F361 | 216 | p0405 | 3 | 0.941243 (p0468) | 217 |
-| T27 | backtrack | 218 | p0297 | 218 | 0.941419 (p1424) | 364 |
+| T27 | backtrack | 218 | p0297 | 242 | 0.941437 (p1477) | 372 |
 | T28 | bold | 220 | p0001 | 4 | 0.881804 (p1195) | 332 |
 | T29 | revive F50 | 220 | p0478 | 2 | 0.941243 (p0487) | 220 |
 | T30 | backtrack | 222 | p0234 | 2 | 0.941232 (p0503) | 222 |
@@ -315,17 +322,25 @@
 | 362 | 0.941412206 | yes | 0 / 1 | 0 | main, main, main |  |  |
 | 363 | 0.941415021 | yes | 0 / 1 | 0 | main, main, main |  |  |
 | 364 | 0.941418670 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 365 | 0.941420993 | yes | 0 / 1 | 0 | main, main, main |  | L8 gained (0.911628 -> 0.912279) |
+| 366 | 0.941423975 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 367 | 0.941426562 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 368 | 0.941428756 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 369 | 0.941430696 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 370 | 0.941433788 | yes | 0 / 1 | 0 | main, main, main |  |  |
+| 371 | 0.941433823 |  | 0 / 1 | 0 | main, main, main |  |  |
+| 372 | 0.941436834 | yes | 1 / 1 | 0 | main, main, main |  |  |
 
 ### Hills (21: 21 on the map after its first generation, 0 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.941419 (p1424) | 291 | T27 (backtrack) | 47 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
+| H2 | 0.941437 (p1477) | 291 | T27 (backtrack) | 47 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
 | H3 | 0.940795 (p0028) | 291 | L1 (line) | 3 | This program abandons the record's zero-revival, tail-revival, and beta-softmax peak-window perturbation stages, instead running a coarse-to-fine homotopy: it coarsens the start to several lower resolutions, optimizes ea |
 | H4 | 0.940644 (p0608) | 291 | T21 (backtrack) | 0 | This program works almost entirely in log-space on the active support (L-BFGS on log heights with a fixed active set), whereas the record's program relies on linear-space global L-BFGS plus beta-softmax window polishing  |
 | H5 | 0.940517 (p0914) | 291 | T45 (backtrack) | 0 | This program runs a single continuous L-BFGS-B optimization in log-space over all active entries with a fixed 60s deadline and no coarse/refine cycles, zero-revival, pruning, or stochastic perturbation stages, relying in |
 | H11 | 0.933314 (p1222) | 291 | L4 (line) | 0 | This program works on a fixed N=8192 grid from the start (prolongating the start by cumulative-mass interpolation) and relies on a beta-softmax homotopy (betas 32→2048) with active-set pruning and peak-window exact polis |
-| H6 | 0.911628 (p0278) | 291 | L8 (line) | 0 | This program spends nearly its entire budget refining the given start directly with a single long line-search loop (sharp L-BFGS, peak-window polishes, and a beta-softmax pass), rather than the record's alternating cycle |
+| H6 | 0.912279 (p1430) | 291 | L8 (line) | 0 | This program spends nearly its entire budget refining the given start directly with a single long line-search loop (sharp L-BFGS, peak-window polishes, and a beta-softmax pass), rather than the record's alternating cycle |
 | H7 | 0.909695 (p0528) | 291 | L6 (line) | 0 | This program works at a much higher resolution from the start (upsampling the start 4x via cumulative-mass prolongation plus Gaussian smoothing) and runs a coarse-to-fine beta-annealing schedule on the full vector before |
 | H8 | 0.909093 (p0412) | 291 | L3 (line) | 0 | This program works on a fixed 256000-step grid and spends its whole budget on a single sharp L-BFGS in log-space plus a beta-softmax peak-window ladder, rather than the record's alternating cycles of linear-space global  |
 | H9 | 0.892740 (p0708) | 291 | L9 (line) | 0 | This program fixes the knot count at 131072 and spends its budget on a single prolongation-then-polish pipeline (sharp L-BFGS, beta-softmax sweep, peak-window polishes) rather than the record's repeated alternation of li |
