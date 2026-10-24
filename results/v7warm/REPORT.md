@@ -2,9 +2,9 @@
 
 ## v7-s1
 
-- Generations 191-266: best 0.941229688 -> 0.941243011 (p0778, track T62); the main track now: L7.
-- Exploration levels: level 0: 4 generations, level 1: 2 generations, level 2: 70 generations.
-- Planned experiments by slot: track 87, main 86, revive 19, backtrack 18, bold 18.
+- Generations 191-275: best 0.941229688 -> 0.941243011 (p0828, track T69); the main track now: L7.
+- Exploration levels: level 0: 4 generations, level 1: 2 generations, level 2: 79 generations.
+- Planned experiments by slot: track 99, main 95, revive 21, backtrack 20, bold 20.
 
 ### Records (2)
 
@@ -13,7 +13,7 @@
 | 191 | 0.941240825 | p0297 | deep | main | L7 |
 | 192 | 0.941242923 | p0302 | deep | main | L7 |
 
-### Side tracks opened (55)
+### Side tracks opened (61)
 
 | Track | Kind | Opened | From | Experiments | Its best | Last gain |
 |---|---|---|---|---|---|---|
@@ -43,7 +43,7 @@
 | T34 | bold | 226 | p0001 | 2 | 0.867513 (p0526) | 226 |
 | T35 | revive F342 | 228 | p0502 | 6 | 0.941243 (p0539) | 228 |
 | T36 | backtrack | 229 | p0527 | 2 | 0.941243 (p0547) | 229 |
-| T37 | bold | 230 | p0001 | 5 | 0.882225 (p0605) | 239 |
+| T37 | bold | 230 | p0001 | 6 | 0.882478 (p0831) | 274 |
 | T38 | revive F474 | 232 | p0555 | 8 | 0.941243 (p0566) | 232 |
 | T39 | backtrack | 234 | p0447 | 2 | 0.940995 (p0579) | 234 |
 | T40 | bold | 234 | p0001 | 3 | 0.881071 (p0583) | 235 |
@@ -68,10 +68,16 @@
 | T59 | revive F621 | 260 | p0703 | 2 | 0.941243 (p0746) | 260 |
 | T60 | backtrack | 262 | p0707 | 2 | 0.941243 (p0761) | 262 |
 | T61 | bold | 262 | p0001 | 2 | 0.693904 (p0760) | 262 |
-| T62 | revive F537 | 264 | p0751 | 3 | 0.941243 (p0773) | 264 |
+| T62 | revive F537 | 264 | p0751 | 8 | 0.941243 (p0773) | 264 |
 | T63 | backtrack | 264 | p0622 | 2 | 0.941243 (p0772) | 264 |
-| T64 | bold | 266 | p0001 | 1 | 0.878326 (p0783) | 266 |
-| T65 | revive F583 | 266 | p0778 | 1 | 0.941243 (p0786) | 266 |
+| T64 | bold | 266 | p0001 | 3 | 0.878451 (p0789) | 267 |
+| T65 | revive F583 | 266 | p0778 | 2 | 0.941243 (p0786) | 266 |
+| T66 | backtrack | 268 | p0702 | 5 | 0.941205 (p0810) | 270 |
+| T67 | bold | 269 | p0001 | 4 | 0.882045 (p0816) | 271 |
+| T68 | revive F580 | 270 | p0778 | 2 | 0.941243 (p0808) | 270 |
+| T69 | backtrack | 272 | p0786 | 3 | 0.941243 (p0823) | 272 |
+| T70 | bold | 273 | p0001 | 2 | - | 273 |
+| T71 | revive F724 | 274 | p0828 | 2 | 0.941243 (p0836) | 274 |
 
 ### Generation by generation
 
@@ -153,3 +159,12 @@
 | 264 | 0.941243011 |  | 71 / 1 | 2 | main, revive, backtrack | 0.941243 | T62 opened (a revive of F537 on p0751); T63 opened (a backtrack to p0622) |
 | 265 | 0.941243011 |  | 72 / 1 | 2 | main, track:T62, track:T63 | 0.941243 | T62 paused (no gain on its own best); T63 paused (no gain on its own best) |
 | 266 | 0.941243011 |  | 73 / 1 | 2 | main, bold, revive | 0.941243 | T64 opened (a bold experiment from p0001); T65 opened (a revive of F583 on p0778) |
+| 267 | 0.941243011 |  | 74 / 1 | 2 | main, track:T65, track:T64 | 0.941243 | T64 gained (0.878326 -> 0.878451); T65 paused (no gain on its own best) |
+| 268 | 0.941243011 |  | 75 / 1 | 2 | main, track:T64, backtrack | 0.941124 | T64 paused (no gain on its own best); T66 opened (a backtrack to p0702) |
+| 269 | 0.941243011 |  | 76 / 1 | 2 | main, track:T66, bold | 0.941203 | T66 gained (0.941124 -> 0.941203); T67 opened (a bold experiment from p0001) |
+| 270 | 0.941243011 |  | 77 / 1 | 2 | main, track:T67, revive | 0.941243 | T66 gained (0.941203 -> 0.941205); T68 opened (a revive of F580 on p0778) |
+| 271 | 0.941243011 |  | 78 / 1 | 2 | main, track:T68, track:T67 | 0.941243 | T66 paused (no gain on its own best); T67 gained (0.880998 -> 0.882045); T68 paused (no gain on its own best) |
+| 272 | 0.941243011 |  | 79 / 1 | 2 | main, track:T67, backtrack | 0.941243 | T67 paused (no gain on its own best); T69 opened (a backtrack to p0786) |
+| 273 | 0.941243011 |  | 80 / 1 | 2 | main, track:T69, bold | 0.941243 | T69 paused (no gain on its own best); T70 opened (a bold experiment from p0001) |
+| 274 | 0.941243011 |  | 81 / 1 | 2 | main, track:T70, revive | 0.941243 | T37 gained (0.882225 -> 0.882478); T70 paused (no gain on its own best); T71 opened (a revive of F724 on p0828) |
+| 275 | 0.941243011 |  | 82 / 1 | 2 | main, track:T71, track:T37 | 0.941243 | T37 paused (no gain on its own best); T71 paused (no gain on its own best) |
