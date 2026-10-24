@@ -96,3 +96,7 @@
 12:36:09 [v8-s1] gen 385: best 0.941441 (p1559, deep, track T27, hill H2); stall 0 (typical 1.5), level 0; slots 3 main; deep 0/3 gained, wide 1/3 gained; 21 hills; 299 s
 12:42:27 [v8-s1] gen 386: best 0.941441 (p1566, wide, track T27, hill H2); stall 1 (typical 1.5), level 0; slots 3 main; deep 0/3 gained, wide 0/3 gained; 21 hills; 378 s
 12:48:02 [v8-s1] gen 387: best 0.941441 (p1566, wide, track T27, hill H2); stall 2 (typical 1.5), level 1; slots 2 main, 1 track; deep 1/3 gained, wide 1/3 gained; 21 hills; T86 landed on H1 (distance 0.028); 335 s
+12:52:18 [v8-s1] gen 388: best 0.941441 (p1579, deep, track T27, hill H2); stall 3 (typical 1.5), level 1; slots 2 main, 1 track; deep 1/3 gained, wide 0/3 gained; 22 hills, 1 new; 1 alternatives kept; T25 gained (0.871694 -> 0.872011); new hill H22, found by T85 (flip): 0.941267, distance 0.207 from the nearest known hill (H12); 256 s
+12:58:50 [v8-s1] gen 389: best 0.941441 (p1579, deep, track T27, hill H2); stall 4 (typical 1.5), level 1; slots 2 main, 1 track; deep 0/3 gained, wide 1/3 gained; 22 hills; 392 s
+13:03:05 [v8-s1] gen 390: best 0.941441 (p1579, deep, track T27, hill H2); stall 5 (typical 1.5), level 2; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 2/3 gained; 22 hills; 1 alternatives kept; T85 paused (no gain on its own best); T87 opened (a flip of D4: How the f*f peak / inf-norm is handled during optimization on p1579); 255 s
+13:03:05 done: v8-s1 (v8, seed 1): best 0.941441 (p1579, track T27) after 390 generations, 1592 programs, 930 model calls
