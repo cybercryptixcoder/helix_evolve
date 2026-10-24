@@ -52,6 +52,14 @@ Two programs are on the same hill if their outputs are nearly the same. The mode
 The last two rows mean those changes barely changed, or didn't change, what the program produced. The planner of
 generation 58 diagnosed the last one itself: the new start had never activated. v8 reports this at once.
 
+**On the real v7 VRP run, the map v8 starts from has 3 hills:**
+- T40's, the record's (1.6505);
+- the hill before it (1.6462);
+- Code Zero's.
+
+10 of v7's revive and backtrack tracks ended on the hill before T40's, 9 of them at distance 0.000 or 0.001:
+explorations that found the same solutions again. That is what the register stops.
+
 **Radii:** 0.075 for the autocorrelation problem and 0.12 for the VRP. Each is raised, at most to twice its value, if
 the run's own steps along a climb turn out larger: twice their median.
 

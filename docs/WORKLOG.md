@@ -32,7 +32,11 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 - **Fake end-to-end runs:**
   - The autocorrelation job continued `results/v7warm/v7-s1`. That folder has no constructions here, so its map has
     one hill; on the VM all constructions exist.
-  - A VRP v8 run continued the real v7 archive on the fake worlds.
+  - A VRP v8 run continued the real v7 archive on the fake worlds. 13 earlier programs were evaluated again for
+    signatures. The map begins with 3 hills: T40's (the record), the hill before it (10 of v7's revive and backtrack
+    tracks ended there, 9 of them at distance 0.000 or 0.001), and Code Zero's.
+  - One v4.7 test failed once, in the full suite run while the VRP test loaded both cores. Alone it passes; its fake
+    search depends on CPU time. helix47 is unchanged since 7dfad60.
 
 ---
 
