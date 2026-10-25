@@ -1,9 +1,9 @@
 {
- "gen_done": 390,
+ "gen_done": 391,
  "config": {
   "condition": "v8",
   "seed": 1,
-  "gens": 390,
+  "gens": 590,
   "deep": 3,
   "wide": 3,
   "budget": 60.0,
@@ -42,7 +42,7 @@
   "survey_max": 12,
   "map_hills": 10
  },
- "t": 1792861385.2442102,
+ "t": 1792921502.1974711,
  "version": "v8",
  "warm": "continue",
  "warm_gen": 290,

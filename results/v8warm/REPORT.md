@@ -2,9 +2,9 @@
 
 ## v8-s1
 
-- Generations 191-390: best 0.941229688 -> 0.941441452 (p1579, track T27); the main track now: T27.
-- Exploration levels: level 0: 92 generations, level 1: 13 generations, level 2: 95 generations.
-- Planned experiments by slot: main 397, track 126, revive 25, backtrack 25, bold 24, flip 2, restart 1.
+- Generations 191-391: best 0.941229688 -> 0.941441452 (p1579, track T27); the main track now: T27.
+- Exploration levels: level 0: 92 generations, level 1: 13 generations, level 2: 96 generations.
+- Planned experiments by slot: main 398, track 128, revive 25, backtrack 25, bold 24, flip 2, restart 1.
 
 ### Records (58)
 
@@ -87,9 +87,9 @@
 | T22 | bold | 210 | p0001 | 3 | 0.863873 (p0432) | 211 |
 | T23 | revive F293 | 212 | p0405 | 2 | 0.941243 (p0436) | 212 |
 | T24 | backtrack | 214 | p0209 | 4 | 0.941156 (p0560) | 229 |
-| T25 | bold | 215 | p0001 | 5 | 0.872011 (p1577) | 388 |
+| T25 | bold | 215 | p0001 | 6 | 0.872011 (p1577) | 388 |
 | T26 | revive F361 | 216 | p0405 | 3 | 0.941243 (p0468) | 217 |
-| T27 | backtrack | 218 | p0297 | 284 | 0.941441 (p1554) | 384 |
+| T27 | backtrack | 218 | p0297 | 285 | 0.941441 (p1554) | 384 |
 | T28 | bold | 220 | p0001 | 5 | 0.881901 (p1521) | 379 |
 | T29 | revive F50 | 220 | p0478 | 2 | 0.941243 (p0487) | 220 |
 | T30 | backtrack | 222 | p0234 | 2 | 0.941232 (p0503) | 222 |
@@ -352,6 +352,7 @@
 | 388 | 0.941441452 |  | 3 / 1.5 | 1 | main, main, track:T25 | 0.872011 | T25 gained (0.871694 -> 0.872011); new hill H22, found by T85 (flip): 0.941267, distance 0.207 from the nearest known hill (H12) |
 | 389 | 0.941441452 |  | 4 / 1.5 | 1 | main, main, track:T85 | 0.941267 |  |
 | 390 | 0.941441452 |  | 5 / 1.5 | 2 | main, track:T85, flip | 0.941441 | T85 paused (no gain on its own best); T87 opened (a flip of D4: How the f*f peak / inf-norm is handled during optimization on p1579) |
+| 391 | 0.941441452 |  | 6 / 1.5 | 2 | main, track:T87, track:T25 | 0.941441 | T25 paused (no gain on its own best) |
 
 ### Hills (22: 21 on the map after its first generation, 1 found since)
 
