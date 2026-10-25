@@ -2,9 +2,9 @@
 
 ## v8-s1
 
-- Generations 191-480: best 0.941229688 -> 0.941441744 (p2132, track T129); the main track now: T27.
-- Exploration levels: level 0: 92 generations, level 1: 13 generations, level 2: 185 generations.
-- Planned experiments by slot: main 487, track 261, revive 25, backtrack 25, bold 24, flip 24, restart 24.
+- Generations 191-492: best 0.941229688 -> 0.941441744 (p2132, track T129); the main track now: T27.
+- Exploration levels: level 0: 92 generations, level 1: 13 generations, level 2: 197 generations.
+- Planned experiments by slot: main 499, track 279, flip 27, backtrack 26, restart 26, revive 25, bold 24.
 
 ### Records (58)
 
@@ -69,7 +69,7 @@
 | 379 | 0.941440148 | p1522 | deep | main | T27 |
 | 384 | 0.941441203 | p1554 | deep | main | T27 |
 
-### Side tracks opened (74)
+### Side tracks opened (75)
 
 | Track | Kind | Opened | From | Experiments | Its best | Last gain |
 |---|---|---|---|---|---|---|
@@ -89,7 +89,7 @@
 | T24 | backtrack | 214 | p0209 | 4 | 0.941156 (p0560) | 229 |
 | T25 | bold | 215 | p0001 | 6 | 0.872011 (p1577) | 388 |
 | T26 | revive F361 | 216 | p0405 | 3 | 0.941243 (p0468) | 217 |
-| T27 | backtrack | 218 | p0297 | 287 | 0.941441 (p1554) | 384 |
+| T27 | backtrack | 218 | p0297 | 288 | 0.941441 (p1554) | 384 |
 | T28 | bold | 220 | p0001 | 7 | 0.881911 (p1674) | 403 |
 | T29 | revive F50 | 220 | p0478 | 2 | 0.941243 (p0487) | 220 |
 | T30 | backtrack | 222 | p0234 | 2 | 0.941232 (p0503) | 222 |
@@ -147,6 +147,7 @@
 | T82 | bold | 286 | p0001 | 2 | - | 286 |
 | T83 | revive F690 | 288 | p0828 | 3 | 0.941245 (p1710) | 409 |
 | T84 | backtrack | 288 | p0921 | 2 | 0.941243 (p0930) | 288 |
+| T136 | backtrack | 488 | p1313 | 2 | 0.941338 (p2238) | 488 |
 
 ### Generation by generation
 
@@ -442,13 +443,25 @@
 | 478 | 0.941441744 |  | 93 / 1.5 | 2 | main, track:T129, flip | 0.941442 | T129 gained (0.926937 -> 0.928843); T131 opened (a flip of D8: objective form actually optimised on p2132) |
 | 479 | 0.941441744 |  | 94 / 1.5 | 2 | main, track:T131, track:T128 | 0.941442 | T128 gained (0.815547 -> 0.816399); T131 landed on H22 (distance 0.054) |
 | 480 | 0.941441744 |  | 95 / 1.5 | 2 | main, track:T131, restart | 0.928221 | T129 paused (no gain on its own best); T131 gained (0.923819 -> 0.928221); T132 opened (a restart towards a new hill, from p0001) |
+| 481 | 0.941441744 |  | 96 / 1.5 | 2 | main, track:T132, track:T131 | 0.928221 | T132 gained (0.797941 -> 0.809953); new hill H34, found by T132 (restart): 0.809953, distance 0.161 from the nearest known hill (H26) |
+| 482 | 0.941441744 |  | 97 / 1.5 | 2 | main, track:T131, flip | 0.941442 | T131 gained (0.928221 -> 0.928449); T133 opened (a flip of D2: Representation of the unknown function on p2132) |
+| 483 | 0.941441744 |  | 98 / 1.5 | 2 | main, track:T133, track:T132 | 0.941442 | T132 gained (0.809953 -> 0.813542); T133 landed on H22 (distance 0.052) |
+| 484 | 0.941441744 |  | 99 / 1.5 | 2 | main, track:T133, restart | 0.923985 | T129 gained (0.928843 -> 0.941428); T134 opened (a restart towards a new hill, from p0001); new hill H35, found by T104 (restart): 0.897817, distance 0.281 from the nearest known hill (H33) |
+| 485 | 0.941441744 |  | 100 / 1.5 | 2 | main, track:T133, track:T104 | 0.923985 | T104 gained (0.897817 -> 0.908438); T133 paused (no gain on its own best) |
+| 486 | 0.941441744 |  | 101 / 1.5 | 2 | main, track:T134, flip | 0.941442 | T88 gained (0.763732 -> 0.845074); T129 paused (no gain on its own best); T135 opened (a flip of D5: Support / zero structure handling on p2132); new hill H36, found by T88 (restart): 0.845074, distance 0.112 from the nearest known hill (H27) |
+| 487 | 0.941441744 |  | 102 / 1.5 | 2 | main, track:T135, track:T134 | 0.796036 | T104 gained (0.908438 -> 0.908442); T134 paused (no gain on its own best); T135 gained (0.663089 -> 0.796036); new hill H37, found by T135 (flip): 0.796036, distance 0.155 from the nearest known hill (H30) |
+| 488 | 0.941441744 |  | 103 / 1.5 | 2 | main, track:T135, backtrack | 0.941338 | T135 gained (0.796036 -> 0.797247); T136 opened (a backtrack to p1313); T136 landed on H2 (distance 0.019) |
+| 489 | 0.941441744 |  | 104 / 1.5 | 2 | main, track:T136, track:T88 | 0.941338 | T136 paused (no gain on its own best) |
+| 490 | 0.941441744 |  | 105 / 1.5 | 2 | main, track:T88, restart | 0.735067 | T88 paused (no gain on its own best); T137 opened (a restart towards a new hill, from p0001) |
+| 491 | 0.941441744 |  | 106 / 1.5 | 2 | main, track:T137, track:T132 | 0.813602 | T104 gained (0.908442 -> 0.908459); T132 gained (0.813542 -> 0.813602); new hill H38, found by T137 (restart): 0.735067, distance 0.249 from the nearest known hill (H28) |
+| 492 | 0.941441744 |  | 107 / 1.5 | 2 | main, track:T137, flip | 0.941442 | T137 gained (0.735067 -> 0.736106); T138 opened (a flip of D8: time allocation on p2132) |
 
-### Hills (33: 21 on the map after its first generation, 12 found since)
+### Hills (38: 21 on the map after its first generation, 17 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H22 | 0.941441 (p1610) | 388 | T85 (flip) | 14 | This program abandons the record lineage's structural-edit escape strategy (split/merge, non-commensurate lifts, quotient cascades, jitter) and instead escapes local optima by shrinking the array to a smaller N, re-optim |
-| H2 | 0.941441 (p1554) | 291 | T27 (backtrack) | 50 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
+| H22 | 0.941441 (p1610) | 388 | T85 (flip) | 15 | This program abandons the record lineage's structural-edit escape strategy (split/merge, non-commensurate lifts, quotient cascades, jitter) and instead escapes local optima by shrinking the array to a smaller N, re-optim |
+| H2 | 0.941441 (p1554) | 291 | T27 (backtrack) | 51 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
 | H24 | 0.941253 (p2055) | 409 | T83 (revive) | 1 | This program optimizes the continuous piecewise-linear autocorrelation via a log-parameterized L-BFGS on active cells, using a beta-smoothed soft-max surrogate for the inf-norm and a peak-window ladder that repeatedly re |
 | H30 | 0.941069 (p1954) | 447 | T115 (flip) | 0 | This program optimises in a squared-parameter space (h = v²) with unconstrained L-BFGS-B, guaranteeing positivity without clipping, whereas the record works directly on h with explicit non-negativity handling. It replace |
 | H3 | 0.940795 (p0028) | 291 | L1 (line) | 4 | This program abandons the record's zero-revival, tail-revival, and beta-softmax peak-window perturbation stages, instead running a coarse-to-fine homotopy: it coarsens the start to several lower resolutions, optimizes ea |
@@ -460,6 +473,7 @@
 | H6 | 0.912389 (p2066) | 291 | L8 (line) | 0 | This program spends nearly its entire budget refining the given start directly with a single long line-search loop (sharp L-BFGS, peak-window polishes, and a beta-softmax pass), rather than the record's alternating cycle |
 | H7 | 0.909695 (p0528) | 291 | L6 (line) | 0 | This program works at a much higher resolution from the start (upsampling the start 4x via cumulative-mass prolongation plus Gaussian smoothing) and runs a coarse-to-fine beta-annealing schedule on the full vector before |
 | H8 | 0.909439 (p1649) | 291 | L3 (line) | 0 | This program works on a fixed 256000-step grid and spends its whole budget on a single sharp L-BFGS in log-space plus a beta-softmax peak-window ladder, rather than the record's alternating cycles of linear-space global  |
+| H35 | 0.908459 (p2254) | 484 | T104 (restart) | 0 | This program refines a single fixed-length array with full-support L-BFGS and then repeatedly upsamples it by exact powers of two (2x, 4x, 8x, 16x) using linear interpolation, polishing only a peak-window of cells — it n |
 | H25 | 0.899963 (p2039) | 409 | T96 (restart) | 0 | This program optimises a continuous density on a fixed uniform grid via L-BFGS in log-height space, fitting f*f toward flat or Gaussian plateau targets rather than exploiting discrete structural edits like split/merge or |
 | H13 | 0.899621 (p1739) | 291 | T22 (bold) | 0 | This program builds its initial guess from a parametric sum of Gaussian bumps (random centres, widths, amplitudes) fitted by L-BFGS through a beta-softmax schedule, then escalates resolution 1024→16384, whereas the recor |
 | H9 | 0.892807 (p1931) | 291 | L9 (line) | 0 | This program fixes the knot count at 131072 and spends its budget on a single prolongation-then-polish pipeline (sharp L-BFGS, beta-softmax sweep, peak-window polishes) rather than the record's repeated alternation of li |
@@ -468,26 +482,30 @@
 | H14 | 0.872011 (p1577) | 291 | T25 (bold) | 0 | This program builds its solution from scratch by rasterizing a small number of variable-width, variable-height blocks (K=6/10/16) onto a grid, then escalating resolution by integer replication, rather than starting from  |
 | H16 | 0.871984 (p2095) | 291 | T55 (bold) | 0 | This program optimises a fixed-length vector by L-BFGS in log-height space to match a hand-built trapezoid target for f\*f, sweeping a small ladder of ramp widths (rho) rather than polishing the exact R with soft-max pea |
 | H20 | 0.847838 (p2056) | 291 | T73 (bold) | 2 | This program parameterises the target shape of f*f as a two-sided power-law family (rL, rR, pL, pR, tilt) and fits f to it by log-space least squares, then tunes those four shape parameters with Nelder-Mead, rather than  |
+| H36 | 0.845074 (p2220) | 486 | T88 (restart) | 0 | This program optimises a dense, fully positive height profile (no exact zeros, max/mean only 3.81) via continuous L-BFGS-B on all cells, whereas the record is a spiky 67%-zero comb built through discrete structural edits |
 | H33 | 0.828494 (p2145) | 475 | T129 (flip) | 0 | This program abandons the record's lift-and-polish lineage (interlacing, non-commensurate lifts, quotient cascades, jitter) and instead works directly on the full-resolution array by prescribing a target shape for f\*f — |
 | H27 | 0.825211 (p1849) | 429 | T106 (restart) | 1 | This program abandons the record's spiky-comb structure entirely, using a dense 4096-cell step function with no exact zeros and a max/mean of only 3.67, rather than a 67.6%-zero comb with max/mean 182.9. It searches via  |
 | H32 | 0.816399 (p2169) | 473 | T128 (restart) | 0 | This program builds candidates from scratch via a recursive 3-way multiplicative cascade (Dirichlet split widths with log-normal weight jitter) rather than lifting and folding a polished half-quotient of the current reco |
+| H34 | 0.813602 (p2259) | 481 | T132 (restart) | 0 | This program abandons the record's discrete structural edits (splitting/merging, non-commensurate lifts, quotient cascades) in favor of a continuous parametric seed family — a two-cosine "comb" with envelope, phase, and  |
 | H29 | 0.813513 (p1885) | 437 | T110 (restart) | 0 | This program seeds from a Gerchberg-Saxton spectral phase-retrieval routine targeting a flat, band-limited autocorrelation (a smooth plateau on 15–85% of lags) at N=4096, rather than building up from the record's spiky c |
 | H31 | 0.809627 (p2027) | 449 | T116 (restart) | 0 | This program builds its starting point from a quadratic-residue difference-set raster (Singer-style, p·q=127·43) smoothed into a dense 16383-cell array, rather than lifting and folding a spiky comb quotient as the record |
+| H37 | 0.797247 (p2239) | 487 | T135 (flip) | 0 | This program optimises a continuous, dense histogram (no exact zeros, max/mean only 20.2) via analytic L-BFGS on the full knot array, using a smooth log-objective with an explicit flat-top penalty term and a softmax shar |
 | H17 | 0.796239 (p0875) | 291 | T76 (bold) | 2 | This program builds its candidate from a parametric two-pulse profile (power-law edges with epsilon smoothing and caps, plus gap and amplitude parameters) found by random search and Nelder-Mead on a coarse 8192 grid, the |
 | H18 | 0.794099 (p0749) | 291 | T58 (bold) | 0 | This program searches a low-dimensional parametric family (a constant base plus four capped rectangular blocks, 13 parameters) by random sampling and Nelder-Mead at N=1024, then rasterizes the winner upward, rather than  |
 | H19 | 0.786748 (p0664) | 291 | T49 (bold) | 0 | This program parameterizes f spectrally (raised-cosine band edges with low-frequency ripples and antisymmetric Fourier phases) and searches that low-dimensional space with a hand-rolled differential evolution plus Nelder |
 | H26 | 0.780101 (p1799) | 422 | T102 (restart) | 0 | This program abandons the record's spiky-comb, exact-zero, quotient-cascade lineage and instead builds smooth continuous densities from parametric spike families (a two-scale comb and a quadratic-residue comb) rasterised |
+| H38 | 0.736106 (p2265) | 491 | T137 (restart) | 0 | This program abandons the record's discrete structural edits (split/merge, comb densification, non-commensurate lifts) and instead builds candidates from random-phase spectral draws with a plateau-plus-ripple power spect |
 | H21 | 0.725574 (p0349) | 291 | T13 (bold) | 0 | This program abandons the record's incremental polish-and-extend schedule entirely, instead building 32 random piecewise-constant seeds at N=2048 and running a fixed five-level ladder (upsample, sharp L-BFGS, beta polish |
 | H28 | 0.723784 (p1864) | 433 | T108 (restart) | 1 | This program abandons the record's discrete structural editing of a sparse spiky comb (split/merge, zero-support re-selection, non-commensurate lifts) and instead runs a continuous, positivity-preserving log-height L-BFG |
 | H1 | 0.666667 (p0001) | 291 | - | 6 | the starting program (Code Zero) |
 
-Decisions every hill shared (mapped at generation 476):
+Decisions every hill shared (mapped at generation 492):
 
-- D1: representation of the unknown function h (all: a nonnegative piecewise-constant step function on a uniform grid, with f*f treated as the piecewise-linear autoconvolution of that step function (exact knot fo…); flipped at generation 414 by T99 (on H22); generation 434 by T109 (unplaced ); generation 438 by T111 (unplaced ); generation 450 by T117 (unplaced ); generation 462 by T123 (unplaced ); generation 470 by T127 (unplaced )
-- D2: how the inf-norm constraint enters the objective (all: the max of f*f is handled by a smooth surrogate (soft-max / log-sum-exp with a beta ladder, or a tie-averaged gradient) that is annealed toward the exact max, …); flipped at generation 410 by T97 (on H2); generation 430 by T107 (on H22); generation 458 by T121 (unplaced )
-- D3: optimiser family (all: quasi-Newton L-BFGS-B with analytic gradients and box bounds [0,inf), restarted in blocks over selected coordinate subsets); flipped at generation 402 by T93 (on H22)
-- D4: parameterisation of positivity (all: optimise h directly in linear space and clip to zero (or h=v^2 in one variant), so zeros are absorbing and the support is effectively frozen once it collapses); flipped at generation 390 by T87 (top H22); generation 426 by T105 (on H22)
-- D5: support/zero structure (all: the exact-zero pattern is essentially frozen: perturbations and polishes only touch active cells, so ~60-67% zeros are inherited and never re-selected); flipped at generation 398 by T91 (on H22); generation 442 by T113 (unplaced ); generation 454 by T119 (unplaced ); generation 466 by T125 (unplaced )
-- D6: resolution / grid handling (all: work at a single fixed N inherited from the start (or prolongate by commensurate integer factors), never re-discretising the shape at a genuinely different grid); flipped at generation 394 by T89 (on H22)
-- D7: escape from local optima (all: deterministic continuation only: beta ladders, peak-window refits, and deconvolution-to-a-prescribed-target; no stochastic global search); flipped at generation 406 by T95 (on H22)
-- D8: objective form actually optimised (all: the ratio is optimised as -log(num) + 2 log(sum h) + log(max f*f), i.e. log of the ratio, with the L1 normalisation handled by the sum-h term); flipped at generation 301 by T85 (founder H22); generation 418 by T101 (on H22); generation 446 by T115 (founder H30); generation 474 by T129 (on H22); generation 478 by T131 (on H22)
+- D1: objective formulation for the ratio (all: minimise -log(num) + 2 log(sum) + log(max of f*f knots), i.e. log-domain ratio with exact or soft/tie max of the piecewise-linear autoconvolution); flipped at generation 414 by T99 (on H22); generation 434 by T109 (unplaced ); generation 438 by T111 (unplaced ); generation 450 by T117 (unplaced ); generation 462 by T123 (unplaced ); generation 470 by T127 (unplaced )
+- D2: representation of the search variable (all: optimise the nonnegative height array h directly (linear heights, with clipping or bounds), on a fixed grid inherited from the start); flipped at generation 410 by T97 (on H2); generation 430 by T107 (on H22); generation 458 by T121 (unplaced ); generation 482 by T133 (on H22)
+- D3: how the inf-norm constraint is handled (all: either exact argmax gradient or a soft-max/tie-averaged surrogate over the f*f knots, with rescaling to keep max fixed); flipped at generation 402 by T93 (on H22)
+- D4: support / sparsity handling (all: fixed active set inherited from the start (or full array); zeros are frozen except where a specific revival step is added, and no structural support re-selecti…); flipped at generation 390 by T87 (top H22); generation 426 by T105 (on H22)
+- D5: resolution strategy (all: work at the start's native N (or a coarse-to-fine prolongation of it), with peak-window block polishing around the f*f argmax); flipped at generation 398 by T91 (on H22); generation 442 by T113 (unplaced ); generation 454 by T119 (unplaced ); generation 466 by T125 (unplaced ); generation 486 by T135 (founder H37)
+- D6: local optimiser (all: L-BFGS-B with analytic gradients, tight ftol/gtol, and a wall-clock callback that aborts on deadline); flipped at generation 394 by T89 (on H22)
+- D7: global escape mechanism (all: deterministic restarts from the same start: beta/tie ladders, peak-window refits, deconvolution-to-target steps, or coarse-to-fine homotopy; no random restarts…); flipped at generation 406 by T95 (on H22)
+- D8: time allocation (all: a single sequential pipeline that spends nearly all of a fixed ~60s CPU budget on one lineage of polish steps, with early-exit guards); flipped at generation 301 by T85 (founder H22); generation 418 by T101 (on H22); generation 446 by T115 (founder H30); generation 474 by T129 (on H22); generation 478 by T131 (on H22); generation 492 by T138 (unplaced )
