@@ -183,10 +183,10 @@ footer code { background: var(--chip); padding: 1px 5px; border-radius: 5px; }
 "use strict";
 const REPO = "https://raw.githubusercontent.com/cybercryptixcoder/helix_evolve/main/";
 const PRESETS = [
-  ["Simulator: easy world, v9", "viz/data/sim-easy-v9-s3.json"],
-  ["Simulator: easy world, v8", "viz/data/sim-easy-v8-s3.json"],
-  ["Simulator: slow world, v9", "viz/data/sim-slow-v9-s2.json"],
-  ["Simulator: slow world, v8", "viz/data/sim-slow-v8-s2.json"],
+  ["Simulator: fast world, v9", "viz/data/sim-fast-v9-s69.json"],
+  ["Simulator: fast world, v8 (same world)", "viz/data/sim-fast-v8-s69.json"],
+  ["Simulator: broad world, v9", "viz/data/sim-broad-v9-s59.json"],
+  ["Simulator: broad world, v8 (same world)", "viz/data/sim-broad-v8-s59.json"],
   ["v9 on the autocorrelation problem (live)", "results/v9warm/v9-s1/mapview.json"],
   ["v8 on the autocorrelation problem", "viz/data/v8-s1.json"],
   ["v8, placed by what its programs produce", "results/v8warm/v8-s1/mapview.json"],
@@ -213,7 +213,6 @@ function tScale(t) { return scale === "top" ? Math.pow(Math.max(0, Math.min(1, t
 function fill(sel) {
   sel.innerHTML = "";
   PRESETS.forEach(([name, path]) => { const o = document.createElement("option"); o.value = REPO + path; o.textContent = name; sel.appendChild(o); });
-  const o = document.createElement("option"); o.value = "embedded"; o.textContent = "Built-in demo (offline)"; sel.appendChild(o);
 }
 fill($("preset"));
 function showSource(v, label) {              // the menu names what is shown, a preset or not
@@ -225,7 +224,7 @@ function showSource(v, label) {              // the menu names what is shown, a 
 }
 $("preset").onchange = () => { const o = $("preset").selectedOptions[0]; if (!o.dataset.custom) load(o.value); };
 $("loadUrl").onclick = () => { const u = $("url").value.trim(); if (u) load(u); };
-function useFile(f) { f.text().then(t => { showSource("file:" + f.name, "File: " + f.name); use(JSON.parse(t), "file: " + f.name); }); }
+function useFile(f) { f.text().then(t => { src = null; if (liveTimer) { clearInterval(liveTimer); liveTimer = null; $("liveBtn").classList.remove("on"); } showSource("file:" + f.name, "File: " + f.name); use(JSON.parse(t), "file: " + f.name); }); }
 $("file").onchange = (e) => { const f = e.target.files[0]; if (f) useFile(f); };
 document.addEventListener("dragover", e => { e.preventDefault(); $("dropzone").style.display = "grid"; });
 document.addEventListener("dragleave", e => { if (e.target === $("dropzone")) $("dropzone").style.display = "none"; });
@@ -233,8 +232,7 @@ document.addEventListener("drop", e => { e.preventDefault(); $("dropzone").style
 
 async function load(u, keepGen) {
   src = u;
-  if (!keepGen) showSource(u, u === "embedded" ? "Built-in demo (offline)" : "Source: " + u.replace(REPO, "").split("/").slice(-2).join("/"));
-  if (u === "embedded") { const el = document.getElementById("demo"); if (el && el.textContent.trim().length > 2) use(JSON.parse(el.textContent), "built-in demo"); else $("subtitle").textContent = "No built-in demo in this copy."; return; }
+  if (!keepGen) showSource(u, "Source: " + u.replace(REPO, "").split("/").slice(-2).join("/"));
   document.body.style.opacity = keepGen ? 1 : 0.6;
   try {
     const r = await fetch(u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(), {cache: "no-store"});
@@ -650,7 +648,7 @@ for (const b of document.querySelectorAll("#scaleSeg button")) b.onclick = () =>
 $("liveBtn").onclick = () => {
   const on = !$("liveBtn").classList.contains("on"); $("liveBtn").classList.toggle("on", on);
   if (liveTimer) clearInterval(liveTimer); liveTimer = null;
-  if (on && src && src !== "embedded") { liveTimer = setInterval(() => load(src, true), 60000); load(src, true); }
+  if (on && src) { liveTimer = setInterval(() => load(src, true), 60000); load(src, true); }
 };
 function redrawAll(full) {
   if (!D) return;
@@ -664,11 +662,8 @@ let rz = null; window.addEventListener("resize", () => { clearTimeout(rz); rz = 
 (function start() {
   const q = new URLSearchParams(location.search).get("src");
   if (q) { $("url").value = q; return load(q); }
-  const el = document.getElementById("demo");
-  if (el && el.textContent.trim().length > 2) { $("preset").value = "embedded"; return load("embedded"); }
   load($("preset").value);
 })();
 </script>
-<script type="application/json" id="demo"></script>
 </body>
 </html>

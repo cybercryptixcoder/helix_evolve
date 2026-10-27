@@ -55,7 +55,7 @@ class PlantedProblem:
         self.CODE_ZERO = PROGRAM.format(design=json.dumps(self.design_of(x0)), x=json.dumps(x0))
 
     def design_of(self, x):
-        return {f"A{i + 1}": f"option {v + 1}" for i, v in enumerate(x)}
+        return {f"D{i + 1}": f"option {v + 1}" for i, v in enumerate(x)}
 
     def check(self, arr):
         a = np.asarray(arr, dtype=float).ravel()
@@ -90,11 +90,13 @@ def make_answer(problem: PlantedProblem, fidelity=0.8, seed=1):
             blocks = re.findall(r"```python\n(.*?)```", user, re.S)
             base = _design(blocks[0]) if blocks else None
             x = list(base) if base else list(w.trap)
-            asked = re.findall(r"^- A(\d+) \([^)]*\): (.+)$", user, re.M)
+            # blueprint lines: "- <axis id> (<axis name>): <option>"; the world's decisions are named D1, D2, ...
+            asked = re.findall(r"^- A\d+ \(([^)]*)\): (.+)$", user, re.M)
             if asked and ("builds a specific design" in user or "changes exactly one design decision" in user
                           or "undoes one design decision" in user):
-                for i, what in asked:
-                    i = int(i) - 1
+                for name, what in asked:
+                    m = re.fullmatch(r"D(\d+)", name.strip())
+                    i = int(m.group(1)) - 1 if m else len(x)
                     if i >= len(x) or rng.random() > fidelity:
                         continue
                     m = re.match(r"option (\d+)", what)

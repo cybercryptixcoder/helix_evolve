@@ -4,6 +4,32 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 27, 2026 (afternoon): v9 built, tested, and its job ready
+
+- **The request** (09:41): build all of v9, test every part (the replay and the simulators too), fix technical and
+  conceptual problems, a viewer for the simulator that also follows live runs of any version, and a test job that
+  continues the v8 autocorrelation run from GitHub if that is lossless.
+- **Built:** `helix9/` (codebook, annotator, model, drops, race, run, warm start, pack, replay, publishing, report,
+  job wrapper, simulator, planted problem, map view), `viz/mapview.html`, `scripts/run_v9_warm.sh`; 41 tests in
+  `tests/test_helix9_*.py`; the v7 and v8 tests unchanged and passing.
+- **GitHub as the source:** GitHub's copy of v8-s1 lacks the constructions (3 GB), so a continuation from it alone
+  would lose every base but the record. The job builds a verified 80 MB pack once on the VM and pushes it; on the VM,
+  anything outside the pack comes from the local folder, so nothing is lost; elsewhere it is rebuilt. Every push now
+  sends the whole run in gzipped chunks (AETHER.md section 5).
+- **Found by testing and fixed:**
+  - the warm start's retroactive race made 83 of v8's explorations race at once (the whole continuation would have
+    gone to v8's backlog): now the 2 strongest race and the rest wait in a queue, taken in turn with new drops;
+  - rebuilding a missing construction from a far ancestor (Code Zero) gave nonsense: now a close ancestor, or the
+    program whose output is most like its own, and local folders first;
+  - v8's wide loop samples the whole archive, so a GitHub-only continuation would rebuild constructions for most wide
+    children: it now samples programs whose construction is at hand;
+  - **the race throttled breadth:** in the simulator the first draft opened 11 explorations in 120 generations
+    against v8's 57, and was worse than v8 (p = 0.047). Now half the exploration slots open new directions, at most
+    3 race, gaining tracks are served first. On 280 fresh worlds v9 beats v8: 88 seeds better, 46 worse (p < 0.001)
+    (`docs/V9_SIM.md`).
+- **The job** was run end to end with a fake model on the real 3,625-program archive, and through a stop signal, the
+  grace running out, `kill -9` with a torn line, a second copy, and restarts.
+
 ## October 27, 2026: a model of the search space (v9 proposed, not built)
 
 - **The request** (`docs/BRIEF_2026-10-27.md`): a transcript of a discussion about the map (features as axes, points

@@ -197,7 +197,7 @@ def retro_judge(race, tracks, gen, keep, kinds=("restart", "bold", "flip"), main
         running.sort(key=lambda t: (-rank[t["id"]], -(t.get("best") if t.get("best") is not None else -1e300)))
         for i, t in enumerate(running[keep:]):
             t["race"]["status"] = "waiting"
-            t["race"]["queue"] = i
+            t["race"]["queue"] = round(1.0 - rank[t["id"]], 4)     # the strongest at equal effort first
             t["race"]["decisions"].append({
                 "gen": gen, "rung": t["race"]["budget"], "best": t.get("best"), "go": True, "cap": True,
                 "why": f"qualifies to race again; {len(running)} earlier explorations do, so it waits its turn "

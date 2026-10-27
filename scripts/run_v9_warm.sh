@@ -381,7 +381,7 @@ echo "== the run's own continuation pack (only what its source's pack doesn't ho
 $NICE_CMD "$PY" -m helix9.pack build --run "$DIR" --search "$DIR/constructions" --out "$RESULTS/$NAME/pack" --budget-mb "$PACK_MB" \
     $([ -f "$PACK/manifest.json" ] && echo "--base $PACK") 2>&1 | tail -1 | sed 's/^/   /'
 git_push "$MSG" "$RESULTS"
-echo "== the report: $RESULTS/REPORT.md; the map: viz/mapview.html (preset \"v9 warm\", or $RESULTS/$NAME/mapview.json)"
+echo "== the report: $RESULTS/REPORT.md; the map: viz/mapview.html (source \"v9 on the autocorrelation problem (live)\", or $RESULTS/$NAME/mapview.json)"
 "$PY" - "$DIR" <<'PY' 2>/dev/null || true
 import json, sys
 from pathlib import Path

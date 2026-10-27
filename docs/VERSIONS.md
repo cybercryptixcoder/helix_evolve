@@ -33,23 +33,33 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
-## v9 (proposed, October 27, 2026): v8 plus a design map with coordinates, not built
+## v9: v8 plus a design map with coordinates (October 27, 2026), job ready
 
-- **Why.** The October 27 discussion asked for a map of the design space with literal coordinates, jumps to new
+- **Why.** The October 27 discussion asked for a map of the design space with literal coordinates, jumps to chosen
   points on it, and axes discovered while searching; and for a proof of concept that can be trusted before scaling.
-  Measurements on v4-v8 (`docs/SEARCH_SPACE_MODEL.md`, section 2):
-  - the Cartographer's 656 decision names fall ~98% into 9 recurring axes, but v8 re-derived them every scan, so no
-    program ever had a coordinate;
-  - a run's best after 20 programs has no rank correlation with its final best (15 runs, Spearman -0.09), yet v8
-    paused restarts after a median of 3 experiments;
-  - one-decision flips often changed many decisions.
-- **Proposed** (`docs/SEARCH_SPACE_MODEL.md`, sections 4 and 6): a codebook of axes with permanent ids, an annotator
-  that gives every program a coordinate, a sparse Bayesian model of the landscape (what helps, what hurts), drops to
-  sampled coordinates 2-4 axes from every known hill, a fair race between hills at equal effort, residual-driven axis
-  discovery, ablations on the record.
-- **Trust first:** an offline replay on v8's archive, a planted landscape with a known best, then a small live run
-  against a simple baseline (section 7).
-- **Status:** a plan, waiting for Shreyas's decision (`docs/BRIEF_2026-10-27.md`).
+  Measurements on v4-v8 (`docs/SEARCH_SPACE_MODEL.md`, section 2): the Cartographer's decision names fall ~98% into 9
+  recurring axes, but v8 re-derived them every scan, so no program ever had a coordinate; a run's best after 20
+  programs has no rank correlation with its final best, yet v8 paused restarts after a median of 3 experiments.
+- **What it adds** (`docs/V9_DESIGN.md`, `helix9/`): a codebook of decisions with permanent ids; an annotator that
+  gives every program a coordinate (from its diff, or in full, a sample read twice to measure reliability); a
+  Bayesian model of the landscape (main effects, screened interactions, effort; undecided decisions kept uncertain);
+  drops, flips and ablations chosen from it by Thompson sampling, built from a blueprint and read back; a fair race
+  at equal effort that keeps breadth (half the exploration slots open new directions; at most 3 race; the weakest
+  waits in a queue); the earlier run's explorations judged again and queued; discovery of new decisions from
+  residuals.
+- **Continuing from GitHub:** a continuation pack (verified constructions and every signature), publishing in fixed
+  gzipped chunks, a warm start that reads either; on the VM, missing constructions come from the local folder.
+- **The simulator** (`docs/V9_SIM.md`): the first draft was **not** better than v8 (worse on 40 seeds per world,
+  p = 0.047): its race had throttled breadth (11 explorations in 120 generations against v8's 57). Fixed. v9 as
+  shipped, on 280 fresh worlds: the taller hill 43.9% vs 36.4%, better on 88 seeds and worse on 46 (p < 0.001); much
+  better where new hills show their height quickly, never worse beyond noise. Every Helix version beats a simple
+  baseline (14% vs 33%).
+- **The viewer** (`viz/mapview.html`): any version's run, or a simulator run, live from GitHub: the map, the
+  landscape as contours or terrain, the record's climb, the race, the design map.
+- **The job** (`docs/V9_JOB.md`, `scripts/run_v9_warm.sh`): v8-s1 continued from generation 700 (record 0.9414417)
+  for 100 generations, after a replay on v8's archive (stage 0: is the map real?). Tested end to end with a fake
+  model on the real archive, through every interruption.
+- **Status:** job ready, not run yet.
 
 ## v8: v7 plus a register of hills (October 24, 2026), job ready
 

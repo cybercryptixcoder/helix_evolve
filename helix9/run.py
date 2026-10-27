@@ -26,8 +26,9 @@ What v9 adds:
 - **Read-back.** A drop's, flip's or ablation's program is read in full: if it doesn't make the target decisions, the
   track's next follow-up is told which are missing.
 - **The fair race** (helix9/race.py) replaces v8's 2-follow-up patience for drops, flips and ablations: they are
-  compared with tracks that started the same way, at the same effort, and continue while they keep rising. Running race
-  tracks are served in turn; a new one opens only while fewer than `running_cap` run.
+  compared with tracks that started the same way, at the same effort, and continue while they keep rising. About half
+  the exploration slots open new directions whatever races; at most `running_cap` race at once (the weakest at equal
+  effort waits in a queue); racing tracks that gained at their last experiment are served first, then in turn.
 - **Discovery.** Programs the map places at the same design, scoring further apart than the model explains, prompt the
   question "what design decision differs?"; the answer becomes a new axis.
 - **Constructions on demand.** A base without a construction (a continuation from a pack that didn't hold it) is
@@ -100,6 +101,10 @@ class Config(Config8):
     race_q_rising: float = 0.25
     race_min_cohort: int = 3
     running_cap: int = 3
+    race_serve: str = "gain"          # racing tracks that gained at their last experiment are served first, then in turn
+    breadth: str = "half"             # "half": about half the exploration slots open new directions whatever races, and
+                                      # at most `running_cap` race at once (the weakest at equal effort waits in the
+                                      # queue); "cap": a new direction opens only while fewer than `running_cap` race
     ablate_every: int = 12            # generations between two ablations (while exploring)
     discover_every: int = 4
     residual_z: float = 2.5
@@ -117,6 +122,7 @@ class Run(Run8):
     def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         super().__init__(out, cfg, llm=llm, gens=gens, log=log, problem=problem)
         self.map_lock = threading.Lock()
+        self.record_read = {}
         for f in ("coords.jsonl", "codebook.jsonl", "annotations.jsonl", "rebuilt.jsonl"):
             if (self.dir / f).exists() and self.gen_done >= 0:
                 self._truncate_jsonl(self.dir / f)
@@ -349,7 +355,29 @@ class Run(Run8):
                 ev = self.race.decide(t, list(self.tracks.values()), gen)
                 if ev:
                     events.append(ev)
+        if self.cfg.breadth == "half":
+            events += self.race_pool(gen)
         return events
+
+    def race_pool(self, gen):
+        """At most `running_cap` tracks race at once: the weakest at equal effort waits in the queue, to be taken
+        again in turn (helix9/race.py, take_waiting)."""
+        all_t = list(self.tracks.values())
+        main = self.main_track()
+        running = [t for t in all_t if t["id"] != main and (t.get("race") or {}).get("status") == "running"]
+        if len(running) <= self.cfg.running_cap:
+            return []
+        stand = {t["id"]: self.race.standing(t, all_t) for t in running}
+        running.sort(key=lambda t: (-stand[t["id"]], -(t["best"] if t.get("best") is not None else -1e300)))
+        out = []
+        for t in running[self.cfg.running_cap:]:
+            t["race"]["status"] = "waiting"
+            t["race"]["queue"] = round(1.0 - stand[t["id"]], 4)
+            t["race"]["decisions"].append({"gen": gen, "rung": t["race"]["budget"], "best": t.get("best"), "go": True,
+                                           "cap": True, "why": f"waits its turn: {len(running)} racing, and it is "
+                                                               f"among the weakest at equal effort"})
+            out.append(f"{t['id']} waits its turn to race ({len(running)} racing; among the weakest at equal effort)")
+        return out
 
     # ---------------------------------------------------------------- targets from the map
     def blueprint_lines(self, change, base_coord=None):
@@ -384,7 +412,9 @@ class Run(Run8):
         base = self.coord(best.id)
         if base is None:
             return None
-        pick = choose_drop(self.sample(), base, self.axes(), self.levels(), self.rng9, avoid=self.hill_coords(),
+        # only decisions whose value the base is known to have: a change of an unknown value can't be read back
+        pick = choose_drop(self.sample(), base, [a for a in self.axes() if a in base], self.levels(), self.rng9,
+                           avoid=self.hill_coords(),
                            min_dist=self.cfg.drop_min_dist, tabu={tuple(sorted(t["target"].items())) for t in
                                                                   self.tracks.values() if t.get("target")},
                            compatible=self.cb.compatible, kmin=self.cfg.kmin, kmax=self.cfg.kmax,
@@ -395,8 +425,8 @@ class Run(Run8):
         base = self.coord(best.id)
         if base is None:
             return None
-        return choose_flip(self.sample(), base, self.axes(), self.levels(), self.rng9, tried=self.tried_changes(),
-                           compatible=self.cb.compatible)
+        return choose_flip(self.sample(), base, [a for a in self.axes() if a in base], self.levels(), self.rng9,
+                           tried=self.tried_changes(), compatible=self.cb.compatible)
 
     def pick_ablation(self, best):
         """One of the record's decisions that its lineage changed at some point, undone (least recently ablated)."""
@@ -428,11 +458,16 @@ class Run(Run8):
             return super().make_slots(gen, n_explore)
         slots = [{"kind": "main"} for _ in range(self.cfg.deep - n_explore)]
         all_live = [t for t in self.tracks.values() if self.live(t)]
-        racing = sorted((t for t in all_live if t.get("race")), key=lambda t: (t.get("served", t["opened"]), t["opened"]))
+        racing = sorted((t for t in all_live if t.get("race")),
+                        key=lambda t: ((t.get("misses", 0) > 0) if self.cfg.race_serve == "gain" else False,
+                                       t.get("served", t["opened"]), t["opened"]))
         others = sorted((t for t in all_live if not t.get("race")), key=self.priority)
-        live = (racing + others)[:n_explore]
-        if n_explore >= 2 and len(live) == n_explore and gen % 2 == 0 and len(racing) < self.cfg.running_cap:
-            live = live[:-1]          # breadth: a new direction every other generation, while few tracks race
+        if self.cfg.breadth == "half":  # breadth: about half the exploration slots open new directions
+            live = (racing + others)[:(n_explore // 2 if n_explore >= 2 else gen % 2)]
+        else:
+            live = (racing + others)[:n_explore]
+            if n_explore >= 2 and len(live) == n_explore and gen % 2 == 0 and len(racing) < self.cfg.running_cap:
+                live = live[:-1]      # breadth: a new direction every other generation, while few tracks race
         opened = Counter(t["kind"] for t in self.tracks.values() if t["opened"] > (self.warm_gen or 0))
         # an earlier run's explorations that qualified to race again wait their turn (helix9/race.py, retro_judge):
         # one is taken as a new direction, about twice as often as each kind of new exploration
@@ -846,7 +881,11 @@ class Run(Run8):
         pre = []
         if not self.hills:
             self.update_hills(gen, pre)
-        if not self.coord(prev_best.id) and self.cb.active_axes():
+        rc = self.coord(prev_best.id)
+        missing = [a for a in self.axes() if rc is not None and a not in rc]
+        if self.cb.active_axes() and (rc is None or (len(missing) >= max(2, len(self.axes()) // 4)
+                                                     and gen - self.record_read.get(prev_best.id, -99) >= 5)):
+            self.record_read[prev_best.id] = gen        # the record read again in full: decisions found since
             self.annotate_one(gen, prev_best)
         scanned = None
         if self.scan_due(gen, n_explore):
