@@ -126,6 +126,7 @@ class Run(Run8):
         self.map_lock = threading.Lock()
         self.record_read = {}
         self.rebuild_locks = {}
+        self.checked_at = self.warm_gen or 0
         for f in ("coords.jsonl", "codebook.jsonl", "annotations.jsonl", "rebuilt.jsonl"):
             if (self.dir / f).exists() and self.gen_done >= 0:
                 self._truncate_jsonl(self.dir / f)
@@ -1004,7 +1005,11 @@ class Run(Run8):
             return self.call(role, system, user, temperature=temperature, max_tokens=max_tokens, effort="none", gen=gen)
         say = lambda m: self.log(f"[{self.name}] gen {gen}: {m.strip()}")      # noqa: E731
         n0 = len(self.cb.active_axes())
-        merged = upkeep.consolidate_axes(self.cb, call, self.cfg.max_axes, gen, log=say)
+        born = max((ax.get("born") or 0 for ax in self.cb.axes.values()), default=0)
+        recheck = gen % 10 == 0 and born > self.checked_at          # decisions found since the last full check
+        merged = upkeep.consolidate_axes(self.cb, call, self.cfg.max_axes, gen, force=recheck, log=say)
+        if recheck or n0 > self.cfg.max_axes:
+            self.checked_at = gen
         if merged:
             self.map_events.append(f"{merged} duplicate decision(s) merged ({n0} -> {len(self.cb.active_axes())})")
         grouped = upkeep.tidy(self.cb, call, upkeep.uses_of(self.cb, self.coords), max_values=self.cfg.tidy_values,

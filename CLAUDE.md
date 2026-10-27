@@ -17,6 +17,9 @@
 - Then `docs/REQUESTS.md` (every request and standing rule) and `docs/WORKLOG.md` (what was done and found, newest first).
 - Commit and push often, as `Shreyas Naik <119774329+cybercryptixcoder@users.noreply.github.com>`, with no AI attribution.
 - Never commit `.env` or any Luminal key.
+- **Test live, with the real model, always** (Shreyas, October 27): fake models are for crash tests only. Every
+  element of anything built is tested end to end live. The key goes in the repo's `.env` (gitignored); keys are
+  temporary: ask Shreyas for a current one if the one you have is refused.
 - Shreyas's cloud VM is small (2 ARM cores, 12 GB RAM, disk 83% full, shared with other agents): jobs run gently; budget in `docs/AETHER.md`.
 - **Running anything on the VM: read `docs/AETHER.md` first** (Aether, the VM agent, formerly called Hermes: what it is
   for, the VM's specs and budget, how to write an airtight job, tracing, Luminal, the prompt template).

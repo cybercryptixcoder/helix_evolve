@@ -43,13 +43,16 @@ def support_of(cb, coords):
     return n
 
 
-def consolidate_axes(cb, call, max_axes, gen=None, rounds=3, log=print):
+def consolidate_axes(cb, call, max_axes, gen=None, rounds=3, force=False, log=print):
+    """Merges decisions that are the same in other words: while there are more than `max_axes`, or once when `force`
+    (decisions found since the last check may repeat old ones in other words, below the cap too)."""
     done = 0
-    for _ in range(rounds):
-        if len(cb.active_axes()) <= max_axes:
+    for i in range(rounds):
+        n = len(cb.active_axes())
+        if n <= max_axes and not (force and i == 0):
             break
-        text = call("cartographer", P.MATCH_SYSTEM, P.CONSOLIDATE_ASK.format(axes=cb.text(max_values=3), k=max_axes),
-                    0.2, 3000)
+        text = call("cartographer", P.MATCH_SYSTEM, P.CONSOLIDATE_ASK.format(axes=cb.text(max_values=3),
+                                                                             k=min(n, max_axes)), 0.2, 3000)
         merged = consolidate(cb, P4.extract_json(text) or {}, gen)
         done += len(merged)
         if not merged:
