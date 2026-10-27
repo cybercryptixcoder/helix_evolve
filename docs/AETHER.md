@@ -95,6 +95,11 @@ the machine.
 - `unzip` isn't installed. Extract with
   `python3 -c "import zipfile; zipfile.ZipFile('x.zip').extractall('.')"`.
 - `flock`, `setsid`, `nice` and `ionice` are available.
+- **Python packages may not be where an isolated child looks.** On the VM, `python3` finds numpy, but
+  `python3 -I` (isolated mode: no PYTHONPATH, no user site-packages) doesn't. A job that runs code in `python -I` or
+  with a changed `HOME` must hand the child its own `sys.path` (October 27: a job's preflight caught exactly this).
+- **Show the end of an error, not its start:** a traceback's cause is its last line. A preflight that printed the
+  first 300 characters showed only "M" (of "ModuleNotFoundError").
 
 ### Budget rules: what a job may use
 
