@@ -229,20 +229,27 @@ def effort_of(parent_coord, parent_effort, coord, axes=None):
 
 def fake_reply(cb_text, user):
     """A fake annotator for tests: reads 'DESIGN = {...}' from a program, if there is one (see helix9/planted.py),
-    else reports no change. Mirrors the reply format exactly."""
+    else reports no change. Decisions the codebook in the prompt already names are given by their ids; the others are
+    reported as new decisions (at most two in a full reading, as the real prompt allows). Mirrors the reply format."""
+    ids = {}
+    for m in re.finditer(r"^(A\d+): (.+)$", (cb_text or "") + "\n" + (user or ""), re.M):
+        ids.setdefault(m.group(2).strip(), m.group(1))
     m = re.search(r"DESIGN = (\{[^}]*\})", user)
     if "## The program (" in user:
         if not m:
             return json.dumps({"design": {}, "new_axes": []})
         d = json.loads(m.group(1))
-        return json.dumps({"design": {k: v for k, v in d.items()}, "new_axes": []})
+        return json.dumps({"design": {ids[k]: v for k, v in d.items() if k in ids},
+                           "new_axes": [{"axis": k, "value": v} for k, v in d.items() if k not in ids][:2]})
     ms = re.findall(r"^\+DESIGN = (\{[^}]*\})", user, re.M)
     if not ms:
         return json.dumps({"changes": []})
     d = json.loads(ms[-1])
     old = re.findall(r"^-DESIGN = (\{[^}]*\})", user, re.M)
     o = json.loads(old[-1]) if old else {}
-    return json.dumps({"changes": [{"axis": k, "value": v} for k, v in d.items() if o.get(k) != v]})
+    return json.dumps({"changes": [{"axis": ids[k], "value": v} if k in ids else
+                                   {"new_axis": k, "base_value": o.get(k), "value": v}
+                                   for k, v in d.items() if o.get(k) != v]})
 
 
 def is_value_new(vid):

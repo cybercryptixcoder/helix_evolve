@@ -70,8 +70,9 @@ FAMILIES = {
     "rugged": {"decoys": 8, "rugged": 0.012},                       # many decoy hills, a rougher surface
     "cold": {"warm": False, "gens": 150},                           # from Code Zero, nothing known
 }
-POLICIES = ("v8", "v9", "v9-random", "v9-norace", "v9-noreadback", "v9-nodiscovery", "v9-level", "v9-hedge",
-            "v9-gain", "v9-standing", "v9-cap6", "v9-nocap", "v9-v8flip", "v9-restart", "v8-race", "scs")
+POLICIES = ("v8", "v9", "v9-draft", "v9-random", "v9-norace", "v9-noreadback", "v9-nodiscovery", "v9-noqueue", "v9-level",
+            "v9-hedge", "v9-cap", "v9-turn", "v9-v8flip", "v9-restart", "v9-gain", "v9-cap6", "v9-nocap", "v9-standing",
+            "v9-half", "v9-half-gain", "v8-race", "scs")
 
 
 @dataclass
@@ -123,7 +124,7 @@ class World:
         self.s = s
         rng = np.random.default_rng(10_000 + s.seed)
         d, k = s.d, s.k
-        self.axes = [f"A{i + 1}" for i in range(d)]
+        self.axes = [f"D{i + 1}" for i in range(d)]
         hidden = set(rng.choice(d, size=s.hidden, replace=False).tolist()) if s.hidden else set()
         self.hidden = sorted(hidden)
         trap = tuple(int(x) for x in rng.integers(k, size=d))
@@ -246,33 +247,47 @@ class Policy:
     readback: bool = False
     race: str | None = None          # None (v8's patience), "rising", "level", "hedge"
     flip: str = "auto"               # how a flip is chosen: "auto" (v9: from the map; v8: a shared decision), "shared"
+    breadth: str = "cap"             # "cap": a new direction opens only while fewer than `cap` race; "half": about half
+                                     # the exploration slots open new directions whatever races, and at most `cap`
+                                     # race at once (the weakest at equal effort waits in the queue)
     cap: int = 3                     # a new direction opens only while fewer than this many tracks race
     serve: str = "turn"              # the race's schedule: "turn" (least recently served first), "gain" (tracks that
                                      # gained at their last experiment first, then in turn), "standing" (the best at
                                      # equal effort first)
     discovery: bool = False
+    retro: bool = True               # a warm start judges the earlier run's explorations as the race would have
     scs: bool = False
     kmin: int = 2
     kmax: int = 4
 
 
 def policy(name):
-    v9 = dict(kinds=("drop", "flip", "backtrack"), model=True, readback=True, race="rising", discovery=True)
+    """v9 is v9 as shipped (helix9/run.py's defaults); v9-draft is the first draft, before the simulator showed that
+    capping how many tracks race also capped breadth (docs/V9_SIM.md). The ablations each change one part of v9."""
+    draft = dict(kinds=("drop", "flip", "backtrack"), model=True, readback=True, race="rising", discovery=True)
+    v9 = {**draft, "breadth": "half", "serve": "gain"}
     table = {
         "v8": dict(),
         "v9": v9,
-        "v9-random": {**v9, "model": False},
-        "v9-norace": {**v9, "race": None},
+        "v9-draft": draft,
+        "v9-random": {**v9, "model": False},             # drops and flips at random on the map, no model
+        "v9-norace": {**v9, "race": None},               # v8's patience instead of the race
         "v9-noreadback": {**v9, "readback": False},
         "v9-nodiscovery": {**v9, "discovery": False},
+        "v9-noqueue": {**v9, "retro": False},            # the earlier run's explorations are not judged again
         "v9-level": {**v9, "race": "level"},
         "v9-hedge": {**v9, "race": "hedge"},
-        "v9-gain": {**v9, "serve": "gain"},
-        "v9-cap6": {**v9, "cap": 6},
+        "v9-cap": {**v9, "breadth": "cap"},              # new directions only while fewer than 3 race
+        "v9-turn": {**v9, "serve": "turn"},              # racing tracks served in turn only
         "v9-v8flip": {**v9, "flip": "shared"},
         "v9-restart": {**v9, "kinds": ("restart", "flip", "backtrack")},
-        "v9-nocap": {**v9, "cap": 99},
-        "v9-standing": {**v9, "serve": "standing"},
+        # the first draft's variants (docs/V9_SIM.md, batches 2 to 5)
+        "v9-gain": {**draft, "serve": "gain"},
+        "v9-cap6": {**draft, "cap": 6},
+        "v9-nocap": {**draft, "cap": 99},
+        "v9-standing": {**draft, "serve": "standing"},
+        "v9-half": {**draft, "breadth": "half"},
+        "v9-half-gain": {**draft, "breadth": "half", "serve": "gain"},
         "v8-race": dict(race="rising"),
         "scs": dict(scs=True),
     }
@@ -432,7 +447,7 @@ class Sim:
         self.main = "T1"
         for t in self.tracks.values():
             self.place(0, t)
-        if self.race is not None:    # a v9 continuation judges them as the race would have (helix9/warm.py)
+        if self.race is not None and self.p.retro:   # a v9 continuation judges them as the race would have (helix9/warm.py)
             retro_judge(self.race, list(self.tracks.values()), 0, keep=max(1, min(self.p.cap, 4) - 1), kinds=("restart",),
                         main=self.main)
         self.records = [-6, -4, -2, 0]
@@ -689,10 +704,13 @@ class Sim:
                     live.sort(key=lambda t: (-self.race.standing(t, all_t), t.get("served", t["opened"])))
                 else:
                     live.sort(key=lambda t: (t.get("served", t["opened"]), t["opened"]))
-                live = live[:n_exp]
-                if len([t for t in self.tracks.values() if self.live(t)]) < self.p.cap and len(live) == n_exp \
-                        and n_exp >= 2 and gen % 2 == 0:
-                    live = live[:-1]
+                if self.p.breadth == "half":
+                    live = live[:(n_exp // 2 if n_exp >= 2 else gen % 2)]
+                else:
+                    live = live[:n_exp]
+                    if len([t for t in self.tracks.values() if self.live(t)]) < self.p.cap and len(live) == n_exp \
+                            and n_exp >= 2 and gen % 2 == 0:
+                        live = live[:-1]
             else:
                 live.sort(key=lambda t: (t["misses"], -t["opened"]))
                 live = live[:n_exp]
@@ -752,6 +770,8 @@ class Sim:
             if t["best_id"] and t.get("placed") != t["best_id"]:
                 t["placed"] = t["best_id"]
                 self.place(gen, t)
+        if self.race is not None and self.p.breadth == "half":
+            self.race_pool(gen)
         best = self.best()
         if best.track != self.main:
             ms = self.tracks[self.main]["best"]
@@ -768,6 +788,19 @@ class Sim:
                 self.discover(gen)
         self.hist.append({"gen": gen, "best": best.y, "true": self.w.height(best.x), "basin": best.basin,
                           "level": lv, "hills": len(self.hills)})
+
+    def race_pool(self, gen):
+        """At most `cap` tracks race at once: the weakest at equal effort waits in the queue (helix9/race.py)."""
+        all_t = list(self.tracks.values())
+        running = [t for t in all_t if t["id"] != self.main and (t.get("race") or {}).get("status") == "running"]
+        if len(running) <= self.p.cap:
+            return
+        stand = {t["id"]: self.race.standing(t, all_t) for t in running}
+        running.sort(key=lambda t: (-stand[t["id"]], -(t["best"] if t["best"] is not None else -1e9)))
+        for t in running[self.p.cap:]:
+            t["race"]["status"] = "waiting"
+            t["race"]["queue"] = round(1.0 - stand[t["id"]], 4)
+            self.log(gen, "race", f"{t['id']} waits: {len(running)} racing, it is among the weakest at equal effort")
 
     def run(self):
         g0 = self.start()
@@ -812,7 +845,7 @@ def _work(args):
     return r
 
 
-def batch(families, policies, seeds, workers=2, out=None, log=print):
+def batch(families, policies, seeds, workers=2, out=None, log=print, seed0=1):
     """Every family x policy x seed; results are appended to `out` (sim_runs.jsonl) as they finish, and a run
     already there is not repeated (a batch can be resumed)."""
     done = {}
@@ -824,7 +857,7 @@ def batch(families, policies, seeds, workers=2, out=None, log=print):
                     done[(r["family"], r["policy"], r["seed"])] = r
             except ValueError:
                 pass
-    jobs = [(f, p, s) for f in families for p in policies for s in range(1, seeds + 1) if (f, p, s) not in done]
+    jobs = [(f, p, s) for f in families for p in policies for s in range(seed0, seed0 + seeds) if (f, p, s) not in done]
     rows = list(done.values())
     fh = open(out, "a") if out is not None else None
     t0 = time.time()
@@ -881,6 +914,7 @@ def main(argv=None):
     ap.add_argument("--families", default=",".join(FAMILIES))
     ap.add_argument("--policies", default=",".join(POLICIES))
     ap.add_argument("--seeds", type=int, default=20)
+    ap.add_argument("--seed0", type=int, default=1, help="the first seed of a batch (a fresh set of worlds: seed0 41)")
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--out", default=None)
     ap.add_argument("--view", default=None, help="write the viewer's data for this run (viz/mapview.html)")
@@ -890,7 +924,8 @@ def main(argv=None):
         if a.out:
             Path(a.out).mkdir(parents=True, exist_ok=True)
         rows = batch(a.families.split(","), a.policies.split(","), a.seeds, a.workers,
-                     out=(Path(a.out) / "sim_runs.jsonl") if a.out else None, log=lambda m: print(m, flush=True))
+                     out=(Path(a.out) / "sim_runs.jsonl") if a.out else None, log=lambda m: print(m, flush=True),
+                     seed0=a.seed0)
         tab = summarise(rows)
         for (f, p), x in sorted(tab.items()):
             print(f"{f:10s} {p:15s} true {x['mean_true']:.4f} ± {x['se']:.4f}  tall found {x['tall_found']:.0%} "

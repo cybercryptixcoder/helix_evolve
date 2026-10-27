@@ -29,7 +29,7 @@ and the reading of its programs.
 | Model | `model.py` | Bayesian one-hot regression: main effects, screened pairwise interactions, a saturating effort term, per-axis variances by empirical Bayes; **a decision nobody has varied stays uncertain** (the pooled prior), because the decisions every program shares are where the most is unknown. Thompson samples, importance per axis, residuals |
 | Drops, flips, ablations | `drops.py` | Exploration **chosen from the map**: a drop changes 2-4 decisions at once and lands at least 2 decisions from every known hill's top; a flip changes one; every 12 generations an ablation undoes one of the record's decisions to measure what it is worth. Targets come from Thompson sampling, so untried options keep a chance. Tabu on tried targets, no known-impossible pairs |
 | Blueprint and read-back | `prompts.py`, `run.py` | The planner gets the target and plans how to build it; the coder gets it as a blueprint (the target decisions; everything else as the base). The result is read in full: decisions not built are named to the next follow-up |
-| The fair race | `race.py` | Replaces v8's two-follow-up patience for drops, flips, ablations and restarts: a new design is compared with designs that started the same way **at the same effort** (rungs of 2, 4, 8, 16, 32 experiments) and continues while it keeps rising. At most 3 race at once, served in turn |
+| The fair race | `race.py`, `run.py` | Replaces v8's two-follow-up patience for drops, flips, ablations and restarts: a new design is compared with designs that started the same way **at the same effort** (rungs of 2, 4, 8, 16, 32 experiments) and continues while it keeps rising. **Breadth is kept:** about half the exploration slots open new directions whatever races; at most 3 race at once, and when a fourth arrives the weakest at equal effort waits in the queue. Racing tracks that gained at their last experiment are served first, then in turn |
 | The queue of earlier explorations | `race.py`, `warm.py` | A continuation judges the earlier run's explorations as the race would have. Those still rising when they were paused qualify; the 2 strongest race again at once, the rest **wait in a queue** (strongest at equal effort first) and are taken one at a time as a kind of new direction, about twice as often as each kind of new exploration |
 | Discovery | `run.py` | Two programs at the same coordinate scoring further apart than the model explains prompt "what design decision differs?"; the answer becomes an axis. Cartographer scans are matched into the codebook instead of replacing it; above 16 axes a consolidation call merges duplicates |
 | The planner's view | `run.py` | A table: each decision, its options, how many programs use each, their best, the estimated effect and its uncertainty, what is untried, and the model's suggested move for a track |
@@ -86,7 +86,7 @@ What it found, and what was changed because of it, is in `docs/V9_SIM.md`.
 
 `annotate` (True), `double_rate` (0.12), `reliable_min` (0.5), `model_min_rows` (12), `model_pairs` (6), `kmin`/`kmax`
 (2/4), `drop_min_dist` (2), `race_rule` ("rising"), `race_rungs` (2, 4, 8, 16, 32), `running_cap` (3),
-`ablate_every` (12), `discover_every` (4), `residual_z` (2.5), `map_axes`/`map_values` (10/6, the table's size),
+`breadth` ("half"), `race_serve` ("gain"), `ablate_every` (12), `discover_every` (4), `residual_z` (2.5), `map_axes`/`map_values` (10/6, the table's size),
 `suggest_moves` (True), `seed_axes` (True), `max_axes` (16).
 
 ## Known limits
