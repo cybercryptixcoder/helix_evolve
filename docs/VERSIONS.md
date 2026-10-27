@@ -33,6 +33,24 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
+## v9 (proposed, October 27, 2026): v8 plus a design map with coordinates, not built
+
+- **Why.** The October 27 discussion asked for a map of the design space with literal coordinates, jumps to new
+  points on it, and axes discovered while searching; and for a proof of concept that can be trusted before scaling.
+  Measurements on v4-v8 (`docs/SEARCH_SPACE_MODEL.md`, section 2):
+  - the Cartographer's 656 decision names fall ~98% into 9 recurring axes, but v8 re-derived them every scan, so no
+    program ever had a coordinate;
+  - a run's best after 20 programs has no rank correlation with its final best (15 runs, Spearman -0.09), yet v8
+    paused restarts after a median of 3 experiments;
+  - one-decision flips often changed many decisions.
+- **Proposed** (`docs/SEARCH_SPACE_MODEL.md`, sections 4 and 6): a codebook of axes with permanent ids, an annotator
+  that gives every program a coordinate, a sparse Bayesian model of the landscape (what helps, what hurts), drops to
+  sampled coordinates 2-4 axes from every known hill, a fair race between hills at equal effort, residual-driven axis
+  discovery, ablations on the record.
+- **Trust first:** an offline replay on v8's archive, a planted landscape with a known best, then a small live run
+  against a simple baseline (section 7).
+- **Status:** a plan, waiting for Shreyas's decision (`docs/BRIEF_2026-10-27.md`).
+
 ## v8: v7 plus a register of hills (October 24, 2026), job ready
 
 - **Why.** v7 explored in most generations but couldn't reliably find a new hill, or tell one from a hill it had
@@ -64,6 +82,10 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
     record), the hill before it, on which 10 of v7's explorations had ended (9 of them at distance 0.000 or 0.001),
     and Code Zero's.
   - The jobs (`docs/V8_JOB.md`) continue both v7 runs for 100 generations, side by side.
+  - **The autocorrelation run (v8-s1) ran on to generation 700** (`results/v8warm/`): best 0.9412521 → 0.9414417.
+    The last gain above the floor came at generation 384. 73 hills were registered; flips mostly landed on
+    record-height hills with different shapes, and restarts paused after a median of 3 experiments at a median
+    0.82. Analysis: `docs/SEARCH_SPACE_MODEL.md`, section 2.
 
 ## v7: exploration that follows progress (October 23–24, 2026), finished: it did what it was built to do
 

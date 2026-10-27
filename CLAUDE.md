@@ -1,5 +1,7 @@
 # Notes for agents working in this repo
 
+- **Latest (October 27): `docs/BRIEF_2026-10-27.md` and `docs/SEARCH_SPACE_MODEL.md`** (a model of the search space; v9
+  proposed, waiting for Shreyas's decision).
 - **Fresh session? Read `docs/HANDOFF_2026-10-24.md` first** (everything: versions, lessons, VM, open tasks; the VRP in `docs/VRP_CONTEXT.md`). Then **`docs/BRIEF_2026-10-24.md`** (the current request: v8, a register of hills, `helix8/`,
   `docs/V8_DESIGN.md`, jobs in `docs/V8_JOB.md`; before it, how to explore more of the search space: the v7 results
   are in `docs/V7_RESULTS.md`, the reasoning in `docs/SEARCH_SPACE.md`). Before it:
