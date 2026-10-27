@@ -52,8 +52,9 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **The simulator** (`docs/V9_SIM.md`): the first draft was **not** better than v8 (worse on 40 seeds per world,
   p = 0.047): its race had throttled breadth (11 explorations in 120 generations against v8's 57). Fixed. v9 as
   shipped, on 280 fresh worlds: the taller hill 43.9% vs 36.4%, better on 88 seeds and worse on 46 (p < 0.001); much
-  better where new hills show their height quickly, never worse beyond noise. Every Helix version beats a simple
-  baseline (14% vs 33%).
+  better where new hills show their height quickly, never worse beyond noise. Ablations: breadth is essential (without
+  it v9 falls to v8's level); targets chosen at random on the map do as well as the model's, so the measured gain is
+  from where v9 jumps, not yet from the model. Every Helix version beats a simple baseline (14% vs 33%).
 - **The viewer** (`viz/mapview.html`): any version's run, or a simulator run, live from GitHub: the map, the
   landscape as contours or terrain, the record's climb, the race, the design map.
 - **The job** (`docs/V9_JOB.md`, `scripts/run_v9_warm.sh`): v8-s1 continued from generation 700 (record 0.9414417)
