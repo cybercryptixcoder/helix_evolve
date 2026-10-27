@@ -257,14 +257,18 @@ class LandscapeModel:
         return out
 
     def importance(self):
-        """Each axis's and modelled pair's share of the variance its fitted effects explain over the observed
-        values (functional ANOVA on the fitted model), and the effort term's."""
+        """Each axis's and modelled pair's share of the variance its fitted effects explain over the programs
+        (functional ANOVA on the fitted model, weighted by how many programs make each choice), and the effort term's.
+        A decision read on only a few programs explains little of the whole, however far apart those few scored."""
         var = {}
+        n_all = max(self.n, 1)
         for a in self.axes:
             obs = [v for v in self.levels[a] if self.observed[a].get(v) and v != UNKNOWN]
             if len(obs) >= 2:
                 e = np.array([self.m[self.index[(a, v)]] for v in obs])
-                var[a] = float(e.var())
+                w = np.array([self.observed[a][v] for v in obs], dtype=float)
+                mean = float((w * e).sum() / w.sum())
+                var[a] = float((w * (e - mean) ** 2).sum() / n_all)      # programs with the decision unread add 0
             else:
                 var[a] = 0.0
         for ab in self.pairs:

@@ -37,6 +37,7 @@ from helix4 import prompts as P4
 from helix4.archive import Program
 from helix9 import annotate as A
 from helix9 import prompts as P
+from helix9 import upkeep
 from helix9.codebook import Codebook, consolidate
 from helix9.model import LandscapeModel
 from helix9.pack import jl
@@ -56,7 +57,7 @@ def scan_decisions(run):
     return out
 
 
-def build_codebook(call, decisions, batch=30, max_axes=14, log=print):
+def build_codebook(call, decisions, batch=30, max_axes=14, max_values=6, log=print):
     cb = Codebook()
     for i in range(0, len(decisions), batch):
         part = decisions[i: i + batch]
@@ -83,15 +84,10 @@ def build_codebook(call, decisions, batch=30, max_axes=14, log=print):
             for alt in d.get("alternatives") or []:
                 cb.add_value(aid, alt, d.get("gen"), "replay")
         log(f"   codebook: {len(cb.active_axes())} decisions after {min(i + batch, len(decisions))} of {len(decisions)} names")
-    for _ in range(3):                       # merge duplicates until stable (at most 3 calls)
-        if len(cb.active_axes()) <= max_axes:
-            break
-        text = call("cartographer", P.MATCH_SYSTEM, P.CONSOLIDATE_ASK.format(axes=cb.text(max_values=3), k=max_axes),
-                    0.2, 2500)
-        merged = consolidate(cb, P4.extract_json(text) or {})
-        log(f"   consolidated: {len(merged)} merges, {len(cb.active_axes())} decisions")
-        if not merged:
-            break
+        if len(cb.active_axes()) > 2 * max_axes:           # keep it small as it grows, so later batches match it
+            upkeep.consolidate_axes(cb, call, max_axes, log=log)
+    upkeep.consolidate_axes(cb, call, max_axes, log=log)
+    upkeep.tidy(cb, call, max_values=max_values, log=log)
     return cb
 
 
@@ -122,29 +118,66 @@ def select(run, progs, sample=150, seed=1):
     return pick
 
 
-def annotate_all(call, cb, progs, pids, double=0.25, seed=1, workers=8, log=print):
-    axes = cb.active_axes()
+def annotate_all(call, cb, progs, pids, double=0.25, seed=1, workers=8, wave=48, max_axes=14, max_values=6,
+                 log=print):
+    """Reads the programs in waves; between waves the codebook is kept tidy (helix9/upkeep.py), so later readings see
+    a compact map. A program read twice is read twice within its wave, against the same codebook."""
     rng = random.Random(seed)
     twice = {pid for pid in pids if rng.random() < double}
-    jobs = [(pid, "first") for pid in pids] + [(pid, "second") for pid in sorted(twice)]
-    t0 = time.time()
-
-    def one(job):
-        pid, kind = job
-        p = progs[pid]
-        return call("annotator", A.SYSTEM, A.full_prompt(cb, axes, p), 0.2 if kind == "first" else 0.7, 1500)
-    with ThreadPoolExecutor(max_workers=workers) as ex:
-        texts = list(ex.map(one, jobs))
     coords, seconds, unread = {}, {}, 0
-    for (pid, kind), text in zip(jobs, texts):
-        c, info = A.apply_full_reply(cb, text, axes, None, "replay")
-        if not info["readable"]:
-            unread += 1
-        (coords if kind == "first" else seconds)[pid] = c
-    rows = [{"id": pid, "first": coords.get(pid), "second": seconds[pid]} for pid in sorted(seconds)]
+    t0 = time.time()
+    for w in range(0, len(pids), wave):
+        part = pids[w: w + wave]
+        axes = cb.active_axes()
+        jobs = [(pid, "first") for pid in part] + [(pid, "second") for pid in part if pid in twice]
+
+        def one(job):
+            pid, kind = job
+            return call("annotator", A.SYSTEM, A.full_prompt(cb, axes, progs[pid]), 0.2 if kind == "first" else 0.7,
+                        1500)
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            texts = list(ex.map(one, jobs))
+        for (pid, kind), text in zip(jobs, texts):
+            c, info = A.apply_full_reply(cb, text, axes, None, "replay-reading")
+            if not info["readable"]:
+                unread += 1
+            (coords if kind == "first" else seconds)[pid] = c
+        upkeep.consolidate_axes(cb, call, max_axes, log=log)
+        upkeep.tidy(cb, call, upkeep.uses_of(cb, coords), max_values=max_values, log=log)
+        log(f"   read {min(w + wave, len(pids))} of {len(pids)} programs: {len(cb.active_axes())} decisions, "
+            f"{sum(len(cb.values(a)) for a in cb.active_axes())} options")
+    upkeep.prune(cb, coords, min_support=max(3, round(0.02 * len(coords))), log=log)
+    coords = {pid: cb.canonical(c) for pid, c in coords.items()}
+    rows = [{"id": pid, "first": coords.get(pid), "second": cb.canonical(seconds[pid])} for pid in sorted(seconds)]
     log(f"   annotated {len(coords)} programs ({len(seconds)} twice, {unread} replies unreadable) in "
         f"{time.time() - t0:.0f} s")
     return coords, rows
+
+
+def annotate_children(call, cb, progs, children, coords, workers=8, diff_lines=250, log=print):
+    """The test programs, read the way the run reads a new program: from the diff against its parent (whose
+    coordinate is known), inheriting everything the change didn't move; a rewrite too long to diff is read in full."""
+    from helix4.archive import make_diff
+    axes = cb.active_axes()
+    jobs = []
+    for c in children:
+        par = progs[c.parent]
+        diff = make_diff(par.code, c.code, limit=diff_lines)
+        if "more diff lines)" in diff[-40:]:
+            jobs.append((c, "full", A.full_prompt(cb, axes, c)))
+        else:
+            jobs.append((c, "diff", A.diff_prompt(cb, axes, par, coords[par.id], c, diff)))
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        texts = list(ex.map(lambda j: call("annotator", A.SYSTEM, j[2], 0.2, 1500), jobs))
+    out = {}
+    for (c, mode, _), text in zip(jobs, texts):
+        if mode == "diff":
+            out[c.id] = A.apply_diff_reply(cb, text, coords[c.parent], None, "replay-reading")[0]
+        else:
+            out[c.id] = A.apply_full_reply(cb, text, axes, None, "replay-reading")[0]
+    log(f"   read {len(out)} later programs from their diffs ({sum(1 for j in jobs if j[1] == 'full')} rewrites read "
+        f"in full)")
+    return {pid: cb.canonical(c) for pid, c in out.items()}
 
 
 def lineage_effort(progs, pid, cap=500):
@@ -183,67 +216,119 @@ def permutation_p(a, b, rho, n=2000, seed=1):
     return (hits + 1) / (n + 1)
 
 
-def model_test(cb, coords, progs, effort, split):
+def model_test(cb, coords, child, progs, effort, split):
+    """Fitted on the programs read up to generation `split`, asked about later changes: does its predicted change from
+    parent to child (model(child) - model(parent)) rank the actual changes in score better than chance?"""
     axes = cb.active_axes()
 
-    def row(pid):
-        p = progs[pid]
-        return {"coord": {a: v for a, v in coords[pid].items() if a in axes}, "y": p.score, "effort": effort[pid]}
+    def keep(c):
+        return {a: v for a, v in (c or {}).items() if a in axes}
     train = [pid for pid in coords if progs[pid].gen <= split]
-    test = [pid for pid in coords if progs[pid].gen > split and progs[pid].parent in coords]
-    m = LandscapeModel({a: cb.values(a) for a in axes}).fit([row(pid) for pid in train], min_rows=8)
+    test = [pid for pid in child if progs[pid].parent in coords]
+    m = LandscapeModel({a: cb.values(a) for a in axes}).fit(
+        [{"coord": keep(coords[pid]), "y": progs[pid].score, "effort": effort[pid]} for pid in train], min_rows=8)
     if not m.ready or len(test) < 5:
         return {"train": len(train), "test": len(test), "rho": None, "p": None}
-    pred_c = m.features([coords[pid] for pid in test], [effort[pid] for pid in test]) @ m.m
     par = [progs[pid].parent for pid in test]
-    pred_p = m.features([coords[q] for q in par], [effort[q] for q in par]) @ m.m
+    c_eff = [A.effort_of(keep(coords[q]), effort[q], keep(child[pid]), axes) for pid, q in zip(test, par)]
+    pred_c = m.features([keep(child[pid]) for pid in test], c_eff) @ m.m
+    pred_p = m.features([keep(coords[q]) for q in par], [effort[q] for q in par]) @ m.m
     pred_delta = (pred_c - pred_p) * m.y_sd
     actual = [progs[pid].score - progs[q].score for pid, q in zip(test, par)]
     rho = spearman(pred_delta, actual)
-    moved = [i for i, (pid, q) in enumerate(zip(test, par)) if coords[pid] != coords[q]]
+    moved = [i for i, (pid, q) in enumerate(zip(test, par)) if keep(child[pid]) != keep(coords[q])]
     rho_moved = spearman(pred_delta[moved], np.asarray(actual)[moved]) if len(moved) >= 5 else None
+    # the level: does the model rank the later programs' scores, and better than their parents' scores do?
+    level = pred_c * m.y_sd + m.y_mean
+    scores = [progs[pid].score for pid in test]
+    rho_level = spearman(level, scores)
+    rho_parent = spearman([progs[q].score for q in par], scores)
+    rows = [{"id": pid, "parent": q, "coord": keep(child[pid]), "parent_coord": keep(coords[q]),
+             "predicted_change": float(d), "change": float(a)} for pid, q, d, a in zip(test, par, pred_delta, actual)]
     return {"train": len(train), "test": len(test), "moved": len(moved), "rho": rho,
             "p": permutation_p(pred_delta, actual, rho), "rho_moved": rho_moved,
-            "p_moved": permutation_p(pred_delta[moved], np.asarray(actual)[moved], rho_moved) if moved else None}
+            "p_moved": permutation_p(pred_delta[moved], np.asarray(actual)[moved], rho_moved) if moved else None,
+            "rho_level": rho_level, "p_level": permutation_p(level, scores, rho_level),
+            "rho_parent": rho_parent, "rows": rows}
 
 
 # ---------------------------------------------------------------------------------------------- the whole replay
-def replay(run, out, call, sample=150, double=0.25, seed=1, log=print):
-    run, out = Path(run), Path(out)
-    out.mkdir(parents=True, exist_ok=True)
+def load_programs(run):
     progs = {}
-    for r in jl(run / "programs.jsonl"):
+    for r in jl(Path(run) / "programs.jsonl"):
         try:
             progs[r["id"]] = Program(**r)
         except TypeError:
             continue
+    return progs
+
+
+def split_gen(progs):
+    gens = sorted(p.gen for p in progs.values() if p.valid and p.score is not None)
+    return gens[int(0.75 * (len(gens) - 1))] if gens else 0
+
+
+def replay(run, out, call, sample=150, double=0.25, seed=1, test_pairs=120, log=print):
+    run, out = Path(run), Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    progs = load_programs(run)
     log(f"== replay of {run} ({len(progs)} programs)")
     decisions = scan_decisions(run)
     log(f"1. the codebook, from {len(decisions)} distinct names the Cartographer gave")
     cb = build_codebook(call, decisions, log=log)
     pids = select(run, progs, sample, seed)
-    log(f"2. coordinates: reading {len(pids)} programs")
-    coords, rows = annotate_all(call, cb, progs, pids, double, seed, log=log)
-    A.update_agreement(cb, rows)
-    ag = A.agreement(rows, cb.active_axes())
-    effort = {pid: lineage_effort(progs, pid) for pid in coords}
-    gens = sorted(progs[pid].gen for pid in coords)
-    split = gens[int(0.75 * (len(gens) - 1))] if gens else 0
-    log(f"4. the model's test (fitted up to generation {split}, asked about the later programs)")
-    test = model_test(cb, coords, progs, effort, split)
-    axes = cb.active_axes()
-    full = LandscapeModel({a: cb.values(a) for a in axes}).fit(
-        [{"coord": coords[pid], "y": progs[pid].score, "effort": effort[pid]} for pid in coords], min_rows=8)
+    split = split_gen(progs)
+    later = sorted((p for p in progs.values() if p.valid and p.score is not None and p.gen > split
+                    and p.parent in progs and progs[p.parent].valid and progs[p.parent].score is not None
+                    and p.role not in ("seed", "alt")), key=lambda p: p.id)
+    random.Random(seed + 1).shuffle(later)
+    children = later[:test_pairs]
+    read = list(dict.fromkeys(pids + [c.parent for c in children]))
+    log(f"2. coordinates: reading {len(read)} programs ({len(pids)} for the map, the rest the parents of "
+        f"{len(children)} later programs kept for the test)")
+    coords, rows = annotate_all(call, cb, progs, read, double, seed, log=log)
+    log(f"3. the test programs (after generation {split}), read from their diffs as the run reads them")
+    child = annotate_children(call, cb, progs, children, coords, log=log)
     (out / "coords.jsonl").write_text("".join(json.dumps({"id": pid, "gen": progs[pid].gen, "coord": coords[pid],
-                                                          "how": "replay", "effort": effort[pid]}) + "\n"
+                                                          "how": "replay", "effort": lineage_effort(progs, pid)}) + "\n"
                                               for pid in sorted(coords)))
     (out / "annotations.jsonl").write_text("".join(json.dumps({**r, "gen": progs[r["id"]].gen}) + "\n" for r in rows))
-    verdict = write_report(out / "REPLAY.md", run, cb, coords, rows, ag, test, full, progs, decisions)
-    tmp = out / ".codebook.json.tmp"                  # written last: its presence means the replay finished
+    (out / "test.jsonl").write_text("".join(json.dumps({"id": pid, "parent": progs[pid].parent, "coord": c}) + "\n"
+                                            for pid, c in sorted(child.items())))
+    return analyse(run, out, cb, coords, rows, child, split, progs, decisions, log)
+
+
+def analyse(run, out, cb, coords, rows, child, split, progs, decisions, log=print):
+    """Steps 3-5 from the readings: reliability, the model's test, the effects; REPLAY.md; then codebook.json."""
+    A.update_agreement(cb, rows)
+    ag = A.agreement(rows, cb.active_axes(), cb)
+    effort = {pid: lineage_effort(progs, pid) for pid in coords}
+    log(f"4. the model's test (fitted on the programs up to generation {split}, asked about the {len(child)} later "
+        f"changes)")
+    test = model_test(cb, coords, child, progs, effort, split)
+    axes = cb.active_axes()
+    full = LandscapeModel({a: cb.values(a) for a in axes}).fit(
+        [{"coord": {a: v for a, v in coords[pid].items() if a in axes}, "y": progs[pid].score, "effort": effort[pid]}
+         for pid in coords], min_rows=8)
+    rows_test = test.pop("rows", [])
+    (Path(out) / "test.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows_test))
+    verdict = write_report(Path(out) / "REPLAY.md", run, cb, coords, rows, ag, test, full, progs, decisions)
+    tmp = Path(out) / ".codebook.json.tmp"            # written last: its presence means the replay finished
     tmp.write_text(json.dumps(cb.to_json(), indent=1))
-    tmp.replace(out / "codebook.json")
+    tmp.replace(Path(out) / "codebook.json")
     log("\n".join("   " + v for v in verdict))
     return {"axes": len(axes), "coords": len(coords), "twice": len(rows), "test": test, "verdict": verdict}
+
+
+def report_only(run, out, log=print):
+    """The analysis again from a finished replay's readings (no model calls): after a change to the analysis."""
+    run, out = Path(run), Path(out)
+    progs = load_programs(run)
+    cb = Codebook(json.loads((out / "codebook.json").read_text()))
+    coords = {r["id"]: r["coord"] for r in jl(out / "coords.jsonl")}
+    rows = [r for r in jl(out / "annotations.jsonl")]
+    child = {r["id"]: r["coord"] for r in jl(out / "test.jsonl")}
+    return analyse(run, out, cb, coords, rows, child, split_gen(progs), progs, scan_decisions(run), log)
 
 
 def write_report(path, run, cb, coords, rows, ag, test, m, progs, decisions):
@@ -258,9 +343,13 @@ def write_report(path, run, cb, coords, rows, ag, test, m, progs, decisions):
           f"{test['test']} later programs (permutation p = {p:.3f}; on the {test.get('moved')} that moved a decision: "
           + (f"{test['rho_moved']:+.3f}, p = {test['p_moved']:.3f}" if test.get("rho_moved") is not None else "-")
           + f") ({'pass' if rho > 0 and p is not None and p < 0.05 else 'FAIL'})")
+    v3 = ("" if test.get("rho_level") is None else
+          f"The level: the model's predicted score vs the later programs' actual scores, rank correlation "
+          f"{test['rho_level']:+.3f} (permutation p = {test['p_level']:.3f}); their parents' scores alone: "
+          f"{test['rho_parent']:+.3f}")
     lines = [f"# The replay: is the design map real? ({Path(run).name})", "",
              f"Stage 0 of the proof of concept (`helix9/replay.py`, `docs/V9_DESIGN.md`). No programs were run.", "",
-             "## Verdicts", "", f"- {v1}", f"- {v2}",
+             "## Verdicts", "", f"- {v1}", f"- {v2}"] + ([f"- {v3}"] if v3 else []) + [
              f"- The codebook: {len(axes)} decisions from {len(decisions)} distinct names the Cartographer gave; "
              f"{len(coords)} programs read, {len(rows)} of them twice.", "",
              "## The decisions, how reliably they are read, and what the model says about them", "",
@@ -282,7 +371,7 @@ def write_report(path, run, cb, coords, rows, ag, test, m, progs, decisions):
         if m.pairs:
             lines += ["", "Interacting decisions: " + ", ".join(f"{a} x {b}" for a, b in m.pairs)]
     Path(path).write_text("\n".join(lines) + "\n")
-    return [v1, v2]
+    return [v1, v2] + ([v3] if v3 else [])
 
 
 def main(argv=None):
@@ -293,7 +382,11 @@ def main(argv=None):
     ap.add_argument("--double", type=float, default=0.25)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--fake", action="store_true")
+    ap.add_argument("--report-only", action="store_true", help="redo the analysis from a finished replay's readings")
     a = ap.parse_args(argv)
+    if a.report_only:
+        report_only(a.run, a.out, log=lambda m: print(m, flush=True))
+        return
     if a.fake:
         from helix4.llm import FakeLLM
         from helix9.run import fake_answer

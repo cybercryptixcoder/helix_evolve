@@ -290,6 +290,39 @@ def consolidate(cb, reply_json, gen=None):
     return done
 
 
+def regroup(cb, aid, reply_json, gen=None, uses=None):
+    """Applies a tidying reply {"options": [{"name", "ids"}]} to one axis: in each group the most used option survives,
+    renamed to the group's short name (its old name kept as an alias), and the others become its aliases. Returns
+    the number of options merged away."""
+    aid = cb.resolve(aid)
+    if aid not in cb.axes:
+        return 0
+    uses = uses or {}
+    live = set(cb.values(aid))
+    merged = 0
+    for g in (reply_json or {}).get("options") or []:
+        if not isinstance(g, dict):
+            continue
+        ids = [cb.resolve_value(str(v).strip()) for v in g.get("ids") or []]
+        ids = list(dict.fromkeys(v for v in ids if v in live))
+        if not ids:
+            continue
+        keep = max(ids, key=lambda v: (uses.get(v, 0), -ids.index(v)))
+        name = " ".join(str(g.get("name") or "").split())[:80]
+        val = cb.axes[aid]["values"][keep]
+        if name and name.lower() != val["name"].lower():
+            val["aliases"] = (val.get("aliases", []) + [val["name"]])[-8:]
+            val["name"] = name
+        for v in ids:
+            if v != keep:
+                cb.merge_value(v, keep, gen)
+                live.discard(v)
+                merged += 1
+    if merged:
+        cb.log.append([gen, "regroup", aid, f"{merged} options merged", ""])
+    return merged
+
+
 def hamming(c1, c2, axes=None):
     """Axes on which both coordinates are known and differ (unknowns don't count)."""
     keys = axes if axes is not None else set(c1) | set(c2)

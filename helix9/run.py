@@ -61,6 +61,7 @@ from helix8.run import (Config as Config8, EXPLORE as EXPLORE8, KIND_WORDS as KI
                         fake_answer as fake_answer8)
 from helix9 import annotate as A
 from helix9 import prompts as P
+from helix9 import upkeep
 from helix9.codebook import Codebook, NEW, consolidate, hamming, is_new
 from helix9.drops import choose_drop, choose_flip
 from helix9.model import LandscapeModel
@@ -113,6 +114,7 @@ class Config(Config8):
     suggest_moves: bool = True
     seed_axes: bool = True            # an empty codebook starts with generic design questions (no options)
     max_axes: int = 16                # above this, a consolidation call merges axes that name the same decision
+    tidy_values: int = 6              # a decision with more options than this has them grouped (helix9/upkeep.py)
 
 
 class Run(Run8):
@@ -123,6 +125,7 @@ class Run(Run8):
         super().__init__(out, cfg, llm=llm, gens=gens, log=log, problem=problem)
         self.map_lock = threading.Lock()
         self.record_read = {}
+        self.rebuild_locks = {}
         for f in ("coords.jsonl", "codebook.jsonl", "annotations.jsonl", "rebuilt.jsonl"):
             if (self.dir / f).exists() and self.gen_done >= 0:
                 self._truncate_jsonl(self.dir / f)
@@ -142,7 +145,9 @@ class Run(Run8):
         self.model = None
         self.asked = {tuple(x) for x in (self._jsonl("discoveries.jsonl") and
                                          [r.get("pair") for r in self._jsonl("discoveries.jsonl")] or []) if x}
-        self.last_ablate = max([t["opened"] for t in self.tracks.values() if t.get("kind") == "ablate"] or [-10 ** 6])
+        # the first ablation comes `ablate_every` generations into the run (a cold run's record has few decisions yet)
+        self.last_ablate = max([t["opened"] for t in self.tracks.values() if t.get("kind") == "ablate"]
+                               or [self.warm_gen or 0])
         self.map_events = []
         self.ann_calls = 0
         self.rng9 = np.random.default_rng(self.cfg.seed * 104729 + max(self.gen_done, 0))
@@ -270,6 +275,14 @@ class Run(Run8):
         the construction is there now."""
         if p is None or not p.valid or self.archive.construction(p.id) is not None or p.role == "seed":
             return p is not None and (p.role == "seed" or self.archive.construction(p.id) is not None)
+        with self.map_lock:                     # one rebuild per program, even when two children need it at once
+            lock = self.rebuild_locks.setdefault(p.id, threading.Lock())
+        with lock:
+            if self.archive.construction(p.id) is not None:
+                return True
+            return self._ensure_construction(p, gen)
+
+    def _ensure_construction(self, p, gen):
         src = self.from_local(p)
         if src:
             self._append("rebuilt.jsonl", {"gen": gen, "id": p.id, "from": src, "ok": True, "how": "local",
@@ -895,13 +908,7 @@ class Run(Run8):
                 new = self.merge_scan(gen, scanned)
                 if new:
                     self.map_events.append(f"the Cartographer's scan added {new} decision(s) to the map")
-        if len(self.cb.active_axes()) > self.cfg.max_axes:
-            text = self.call("cartographer", P.MATCH_SYSTEM, P.CONSOLIDATE_ASK.format(
-                axes=self.cb.text(max_values=3), k=self.cfg.max_axes), temperature=0.2, max_tokens=2500, effort="none",
-                gen=gen)
-            merged = consolidate(self.cb, P4.extract_json(text) or {}, gen)
-            if merged:
-                self.map_events.append(f"{len(merged)} duplicate decision(s) merged")
+        self.upkeep(gen)
         self.fit_model()
         slots = self.make_slots(gen, n_explore)
         brief = self.brief(gen, slots)
@@ -990,6 +997,25 @@ class Run(Run8):
                  + (f"; {'; '.join(events)}" if events else "") + f"; {row['seconds']:.0f} s")
         return row
 
+    def upkeep(self, gen):
+        """Keeps the map small and readable (helix9/upkeep.py): duplicate decisions merged, crowded decisions' options
+        grouped, and decisions found by reading that hardly any program makes dropped."""
+        def call(role, system, user, temperature, max_tokens):
+            return self.call(role, system, user, temperature=temperature, max_tokens=max_tokens, effort="none", gen=gen)
+        say = lambda m: self.log(f"[{self.name}] gen {gen}: {m.strip()}")      # noqa: E731
+        n0 = len(self.cb.active_axes())
+        merged = upkeep.consolidate_axes(self.cb, call, self.cfg.max_axes, gen, log=say)
+        if merged:
+            self.map_events.append(f"{merged} duplicate decision(s) merged ({n0} -> {len(self.cb.active_axes())})")
+        grouped = upkeep.tidy(self.cb, call, upkeep.uses_of(self.cb, self.coords), max_values=self.cfg.tidy_values,
+                              gen=gen, limit=3, log=say)
+        if grouped:
+            self.map_events.append(f"{grouped} reworded option(s) merged into the ones they repeat")
+        if gen % 10 == 0:
+            dropped = upkeep.prune(self.cb, self.coords, min_support=3, gen=gen, min_age=10, log=say)
+            if dropped:
+                self.map_events.append(f"{len(dropped)} decision(s) dropped: fewer than 3 programs make them")
+
     def annotate_one(self, gen, p):
         """A full reading of one program: the record, when it has no coordinate yet, or again when decisions found
         since are missing from it (the earlier reading is kept where the new one is silent, and so is its effort)."""
@@ -1018,6 +1044,8 @@ def fake_answer(role, system, user):
     if role == "cartographer" and "design decisions named elsewhere" in user:
         n = len(re.findall(r"^\d+\. ", user.split("Below are design decisions")[-1], re.M))
         return json.dumps({"matches": [{"item": i, "axis": "new", "question": f"fake decision {i}"} for i in range(1, n + 1)]})
+    if role == "cartographer" and "Group them into at most" in user:
+        return json.dumps({"options": []})
     if role == "cartographer" and "What design decision differs" in user:
         ids = re.findall(r"^## (p\d{4})$", user, re.M)
         return json.dumps({"decision": "a fake hidden decision", **{i: f"option of {i}" for i in ids}})

@@ -366,3 +366,56 @@ def test_a_tampered_pack_is_refused(tmp_path):
     out.mkdir()
     with pytest.raises(SystemExit):
         pack.restore(run / "pack", out, log=lambda m: None)
+
+
+# ---------------------------------------------------------------------------------------------- keeping the map tidy
+def test_tidying_groups_reworded_options_and_old_readings_still_resolve():
+    import json as _json
+    from helix9 import upkeep
+    from helix9.codebook import Codebook
+    cb = Codebook()
+    a = cb.add_axis("How is the step size chosen?", 1, "test")
+    vs = [cb.add_value(a, n, 1, "test") for n in ("a fixed learning rate of 0.01", "constant step, never changed",
+                                                   "backtracking line search", "Armijo line search with halving",
+                                                   "a decaying schedule")]
+    coords = {"p1": {a: vs[0]}, "p2": {a: vs[1]}, "p3": {a: vs[1]}, "p4": {a: vs[3]}}
+
+    def call(role, system, user, t, m):
+        assert "Group them into at most 3" in user and vs[4] in user
+        return _json.dumps({"options": [{"name": "Fixed step", "ids": [vs[0], vs[1]]},
+                                        {"name": "Line search", "ids": [vs[2], vs[3]]},
+                                        {"name": "Decaying schedule", "ids": [vs[4]]}]})
+    merged = upkeep.tidy(cb, call, upkeep.uses_of(cb, coords), max_values=3, log=lambda m: None)
+    assert merged == 2 and len(cb.values(a)) == 3
+    assert cb.resolve_value(vs[0]) == vs[1] and cb.value_name(vs[1]) == "Fixed step"     # the most used survives
+    assert cb.resolve_value(vs[2]) == vs[3] and cb.value_name(vs[3]) == "Line search"
+    assert cb.canonical(coords["p1"]) == {a: vs[1]}                                      # old readings resolve
+    assert "constant step, never changed" in cb.axes[a]["values"][vs[1]]["aliases"]
+
+
+def test_pruning_drops_decisions_hardly_any_program_makes():
+    from helix9 import upkeep
+    from helix9.codebook import Codebook
+    cb = Codebook()
+    big = cb.add_axis("How is a solution represented?", 0, "replay")
+    rare = cb.add_axis("Is the answer mirrored at the end?", 5, "annotator")
+    young = cb.add_axis("Which random seed policy is used?", 19, "annotator")
+    v1, v2 = cb.add_value(big, "grid", 0), cb.add_value(rare, "yes", 5)
+    coords = {f"p{i}": {big: v1} for i in range(10)}
+    coords["p0"][rare] = v2
+    dropped = upkeep.prune(cb, coords, min_support=3, gen=20, min_age=10, log=lambda m: None)
+    assert dropped == [rare] and young in cb.active_axes() and big in cb.active_axes()
+
+
+def test_importance_weights_decisions_by_how_many_programs_make_them():
+    rng = np.random.default_rng(0)
+    rows = []
+    for i in range(60):
+        c = {"A1": "A1.v1" if i % 2 else "A1.v2"}
+        if i < 2:
+            c["A2"] = "A2.v1" if i == 0 else "A2.v2"          # read on two programs only, far apart
+        y = (0.02 if c["A1"] == "A1.v1" else 0.0) + (0.03 if c.get("A2") == "A2.v1" else 0.0) + rng.normal(0, 0.002)
+        rows.append({"coord": c, "y": y, "effort": 5.0})
+    m = LandscapeModel({"A1": ["A1.v1", "A1.v2"], "A2": ["A2.v1", "A2.v2"]}, effort=False).fit(rows, min_rows=5)
+    imp = m.importance()
+    assert imp["A1"] > 5 * imp["A2"]          # a larger effect on two programs explains less of the whole

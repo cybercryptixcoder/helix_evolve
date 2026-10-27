@@ -125,3 +125,18 @@ Merge only true duplicates: two different decisions that are often made together
 ```json
 {{"merge": [["A2", "A9", "A16"], ["A1", "A10"]]}}
 ```"""
+
+
+TIDY_ASK = """A design decision of a search, and the options recorded for it so far (with how many programs use each):
+
+{axis}
+{options}
+
+Many of these are the same design choice in different words, or differ only in parameters, wording or minor details. \
+Group them into at most {k} distinct options: options a reader could tell apart in the code, and that would make a \
+real difference to the result. Give each group a short name (at most 8 words). Every option id above must be in \
+exactly one group. Reply with one JSON object and nothing else:
+```json
+{{"options": [{{"name": "short name", "ids": ["A1.v1", "A1.v4"]}}, {{"name": "another short name", "ids": ["A1.v2"]}}]}}
+```"""
+
