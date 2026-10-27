@@ -234,12 +234,14 @@ def replay(run, out, call, sample=150, double=0.25, seed=1, log=print):
     axes = cb.active_axes()
     full = LandscapeModel({a: cb.values(a) for a in axes}).fit(
         [{"coord": coords[pid], "y": progs[pid].score, "effort": effort[pid]} for pid in coords], min_rows=8)
-    (out / "codebook.json").write_text(json.dumps(cb.to_json(), indent=1))
     (out / "coords.jsonl").write_text("".join(json.dumps({"id": pid, "gen": progs[pid].gen, "coord": coords[pid],
                                                           "how": "replay", "effort": effort[pid]}) + "\n"
                                               for pid in sorted(coords)))
     (out / "annotations.jsonl").write_text("".join(json.dumps({**r, "gen": progs[r["id"]].gen}) + "\n" for r in rows))
     verdict = write_report(out / "REPLAY.md", run, cb, coords, rows, ag, test, full, progs, decisions)
+    tmp = out / ".codebook.json.tmp"                  # written last: its presence means the replay finished
+    tmp.write_text(json.dumps(cb.to_json(), indent=1))
+    tmp.replace(out / "codebook.json")
     log("\n".join("   " + v for v in verdict))
     return {"axes": len(axes), "coords": len(coords), "twice": len(rows), "test": test, "verdict": verdict}
 
@@ -295,7 +297,8 @@ def main(argv=None):
     if a.fake:
         from helix4.llm import FakeLLM
         from helix9.run import fake_answer
-        llm = FakeLLM(fake_answer)
+        import os
+        llm = FakeLLM(fake_answer, delay=float(os.environ.get("FAKE_DELAY", "0") or 0))
     else:
         from helix4.llm import LLM
         trace = (Path(a.out) / "trace.jsonl")

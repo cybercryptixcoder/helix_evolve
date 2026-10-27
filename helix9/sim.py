@@ -1,9 +1,9 @@
 """Stage 1 of the proof of concept: a planted landscape with a known best (docs/V9_DESIGN.md, section 7 of
 docs/SEARCH_SPACE_MODEL.md).
 
-    python -m helix9.sim --family deceptive --policy v9 --seed 3            # one run, printed
-    python -m helix9.sim --batch --seeds 30 --out results/v9sim             # every family x policy, SIM.md
-    python -m helix9.sim --family deceptive --policy v9 --seed 3 --view results/v9sim/view.json   # for viz/mapview.html
+    python -m helix9.sim --family broad --policy v9 --seed 3                # one run, printed
+    python -m helix9.sim --batch --seeds 24 --out results/v9sim             # every family x policy
+    python -m helix9.mapview sim --family easy --policy v9 --seed 3 --out viz/data/x.json   # for viz/mapview.html
 
 A model of our situation, not our situation. Its value is that the truth is known, so it says whether the search
 logic finds a taller hill, how often, how fast, and which part of v9 does it, cheaply and over many seeds.
@@ -53,7 +53,7 @@ import numpy as np
 from helix9.codebook import Codebook, hamming
 from helix9.drops import choose_drop, choose_flip, shared_axes
 from helix9.model import LandscapeModel
-from helix9.race import Race, record_curve
+from helix9.race import Race, record_curve, retro_judge, take_waiting
 
 # ---------------------------------------------------------------------------------------------- the worlds
 FAMILIES = {
@@ -71,7 +71,7 @@ FAMILIES = {
     "cold": {"warm": False, "gens": 150},                           # from Code Zero, nothing known
 }
 POLICIES = ("v8", "v9", "v9-random", "v9-norace", "v9-noreadback", "v9-nodiscovery", "v9-level", "v9-hedge",
-            "v8-race", "scs")
+            "v9-gain", "v9-standing", "v9-cap6", "v9-nocap", "v9-v8flip", "v9-restart", "v8-race", "scs")
 
 
 @dataclass
@@ -245,6 +245,11 @@ class Policy:
     model: bool = False
     readback: bool = False
     race: str | None = None          # None (v8's patience), "rising", "level", "hedge"
+    flip: str = "auto"               # how a flip is chosen: "auto" (v9: from the map; v8: a shared decision), "shared"
+    cap: int = 3                     # a new direction opens only while fewer than this many tracks race
+    serve: str = "turn"              # the race's schedule: "turn" (least recently served first), "gain" (tracks that
+                                     # gained at their last experiment first, then in turn), "standing" (the best at
+                                     # equal effort first)
     discovery: bool = False
     scs: bool = False
     kmin: int = 2
@@ -262,6 +267,12 @@ def policy(name):
         "v9-nodiscovery": {**v9, "discovery": False},
         "v9-level": {**v9, "race": "level"},
         "v9-hedge": {**v9, "race": "hedge"},
+        "v9-gain": {**v9, "serve": "gain"},
+        "v9-cap6": {**v9, "cap": 6},
+        "v9-v8flip": {**v9, "flip": "shared"},
+        "v9-restart": {**v9, "kinds": ("restart", "flip", "backtrack")},
+        "v9-nocap": {**v9, "cap": 99},
+        "v9-standing": {**v9, "serve": "standing"},
         "v8-race": dict(race="rising"),
         "scs": dict(scs=True),
     }
@@ -281,6 +292,7 @@ class Sim:
         self.hills = {}                  # basin -> {"top": pid, "score", "found", "by"}
         self.hist = []
         self.events = [] if record_events else None
+        self.revived = 0
         self.cb = Codebook()
         for i, a in enumerate(self.w.axes):
             if i not in self.w.hidden:
@@ -335,6 +347,15 @@ class Sim:
                 ch[i] = vidx(v)
         return ch
 
+    def words(self, change):
+        """A codebook change in the world's own names: 'A4 -> option 1, A6 -> option 4'."""
+        out = []
+        for aid, v in change.items():
+            i = self.known.get(aid)
+            name = self.w.axes[i] if i is not None else aid
+            out.append(f"{name} -> {'a new option' if v.endswith('.new') else 'option ' + v.rsplit('.v', 1)[1]}")
+        return ", ".join(out)
+
     # ---------------------------------------------------------------- bookkeeping
     def floor(self, ref):
         return 3 * self.s.noise
@@ -366,11 +387,11 @@ class Sim:
     def best(self):
         return max((p for p in self.progs if p.valid), key=lambda p: p.y)
 
-    def open_track(self, gen, kind, root):
+    def open_track(self, gen, kind, root, race=True):
         tid = f"T{len(self.tracks) + 1}"
         t = {"id": tid, "kind": kind, "root": root, "opened": gen, "best": None, "best_id": None, "misses": 0,
              "exps": 0, "curve": [], "landed": False, "last_gain": gen}
-        if self.race is not None and kind in ("drop", "flip", "restart"):
+        if race and self.race is not None and kind in ("drop", "flip", "restart"):
             self.race.start(t)
         self.tracks[tid] = t
         return t
@@ -383,6 +404,7 @@ class Sim:
         t1["root"] = zero.id
         if not self.s.warm:
             self.update_track_best(t1, [zero])
+            self.records = [0]
             return 0
         # warm: a climbed record hill (a lineage of 12 programs up to effort ~300) and a few earlier explorations
         x = w.trap
@@ -394,21 +416,25 @@ class Sim:
             prev = self.add(0, prev.id, x, "T1", "deep")
         for step in range(9):
             prev = self.add(0, prev.id, x, "T1", "deep", e=prev.e + 35, e_obs=prev.e_obs + 35)
-        for j in range(4):
-            t = self.open_track(0, "restart", zero.id)
+        for j in range(4):           # the earlier run's restarts, paused by its patience after 3 experiments
+            t = self.open_track(0, "restart", zero.id, race=False)
             t["misses"] = 2
-            if t.get("race"):
-                t["race"]["status"] = "paused"
             q = self.add(0, zero.id, w.fresh(self.rng), t["id"], "restart")
+            t["exps"] = 1
+            self.update_track_best(t, [q])
+            record_curve(t)
             for _ in range(2):
                 q = self.add(0, q.id, q.x, t["id"], "deep")
-            t["exps"] = 3
-            self.update_track_best(t, [p for p in self.progs if p.track == t["id"]])
-            record_curve(t)
+                t["exps"] += 1
+                self.update_track_best(t, [q])
+                record_curve(t)
         self.update_track_best(t1, [p for p in self.progs if p.track == "T1"])
         self.main = "T1"
         for t in self.tracks.values():
             self.place(0, t)
+        if self.race is not None:    # a v9 continuation judges them as the race would have (helix9/warm.py)
+            retro_judge(self.race, list(self.tracks.values()), 0, keep=max(1, min(self.p.cap, 4) - 1), kinds=("restart",),
+                        main=self.main)
         self.records = [-6, -4, -2, 0]
         return 0
 
@@ -576,7 +602,7 @@ class Sim:
         if self.p.model and self.model is not None and self.model.ready:
             sample = self.model.sample(self.rng)
         if kind == "flip":
-            if self.p.model or self.p.name.startswith("v9"):
+            if self.p.flip != "shared" and (self.p.model or self.p.name.startswith("v9")):
                 pick = choose_flip(sample, best.obs, axes, levels, self.rng, tried=self.flipped,
                                    compatible=self.cb.compatible)
                 change = pick[1] if pick else None
@@ -590,7 +616,7 @@ class Sim:
                 return self.explore(gen, "backtrack")
             self.flipped.add(tuple(sorted(change.items())))
             t = self.open_track(gen, kind, best.id)
-            self.log(gen, "open", f"{t['id']} flip {change}")
+            self.log(gen, "open", f"{t['id']} flip: {self.words(change)}")
             return self.child(gen, best, kind, t["id"], change=self.to_x(change, best.x))
         if kind == "drop":
             avoid = [self.byid[h["top"]].obs for h in self.hills.values()]
@@ -601,7 +627,7 @@ class Sim:
             coord, change, rating = pick
             self.dropped.add(tuple(sorted(change.items())))
             t = self.open_track(gen, kind, best.id)
-            self.log(gen, "open", f"{t['id']} drop {change}")
+            self.log(gen, "open", f"{t['id']} drop: {self.words(change)}")
             return self.child(gen, best, kind, t["id"], change=self.to_x(change, best.x))
         raise ValueError(kind)
 
@@ -656,9 +682,15 @@ class Sim:
             if self.race is not None:
                 # the race's schedule: running tracks are served in turn (least recently served first); a new track
                 # opens only while fewer than RUNNING_CAP are running
-                live.sort(key=lambda t: (t.get("served", t["opened"]), t["opened"]))
+                if self.p.serve == "gain":
+                    live.sort(key=lambda t: (t["misses"] > 0, t.get("served", t["opened"]), t["opened"]))
+                elif self.p.serve == "standing":
+                    all_t = list(self.tracks.values())
+                    live.sort(key=lambda t: (-self.race.standing(t, all_t), t.get("served", t["opened"])))
+                else:
+                    live.sort(key=lambda t: (t.get("served", t["opened"]), t["opened"]))
                 live = live[:n_exp]
-                if len([t for t in self.tracks.values() if self.live(t)]) < self.RUNNING_CAP and len(live) == n_exp \
+                if len([t for t in self.tracks.values() if self.live(t)]) < self.p.cap and len(live) == n_exp \
                         and n_exp >= 2 and gen % 2 == 0:
                     live = live[:-1]
             else:
@@ -667,11 +699,22 @@ class Sim:
                 if n_exp >= 2 and len(live) == n_exp and gen % 2 == 0:
                     live = live[:-1]
             opened = Counter(t["kind"] for t in self.tracks.values() if t["opened"] > 0)
+            opened["revive"] = self.revived / 2
             for i in range(n_exp):
                 if live:
                     kids.append(self.continue_track(gen, live.pop(0)))
                     continue
-                kind = min(self.p.kinds, key=lambda k: (opened[k], self.p.kinds.index(k)))
+                waiting = self.race is not None and any((t.get("race") or {}).get("status") == "waiting"
+                                                        for t in self.tracks.values())
+                kinds = self.p.kinds + (("revive",) if waiting else ())
+                kind = min(kinds, key=lambda k: (opened[k], kinds.index(k)))
+                if kind == "revive":          # an earlier exploration's turn in the race's queue (helix9/race.py)
+                    t = take_waiting(list(self.tracks.values()), gen)
+                    self.revived += 1
+                    opened["revive"] += 0.5
+                    self.log(gen, "race", f"{t['id']} races again (its turn in the queue)")
+                    kids.append(self.continue_track(gen, t))
+                    continue
                 opened[kind] += 1
                 kids.append(self.explore(gen, kind))
             # the wide loop
@@ -695,7 +738,7 @@ class Sim:
             gained = self.update_track_best(t, mine) if mine else False
             if gained:
                 t["misses"], t["last_gain"] = 0, gen
-                if self.race is not None and t.get("race") and t["race"]["status"] == "paused" and \
+                if self.race is not None and t.get("race") and t["race"]["status"] in ("paused", "waiting") and \
                         any(k.kind == "wide" for k in mine):
                     self.race.wake(t)
             elif tid in planned and t["opened"] != gen:
@@ -758,16 +801,54 @@ def run_one(family, pol, seed, **kw):
 
 def _work(args):
     family, pol, seed = args
-    return run_one(family, pol, seed)
+    t0 = time.time()
+    try:
+        r = run_one(family, pol, seed)
+    except Exception as exc:                                     # noqa: BLE001  (one failure never sinks a batch)
+        import traceback
+        return {"family": family, "policy": pol, "seed": seed, "error": f"{type(exc).__name__}: {exc}",
+                "trace": traceback.format_exc()[-1500:]}
+    r["seconds"] = round(time.time() - t0, 2)
+    return r
 
 
-def batch(families, policies, seeds, workers=2):
-    jobs = [(f, p, s) for f in families for p in policies for s in range(1, seeds + 1)]
+def batch(families, policies, seeds, workers=2, out=None, log=print):
+    """Every family x policy x seed; results are appended to `out` (sim_runs.jsonl) as they finish, and a run
+    already there is not repeated (a batch can be resumed)."""
+    done = {}
+    if out is not None and Path(out).exists():
+        for line in Path(out).read_text().splitlines():
+            try:
+                r = json.loads(line)
+                if "error" not in r:
+                    done[(r["family"], r["policy"], r["seed"])] = r
+            except ValueError:
+                pass
+    jobs = [(f, p, s) for f in families for p in policies for s in range(1, seeds + 1) if (f, p, s) not in done]
+    rows = list(done.values())
+    fh = open(out, "a") if out is not None else None
+    t0 = time.time()
+
+    def take(r):
+        rows.append(r)
+        if fh:
+            fh.write(json.dumps(r) + "\n")
+            fh.flush()
+        n = len(rows)
+        if n % 50 == 0 or "error" in r:
+            log(f"   {n} of {len(jobs) + len(done)} runs ({time.time() - t0:.0f} s)"
+                + (f"; FAILED {r['family']}/{r['policy']}/{r['seed']}: {r['error']}" if "error" in r else ""))
     if workers > 1:
         from multiprocessing import Pool
         with Pool(workers) as pool:
-            return pool.map(_work, jobs, chunksize=4)
-    return [_work(j) for j in jobs]
+            for r in pool.imap_unordered(_work, jobs, chunksize=2):
+                take(r)
+    else:
+        for j in jobs:
+            take(_work(j))
+    if fh:
+        fh.close()
+    return rows
 
 
 def summarise(rows):
@@ -775,6 +856,8 @@ def summarise(rows):
     the record, and the median generation it took."""
     out = {}
     for r in rows:
+        if "error" in r:
+            continue
         out.setdefault((r["family"], r["policy"]), []).append(r)
     table = {}
     for (f, p), rs in out.items():
@@ -804,10 +887,10 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.batch:
         t0 = time.time()
-        rows = batch(a.families.split(","), a.policies.split(","), a.seeds, a.workers)
         if a.out:
             Path(a.out).mkdir(parents=True, exist_ok=True)
-            (Path(a.out) / "sim_runs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+        rows = batch(a.families.split(","), a.policies.split(","), a.seeds, a.workers,
+                     out=(Path(a.out) / "sim_runs.jsonl") if a.out else None, log=lambda m: print(m, flush=True))
         tab = summarise(rows)
         for (f, p), x in sorted(tab.items()):
             print(f"{f:10s} {p:15s} true {x['mean_true']:.4f} ± {x['se']:.4f}  tall found {x['tall_found']:.0%} "
