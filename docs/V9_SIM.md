@@ -97,7 +97,32 @@ quickly (fast) and where there are many hills to choose between (rugged); where 
 
 ## 4. Which parts of v9 do it
 
-ABLATIONS_TABLE
+Each part switched off in turn, on 30 more fresh worlds per family (seeds 41-70; 180 paired runs each; v9 here is
+the shipped policy under its own name, so its random stream is independent of section 3's):
+
+| Policy | Taller hill | Against v8: better / worse (p) | Against v9: better / worse (p) |
+|---|---|---|---|
+| v8 | 45.6% | | 38 / 62 (0.021) |
+| **v9** | **56.1%** | **62 / 38 (0.021)** | |
+| v9 without breadth (the draft's cap) | 46.1% | 44 / 53 (0.42) | **36 / 61 (0.014)** |
+| v9 with random targets (no model) | 52.8% | 72 / 43 (0.009) | 58 / 55 (0.85) |
+| v9 with v8's patience (no race) | 53.3% | 56 / 44 (0.27) | 53 / 50 (0.84) |
+| v9 without the queue of earlier explorations | 54.4% | 69 / 34 (0.001) | 61 / 45 (0.15) |
+| v9 serving racing tracks in turn only | 57.2% | 74 / 35 (< 0.001) | 56 / 48 (0.49) |
+| v9 without read-back | 55.6% | | 55 / 45 (0.37) |
+| v9 without discovery | 51.7% | | 50 / 52 (0.92) |
+
+What this says, plainly:
+- **Breadth is what the race needed.** Without it v9 falls back to v8's level; with it, v9 is better.
+- **The gain comes from where v9 jumps:** drops and flips on the map, from the record, at least 2 decisions from
+  every known hill, instead of restarts from the coder's habits. Choosing those targets at random on the map does
+  about as well as choosing them with the model: in these worlds the model's choice adds nothing measurable. Its
+  value would show where decisions have unequal, learnable effects; the replay's second verdict tests that on the
+  real archive.
+- The race (against v8's patience), the queue, read-back and discovery each move the result by a few points, none
+  beyond noise in these worlds. They stay: the race and the queue are what the live job's continuation needs (81 of
+  v8's paused explorations qualify), and read-back and discovery are what keep the map honest when real readings
+  are wrong, which the simulator's tidy annotator rarely is.
 
 ## 5. What the simulator can't say
 

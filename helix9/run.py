@@ -991,9 +991,14 @@ class Run(Run8):
         return row
 
     def annotate_one(self, gen, p):
-        """A full reading of one program (the record, when it has no coordinate yet)."""
+        """A full reading of one program: the record, when it has no coordinate yet, or again when decisions found
+        since are missing from it (the earlier reading is kept where the new one is silent, and so is its effort)."""
         text = self.ann_call(A.SYSTEM, A.full_prompt(self.cb, self.cb.active_axes(), p, self.cfg.annotate_chars), gen)
         coord, info = A.apply_full_reply(self.cb, text, self.cb.active_axes(), gen)
+        old = self.coords.get(p.id)
+        if old is not None:
+            return self.set_coord(p.id, gen, {**(old.get("coord") or {}), **coord}, "reread",
+                                  effort=old.get("effort", 1.0))
         return self.set_coord(p.id, gen, coord, "full", effort=1.0)
 
     def finish(self, seconds=None, stopped_at=None):

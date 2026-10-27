@@ -93,8 +93,10 @@ What it found, and what was changed because of it, is in `docs/V9_SIM.md`.
 
 - The map is only as good as the readings. The replay measures this before the run relies on it, and an axis read
   unreliably stops steering.
-- The model is data-limited near the record (it ranks designs there weakly in the simulator); its value is as an
-  accountant of what is untried and uncertain, which is what Thompson sampling needs.
+- The model is data-limited near the record. In the simulator, targets chosen at random on the map did as well as
+  the model's (`docs/V9_SIM.md`, section 4): v9's measured gain comes from where it jumps (drops and flips from the
+  record, away from known hills) and from keeping breadth, not yet from the model's choice. The replay tests whether
+  the model knows anything on the real archive.
 - A construction rebuilt without its original start is approximate; the job avoids this on the VM by using the local
   folder.
 - One run is one sample: section 2.2 of the search-space model shows single runs are noisy. The live job tests

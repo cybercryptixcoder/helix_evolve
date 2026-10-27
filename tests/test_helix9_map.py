@@ -297,10 +297,14 @@ def test_effort_rules():
 
 
 def test_the_fake_annotator_reads_designs():
-    full = A.fake_reply("", "## The program (p0003)\n```python\nDESIGN = {\"A1\": \"A1.v2\"}\n```")
-    assert json.loads(full)["design"] == {"A1": "A1.v2"}
-    diff = A.fake_reply("", "```diff\n-DESIGN = {\"A1\": \"A1.v1\"}\n+DESIGN = {\"A1\": \"A1.v2\"}\n```")
-    assert json.loads(diff)["changes"] == [{"axis": "A1", "value": "A1.v2"}]
+    # decisions the codebook names come back by their ids; the others as new decisions
+    cb = "A3: D1\n   A3.v1: option 1\n"
+    full = json.loads(A.fake_reply(cb, '## The program (p0003)\n```python\nDESIGN = {"D1": "option 2", "D2": "option 1"}\n```'))
+    assert full["design"] == {"A3": "option 2"} and full["new_axes"] == [{"axis": "D2", "value": "option 1"}]
+    diff = json.loads(A.fake_reply(cb, '```diff\n-DESIGN = {"D1": "option 1", "D2": "option 1"}\n'
+                                       '+DESIGN = {"D1": "option 2", "D2": "option 3"}\n```'))
+    assert diff["changes"] == [{"axis": "A3", "value": "option 2"},
+                               {"new_axis": "D2", "base_value": "option 1", "value": "option 3"}]
 
 
 # ---------------------------------------------------------------------------------------------- the continuation pack
