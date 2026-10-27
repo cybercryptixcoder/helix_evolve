@@ -4,6 +4,14 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 26, 2026 (evening): Aether's guide
+
+- **docs/AETHER.md** (new, general): Aether (the VM agent, formerly called Hermes), the VM's measured specs and budget
+  ("disk" = the 48 GB storage, the binding limit), the anatomy of an airtight job, interruptions handled gracefully
+  (section 4b: atomic state, a graceful stop that finishes the generation, repair after hard kills, catch-up pushes,
+  bounded retries of the job's own run, waiting out a dead model or a full disk), tracing everything, GitHub as the
+  medium of exchange (private work stays in private repos: this one is public), Luminal, and the prompt template.
+
 ## October 24, 2026 (03:45-05:00): v8, a register of hills
 
 - **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):
