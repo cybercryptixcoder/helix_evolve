@@ -4,6 +4,26 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 27, 2026: a model of the search space (v9 proposed, not built)
+
+- **The request** (`docs/BRIEF_2026-10-27.md`): a transcript of a discussion about the map (features as axes, points
+  as coordinates, hills, jumping to random points), notes on trust before scale, persistence, RL, an evolutionary
+  agent, problem-specific versus general axes, and discovering dimensions while searching. Research widely; thoughts
+  first.
+- **New measurements** (`docs/SEARCH_SPACE_MODEL.md`, section 2):
+  - the Cartographer's 82 scans: 460 wordings, ~98% in 9 recurring axes; 59 different decisions labelled D1;
+  - 15 from-scratch runs: best after 20 programs vs final best, Spearman -0.09 (0.50 after 40); the eventual best run
+    was 4th lowest of 15 at 20 programs; three of the top four at 20 ended in the 0.8825 trap;
+  - v8: restarts paused after a median of 3 experiments; three reached 0.90-0.914 within 12, above where the record's
+    run was after 40 programs; flips often changed many decisions; faithful flips landed at record height on other
+    shapes;
+  - other systems reach 0.947-0.963 on the same problem (ImprovEvolve, GigaEvo, ThetaEvolve, TTT-Discover).
+- **Research:** basin hopping, TuRBO, Go-Explore, NK and local optima networks, neutral networks, RegNet's design
+  spaces, component-wise algorithm design, Zwicky's box, BOCS, fANOVA, latent-space optimisation, QDAIF, AURORA,
+  AutoQD, NEAT, DreamCoder, rising bandits, MCTS-AHD, SMCEvolve, "simple baselines", METR, SEAL, TTT-Discover.
+- **Proposed:** v9 = v8 + codebook, annotator, landscape model, drops, a fair race, discovery triggers, ablations;
+  a three-stage proof of concept first.
+
 ## October 26, 2026 (evening): Aether's guide
 
 - **docs/AETHER.md** (new, general): Aether (the VM agent, formerly called Hermes), the VM's measured specs and budget
