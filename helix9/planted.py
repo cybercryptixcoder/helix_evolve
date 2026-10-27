@@ -109,5 +109,23 @@ def make_answer(problem: PlantedProblem, fidelity=0.8, seed=1):
                 x[i] = rng.choice([v for v in range(problem.spec.k) if v != x[i]])
             code = PROGRAM.format(design=json.dumps(problem.design_of(x)), x=json.dumps(x))
             return f"```python\n{code}```\nSUMMARY: design {x}"
+        if role == "cartographer":
+            ids = {m.group(2).strip(): m.group(1) for m in re.finditer(r"^(A\d+): (.+)$", user, re.M)}
+            if "List the design decisions" in user:              # a scan names two of the world's decisions
+                k = problem.spec.k
+                picks = rng.sample(range(problem.spec.d), 2)
+                return json.dumps({"shared": [{"decision": f"D{i + 1}", "everyone": f"option {1 + rng.randrange(k)}",
+                                               "alternatives": [f"option {1 + rng.randrange(k)}"]} for i in picks]})
+            if "design decisions named elsewhere" in user:      # matched by name
+                items = re.findall(r"^(\d+)\. (D\d+)", user.split("Below are design decisions")[-1], re.M)
+                return json.dumps({"matches": [{"item": int(n), "axis": ids.get(name, "new"), "question": name}
+                                               for n, name in items]})
+            if "What design decision differs" in user:          # a decision the codebook lacks, read off DESIGN
+                designs = {pid: json.loads(d) for pid, d in
+                           re.findall(r"^## (p\d{4})\n```python\n[^`]*?DESIGN = (\{[^}]*\})", user, re.M)}
+                missing = [f"D{i + 1}" for i in range(problem.spec.d) if f"D{i + 1}" not in ids]
+                if missing and designs:
+                    name = missing[0]
+                    return json.dumps({"decision": name, **{pid: d.get(name, "?") for pid, d in designs.items()}})
         return fake_answer9(role, system, user)
     return answer

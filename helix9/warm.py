@@ -125,7 +125,9 @@ def prepare(src, out, mode="continue", seed=1, budget=60.0, label="", pack=None,
         (out / "coords.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
         ann = [dict(r, gen=warm_gen) for r in jl(rp / "annotations.jsonl") if r.get("id") in have]
         (out / "annotations.jsonl").write_text("".join(json.dumps(r) + "\n" for r in ann))
-        log(f"the replay's map: {len(cb.get('axes', {}))} decisions, {len(rows)} programs placed, {len(ann)} read twice")
+        from helix9.codebook import Codebook
+        log(f"the replay's map: {len(Codebook(cb).active_axes())} decisions, {len(rows)} programs placed, "
+            f"{len(ann)} read twice")
     if mode == "continue":
         retro_race(out, cfg, log=log)
     state["config"] = asdict(cfg)

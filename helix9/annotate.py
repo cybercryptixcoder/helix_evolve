@@ -46,9 +46,11 @@ The change, as a unified diff (base -> new){cut}:
 ```
 
 Which design decisions did this change move, and to which options? Use the ids above.
-- If an axis took an option that isn't listed, give it a short name as "new_value".
-- If the change moved a design decision that no axis above describes, add it as "new_axis" (the decision, phrased \
-as a question), with "base_value" (what the base did) and "value" (what the new program does).
+- Use a listed option whenever one fits, even if it is worded differently or differs in details. Only if the new \
+choice is clearly different from every listed option, give it a short name (at most 8 words) as "new_value".
+- Only if the change moved a major design decision that no axis above covers, even loosely, add it as "new_axis" \
+(the decision, phrased as a short question), with "base_value" (what the base did) and "value" (what the new program \
+does). At most one; this should be rare.
 - A change that only tunes numbers, fixes bugs or polishes the implementation moves no axis: reply with an empty list.
 Reply with one JSON object and nothing else:
 ```json
@@ -65,9 +67,11 @@ FULL_ASK = """## The design decisions known so far (axes), with their options (v
 ```
 
 For every axis above, which option does this program use? Use the value ids.
-- If it uses an option that isn't listed, give {{"new_value": "short name"}}.
+- Use a listed option whenever one fits, even if it is worded differently or differs in details. Only if the \
+program's choice is clearly different from every listed option, give {{"new_value": "short name"}} (at most 8 words).
 - If the axis doesn't apply to this program, give "n/a".
-- Then list up to 2 important design decisions of this program that no axis describes, as "new_axes".
+- Only if the program makes a major design decision that no axis above covers, even loosely, name it under \
+"new_axes" (at most one, as a short question; usually there is none: give an empty list).
 Reply with one JSON object and nothing else:
 ```json
 {{"design": {{"A1": "A1.v2", "A2": {{"new_value": "short name"}}, "A3": "n/a"}},
@@ -118,10 +122,14 @@ def apply_diff_reply(cb, text, base_coord, gen, source="annotator"):
     info = {"mode": "diff", "readable": js is not None, "changed": {}, "new_axes": [], "new_values": []}
     if js is None:
         return coord, info
+    new_axes = 0
     for ch in js.get("changes") or []:
         if not isinstance(ch, dict):
             continue
         if ch.get("new_axis"):
+            new_axes += 1
+            if new_axes > 1:                         # at most one new decision from a reading
+                continue
             n0 = len(cb.axes)
             aid = cb.add_axis(str(ch["new_axis"]), gen, source)
             if len(cb.axes) > n0:
@@ -167,7 +175,7 @@ def apply_full_reply(cb, text, axes, gen, source="annotator"):
                 coord[aid] = v
                 if v not in before:
                     info["new_values"].append(v)
-    for na in (js.get("new_axes") or [])[:2]:
+    for na in (js.get("new_axes") or [])[:1]:
         if isinstance(na, dict) and na.get("axis"):
             n0 = len(cb.axes)
             aid = cb.add_axis(str(na["axis"]), gen, source)
@@ -194,20 +202,22 @@ def kappa(pairs):
     return k, agree, n
 
 
-def agreement(rows, axes):
-    """{axis: (n, agree, kappa)} over rows of {"first": coord, "second": coord} (both full readings)."""
+def agreement(rows, axes, cb=None):
+    """{axis: (n, agree, kappa)} over rows of {"first": coord, "second": coord} (both full readings). With the
+    codebook, readings are compared as they resolve now (options merged since count as the same)."""
     out = {}
+    canon = (lambda c: cb.canonical(c)) if cb is not None else (lambda c: c)
+    rows = [{"first": canon(r["first"]), "second": canon(r["second"])} for r in rows
+            if r.get("first") is not None and r.get("second") is not None]
     for a in axes:
-        pairs = [(r["first"].get(a), r["second"].get(a)) for r in rows
-                 if r.get("first") is not None and r.get("second") is not None
-                 and (r["first"].get(a) or r["second"].get(a))]
+        pairs = [(r["first"].get(a), r["second"].get(a)) for r in rows if (r["first"].get(a) or r["second"].get(a))]
         k, agree, n = kappa(pairs)
         out[a] = (n, agree, k)
     return out
 
 
 def update_agreement(cb, rows):
-    for a, (n, agree, k) in agreement(rows, cb.active_axes()).items():
+    for a, (n, agree, k) in agreement(rows, cb.active_axes(), cb).items():
         if n:
             cb.set_agreement(a, n, agree, k)
 
