@@ -33,8 +33,9 @@ number matters.
 
 ## 2. Rules that always apply
 
-1. **No cron jobs, no scheduled check-ins, no watchdogs and no auto-restarts.** Aether doesn't create any, and job
-   scripts don't install any. Shreyas checks in himself. *(On October 21, Aether's own check-in cron carried a
+1. **No cron jobs, no scheduled check-ins, no outside watchdogs and no outside restarts.** Aether doesn't create
+   any, and job scripts don't install any. Shreyas checks in himself. (A job may retry *its own* run a few times
+   after a crash, inside the same job process, and never touches any other process: see section 4b.) *(On October 21, Aether's own check-in cron carried a
    "restart if dead" instruction. It killed a running job 19 times, once every 12 minutes, and lost about 3.5 hours.
    See `docs/INCIDENT_2026-10-21.md`.)*
 2. **Aether never stops, kills or restarts a process** (no `kill`, `pkill`, `systemctl stop`, and no reboot) unless
@@ -45,8 +46,22 @@ number matters.
    `nohup` alone isn't enough: the terminal tool's session was reaped once and took the whole job with it.
 5. **Never commit secrets or private data:** `.env`, Luminal keys, proprietary data, or results computed from it.
    Those stay on the machine or with Shreyas.
-6. **Git identity:** commits are made as `Shreyas Naik <119774329+cybercryptixcoder@users.noreply.github.com>`, with
-   no AI attribution.
+6. **Git identity:** each repo's own, with no AI attribution: `Shreyas Naik
+   <119774329+cybercryptixcoder@users.noreply.github.com>` in helix_evolve; a private repo uses the identity its own
+   history uses.
+
+## 2b. GitHub is how everything moves
+
+GitHub is the medium of exchange between Claude, Aether and Shreyas, in both directions:
+- **Claude → VM:** code, jobs and their documentation are pushed to a repo; Aether runs `git pull` and starts the job.
+  Nothing is copied over by hand unless it can't be on GitHub.
+- **VM → Claude:** the job pushes its results, reports and **full traces** while it runs and at the end. Claude
+  pulls them and analyses them as if the run had happened locally. Aether never summarises results for Claude.
+- **Which repo:** the project's own. **helix_evolve is public**, so private work (anything with
+  proprietary code or data) lives and is pushed in its own private repo. Its job only *reads* helix_evolve for the
+  search code.
+- **The exceptions:** keys (`.env`) and proprietary data never go to GitHub. Proprietary data stays on Shreyas's
+  computer; only normalised, name-free numbers may leave it.
 
 ## 3. The VM
 
@@ -59,7 +74,7 @@ the machine.
 | CPU | **2 vCPU** (2 cores, 1 thread each) |
 | RAM | **11.9 GB**; about 9.8 GB available at idle (most of the rest is page cache) |
 | Swap | 4.1 GB swapfile (2.4 GB in use at idle, held by an old finished Python process) |
-| Disk | **48 GB, 39 GB used, 8.5 GB free (83%)** |
+| Disk (storage) | **48 GB boot volume, 39 GB used, 8.5 GB free (83%)**. "Disk" in this guide always means this storage, not RAM |
 | GPU | none |
 | Uptime record | weeks; no OOM kill seen in the journal |
 
@@ -97,7 +112,7 @@ the machine.
 - Gate the start on `MemAvailable ≥ 1200 MB` (`MIN_FREE_MB`): the job **waits**, it doesn't fail.
 - Swap use isn't a problem by itself; a growing swap while a job runs is.
 
-**Disk (the binding limit today, at 83%):**
+**Disk, meaning storage (the binding limit today, at 83%):**
 - The preflight must check free space, and refuse to start below about 3 GB free or below 2× the job's estimated output.
 - Gzip traces.
 - Don't keep duplicate copies of run folders.
@@ -132,6 +147,30 @@ following. `scripts/run_v8_warm.sh` is a working example of each part.
 | 13 | **Push as it goes** | a light push (logs, history, summary, report) every 40 minutes; a full push (programs, gzipped traces) at the end |
 | 14 | **Final report** | written into the results folder: what ran, for how long, the best results, anything that went wrong |
 | 15 | **Last line** | `== all jobs done`, or `== stopped before generation N (…); run this script again to continue it` |
+
+### 4b. Interruptions: degrade gracefully, resume as if nothing happened
+
+Anything can interrupt a job: a reboot, an out-of-memory kill, the model or the network going down, the disk filling
+up, a bug, or Shreyas ordering a stop. Every job must survive all of these: save everything it needs, and when it
+is started again, carry on from where it was as if nothing had happened. The parts (all in
+a private project's `helix/` folder as a worked, tested example):
+
+| Threat | What the job does |
+|---|---|
+| **Any stop at all** | State is saved **atomically** after every generation (write a temp file, then `os.replace`). Every log (programs, trace, history) is append-only and flushed per line. Started again, the job resumes after the last finished generation; only the generation in progress is lost and redone |
+| **A stop signal** (SIGTERM/SIGINT/SIGHUP: Shreyas's order, a reboot) | The job passes it to the run. The run **finishes the generation in progress** (up to a grace period, e.g. 5 minutes) and saves, then the job **pushes everything** and exits. A second signal, or the grace running out, stops the run at once (the generation in progress is redone on resume). Duplicate signals arriving together (a shutdown signals every process) count as one |
+| **A hard kill** (SIGKILL, OOM, power loss) | Nothing runs at that moment, so the next start does the clean-up: JSONL files cut off mid-line are trimmed back to their last whole line, partial results of unfinished programs are deleted, and a **catch-up push** sends what was saved before the run resumes |
+| **The run crashes** (a bug, an unexpected exception) | The job retries **its own run** up to `MAX_RETRIES` (3) times, 60 s apart, each resuming from the last finished generation, then stops and says so. It never restarts anything else |
+| **The model or network is down** | Before each generation the run checks the model with a one-word call. While it fails, the run **waits** (1, 2, 4 ... up to 30 minutes between checks) instead of burning generations on empty replies |
+| **The disk fills up** | The preflight refuses to start below a threshold (3 GB); between generations the run waits while less than 800 MB is free |
+| **Memory gets tight** | The job waits for `MIN_FREE_MB` before starting; every evaluation waits for free memory and a machine-wide slot |
+| **The deadline passes** | The run stops after the generation in progress; `RESET_DEADLINE=1 HOURS=n` and the same command continue it |
+| **A `git pull` mid-run** | The job runs from a snapshot of itself, so the running job never changes under its own feet |
+| **A push fails** | Results stay on disk; the next push (every 40 minutes, at the end, or at the next start) sends them |
+
+**Test every one of these before handing a job over** (with a fake model): a stop signal mid-generation, a restart
+(it must resume and push first), a `kill -9` of the run mid-generation (it must retry and resume), a torn last line,
+and the grace running out.
 
 ### Line vocabulary (so Aether can match lines without interpreting)
 
@@ -176,8 +215,10 @@ as it happens:
 | `run.log` | the human-readable log |
 | `env.json` | written at start: git commit, settings, Python and package versions, machine (cores, RAM, disk) |
 
-- **Pushed:** every file above. `trace.jsonl` is gzipped at push time (`trace.jsonl.gz`).
-- **If a trace would exceed about 50 MB**, push it in numbered parts (`trace.000.jsonl.gz`, …). Don't truncate it.
+- **Pushed:** every file above. Big, growing files (the trace, programs) are pushed as **gzipped chunks of 10
+  generations** (`trace/gens_0001-0010.jsonl.gz`, ...). A finished chunk is written once and never changes, and gzip
+  is run deterministically (`mtime=0`), so each push adds only what is new. Re-committing one ever-growing file every
+  40 minutes would fill the repo, and the VM's disk, with copies. Never truncate a trace.
 - **Private problems** (real data) are the exception: their runs are never pushed. Only normalised, name-free numbers
   may leave the machine.
 - **Resuming** keeps appending to the same files. Every line carries its generation, so a resumed run reads as one
@@ -247,6 +288,13 @@ Every job comes with a prompt Shreyas pastes to Aether as is. The prompt is a pr
 > 7. Then stop. Don't stop, restart or kill any process. Don't set up cron jobs, scheduled check-ins or reminders:
 >    I check in myself.
 
+**Finding the job's process:** `setsid` forks, so `$!` after the start command is *not* the job. Find it by its
+snapshot's name, e.g. `pgrep -fa <job>_snapshot`, and report it with `ps -o pid,sid,ppid,etime,cmd -p <pid>`.
+
+**Stopping a job on purpose** (only on Shreyas's explicit order): `kill -TERM <the job's pid>`, the job's bash process,
+not its Python run. Then wait for the job's log to end with "all jobs done" (up to the grace period plus a push). Never
+`kill -9`.
+
 **Status checks later** (when Shreyas asks Aether "how is it going?"): read the latest `== HH:MM progress:` line and
 the run log's last generation line, report them verbatim, and say whether the process is alive (`ps`). Nothing else.
 
@@ -255,8 +303,9 @@ packs the named folder into a tarball and Shreyas downloads it whole (attach it 
 
 ## 8. Checklist before handing a job over
 
-- [ ] `FAKE=1 PUSH=0` with tiny settings runs the whole job end to end, including resume (stop it once mid-run and
-      start it again) and the final report.
+- [ ] `FAKE=1 PUSH=0` with tiny settings runs the whole job end to end, including every interruption in section 4b
+      (stop signal, restart, `kill -9` of the run, torn line, grace running out) and the final report.
+- [ ] The job and its results go to the right repo (private work never to helix_evolve).
 - [ ] A second start exits at once with "already running".
 - [ ] The preflight fails cleanly on a missing package, a missing input and low disk.
 - [ ] The estimated peak RAM, CPU processes, disk output and wall time are in the header, and fit section 3.
