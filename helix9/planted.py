@@ -49,8 +49,16 @@ class PlantedProblem:
     def __init__(self, spec: Spec | None = None):
         self.spec = spec or Spec(warm=False)
         self.world = World(self.spec)
-        self.DESCRIPTION = ("## The problem: a planted design problem (a test)\n\nWrite `construct(budget_seconds, start)`"
-                            " returning a numpy array. Higher is better.\n")
+        d, k = self.spec.d, self.spec.k
+        self.DESCRIPTION = (
+            "## The problem: a planted design problem (a test of the search itself)\n\n"
+            f"A design is a choice of one of {k} options for each of {d} decisions, D1 to D{d}. A program declares its "
+            f"design twice, and the two must agree: `DESIGN` maps each decision to its option's name (\"option 1\" to "
+            f"\"option {k}\"), and `X` lists the options' indices (0 to {k - 1}) in the order D1 to D{d}. "
+            "`construct(budget_seconds, start)` returns the construction; keep it as it is and change DESIGN and X. "
+            "The score depends only on the design, and on how long the search has stayed with it: each experiment that "
+            "keeps a design polishes it a little, and changing decisions starts a new climb, so a new design scores low "
+            "at first. Some designs are far better than others; nothing else is known about which. Higher is better.\n")
         x0 = list(self.world.trap)
         self.CODE_ZERO = PROGRAM.format(design=json.dumps(self.design_of(x0)), x=json.dumps(x0))
 

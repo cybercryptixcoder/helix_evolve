@@ -60,7 +60,11 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **The job** (`docs/V9_JOB.md`, `scripts/run_v9_warm.sh`): v8-s1 continued from generation 700 (record 0.9414417)
   for 100 generations, after a replay on v8's archive (stage 0: is the map real?). Tested end to end with a fake
   model on the real archive, through every interruption.
-- **Status:** job ready, not run yet.
+- **Tested live** with the real model (October 27, evening): the replay on v8's archive (12 of 13 decisions read
+  reliably after the map's upkeep, which live testing showed was needed: without it the map grew to 874 decisions; the
+  model ranks later changes weakly, +0.06 to +0.16), the job end to end with a stop and resume, a cold run, and the
+  planted problem (the real coder built 8 of 9 target decisions; the run reached the planted taller hill).
+- **Status:** job ready, not run on the VM yet.
 
 ## v8: v7 plus a register of hills (October 24, 2026), job ready
 

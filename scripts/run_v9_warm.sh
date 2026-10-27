@@ -33,8 +33,8 @@
 # - Before every generation the run checks the disk and the model; while either is down it waits.
 # - It waits (never stops anything) while another autocorrelation Helix run is running.
 #
-# Estimated: about 3.5 minutes a generation (v8's 3 minutes, plus v9's readings of each new program), so 100
-# generations take about 6 hours (deadline 24 h). Peak memory about 2 GB (the run, up to 2 evaluations of ~0.5 GB).
+# Estimated (measured live): 3-8 minutes a generation, about 4 on average, so 100 generations take about 7 hours
+# (deadline 24 h). The replay is already on GitHub (done live), so the first start only builds the pack. Peak memory about 2 GB (the run, up to 2 evaluations of ~0.5 GB).
 # Disk: about 1 GB in runs/ (only the packed constructions are restored, not v8's 3 GB folder; new constructions are
 # 0.8 MB each), refuses to start below 3 GB free. Pushed: the pack (up to 80 MB, once), the run's chunks (about 25 MB),
 # the run's own pack at the end (up to 80 MB). Model: about 15 calls and 130k tokens in a generation.
@@ -230,6 +230,10 @@ PY
     echo "== the continuation pack: $PACK ($("$PY" -c "import json,sys; m=json.load(open(sys.argv[1])); print(len(m['packed']), 'constructions,', m['signatures'], 'signatures, built', m['built'])" "$PACK/manifest.json"))"
   fi
   # ---------------------------------------------------------------- 4. the replay
+  if [ "$REPLAY" = "1" ] && [ -f "$RESULTS/replay/codebook.json" ]; then
+    echo "== the replay: done already ($RESULTS/replay/REPLAY.md, from GitHub); its verdicts:"
+    sed -n '/^## Verdicts/,/^## [^V]/p' "$RESULTS/replay/REPLAY.md" 2>/dev/null | grep -E "^- " | head -3 | sed 's/^/   /'
+  fi
   if [ "$REPLAY" = "1" ] && [ ! -f "$RESULTS/replay/codebook.json" ] && [ "$STOPPING" = "0" ]; then
     echo "== the replay: the model reads $REPLAY_SAMPLE earlier programs to start the design map (10-20 minutes)"
     run_child "$LOG" $NICE_CMD "$PY" -m helix9.replay --run "$SRC" --out "$RESULTS/replay" --sample "$REPLAY_SAMPLE" $FAKE_FLAG

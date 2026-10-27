@@ -4,6 +4,34 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 27, 2026 (evening): v9 tested live, with the real model
+
+- **The request** (17:27): testing means testing live with the real model, always (a temporary key given; it lives
+  in the repo's gitignored `.env`). Now a standing rule (`docs/REQUESTS.md`, `CLAUDE.md`).
+- **The replay, live** (stage 0), four times, each finding fixed before the next:
+  1. the map exploded: 874 decisions, one with 296 options (the model rewords decisions and options every time, and
+     word matching misses paraphrases); only 2 of 9 decisions read with 80% agreement. Fixed with upkeep
+     (`helix9/upkeep.py`): consolidate decisions, group reworded options (at most 6 per decision), prune decisions
+     hardly any program makes; a stricter annotator prompt; reading in waves with upkeep between them;
+  2. tidy map (12 decisions, about 60 options): 10 of 11 decisions read reliably, but the model test had only 39
+     pairs read independently (noisy). Now 120 later changes read from their diffs, as the run reads them;
+  3-4. 12 of 13 decisions read with at least 80% agreement; the model ranks later changes weakly: +0.06 (p = 0.28)
+     and +0.16 (p = 0.04) in two full replays; it doesn't rank later programs' scores (their parents' do, +0.996).
+     The last one is on GitHub (`results/v9warm/replay/`), so the VM job skips the replay.
+- **The job, live, end to end** on GitHub's v8-s1 (60 s per program): preflight, warm start with the replay's map,
+  2 of v8's explorations racing and 81 in the queue, annotations (0 unreadable), upkeep, an ablation built from its
+  blueprint and read back, a discovery, the race, report, publishing, pack; stopped mid-generation (finished it and
+  pushed) and resumed. 160-510 s a generation; about 20 calls, 155k tokens in, 40k out.
+- **A cold run, live** (Code Zero, 30 s per program, 8 generations): 0.6667 -> 0.8953; the map grew from the generic
+  questions to 14 decisions of at most 6 options; a drop landed 2 of 3 target decisions, flips 1 of 1.
+- **The planted problem, live** (12 generations, cold): the real coder built 8 of 9 target decisions in 4
+  read-backs; the run reached the planted taller hill (0.9395 of 0.962). The duplicate check at generation 10 merged
+  11 decisions into 8.
+- **Also fixed from the live runs:** importance weighted by how many programs make a choice (a decision read on two
+  programs had been given 82%); one rebuild per program when two children need it at once; the first ablation only
+  12 generations into a run; a check for reworded duplicate decisions every 10 generations (below the cap too); the
+  planted problem described so a real model can work on it.
+
 ## October 27, 2026 (afternoon): v9 built, tested, and its job ready
 
 - **The request** (09:41): build all of v9, test every part (the replay and the simulators too), fix technical and

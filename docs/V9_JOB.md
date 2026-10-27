@@ -8,9 +8,9 @@ design map. Script: `scripts/run_v9_warm.sh`. It runs on the VM, gently (the bud
 | Continues | v8-s1 at generation 700, as pushed to GitHub (`results/v8warm/v8-s1`): 3,625 programs, 6,555 findings events (the Atlas), 242 tracks, 73 hills; record **0.9414417** (p3596, N = 104,992) |
 | Adds | the design map: a codebook of design decisions, coordinates for every program, a model of the landscape, drops and flips chosen from it, ablations, the fair race, discovery |
 | Generations | 100 more (701–800), 60 s of CPU per program, 2 evaluation slots shared machine-wide |
-| Time, estimated | first start: preflight 2 min, the pack a few minutes, the replay 10–20 min; then about 3.5 min a generation, so about 6 hours |
+| Time, estimated | first start: preflight 2 min, the pack a few minutes; then 3-8 min a generation (measured live: 160-510 s, about 4 min on average), so about 7 hours |
 | Deadline | 24 hours after the first start (the run stops after the generation in progress) |
-| Model | DeepSeek V4.1 Flash via Luminal, as v8; about 15 calls and 130k tokens in a generation (v8's plus the readings) |
+| Model | DeepSeek V4.1 Flash via Luminal, as v8; measured live: about 20 calls, 155k tokens in and 40k out a generation (about $0.10 at DeepSeek's list prices, so about $10 for the job) |
 | Memory | about 2 GB at peak (the run, and up to 2 evaluations of about 0.5 GB) |
 | Disk | about 1 GB in `runs/v9warm` (constructions of new programs are 0.8 MB each); refuses to start below 3 GB free |
 | Results | pushed to `results/v9warm/` every 40 minutes and at the end (below) |
@@ -43,12 +43,12 @@ the run in full, so the next continuation (v9 or later) starts from GitHub alone
    access.
 2. **The source**: `results/v8warm/v8-s1` (after `git pull`), printed with its generation, programs and record.
 3. **The pack**: built and pushed if GitHub doesn't have it yet; otherwise used as it is.
-4. **The replay** (`helix9/replay.py`, stage 0 of the proof of concept): the model reads 150 of v8's programs (every
-   hill's top, every track's best, the record's lineage, a sample), a quarter of them twice independently, after
-   building a codebook from the Cartographer's 82 scans. `results/v9warm/replay/REPLAY.md` gives two verdicts: are the
-   decisions read reliably (agreement of at least 80% on most of them), and does the map know anything (does the
-   model, fitted on earlier programs, rank the later programs' gains better than chance). Its codebook and
-   coordinates seed the run's design map. If it fails, the run starts its map from scratch (`REPLAY=0` skips it).
+4. **The replay** (`helix9/replay.py`, stage 0 of the proof of concept): **already done, live, and on GitHub**
+   (`results/v9warm/replay/`): the model built a codebook from the Cartographer's 82 scans, read 458 of v8's
+   programs (a quarter twice), and 120 later changes from their diffs. Verdicts: 12 of 13 decisions read with at
+   least 80% agreement; the model ranks later changes better than chance, weakly (+0.16, p = 0.04). The job prints
+   these verdicts and uses its codebook and coordinates to seed the run's design map; it would run the replay
+   itself only if GitHub didn't have it (10-20 minutes; `REPLAY=0` skips it).
 5. **The warm start** (`helix9/warm.py`): everything of v8-s1 kept, the pack and the replay restored, and the race
    applied to v8's explorations as v9 would have judged them (the 2 strongest that were still rising race again; the
    rest wait, paused, and a gain wakes one).
@@ -86,16 +86,16 @@ Settings (environment variables): `ADD` (100) or `GENS` (800), `HOURS` (24), `RE
 > 2. Start the job in the background, exactly like this (one command):
 >    `cd /home/ubuntu/helix_v5_run && HELIX4_SLOTS_DIR=/home/ubuntu/helix_v5_run/runs/v4/.slots setsid nohup bash scripts/run_v9_warm.sh > v9_warm.log 2>&1 < /dev/null &`
 > 3. Don't change any setting: other agents share this machine, and the job is sized for it.
-> 4. Wait about 30 minutes (its first start builds a pack and runs a replay before the run begins), then read the last
+> 4. Wait about 20 minutes (its first start builds a pack before the run begins), then read the last
 >    30 lines of /home/ubuntu/helix_v5_run/v9_warm.log and the last 10 lines of
 >    /home/ubuntu/helix_v5_run/runs/v9warm/v9-s1.log once. A good start shows, in order:
 >    "crash test passed (v9: 2 generations with a fake model, report, publish, pack)", "model answers",
 >    "GitHub: can push", "the source: results/v8warm/v8-s1 (v8), generation 700, 3625 programs, record 0.941441744
->    (p3596)", a line starting "pack:" with how many constructions were verified, "the replay: the model reads 150
->    earlier programs", the replay's verdict lines ("Reliability: ...", "The model's knowledge: ..."), "the warm start",
+>    (p3596)", a line starting "pack:" with how many constructions were verified, "the replay: done already", the
+>    replay's verdict lines ("Reliability: 12 of 13 ...", "The model's knowledge: ..."), "the warm start",
 >    "v9-s1 continues from generation 700 to generation 800", "constructions the pack doesn't hold: taken from" and
->    "running". The run log should show "resuming after generation 700" and then "gen 701: ...". If the replay is
->    still running at 30 minutes, wait 15 more and read again, once.
+>    "running". The run log should show "resuming after generation 700" and then "gen 701: ..." (a generation takes
+>    3 to 8 minutes). If the pack is still being built at 20 minutes, wait 15 more and read again, once.
 >    A line starting with "preflight:" or "warm start:", or a Traceback, means the job stopped: report those lines
 >    exactly, and don't edit anything to fix it.
 > 5. Report what you saw (quote the lines, including the "pack:" line and the replay's verdict lines), the output of

@@ -40,6 +40,36 @@ an occasional discovery or consolidation call, and a model fit in milliseconds.
 
 **If the map can't steer** (fewer than 2 reliable axes), exploration falls back to v8's kinds.
 
+## Keeping the map tidy (`upkeep.py`): found by testing live
+
+The first replay with the real model (DeepSeek V4.1 Flash) on v8's archive showed what fake models never could: the
+model names the same decision and the same option in new words almost every time, and word matching can't tell
+paraphrases apart. 386 readings grew the codebook to **874 decisions**, one with **296 options**; the annotator saw
+only the first 8 options of each, so it named new ones, and two readings of a program picked different paraphrases:
+only 2 of 9 decisions were read with 80% agreement. Now:
+
+- **the annotator is told** to use a listed option whenever one fits, to name a new one only if it is clearly
+  different (at most 8 words), and a new decision only if a major one is missing (at most one per reading);
+- **consolidate:** decisions that are the same in other words are merged (as before, now also between waves);
+- **tidy:** a decision with more than 6 options has them grouped by the model into at most 6 distinct choices with
+  short names; the most used option of each group survives, the others become its aliases, so every earlier reading
+  still resolves; agreement is measured on resolved options;
+- **prune:** a decision found by reading programs that, 10 generations on, fewer than 3 programs make is dropped;
+- **importance** is weighted by how many programs make each choice (a decision read on two programs explains little
+  of the whole, however far apart they scored).
+
+The replay reads in waves of 48 programs with upkeep between them; the run does upkeep at the start of every
+generation (at most 3 decisions tidied per generation).
+
+## Live tests (October 27, with the real model)
+
+| Test | Result |
+|---|---|
+| The replay on v8-s1 (458 programs read, 119 twice, 120 later changes read from their diffs) | **12 of 13 decisions read with at least 80% agreement** (kappa 0.23-1.00). The model, fitted up to generation 562, ranks the 120 later changes better than chance but weakly: rank correlation **+0.16 (p = 0.04)**; a second full replay gave +0.06 (p = 0.28). It does not rank the later programs' scores (+0.06; their parents' scores alone: +0.996). `results/v9warm/replay/REPLAY.md` |
+| The job, end to end, on GitHub's v8-s1 (5 generations, 60 s per program, then stopped mid-generation and resumed) | Every stage ran: preflight with a real call, warm start with the replay's map and the queue (2 racing, 81 waiting), annotations (0 unreadable), upkeep, an ablation built from its blueprint and read back (landed 1/1, then its follow-up drifted: 0/1, named to the coder), a discovery (a new decision), the race pausing it, the report, publishing, the pack. A stop signal mid-generation finished the generation and pushed; the restart resumed at 705. 160-510 s a generation; about 20 calls, 155k tokens in and 40k out a generation |
+| The planted problem with the real model (12 generations, cold) | The real coder built what blueprints asked: 8 of 9 target decisions in 4 read-backs. The run reached the planted world's **taller hill** (true height 0.9395 of a best possible 0.962, from 0.737). The check for reworded duplicates at generation 10 merged 11 decisions into 8; the first ablation came at generation 12. The real annotator maps the program's mechanics rather than the declared `DESIGN`, so this tests the machinery live, not the map's match to the planted truth |
+| A cold run from Code Zero (8 generations, 30 s per program) | 0.6667 -> 0.8953; the map grew from the 8 generic questions to 14 decisions of at most 6 options each; a drop landed 2 of its 3 target decisions, flips 1 of 1; 139 calls, 776k tokens in, 224k out |
+
 ## Continuing from GitHub
 
 | Part | File | What it does |
@@ -95,8 +125,9 @@ What it found, and what was changed because of it, is in `docs/V9_SIM.md`.
   unreliably stops steering.
 - The model is data-limited near the record. In the simulator, targets chosen at random on the map did as well as
   the model's (`docs/V9_SIM.md`, section 4): v9's measured gain comes from where it jumps (drops and flips from the
-  record, away from known hills) and from keeping breadth, not yet from the model's choice. The replay tests whether
-  the model knows anything on the real archive.
+  record, away from known hills) and from keeping breadth, not from the model's choice. On the real archive the
+  model's knowledge is weak (rank correlation +0.06 to +0.16 on later changes): Thompson sampling with a model that
+  knows little behaves much like choosing untried targets at random, which the simulator says is what works.
 - A construction rebuilt without its original start is approximate; the job avoids this on the VM by using the local
   folder.
 - One run is one sample: section 2.2 of the search-space model shows single runs are noisy. The live job tests
