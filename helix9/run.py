@@ -31,7 +31,9 @@ What v9 adds:
 - **Discovery.** Programs the map places at the same design, scoring further apart than the model explains, prompt the
   question "what design decision differs?"; the answer becomes a new axis.
 - **Constructions on demand.** A base without a construction (a continuation from a pack that didn't hold it) is
-  rebuilt by running its code from its nearest ancestor that has one.
+  copied from a local folder (HELIX9_LOCAL_CONSTRUCTIONS) if one there verifies, else rebuilt by running its code from
+  its nearest ancestor that has one (if close) or the program whose output is most like its own; rebuilds are
+  approximate and logged. The wide loop samples the programs whose construction is at hand.
 If the map can't steer (fewer than 2 reliable axes), exploration falls back to v8's kinds.
 """
 from __future__ import annotations
@@ -61,7 +63,7 @@ from helix9 import prompts as P
 from helix9.codebook import Codebook, NEW, consolidate, hamming, is_new
 from helix9.drops import choose_drop, choose_flip
 from helix9.model import LandscapeModel
-from helix9.race import RUNGS, Race, group_of, record_curve
+from helix9.race import RUNGS, Race, group_of, record_curve, take_waiting
 
 MAP_KINDS = ("drop", "flip", "backtrack")
 SEED_AXES = (    # generic design questions, with no options: every program-improvement problem has some version of them
@@ -199,25 +201,100 @@ class Run(Run8):
         return self.model.sample(self.rng9) if self.model is not None else None
 
     # ---------------------------------------------------------------- constructions on demand
-    def ensure_construction(self, p, gen):
-        """A base needs its construction; one missing (a continuation from a pack that didn't hold it) is rebuilt by
-        running its code from its nearest ancestor that has one. Returns True if the construction is there now."""
-        if p is None or not p.valid or self.archive.construction(p.id) is not None or p.role == "seed":
-            return p is not None and (p.role == "seed" or self.archive.construction(p.id) is not None)
-        anc = self.archive.programs.get(p.parent) if p.parent else None
+    # ---------------------------------------------------------------- constructions of a continuation
+    def local_folders(self):
+        """Folders of constructions on this machine (HELIX9_LOCAL_CONSTRUCTIONS, comma-separated): the earlier run's
+        own folder on the VM. Used on demand, each construction verified before use; nothing is copied in bulk."""
+        if not hasattr(self, "_local_folders"):
+            import os
+            from pathlib import Path as _P
+            self._local_folders = [_P(x) for x in os.environ.get("HELIX9_LOCAL_CONSTRUCTIONS", "").split(",")
+                                   if x.strip() and _P(x.strip()).is_dir()]
+        return self._local_folders
+
+    def has_construction(self, p):
+        if p is None:
+            return False
+        if p.role == "seed" or (self.dir / "constructions" / f"{p.id}.npy").exists():
+            return True
+        return any((f / f"{p.id}.npy").exists() for f in self.local_folders())
+
+    def from_local(self, p):
+        """Copies p's construction from a local folder if one there verifies (same steps, same score)."""
+        from helix9.pack import verify
+        for f in self.local_folders():
+            c = f / f"{p.id}.npy"
+            if not c.exists():
+                continue
+            try:
+                arr = np.load(c)
+            except Exception:                                    # noqa: BLE001
+                continue
+            ok, _why = verify(self.problem, arr, {"score": p.score, "n": p.n}) if hasattr(self.problem, "check") \
+                else (True, "")
+            if ok:
+                np.save(self.dir / "constructions" / f"{p.id}.npy", np.asarray(arr, dtype=float))
+                return str(f)
+        return None
+
+    def rebuild_start(self, p):
+        """Where to run p's code from to rebuild its construction: its nearest ancestor with a construction if that is
+        close (at most 3 steps up its lineage), else the program with a construction whose output is most like p's
+        (by signature), else the farther ancestor."""
+        anc, steps = self.archive.programs.get(p.parent) if p.parent else None, 1
         while anc is not None and self.archive.construction(anc.id) is None and anc.role != "seed":
             anc = self.archive.programs.get(anc.parent) if anc.parent else None
-        start = self.archive.construction(anc.id) if anc is not None else None
+            steps += 1
+        if anc is not None and steps <= 3:
+            return anc, f"its ancestor {anc.id} ({steps} step{'s' if steps > 1 else ''} up)"
+        sig = self.signatures.get(p.id)
+        if sig is not None:
+            have = [q for q in self.archive.valid() if q.id in self.signatures and q.id != p.id
+                    and (self.dir / "constructions" / f"{q.id}.npy").exists()]
+            if have:
+                d = {q.id: self.signature_distance(sig, self.signatures[q.id]) for q in have}
+                q = min(have, key=lambda q: (d[q.id], -(q.score or 0)))
+                return q, f"{q.id}, the program with a construction whose output is most like {p.id}'s (distance {d[q.id]:.3f})"
+        return anc, (f"its ancestor {anc.id} ({steps} steps up)" if anc is not None else "nothing")
+
+    def ensure_construction(self, p, gen):
+        """A base needs its construction. One missing (a continuation from GitHub, whose pack holds the constructions
+        that matter most) is copied from a local folder if one verifies (lossless), else rebuilt by running its code
+        again from the nearest start there is (rebuild_start); the rebuild is approximate and says so. Returns True if
+        the construction is there now."""
+        if p is None or not p.valid or self.archive.construction(p.id) is not None or p.role == "seed":
+            return p is not None and (p.role == "seed" or self.archive.construction(p.id) is not None)
+        src = self.from_local(p)
+        if src:
+            self._append("rebuilt.jsonl", {"gen": gen, "id": p.id, "from": src, "ok": True, "how": "local",
+                                           "recorded": p.score, "rebuilt": p.score, "faithful": True})
+            return True
+        start_p, why = self.rebuild_start(p)
+        start = self.archive.construction(start_p.id) if start_p is not None else None
         from helix47.evaluate import evaluate
         res = evaluate(self.problem, p.code, start, self.cfg.budget, self.cfg.mem_mb)
         ok = bool(res["valid"] and res["construction"] is not None)
+        faithful = bool(ok and p.score is not None and abs(res["score"] - p.score) <= 1e-9 * max(abs(p.score), 1e-12))
         if ok:
             np.save(self.dir / "constructions" / f"{p.id}.npy", np.asarray(res["construction"], dtype=float))
-        self._append("rebuilt.jsonl", {"gen": gen, "id": p.id, "from": anc.id if anc else None, "ok": ok,
-                                       "recorded": p.score, "rebuilt": res.get("score")})
-        self.log(f"[{self.name}] gen {gen}: rebuilt the construction of {p.id} from {anc.id if anc else 'nothing'}: "
-                 + (f"{res['score']:.6f} (recorded {p.score:.6f})" if ok else f"failed ({res['error'][:120]})"))
+        self._append("rebuilt.jsonl", {"gen": gen, "id": p.id, "from": start_p.id if start_p else None, "ok": ok,
+                                       "how": "rebuilt", "recorded": p.score, "rebuilt": res.get("score"),
+                                       "faithful": faithful})
+        self.log(f"[{self.name}] gen {gen}: rebuilt the construction of {p.id} from {why}: "
+                 + (f"{res['score']:.6f} (recorded {p.score:.6f}{', the same' if faithful else ''})" if ok
+                    else f"failed ({res['error'][:120]})"))
         return ok
+
+    def wide_parents(self, rng, pool, level):
+        """v8's sampling over the archive, among the programs whose construction is at hand (in the run, or in a
+        local folder): a continuation from GitHub alone samples the packed programs and everything new, instead of
+        rebuilding a far-off program's construction for every wide child."""
+        have = [q for q in pool if self.has_construction(q)]
+        if len(have) < len(pool) and not getattr(self, "_said_wide_pool", False):
+            self._said_wide_pool = True
+            self.log(f"[{self.name}] the wide loop samples the {len(have)} of {len(pool)} programs whose construction "
+                     f"is at hand (the pack, a local folder, or this run)")
+        return super().wide_parents(rng, have or pool, level)
 
     def evaluate_child(self, p, parent, code):
         if parent is not None and parent.role != "seed" and self.archive.construction(parent.id) is None:
@@ -263,7 +340,7 @@ class Run(Run8):
         for t in self.tracks.values():
             if not t.get("race"):
                 continue
-            if t["last_gain"] == gen and t["id"] in wide_gain and t["race"]["status"] == "paused":
+            if t["last_gain"] == gen and t["id"] in wide_gain and t["race"]["status"] in ("paused", "waiting"):
                 if self.race.wake(t):
                     events.append(f"{t['id']} woken by a gain from the wide loop (race: on to {t['race']['budget']} "
                                   f"experiments)")
@@ -357,6 +434,10 @@ class Run(Run8):
         if n_explore >= 2 and len(live) == n_explore and gen % 2 == 0 and len(racing) < self.cfg.running_cap:
             live = live[:-1]          # breadth: a new direction every other generation, while few tracks race
         opened = Counter(t["kind"] for t in self.tracks.values() if t["opened"] > (self.warm_gen or 0))
+        # an earlier run's explorations that qualified to race again wait their turn (helix9/race.py, retro_judge):
+        # one is taken as a new direction, about twice as often as each kind of new exploration
+        opened["revive"] = sum(1 for t in self.tracks.values() for d in (t.get("race") or {}).get("decisions", [])
+                               if d.get("why") == "its turn came: racing again") / 2
         used = []
         best = self.archive.best()
         for _ in range(n_explore):
@@ -368,8 +449,21 @@ class Run(Run8):
             kind = None
             if gen - self.last_ablate >= self.cfg.ablate_every and "ablate" not in used:
                 kind = "ablate"
-            avail = [k for k in MAP_KINDS if k not in used and (k != "backtrack" or self.backtrack_candidates())]
-            for k in ([kind] if kind else []) + sorted(avail, key=lambda k: (opened[k], MAP_KINDS.index(k))):
+            waiting = any((t.get("race") or {}).get("status") == "waiting" for t in self.tracks.values())
+            avail = [k for k in MAP_KINDS + (("revive",) if waiting else ()) if k not in used
+                     and (k != "backtrack" or self.backtrack_candidates())]
+            order = MAP_KINDS + ("revive",)
+            for k in ([kind] if kind else []) + sorted(avail, key=lambda k: (opened[k], order.index(k))):
+                if k == "revive":
+                    t = take_waiting(list(self.tracks.values()), gen)
+                    if t is None:
+                        continue
+                    t["served"] = gen
+                    used.append(k)
+                    opened[k] += 0.5
+                    self.map_events.append(f"{t['id']} races again (its turn in the queue of earlier explorations)")
+                    slots.append({"kind": "track", "track": t["id"]})
+                    break
                 s = self.target_slot(k, best)
                 if s is not None:
                     used.append(k)
@@ -727,7 +821,7 @@ class Run(Run8):
             r = t.get("race")
             if r and t["id"] in text:
                 tag = {"running": f"racing, judged at {r['budget']} experiments", "paused": "paused by the race",
-                       "finished": "finished the race"}.get(r["status"], "")
+                       "waiting": "waiting its turn to race again", "finished": "finished the race"}.get(r["status"], "")
                 text = text.replace(f"- {t['id']} [", f"- {t['id']} [{tag}; ", 1) if f"- {t['id']} [" in text else \
                     text.replace(f"- {t['id']}: ", f"- {t['id']} [{tag}]: ", 1)
         return text

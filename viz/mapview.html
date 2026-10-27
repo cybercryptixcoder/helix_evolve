@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helix Map Viewer</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f6efe4; --card: #fffcf7; --ink: #2b211a; --ink-2: #5b4c40; --ink-3: #8c7c6e; --rule: #e7dccb;
+  --accent: #e3741f; --new: #2a78d6; --local: #1baf7a; --main: #2b211a; --other: #9b8b7c; --ring: #fffcf7;
+  --chip: #f1e7d8; --shadow: 0 1px 2px rgba(60,40,20,.06), 0 4px 14px rgba(60,40,20,.05);
+  --ramp: #f7efe3,#ecd9bb,#dcb98d,#c8935c,#a96a34,#7d4521,#4e2812;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #171411; --card: #221e1a; --ink: #f2e9dd; --ink-2: #c9bba9; --ink-3: #93857a; --rule: #3a322b;
+    --accent: #e06a2c; --new: #3987e5; --local: #199e70; --main: #f2e9dd; --other: #8b7d70; --ring: #221e1a;
+    --chip: #2d2721; --shadow: 0 1px 2px rgba(0,0,0,.3);
+    --ramp: #241f1a,#3b2d22,#5a3f2a,#81552f,#a86e35,#cf8e45,#f2c58a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #171411; --card: #221e1a; --ink: #f2e9dd; --ink-2: #c9bba9; --ink-3: #93857a; --rule: #3a322b;
+  --accent: #e06a2c; --new: #3987e5; --local: #199e70; --main: #f2e9dd; --other: #8b7d70; --ring: #221e1a;
+  --chip: #2d2721; --shadow: 0 1px 2px rgba(0,0,0,.3);
+  --ramp: #241f1a,#3b2d22,#5a3f2a,#81552f,#a86e35,#cf8e45,#f2c58a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink); }
+body { font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+button, select, input { font: inherit; color: inherit; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 16px; }
+header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 260px; }
+.logo { width: 30px; height: 30px; border-radius: 8px; background: var(--ink); display: grid; place-items: center; flex: none; }
+.logo i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); display: block; }
+h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: var(--card); border: 1px solid var(--rule); cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.pill:hover { color: var(--ink); }
+.pill.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
+.pill.on .live-dot { background: var(--accent); }
+select.pill { appearance: none; padding-right: 26px; max-width: 260px; background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%); background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.stat { background: var(--card); border-radius: 14px; padding: 10px 14px; box-shadow: var(--shadow); min-width: 0; }
+.stat .k { color: var(--ink-3); font-size: 12px; }
+.stat .v { font-size: 19px; font-weight: 650; font-variant-numeric: tabular-nums; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat .v small { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+@media (max-width: 520px) { .stats { grid-template-columns: 1fr 1fr; } .stat:last-child { grid-column: 1 / -1; } }
+.grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; min-width: 0; }
+.card h2 { font-size: 13.5px; margin: 0 0 2px; font-weight: 650; }
+.card .note { color: var(--ink-3); font-size: 12px; margin-bottom: 8px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--chip); border-radius: 10px; padding: 2px; }
+.seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 8px; cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
+.seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.mapbox { position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 70vh; margin: 8px 0; border-radius: 12px; overflow: hidden; background: var(--page); touch-action: pan-y; }
+.mapbox canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--ink-2); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend svg { overflow: visible; }
+.ramp { height: 8px; border-radius: 4px; flex: 1 1 120px; min-width: 80px; max-width: 220px; }
+.time { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.time input[type=range] { flex: 1; accent-color: var(--accent); }
+.play { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--ink); color: var(--card); cursor: pointer; display: grid; place-items: center; flex: none; }
+.gen { font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; color: var(--ink-2); font-size: 12.5px; }
+.tip { position: absolute; pointer-events: none; background: var(--card); color: var(--ink); border-radius: 10px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 18px rgba(0,0,0,.18); border: 1px solid var(--rule); max-width: 240px; display: none; z-index: 5; }
+.tip b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.tip .m { color: var(--ink-3); }
+svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+svg.chart text { fill: var(--ink-3); font-size: 11px; }
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.events { max-height: 260px; overflow: auto; font-size: 12.5px; color: var(--ink-2); }
+.events div { padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.events div b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+.bars .b { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 8px; align-items: center; margin: 5px 0; font-size: 12.5px; }
+.bars .t { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bars .track { height: 8px; border-radius: 4px; background: var(--chip); position: relative; grid-column: 1 / 2; }
+.bars .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--ink-2); }
+.bars .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); grid-row: span 2; }
+.detail { font-size: 12.5px; color: var(--ink-2); }
+.detail .big { font-size: 20px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+.detail table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+.detail td { padding: 3px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.detail td:first-child { color: var(--ink-3); width: 38%; padding-right: 8px; }
+table.list { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.list th { text-align: left; color: var(--ink-3); font-weight: 500; border-bottom: 1px solid var(--rule); padding: 4px 6px 4px 0; }
+table.list td { border-bottom: 1px solid var(--rule); padding: 4px 6px 4px 0; font-variant-numeric: tabular-nums; }
+.empty { color: var(--ink-3); font-size: 12.5px; padding: 10px 0; }
+.drop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; place-items: center; z-index: 20; color: #fff; font-size: 18px; }
+.hidden { display: none !important; }
+footer { color: var(--ink-3); font-size: 12px; margin: 16px 0 8px; }
+footer code { background: var(--chip); padding: 1px 5px; border-radius: 5px; }
+.srcbox { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.srcbox input { flex: 1 1 260px; min-width: 0; padding: 7px 11px; border-radius: 10px; border: 1px solid var(--rule); background: var(--card); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"><i></i></div>
+      <div style="min-width:0">
+        <h1 id="title">Helix map</h1>
+        <div class="sub" id="subtitle">Loading…</div>
+      </div>
+    </div>
+    <div class="tools">
+      <select class="pill" id="preset" aria-label="Data source"></select>
+      <button class="pill" id="liveBtn" title="Refresh from the source every minute"><span class="live-dot"></span>Live</button>
+      <button class="pill" id="themeBtn" aria-label="Theme">Theme</button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><h2>The map</h2><div class="note" id="mapnote"></div></div>
+        <div class="row">
+          <div class="seg" id="viewSeg"><button data-v="map" class="on">Map</button><button data-v="terrain">Terrain</button><button data-v="table">Table</button></div>
+          <div class="seg" id="scaleSeg" title="Colour scale of the landscape"><button data-s="top" class="on">Top</button><button data-s="linear">Linear</button></div>
+        </div>
+      </div>
+      <div class="mapbox" id="mapbox">
+        <canvas id="map" aria-label="Map of the programs over the landscape" role="img"></canvas>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div id="tablebox" class="hidden" style="max-height:520px;overflow:auto"></div>
+      <div class="legend" id="legend"></div>
+      <div class="time">
+        <button class="play" id="play" aria-label="Play">▶</button>
+        <input type="range" id="slider" min="0" max="0" value="0" aria-label="Generation">
+        <div class="gen" id="genLabel">gen –</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h2>Best so far</h2><div class="note" id="bestnote">Score of the best program after each generation.</div>
+        <div id="bestChart"></div>
+      </div>
+      <div class="card">
+        <h2>The race</h2><div class="note">Each exploration track's best against the experiments spent on it: new designs start low and need a climb.</div>
+        <div id="raceChart"></div>
+      </div>
+      <div class="card" id="selCard">
+        <h2>Selected</h2>
+        <div class="detail" id="detail"><div class="empty">Tap or hover a program on the map.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:12px">
+    <div class="card">
+      <h2>What happened</h2><div class="note">Events up to the selected generation, newest first.</div>
+      <div class="events" id="events"></div>
+    </div>
+    <div class="card" id="designCard">
+      <h2>The design map</h2><div class="note" id="designnote">How much of the score's variation each design decision explains, as the model estimates it.</div>
+      <div class="bars" id="bars"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>Source</h2>
+    <div class="note">Paste the URL of a <code>mapview.json</code> (a GitHub raw link works), or drop a file anywhere on the page.</div>
+    <div class="srcbox"><input id="url" placeholder="https://raw.githubusercontent.com/…/mapview.json"><button class="pill" id="loadUrl">Load</button><label class="pill">Open file<input type="file" id="file" accept=".json" hidden></label></div>
+  </div>
+  <footer>Helix map viewer · data from <code>helix9/mapview.py</code> · works for simulator runs and any Helix run (v4–v9).</footer>
+</div>
+<div class="drop" id="dropzone">Drop a mapview.json</div>
+
+<script>
+"use strict";
+const REPO = "https://raw.githubusercontent.com/cybercryptixcoder/helix_evolve/main/";
+const PRESETS = [
+  ["Simulator: easy world, v9", "viz/data/sim-easy-v9-s3.json"],
+  ["Simulator: easy world, v8", "viz/data/sim-easy-v8-s3.json"],
+  ["Simulator: slow world, v9", "viz/data/sim-slow-v9-s2.json"],
+  ["Simulator: slow world, v8", "viz/data/sim-slow-v8-s2.json"],
+  ["v9 on the autocorrelation problem (live)", "results/v9warm/v9-s1/mapview.json"],
+  ["v8 on the autocorrelation problem", "viz/data/v8-s1.json"],
+  ["v8, placed by what its programs produce", "results/v8warm/v8-s1/mapview.json"],
+];
+const KIND_GROUP = {drop: "new", restart: "new", bold: "new", flip: "local", ablate: "local", main: "main", seed: "main"};
+const GROUP_LABEL = {main: "Main line", new: "New design (drop, restart)", local: "One decision (flip, ablation)", other: "Other (mutation, backtrack, track)"};
+const $ = (id) => document.getElementById(id);
+let D = null, src = null, gen = 0, playing = null, view = "map", scale = "top", selected = null, liveTimer = null;
+let fieldImg = null, fieldGrid = null, terrainAngle = 0.6, pts = [];
+
+// ------------------------------------------------------------------ theme
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function setTheme(t) { if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; try { localStorage.setItem("mv-theme", t || ""); } catch (e) {} redrawAll(true); }
+$("themeBtn").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); setTheme(cur === "dark" ? "light" : "dark"); };
+try { const t = localStorage.getItem("mv-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+// ------------------------------------------------------------------ colour
+function hex(h) { h = h.replace("#", ""); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+function rampStops() { return css("--ramp").split(",").map(s => hex(s.trim())); }
+function rampAt(stops, t) { t = Math.max(0, Math.min(1, t)); const x = t * (stops.length - 1), i = Math.min(Math.floor(x), stops.length - 2), f = x - i; return stops[i].map((c, k) => Math.round(c + (stops[i + 1][k] - c) * f)); }
+function tScale(t) { return scale === "top" ? Math.pow(Math.max(0, Math.min(1, t)), 2.6) : t; }
+
+// ------------------------------------------------------------------ loading
+function fill(sel) {
+  sel.innerHTML = "";
+  PRESETS.forEach(([name, path]) => { const o = document.createElement("option"); o.value = REPO + path; o.textContent = name; sel.appendChild(o); });
+  const o = document.createElement("option"); o.value = "embedded"; o.textContent = "Built-in demo (offline)"; sel.appendChild(o);
+}
+fill($("preset"));
+function showSource(v, label) {              // the menu names what is shown, a preset or not
+  const sel = $("preset");
+  if ([...sel.options].some(o => o.value === v && !o.dataset.custom)) { sel.value = v; return; }
+  let o = sel.querySelector("option[data-custom]");
+  if (!o) { o = document.createElement("option"); o.dataset.custom = "1"; sel.appendChild(o); }
+  o.value = v; o.textContent = label; sel.value = v;
+}
+$("preset").onchange = () => { const o = $("preset").selectedOptions[0]; if (!o.dataset.custom) load(o.value); };
+$("loadUrl").onclick = () => { const u = $("url").value.trim(); if (u) load(u); };
+function useFile(f) { f.text().then(t => { showSource("file:" + f.name, "File: " + f.name); use(JSON.parse(t), "file: " + f.name); }); }
+$("file").onchange = (e) => { const f = e.target.files[0]; if (f) useFile(f); };
+document.addEventListener("dragover", e => { e.preventDefault(); $("dropzone").style.display = "grid"; });
+document.addEventListener("dragleave", e => { if (e.target === $("dropzone")) $("dropzone").style.display = "none"; });
+document.addEventListener("drop", e => { e.preventDefault(); $("dropzone").style.display = "none"; const f = e.dataTransfer.files[0]; if (f) useFile(f); });
+
+async function load(u, keepGen) {
+  src = u;
+  if (!keepGen) showSource(u, u === "embedded" ? "Built-in demo (offline)" : "Source: " + u.replace(REPO, "").split("/").slice(-2).join("/"));
+  if (u === "embedded") { const el = document.getElementById("demo"); if (el && el.textContent.trim().length > 2) use(JSON.parse(el.textContent), "built-in demo"); else $("subtitle").textContent = "No built-in demo in this copy."; return; }
+  document.body.style.opacity = keepGen ? 1 : 0.6;
+  try {
+    const r = await fetch(u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(), {cache: "no-store"});
+    if (!r.ok) throw new Error(r.status + " " + r.statusText);
+    use(await r.json(), u, keepGen);
+  } catch (e) {
+    $("subtitle").textContent = "Could not load " + u.replace(REPO, "") + " (" + e.message + "). Try another source, or a file.";
+  } finally { document.body.style.opacity = 1; }
+}
+function use(data, where, keepGen) {
+  D = data;
+  const gens = (D.history || []).map(h => h.gen).concat((D.programs || []).map(p => p.gen));
+  D.g0 = Math.min(...gens); D.g1 = Math.max(...gens);
+  const s = $("slider"); s.min = D.g0; s.max = D.g1;
+  if (!keepGen || gen > D.g1 || gen < D.g0) gen = D.g1;
+  s.value = gen;
+  D.byId = {}; (D.programs || []).forEach(p => D.byId[p.id] = p);
+  D.scores = (D.programs || []).filter(p => p.valid && p.score != null).map(p => p.score).sort((a, b) => a - b);
+  $("title").textContent = D.title || "Helix map";
+  $("subtitle").textContent = (D.subtitle || "") + (where ? "  ·  " + where.replace(REPO, "") : "");
+  $("liveBtn").classList.toggle("hidden", !D.live && D.kind !== "run");
+  fieldImg = null; fieldGrid = null;
+  buildField();
+  redrawAll(true);
+}
+
+// ------------------------------------------------------------------ the field
+function decodeField(f) {
+  const bin = atob(f.b64), n = bin.length, v = new Float32Array(n);
+  for (let i = 0; i < n; i++) v[i] = f.lo + (bin.charCodeAt(i) / 255) * (f.hi - f.lo);
+  return v;
+}
+function buildField() {
+  const f = D.field || {};
+  if (f.kind === "true" && f.b64) {
+    fieldGrid = {w: f.w, h: f.h, v: decodeField(f), lo: f.lo, hi: f.hi, known: null, kind: "true"};
+  } else {
+    fieldGrid = estimateField(gen);
+  }
+}
+function estimateField(g) {
+  // a kernel smoother over the programs' scores where they sit (only programs up to generation g)
+  const N = 96, sum = new Float32Array(N * N), wt = new Float32Array(N * N);
+  const ps = (D.programs || []).filter(p => p.valid && p.score != null && p.gen <= g);
+  if (!ps.length) return null;
+  const lo = D.scores[Math.floor(0.02 * (D.scores.length - 1))], hi = D.scores[D.scores.length - 1];
+  for (const p of ps) {
+    const i = Math.min(N - 1, Math.max(0, Math.floor(p.x * N))), j = Math.min(N - 1, Math.max(0, Math.floor(p.y * N)));
+    const v = Math.max(lo, p.score);
+    sum[j * N + i] += v; wt[j * N + i] += 1;
+  }
+  const blur = (a) => { // separable gaussian, sigma ~ 2.2 cells
+    const k = [0.03, 0.11, 0.22, 0.28, 0.22, 0.11, 0.03], r = 3, t = new Float32Array(N * N), o = new Float32Array(N * N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { let s = 0; for (let d = -r; d <= r; d++) { const ii = i + d; if (ii >= 0 && ii < N) s += a[j * N + ii] * k[d + r]; } t[j * N + i] = s; }
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { let s = 0; for (let d = -r; d <= r; d++) { const jj = j + d; if (jj >= 0 && jj < N) s += t[jj * N + i] * k[d + r]; } o[j * N + i] = s; }
+    return o;
+  };
+  let S = sum, W = wt;
+  for (let pass = 0; pass < 2; pass++) { S = blur(S); W = blur(W); }
+  const v = new Float32Array(N * N), known = new Float32Array(N * N);
+  for (let i = 0; i < N * N; i++) { v[i] = W[i] > 1e-6 ? S[i] / W[i] : lo; known[i] = Math.min(1, W[i] / 0.08); }
+  return {w: N, h: N, v, lo, hi, known, kind: "estimated"};
+}
+function fieldImage() {
+  if (!fieldGrid) return null;
+  const {w, h, v, lo, hi, known} = fieldGrid, stops = rampStops(), page = hex(css("--page"));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"), img = ctx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    let col = rampAt(stops, tScale((v[i] - lo) / Math.max(hi - lo, 1e-12)));
+    if (known) { const a = known[i]; col = col.map((x, k) => Math.round(page[k] + (x - page[k]) * a)); }
+    img.data[4 * i] = col[0]; img.data[4 * i + 1] = col[1]; img.data[4 * i + 2] = col[2]; img.data[4 * i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+function contours(ctx, W, H) {
+  if (!fieldGrid) return;
+  const {w, h, v, lo, hi, known} = fieldGrid;
+  ctx.save(); ctx.strokeStyle = css("--ink"); ctx.globalAlpha = 0.18; ctx.lineWidth = 1;
+  const levels = [0.5, 0.7, 0.82, 0.9, 0.95].map(q => lo + (hi - lo) * (scale === "top" ? Math.pow(q, 1 / 2.6) : q));
+  const sx = W / w, sy = H / h;
+  for (const L of levels) {
+    ctx.beginPath();
+    for (let j = 0; j < h - 1; j++) for (let i = 0; i < w - 1; i++) {
+      if (known && known[j * w + i] < 0.5) continue;
+      const a = v[j * w + i], b = v[j * w + i + 1], c = v[(j + 1) * w + i + 1], d = v[(j + 1) * w + i];
+      const code = (a > L) | ((b > L) << 1) | ((c > L) << 2) | ((d > L) << 3);
+      if (code === 0 || code === 15) continue;
+      const P = (p, q, x0, y0, x1, y1) => { const t = (L - p) / (q - p || 1e-12); return [(x0 + (x1 - x0) * t + 0.5) * sx, (y0 + (y1 - y0) * t + 0.5) * sy]; };
+      const top = P(a, b, i, j, i + 1, j), right = P(b, c, i + 1, j, i + 1, j + 1), bot = P(d, c, i, j + 1, i + 1, j + 1), left = P(a, d, i, j, i, j + 1);
+      const seg = {1: [left, top], 2: [top, right], 3: [left, right], 4: [right, bot], 5: [left, top, right, bot], 6: [top, bot], 7: [left, bot], 8: [left, bot], 9: [top, bot], 10: [top, right, left, bot], 11: [right, bot], 12: [left, right], 13: [top, right], 14: [left, top]}[code];
+      for (let k = 0; k < seg.length; k += 2) { ctx.moveTo(...seg[k]); ctx.lineTo(...seg[k + 1]); }
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ marks
+function groupOf(p) { return KIND_GROUP[p.kind] || (p.track === mainTrack() ? "main" : "other"); }
+function mainTrack() { const b = bestUpTo(gen); return b ? b.track : null; }
+function bestUpTo(g) { let b = null; for (const p of D.programs) if (p.valid && p.score != null && p.gen <= g && (!b || p.score > b.score)) b = p; return b; }
+function shapePath(ctx, g, x, y, r) {
+  ctx.beginPath();
+  if (g === "new") { ctx.moveTo(x, y - r * 1.25); ctx.lineTo(x + r * 1.25, y); ctx.lineTo(x, y + r * 1.25); ctx.lineTo(x - r * 1.25, y); ctx.closePath(); }
+  else if (g === "local") { ctx.moveTo(x, y - r * 1.25); ctx.lineTo(x + r * 1.15, y + r * 0.85); ctx.lineTo(x - r * 1.15, y + r * 0.85); ctx.closePath(); }
+  else ctx.arc(x, y, r, 0, 2 * Math.PI);
+}
+function colorOf(g) { return css({main: "--main", new: "--new", local: "--local", other: "--other"}[g]); }
+function star(ctx, x, y, r) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; ctx.lineTo(x + rr * Math.cos(a), y + rr * Math.sin(a)); } ctx.closePath(); }
+
+// ------------------------------------------------------------------ the map
+function drawMap() {
+  const cv = $("map"), box = $("mapbox"), dpr = window.devicePixelRatio || 1;
+  const W = box.clientWidth, H = box.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = css("--page"); ctx.fillRect(0, 0, W, H);
+  if (!D) return;
+  if (view === "terrain") return drawTerrain(ctx, W, H);
+  if (!fieldImg) fieldImg = fieldImage();
+  if (fieldImg) { ctx.imageSmoothingEnabled = fieldGrid.kind !== "true"; ctx.drawImage(fieldImg, 0, 0, W, H); contours(ctx, W, H); }
+  const ring = css("--ring"), visible = D.programs.filter(p => p.valid && p.gen <= gen);
+  pts = [];
+  // trails of the selected track
+  if (selected) {
+    const tr = selected.track;
+    ctx.save(); ctx.strokeStyle = css("--ink"); ctx.globalAlpha = 0.55; ctx.lineWidth = 1.5;
+    for (const p of visible) { if (p.track !== tr || !p.parent) continue; const q = D.byId[p.parent]; if (!q) continue; ctx.beginPath(); ctx.moveTo(q.x * W, q.y * H); ctx.lineTo(p.x * W, p.y * H); ctx.stroke(); }
+    ctx.restore();
+  }
+  const order = ["other", "main", "local", "new"];
+  const jit = (p, k) => (((parseInt(p.id.slice(1)) * (k ? 7919 : 104729)) % 997) / 997 - 0.5) * (D.layout === "grid" ? 6 : 0);
+  for (const g of order) for (const p of visible) {
+    if (groupOf(p) !== g) continue;
+    const x = p.x * W + jit(p, 0), y = p.y * H + jit(p, 1), fresh = p.gen === gen;
+    const r = g === "other" ? 2.6 : 4.2;
+    ctx.globalAlpha = fresh ? 1 : (g === "other" ? 0.55 : 0.85);
+    shapePath(ctx, g, x, y, r + 2); ctx.fillStyle = ring; ctx.fill();
+    shapePath(ctx, g, x, y, r); ctx.fillStyle = colorOf(g); ctx.fill();
+    if (fresh) { ctx.globalAlpha = 1; shapePath(ctx, g, x, y, r + 3.5); ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1.5; ctx.stroke(); }
+    pts.push({p, x, y});
+  }
+  ctx.globalAlpha = 1;
+  // planted hills (simulator) and the record
+  for (const h of D.planted || []) {
+    const x = h.x * W, y = h.y * H;
+    ctx.save(); ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.25; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(x, y, 11, 0, 2 * Math.PI); ctx.stroke(); ctx.restore();
+    label(ctx, x + 14, y + 4, `${h.name} ${h.peak.toFixed(3)}`, W);
+  }
+  const b = bestUpTo(gen);
+  if (b) { const x = b.x * W, y = b.y * H; star(ctx, x, y, 10); ctx.fillStyle = css("--ring"); ctx.fill(); star(ctx, x, y, 7.5); ctx.fillStyle = css("--accent"); ctx.fill(); }
+  if (selected) { const x = selected.x * W, y = selected.y * H; ctx.beginPath(); ctx.arc(x, y, 9, 0, 2 * Math.PI); ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.stroke(); }
+}
+function label(ctx, x, y, t, W) {
+  ctx.save(); ctx.font = "11px -apple-system, Segoe UI, sans-serif";
+  const w = ctx.measureText(t).width + 8; if (x + w > W - 4) x = x - w - 28;
+  ctx.fillStyle = css("--card"); ctx.globalAlpha = 0.86; ctx.fillRect(x - 4, y - 11, w, 15); ctx.globalAlpha = 1;
+  ctx.fillStyle = css("--ink-2"); ctx.fillText(t, x, y); ctx.restore();
+}
+
+// ------------------------------------------------------------------ terrain (an isometric 3-D view of the landscape)
+function terrainGrid(n) {
+  // vertex heights: the landscape averaged over blocks (a smooth surface to read the hills from)
+  const {w, h, v, lo, hi, known} = fieldGrid, z = new Float32Array((n + 1) * (n + 1));
+  for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) {
+    const i0 = Math.max(0, Math.floor((i - 0.5) / n * w)), i1 = Math.min(w, Math.ceil((i + 0.5) / n * w));
+    const j0 = Math.max(0, Math.floor((j - 0.5) / n * h)), j1 = Math.min(h, Math.ceil((j + 0.5) / n * h));
+    let s = 0, c = 0, cnt = 0;
+    for (let jj = j0; jj < j1; jj++) for (let ii = i0; ii < i1; ii++) { const wt = known ? known[jj * w + ii] : 1; s += wt * v[jj * w + ii]; c += wt; cnt++; }
+    // an estimated landscape sinks to the floor where few programs sit (no cliffs at the edge of the data)
+    const conf = cnt > 0 ? c / cnt : 0;
+    z[j * (n + 1) + i] = c > 0 ? conf * tScale(((s / c) - lo) / Math.max(hi - lo, 1e-12)) : 0;
+  }
+  return z;
+}
+function drawTerrain(ctx, W, H) {
+  if (!fieldGrid) return;
+  const n = 56, z = terrainGrid(n), stops = rampStops();
+  const ca = Math.cos(terrainAngle), sa = Math.sin(terrainAngle), S = Math.min(W, H) * 0.66, zs = Math.min(W, H) * 0.42;
+  const proj = (u, t, zz) => { const x = u - 0.5, y = t - 0.5, rx = x * ca - y * sa, ry = x * sa + y * ca; return [W / 2 + rx * S, H * 0.6 + ry * S * 0.48 - zz * zs]; };
+  const Z = (i, j) => z[j * (n + 1) + i];
+  const zAt = (u, t) => { const x = Math.min(n - 1e-6, Math.max(0, u * n)), y = Math.min(n - 1e-6, Math.max(0, t * n)), i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j;
+    return Z(i, j) * (1 - fx) * (1 - fy) + Z(i + 1, j) * fx * (1 - fy) + Z(i, j + 1) * (1 - fx) * fy + Z(i + 1, j + 1) * fx * fy; };
+  const quads = [];
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const u0 = i / n, u1 = (i + 1) / n, t0 = j / n, t1 = (j + 1) / n;
+    const za = Z(i, j), zb = Z(i + 1, j), zc = Z(i + 1, j + 1), zd = Z(i, j + 1), zm = (za + zb + zc + zd) / 4;
+    const depth = ((u0 + u1) / 2 - 0.5) * sa + ((t0 + t1) / 2 - 0.5) * ca;
+    const slope = ((zb + zc) - (za + zd)) * ca - ((zd + zc) - (za + zb)) * sa;      // light from the left
+    quads.push({depth, zm, light: Math.max(-1, Math.min(1, slope * 6)), p: [proj(u0, t0, za), proj(u1, t0, zb), proj(u1, t1, zc), proj(u0, t1, zd)]});
+  }
+  quads.sort((a, b) => a.depth - b.depth);
+  for (const q of quads) {
+    let col = rampAt(stops, q.zm);
+    const k = q.light > 0 ? 1 - 0.18 * q.light : 1 - 0.06 * q.light;
+    col = col.map(c => Math.max(0, Math.min(255, Math.round(c * k + (q.light < 0 ? -12 * q.light : 0)))));
+    ctx.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+    ctx.beginPath(); q.p.forEach(([x, y], k2) => k2 ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.6; ctx.stroke();
+  }
+  pts = [];
+  const visible = D.programs.filter(p => p.valid && p.gen <= gen && groupOf(p) !== "other");
+  for (const p of visible) {
+    const [x, y] = proj(p.x, p.y, zAt(p.x, p.y) + 0.015), g = groupOf(p);
+    shapePath(ctx, g, x, y, 5.5); ctx.fillStyle = css("--ring"); ctx.fill();
+    shapePath(ctx, g, x, y, 3.8); ctx.fillStyle = colorOf(g); ctx.fill();
+    pts.push({p, x, y});
+  }
+  for (const h of D.planted || []) { const [x, y] = proj(h.x, h.y, zAt(h.x, h.y) + 0.02); label(ctx, x + 8, y - 6, `${h.name} ${h.peak.toFixed(3)}`, W); }
+  const b = bestUpTo(gen);
+  if (b) { const [x, y] = proj(b.x, b.y, zAt(b.x, b.y) + 0.03); star(ctx, x, y, 10); ctx.fillStyle = css("--ring"); ctx.fill(); star(ctx, x, y, 7.5); ctx.fillStyle = css("--accent"); ctx.fill(); }
+  label(ctx, 10, H - 10, "Drag sideways to turn · height = the landscape, averaged over neighbouring designs", W);
+}
+let drag = null;
+$("map").addEventListener("pointerdown", e => { if (view === "terrain") { drag = e.clientX; $("map").setPointerCapture(e.pointerId); } });
+$("map").addEventListener("pointerup", () => { drag = null; });
+$("map").addEventListener("pointermove", e => {
+  if (drag !== null && view === "terrain") { terrainAngle += (e.clientX - drag) * 0.01; drag = e.clientX; drawMap(); return; }
+  hover(e);
+});
+$("map").addEventListener("pointerleave", () => { $("tip").style.display = "none"; });
+$("map").addEventListener("click", e => { const h = nearest(e); if (h) { selected = h.p; drawMap(); detail(h.p); } });
+function nearest(e) {
+  const r = $("map").getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, bd = 18 * 18;
+  for (const q of pts) { const d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < bd) { bd = d; best = q; } }
+  return best;
+}
+function hover(e) {
+  const h = nearest(e), tip = $("tip");
+  if (!h) { tip.style.display = "none"; return; }
+  const p = h.p, box = $("mapbox").getBoundingClientRect();
+  tip.innerHTML = "";
+  const b = document.createElement("b"); b.textContent = p.score != null ? p.score.toFixed(6) : "failed"; tip.appendChild(b);
+  const m = document.createElement("div"); m.className = "m";
+  m.textContent = `${p.id} · gen ${p.gen} · ${GROUP_LABEL[groupOf(p)].split(" (")[0].toLowerCase()} · ${p.track}` + (p.true != null ? ` · true height ${p.true.toFixed(4)}` : "");
+  tip.appendChild(m);
+  tip.style.display = "block";
+  let x = h.x + 14, y = h.y + 10;
+  if (x + 240 > box.width) x = h.x - 250;
+  if (y + 70 > box.height) y = h.y - 70;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+
+// ------------------------------------------------------------------ the legend
+function legend() {
+  const el = $("legend"); el.innerHTML = "";
+  const groups = new Set(D.programs.filter(p => p.gen <= gen).map(groupOf));
+  for (const g of ["main", "new", "local", "other"]) {
+    if (!groups.has(g)) continue;
+    const s = document.createElement("span");
+    s.innerHTML = `<svg width="12" height="12" viewBox="-6 -6 12 12">${g === "new" ? '<path d="M0,-5 L5,0 L0,5 L-5,0Z"/>' : g === "local" ? '<path d="M0,-5 L4.6,3.6 L-4.6,3.6Z"/>' : '<circle r="4"/>'}</svg>`;
+    s.querySelector("svg").style.fill = colorOf(g);
+    s.appendChild(document.createTextNode(GROUP_LABEL[g])); el.appendChild(s);
+  }
+  const st = document.createElement("span");
+  st.innerHTML = `<svg width="14" height="14" viewBox="-7 -7 14 14"><path d="${(() => { let d = ""; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 2.7 : 6; d += (i ? "L" : "M") + (r * Math.cos(a)).toFixed(2) + "," + (r * Math.sin(a)).toFixed(2); } return d + "Z"; })()}"/></svg>`;
+  st.querySelector("svg").style.fill = css("--accent"); st.appendChild(document.createTextNode("Best so far")); el.appendChild(st);
+  const rs = document.createElement("span");
+  const stops = css("--ramp").split(",").map(s => s.trim());
+  rs.innerHTML = `<span class="ramp" style="background:linear-gradient(90deg,${stops.join(",")})"></span>`;
+  rs.appendChild(document.createTextNode(D.field && D.field.kind === "true" ? "Height of the landscape (true)" : "Score where programs sit (estimated)"));
+  el.appendChild(rs);
+  $("mapnote").textContent = D.layout === "grid" ? "Every design of the planted world: each direction runs through half the decisions, neighbouring cells differ in one. Dashed rings: the planted hills."
+    : D.layout === "signature" ? "Programs placed by what they produce (nearby = similar output); the landscape is estimated from their scores."
+    : D.layout === "design" ? "Programs placed by their design (v9's coordinates); the landscape is estimated from their scores."
+    : "No signatures or coordinates in this data: programs placed by generation (left to right) and track.";
+}
+
+// ------------------------------------------------------------------ charts (svg)
+function svgEl(tag, attrs, parent) { const e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function niceTicks(lo, hi, n) { const span = hi - lo || 1, step = Math.pow(10, Math.floor(Math.log10(span / n))), err = span / n / step, m = err > 5 ? 10 : err > 2 ? 5 : err > 1 ? 2 : 1, s = m * step, out = []; for (let v = Math.ceil(lo / s) * s; v <= hi + 1e-12; v += s) out.push(+v.toPrecision(12)); return out; }
+function fmt(v, span) { const d = span < 1e-4 ? 7 : span < 1e-3 ? 6 : span < 0.01 ? 5 : span < 0.1 ? 4 : 3; return v.toFixed(d); }
+function lineChart(el, series, opts) {
+  el.innerHTML = "";
+  const W = Math.max(280, el.clientWidth || 360), H = opts.h || 190, m = {l: 54, r: 10, t: 8, b: 24};
+  const svg = svgEl("svg", {viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": opts.label}, el);
+  const all = series.flatMap(s => s.pts), xs = all.map(p => p[0]), ys = all.map(p => p[1]).filter(v => v != null);
+  if (!ys.length) { el.innerHTML = '<div class="empty">No data yet.</div>'; return; }
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  if (opts.yLo != null) y0 = Math.max(y0, opts.yLo);
+  const pad = (y1 - y0) * 0.08 || 1e-6; y0 -= pad; y1 += pad; if (x1 === x0) x1 = x0 + 1;
+  const X = v => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b);
+  const ink3 = css("--ink-3"), rule = css("--rule");
+  for (const t of niceTicks(y0, y1, 4)) { svgEl("line", {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: rule, "stroke-width": 1}, svg); const tx = svgEl("text", {x: m.l - 6, y: Y(t) + 3.5, "text-anchor": "end"}, svg); tx.textContent = fmt(t, y1 - y0); }
+  for (const t of niceTicks(x0, x1, 5)) { const tx = svgEl("text", {x: X(t), y: H - 6, "text-anchor": "middle"}, svg); tx.textContent = opts.xfmt ? opts.xfmt(t) : t; }
+  for (const s of series) {
+    const d = s.pts.filter(p => p[1] != null).map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join("");
+    svgEl("path", {d, fill: "none", stroke: s.color, "stroke-width": s.w || 2, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: s.op || 1}, svg);
+  }
+  if (opts.marks) for (const [x, y, c] of opts.marks) { svgEl("circle", {cx: X(x), cy: Y(y), r: 4.5, fill: css("--ring")}, svg); svgEl("circle", {cx: X(x), cy: Y(y), r: 3, fill: c}, svg); }
+  if (opts.cursor != null) svgEl("line", {x1: X(opts.cursor), x2: X(opts.cursor), y1: m.t, y2: H - m.b, stroke: css("--accent"), "stroke-width": 1.5, "stroke-dasharray": "3 3"}, svg);
+  // the crosshair and tooltip
+  const hair = svgEl("line", {y1: m.t, y2: H - m.b, stroke: css("--ink-2"), "stroke-width": 1, opacity: 0}, svg);
+  const tip = document.createElement("div"); tip.className = "tip"; el.style.position = "relative"; el.appendChild(tip);
+  svg.addEventListener("pointermove", e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W, xv = x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0);
+    const rows = series.map(s => { let best = null; for (const p of s.pts) if (p[1] != null && (!best || Math.abs(p[0] - xv) < Math.abs(best[0] - xv))) best = p; return [s, best]; }).filter(r => r[1]);
+    if (!rows.length) return;
+    const xs0 = rows[0][1][0]; hair.setAttribute("x1", X(xs0)); hair.setAttribute("x2", X(xs0)); hair.setAttribute("opacity", 0.6);
+    tip.innerHTML = ""; const head = document.createElement("div"); head.className = "m"; head.textContent = (opts.xname || "x") + " " + xs0; tip.appendChild(head);
+    for (const [s, p] of rows.slice(0, 6)) { const d = document.createElement("div"); const k = document.createElement("span"); k.style.cssText = `display:inline-block;width:12px;height:2px;background:${s.color};margin-right:6px;vertical-align:middle`; d.appendChild(k); const b = document.createElement("b"); b.textContent = p[1].toFixed(6); d.appendChild(b); d.appendChild(document.createTextNode(" " + s.name)); tip.appendChild(d); }
+    tip.style.display = "block"; const tx = Math.min(X(xs0) / W * r.width + 12, r.width - 200); tip.style.left = Math.max(0, tx) + "px"; tip.style.top = "6px";
+  });
+  svg.addEventListener("pointerleave", () => { hair.setAttribute("opacity", 0); tip.style.display = "none"; });
+  if (opts.click) svg.addEventListener("click", e => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W; opts.click(x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0)); });
+  if (series.length > 1 && opts.legend !== false) {
+    const lg = document.createElement("div"); lg.className = "legend"; lg.style.marginTop = "4px";
+    for (const s of series.slice(0, opts.legendMax || 6)) { const sp = document.createElement("span"); const k = document.createElement("span"); k.style.cssText = `display:inline-block;width:14px;height:2px;background:${s.color}`; sp.appendChild(k); sp.appendChild(document.createTextNode(s.name)); lg.appendChild(sp); }
+    el.appendChild(lg);
+  }
+}
+function bestChart() {
+  const h = (D.history || []).filter(r => r.best != null);
+  const series = [{name: "best score", color: css("--ink"), pts: h.map(r => [r.gen, r.best])}];
+  if (h.some(r => r.true != null)) series.push({name: "its true height", color: css("--accent"), pts: h.map(r => [r.gen, r.true])});
+  const marks = h.filter(r => r.record).map(r => [r.gen, r.best, css("--accent")]);
+  const lo = D.scores.length ? D.scores[Math.floor(0.1 * (D.scores.length - 1))] : null;
+  lineChart($("bestChart"), series, {label: "Best score by generation", cursor: gen, xname: "gen", marks: series.length === 1 ? marks : null, h: 180,
+    click: (x) => setGen(Math.round(x))});
+  $("bestnote").textContent = series.length > 1 ? "The best program's score (what the search sees) and its design's true height (what the simulator knows)." : "Score of the best program after each generation; dots mark records.";
+}
+function raceChart() {
+  const el = $("raceChart");
+  const ts = (D.tracks || []).filter(t => t.curve && t.curve.length >= 1 && t.opened <= gen && KIND_GROUP[t.kind] && KIND_GROUP[t.kind] !== "main");
+  if (!ts.length) { el.innerHTML = '<div class="empty">No exploration tracks yet.</div>'; return; }
+  ts.sort((a, b) => (b.best || 0) - (a.best || 0));
+  const show = ts.slice(0, 24);
+  const series = show.map(t => ({name: `${t.id} ${t.kind}` + (t.status ? ` (${t.status})` : ""), color: colorOf(KIND_GROUP[t.kind]), w: 1.5, op: t.status === "running" || t.status === "live" ? 1 : 0.55,
+    pts: t.curve.filter(p => p[1] != null).map(p => [p[0], p[1]])}));
+  lineChart(el, series, {label: "The race: best against experiments, per exploration track", xname: "experiments", h: 190, legend: false});
+  const lg = document.createElement("div"); lg.className = "legend"; lg.style.marginTop = "4px";
+  for (const g of ["new", "local"]) { if (!show.some(t => KIND_GROUP[t.kind] === g)) continue; const sp = document.createElement("span"); const k = document.createElement("span"); k.style.cssText = `display:inline-block;width:14px;height:2px;background:${colorOf(g)}`; sp.appendChild(k); sp.appendChild(document.createTextNode(GROUP_LABEL[g])); lg.appendChild(sp); }
+  const n = document.createElement("span"); n.textContent = `${show.length} of ${ts.length} tracks, the strongest; faded: paused`; lg.appendChild(n);
+  el.appendChild(lg);
+}
+
+// ------------------------------------------------------------------ side panels
+function stats() {
+  const el = $("stats"); el.innerHTML = "";
+  const b = bestUpTo(gen), h = (D.history || []).filter(r => r.gen <= gen), last = h[h.length - 1] || {};
+  const n = D.programs.filter(p => p.gen <= gen).length, nv = D.programs.filter(p => p.gen <= gen && p.valid).length;
+  const tiles = [["Generation", `${gen}`, `of ${D.g1}`], ["Best so far", b ? b.score.toFixed(D.kind === "sim" ? 4 : 7) : "–", b ? b.id : ""],
+    ["Programs", `${n}`, `${n - nv} failed`], ["Hills", `${last.hills != null ? last.hills : (D.hills || []).length}`, ""]];
+  if (D.kind === "sim") tiles.push(["True height of the best", b && b.true != null ? b.true.toFixed(4) : "–", `best possible ${Math.max(...(D.planted || []).map(p => p.peak)).toFixed(4)}`]);
+  else if (last.map) tiles.push(["Design map", `${last.map.axes}`, `decisions; ${last.map.coords} placed`]);
+  else tiles.push(["Exploration level", `${last.level != null ? last.level : "–"}`, "0 climbing, 2 stalled"]);
+  for (const [k, v, s] of tiles) { const d = document.createElement("div"); d.className = "stat"; const kk = document.createElement("div"); kk.className = "k"; kk.textContent = k; const vv = document.createElement("div"); vv.className = "v"; vv.textContent = v + " "; const sm = document.createElement("small"); sm.textContent = s; vv.appendChild(sm); d.append(kk, vv); el.appendChild(d); }
+}
+function events() {
+  const el = $("events"); el.innerHTML = "";
+  let ev = (D.events || []).filter(e => e.gen <= gen).map(e => [e.gen, e.text]);
+  if (!ev.length) ev = (D.history || []).filter(h => h.gen <= gen).flatMap(h => (h.events || []).map(t => [h.gen, t]));
+  ev = ev.slice(-80).reverse();
+  if (!ev.length) { el.innerHTML = '<div class="empty">Nothing recorded yet.</div>'; return; }
+  for (const [g, t] of ev) { const d = document.createElement("div"); const b = document.createElement("b"); b.textContent = `gen ${g}  `; d.appendChild(b); d.appendChild(document.createTextNode(t)); el.appendChild(d); }
+}
+function design() {
+  const card = $("designCard"), el = $("bars"); el.innerHTML = "";
+  const des = D.design || {}, imp = des.importance || {}, keys = Object.keys(imp);
+  if (!keys.length) { el.innerHTML = '<div class="empty">No model yet (v9 runs, and simulator runs of v9, have one).</div>'; return; }
+  const names = {}; (des.axes || []).forEach(a => names[a.id] = a.name);
+  const max = Math.max(...keys.map(k => imp[k])) || 1;
+  for (const k of keys.slice(0, 10)) {
+    const row = document.createElement("div"); row.className = "b";
+    const t = document.createElement("div"); t.className = "t"; t.textContent = k === "effort" ? "effort (experiments spent)" : (names[k] ? `${k}: ${names[k]}` : k.replace(/[()']/g, "").replace(", ", " × "));
+    const n = document.createElement("div"); n.className = "n"; n.textContent = Math.round(100 * imp[k]) + "%";
+    const tr = document.createElement("div"); tr.className = "track"; const f = document.createElement("div"); f.className = "fill"; f.style.width = (100 * imp[k] / max) + "%"; tr.appendChild(f);
+    row.append(t, n, tr); el.appendChild(row);
+  }
+}
+function detail(p) {
+  const el = $("detail"); el.innerHTML = "";
+  const big = document.createElement("div"); big.className = "big"; big.textContent = p.score != null ? p.score.toFixed(D.kind === "sim" ? 5 : 9) : "failed"; el.appendChild(big);
+  const tb = document.createElement("table");
+  const rows = [["Program", p.id], ["Generation", p.gen], ["Built on", p.parent || "–"], ["Track", p.track], ["Kind", (p.kind || p.role || "–")]];
+  if (p.true != null) rows.push(["True height", p.true.toFixed(5)], ["Planted hill", p.basin || "–"]);
+  const t = (D.tracks || []).find(t => t.id === p.track);
+  if (t) rows.push(["Track's status", t.status || "–"], ["Track's experiments", t.exps]);
+  if (p.design) rows.push(["Design", Array.isArray(p.design) ? p.design.map(v => v + 1).join(" ") : Object.entries(p.design).map(([a, v]) => `${a}=${v.split(".").pop()}`).join(" ")]);
+  for (const [k, v] of rows) { const tr = document.createElement("tr"); const a = document.createElement("td"); a.textContent = k; const b = document.createElement("td"); b.textContent = String(v); tr.append(a, b); tb.appendChild(tr); }
+  el.appendChild(tb);
+  const note = document.createElement("div"); note.className = "m"; note.style.marginTop = "6px"; note.textContent = "Its track's path is drawn on the map.";
+  el.appendChild(note);
+}
+function table() {
+  const el = $("tablebox"); el.innerHTML = "";
+  const ps = D.programs.filter(p => p.gen <= gen && p.valid).sort((a, b) => b.score - a.score).slice(0, 200);
+  const tb = document.createElement("table"); tb.className = "list";
+  const head = document.createElement("tr"); for (const h of ["Program", "Gen", "Score", D.kind === "sim" ? "True height" : "Track", "Kind"]) { const th = document.createElement("th"); th.textContent = h; head.appendChild(th); } tb.appendChild(head);
+  for (const p of ps) { const tr = document.createElement("tr"); for (const v of [p.id, p.gen, p.score.toFixed(D.kind === "sim" ? 5 : 8), D.kind === "sim" ? (p.true != null ? p.true.toFixed(5) : "–") : p.track, GROUP_LABEL[groupOf(p)].split(" (")[0]]) { const td = document.createElement("td"); td.textContent = v; tr.appendChild(td); } tr.onclick = () => { selected = p; detail(p); }; tb.appendChild(tr); }
+  el.appendChild(tb);
+}
+
+// ------------------------------------------------------------------ time
+function setGen(g, keepField) {
+  gen = Math.max(D.g0, Math.min(D.g1, g)); $("slider").value = gen; $("genLabel").textContent = `gen ${gen}`;
+  if (D.field && D.field.kind !== "true") { fieldGrid = estimateField(gen); fieldImg = null; }
+  redrawAll(false);
+}
+$("slider").oninput = (e) => setGen(+e.target.value);
+$("play").onclick = () => {
+  if (playing) { clearInterval(playing); playing = null; $("play").textContent = "▶"; return; }
+  if (gen >= D.g1) setGen(D.g0);
+  $("play").textContent = "❚❚";
+  const step = Math.max(1, Math.round((D.g1 - D.g0) / 150));
+  playing = setInterval(() => { if (gen >= D.g1) { clearInterval(playing); playing = null; $("play").textContent = "▶"; return; } setGen(gen + step); }, 90);
+};
+for (const b of document.querySelectorAll("#viewSeg button")) b.onclick = () => { view = b.dataset.v; document.querySelectorAll("#viewSeg button").forEach(x => x.classList.toggle("on", x === b)); $("mapbox").classList.toggle("hidden", view === "table"); $("tablebox").classList.toggle("hidden", view !== "table"); redrawAll(false); };
+for (const b of document.querySelectorAll("#scaleSeg button")) b.onclick = () => { scale = b.dataset.s; document.querySelectorAll("#scaleSeg button").forEach(x => x.classList.toggle("on", x === b)); fieldImg = null; redrawAll(false); };
+$("liveBtn").onclick = () => {
+  const on = !$("liveBtn").classList.contains("on"); $("liveBtn").classList.toggle("on", on);
+  if (liveTimer) clearInterval(liveTimer); liveTimer = null;
+  if (on && src && src !== "embedded") { liveTimer = setInterval(() => load(src, true), 60000); load(src, true); }
+};
+function redrawAll(full) {
+  if (!D) return;
+  if (full) fieldImg = null;
+  $("genLabel").textContent = `gen ${gen}`;
+  stats(); legend(); if (view === "table") table(); else drawMap(); bestChart(); raceChart(); events(); design();
+}
+let rz = null; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => redrawAll(false), 120); });
+
+// ------------------------------------------------------------------ start
+(function start() {
+  const q = new URLSearchParams(location.search).get("src");
+  if (q) { $("url").value = q; return load(q); }
+  const el = document.getElementById("demo");
+  if (el && el.textContent.trim().length > 2) { $("preset").value = "embedded"; return load("embedded"); }
+  load($("preset").value);
+})();
+</script>
+<script type="application/json" id="demo"></script>
+</body>
+</html>

@@ -78,6 +78,102 @@ def test_a_missing_construction_is_rebuilt_from_its_ancestor(tmp_path):
     assert row["id"] == p.id and row["ok"] and row["rebuilt"] is not None
 
 
+def test_a_missing_construction_is_copied_from_a_local_folder_only_if_it_verifies(tmp_path, monkeypatch):
+    r = fake_run(tmp_path / "run", gens=2)
+    p = max((q for q in r.archive.valid() if q.role not in ("seed", "alt")), key=lambda q: q.score)
+    local = tmp_path / "local"
+    local.mkdir()
+    good = np.load(tmp_path / "run" / "constructions" / f"{p.id}.npy")
+    (tmp_path / "run" / "constructions" / f"{p.id}.npy").unlink()
+    np.save(local / f"{p.id}.npy", good * 1.5 + 0.1)                   # a wrong one: must not be used
+    monkeypatch.setenv("HELIX9_LOCAL_CONSTRUCTIONS", str(local))
+    r2 = Run(tmp_path / "run", llm=FakeLLM(fake_answer), gens=3, **QUIET)
+    assert r2.has_construction(p) and r2.from_local(p) is None
+    np.save(local / f"{p.id}.npy", good)                               # the right one: copied, verified
+    assert r2.ensure_construction(p, 3)
+    assert np.array_equal(r2.archive.construction(p.id), good)
+    row = jl(tmp_path / "run" / "rebuilt.jsonl")[-1]
+    assert row["how"] == "local" and row["faithful"]
+
+
+def test_a_rebuild_starts_from_the_closest_output_when_the_ancestors_are_far(tmp_path):
+    r = fake_run(tmp_path, gens=5)
+    for q in r.archive.valid():                       # every program's signature, as a pack provides them
+        if q.id not in r.signatures and r.output_signature(q) is not None:
+            r.signatures[q.id] = r.output_signature(q)
+    deep = []
+    for q in r.archive.valid():
+        chain, a = [], q
+        while a is not None and a.parent:
+            a = r.archive.programs.get(a.parent)
+            if a is not None:
+                chain.append(a)
+        if len(chain) >= 4 and q.id in r.signatures:
+            deep.append((q, chain))
+    assert deep
+    q, chain = deep[-1]
+    for a in [q] + chain[:3]:
+        f = tmp_path / "constructions" / f"{a.id}.npy"
+        if f.exists() and a.role != "seed":
+            f.unlink()
+    start, why = r.rebuild_start(q)
+    assert start is not None and r.archive.construction(start.id) is not None
+    assert "most like" in why or "steps up" in why
+    assert r.ensure_construction(q, 6)
+    row = jl(tmp_path / "rebuilt.jsonl")[-1]
+    assert row["id"] == q.id and row["how"] == "rebuilt" and "faithful" in row
+
+
+def test_the_wide_loop_samples_programs_whose_construction_is_at_hand(tmp_path):
+    import random as _r
+    r = fake_run(tmp_path, gens=3)
+    pool = [q for q in r.archive.valid()]
+    gone = {q.id for q in pool[1::2] if q.role != "seed"}
+    for pid in gone:
+        (tmp_path / "constructions" / f"{pid}.npy").unlink()
+    rng = _r.Random(1)
+    picks = [p.id for _ in range(40) for p in r.wide_parents(rng, pool, 0)]
+    assert picks and not (set(picks) & gone)
+
+
+def test_the_retroactive_race_caps_how_many_earlier_explorations_race_again(tmp_path):
+    from helix9.warm import retro_race
+    rows = []
+    for g in range(1, 4):
+        ts = [{"id": "T1", "kind": "seed", "exps": g, "best": 0.9, "opened": 0}]
+        for k in range(8):                       # eight restarts, all still rising at their pause
+            ts.append({"id": f"T{k + 2}", "kind": "restart", "exps": g, "best": 0.5 + 0.01 * k + 0.02 * g, "opened": 1})
+        rows.append({"gen": g, "main": "T1", "tracks": ts})
+    (tmp_path / "tracks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    status = retro_race(tmp_path, Config(running_cap=3), log=lambda m: None)
+    last = jl(tmp_path / "tracks.jsonl")[-1]["tracks"]
+    running = [t["id"] for t in last if (t.get("race") or {}).get("status") == "running"]
+    assert len(running) == 2 and status.get("waiting", 0) == 6
+    assert set(running) == {"T9", "T8"}                                 # the strongest at equal effort
+    waiting = [t for t in last if t["id"] == "T2"][0]
+    assert waiting["race"]["status"] == "waiting" and waiting["race"]["decisions"][-1]["cap"]
+    # the queue: the strongest waiting goes first
+    from helix9.race import take_waiting
+    assert take_waiting(last, 4)["id"] == "T7" and take_waiting(last, 4)["id"] == "T6"
+
+
+def test_a_waiting_exploration_is_taken_as_a_new_direction(tmp_path):
+    r, prob = planted_run(tmp_path, gens=6)
+    paused = [t for t in r.tracks.values() if t.get("race") and t["id"] != r.main_track()]
+    assert paused
+    queued = set()
+    for t in r.tracks.values():                    # every race track waits its turn; nothing else is live
+        if t.get("race") and t["id"] != r.main_track():
+            t["race"]["status"] = "waiting"
+            queued.add(t["id"])
+        elif t["id"] != r.main_track():
+            t["misses"] = 99
+    slots = r.make_slots(7, 2)
+    taken = [s["track"] for s in slots if s["kind"] == "track" and s.get("track") in queued]
+    assert taken and r.tracks[taken[0]]["race"]["status"] == "running"
+    assert any("races again" in e for e in r.map_events)
+
+
 # ---------------------------------------------------------------------------------------------- the planted problem
 def test_the_planted_problem_drives_drops_read_back_the_race_and_the_model(tmp_path):
     r, prob = planted_run(tmp_path, gens=16)
@@ -159,6 +255,45 @@ def test_the_retroactive_race_revives_paused_explorations_that_were_still_rising
     assert "race" not in next(t for t in last if t["id"] == "T1")
 
 
+def test_a_continuation_from_a_published_folder_in_chunks_with_chained_packs(tmp_path):
+    """GitHub as the only source: a v8 run published in chunks (helix9/publish.py) with its pack; a v9 run continued
+    from it, published and packed in turn (its pack holding only what is new); a second continuation from that."""
+    from helix8.run import Config as Config8, Run as Run8, fake_answer as fake8
+    from helix9 import pack, publish
+    from helix9.warm import prepare
+    src = tmp_path / "v8"
+    Run8(src, Config8(gens=4, budget=2.0), llm=FakeLLM(fake8), gens=4, **QUIET).go()
+    gh = tmp_path / "github" / "v8"
+    publish.publish(src, gh, full=True, say=lambda m: None)
+    assert (gh / "programs" / "index.json").exists() and not (gh / "programs.jsonl").exists()
+    assert pack.jl(gh / "programs.jsonl") == jl(src / "programs.jsonl")
+    m1 = pack.build(gh, [str(src / "constructions")], log=lambda m: None)
+    out = tmp_path / "v9"
+    prepare(gh, out, pack=gh / "pack", budget=2.0, log=lambda m: None)
+    assert jl(out / "programs.jsonl") == jl(src / "programs.jsonl")
+    r9 = Run(out, llm=FakeLLM(fake_answer), gens=6, **QUIET)
+    r9.go()
+    gh9 = tmp_path / "github" / "v9"
+    first = publish.publish(out, gh9, full=True, say=lambda m: None)
+    again = publish.publish(out, gh9, full=True, say=lambda m: None)
+    assert first["chunks_written"] > 0 and again["chunks_written"] == 0      # each push adds only what is new
+    assert (gh9 / "mapview.json").exists() and json.loads((gh9 / "mapview.json").read_text())["programs"]
+    m2 = pack.build(gh9, [str(out / "constructions")], base=gh / "pack", log=lambda m: None)
+    assert m2["base"] and m2["in_base"] and not set(m2["packed"]) & set(m1["packed"])
+    out2 = tmp_path / "v9b"
+    prepare(gh9, out2, pack=gh9 / "pack", budget=2.0, log=lambda m: None)
+    for pid in m1["packed"] + m2["packed"]:
+        assert (out2 / "constructions" / f"{pid}.npy").exists()
+    r10 = Run(out2, llm=FakeLLM(fake_answer), gens=7, **QUIET)
+    assert r10.gen_done == 6
+    r10.go()
+    assert r10.gen_done == 7
+    # a resume that trims lines already pushed rewrites only the chunks that changed
+    joined = tmp_path / "joined"
+    publish.join(gh9, joined)
+    assert jl(joined / "programs.jsonl") == jl(out / "programs.jsonl")
+
+
 # ---------------------------------------------------------------------------------------------- the replay
 def test_the_replay_runs_end_to_end_and_seeds_a_warm_start(tmp_path):
     from helix8.run import Config as Config8, Run as Run8, fake_answer as fake8
@@ -194,3 +329,40 @@ def test_earlier_versions_are_unchanged_by_importing_v9():
     import helix7.run as r7
     assert r8.Run.VERSION == "v8" and r7.Run.VERSION == "v7"
     assert r8.Run.make_slots is not Run.make_slots and r8.Config is not Config
+
+
+# ---------------------------------------------------------------------------------------------- the job's helpers
+def test_publishing_rewrites_only_chunks_whose_lines_changed(tmp_path, monkeypatch):
+    from helix9 import publish
+    from helix9.pack import jl as read
+    monkeypatch.setattr(publish, "CHUNK_MB", 0.0005)          # tiny chunks: 20 lines each
+    run, out = tmp_path / "run", tmp_path / "out"
+    run.mkdir()
+    rows = [{"id": f"p{i:04d}", "gen": i // 5, "x": "y" * 30} for i in range(95)]
+    (run / "programs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows) + '{"id": "torn')
+    s1 = publish.publish(run, out, say=lambda m: None)
+    idx = json.loads((out / "programs" / "index.json").read_text())
+    assert idx["lines_per_chunk"] == 20 and s1["chunks"] == 5 and idx["lines"] == 95      # the torn line left out
+    assert read(out / "programs.jsonl") == rows
+    first = (out / "programs" / "part-0001.jsonl.gz").read_bytes()
+    # a resume trims the unfinished generation's lines (88-94), then the run appends new ones
+    rows2 = rows[:88] + [{"id": f"q{i}", "gen": 18, "x": "z"} for i in range(30)]
+    (run / "programs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows2))
+    s2 = publish.publish(run, out, say=lambda m: None)
+    assert read(out / "programs.jsonl") == rows2
+    assert s2["chunks_written"] == 2 and s2["chunks"] == 6                # part 5 rewritten, part 6 new
+    assert (out / "programs" / "part-0001.jsonl.gz").read_bytes() == first
+    # trimmed below a chunk: the extra part is removed
+    (run / "programs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows[:30]))
+    publish.publish(run, out, say=lambda m: None)
+    assert read(out / "programs.jsonl") == rows[:30] and not (out / "programs" / "part-0003.jsonl.gz").exists()
+
+
+def test_the_job_repairs_lines_cut_off_by_a_hard_stop(tmp_path):
+    from helix9.job import repair_jsonl
+    (tmp_path / "a.jsonl").write_text('{"x": 1}\n{"x": 2}\n{"x": 3')
+    (tmp_path / "b.jsonl").write_text('{"x": 1}\n')
+    (tmp_path / "c.jsonl").write_text('{"x": 1}\n{"x"\n\n')
+    assert sorted(repair_jsonl(tmp_path)) == ["a.jsonl", "c.jsonl"]
+    assert (tmp_path / "a.jsonl").read_text() == '{"x": 1}\n{"x": 2}\n'
+    assert (tmp_path / "b.jsonl").read_text() == '{"x": 1}\n' and (tmp_path / "c.jsonl").read_text() == '{"x": 1}\n'

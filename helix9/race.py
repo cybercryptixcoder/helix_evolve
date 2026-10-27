@@ -20,6 +20,11 @@ way **at the same effort**, never with a record that has a thousand experiments 
 - otherwise it pauses (never closed: a later gain on it, from the wide loop, wakes it, as in v7);
 - past the last rung the race is over: the track is a hill in its own right and follows v7's rules.
 
+A continuation judges the earlier run's explorations the same way, as if they had raced (`retro_judge`): those still
+rising when the earlier run paused them qualify. Only a few race again at once; the rest **wait** in a queue, the
+strongest at equal effort first, and the run takes one from it whenever it opens a new exploration (in turn with new
+drops, flips and backtracks), so every one gets its chance without the backlog crowding out new directions.
+
 A track that beats the record becomes the main track whatever its rung, as before.
 """
 from __future__ import annotations
@@ -143,9 +148,9 @@ class Race:
         return f"{t['id']} paused by the race at {rung} experiments: {why}"
 
     def wake(self, t):
-        """A gain on a paused race track (from the wide loop) gives it one more rung."""
+        """A gain on a paused or waiting race track (from the wide loop) gives it one more rung."""
         r = t.get("race")
-        if r and r["status"] == "paused":
+        if r and r["status"] in ("paused", "waiting"):
             r["status"] = "running"
             k = min(r["rung"] + 1, len(self.rungs) - 1)
             r["rung"], r["budget"] = k, max(self.rungs[k], (t.get("exps") or 0) + 2)
@@ -171,6 +176,51 @@ class Race:
                 if b is not None:
                     others.append(b)
         return 0.5 if not others else sum(1 for x in others if x <= mine) / len(others)
+
+
+def retro_judge(race, tracks, gen, keep, kinds=("restart", "bold", "flip"), main=None):
+    """Judges an earlier run's explorations as the race would have (each at the rungs its curve reached). Those that
+    qualify to go on: the `keep` strongest at equal effort race again; the rest wait (status "waiting"), to be taken
+    one at a time (`take_waiting`). Returns {status: count}."""
+    for t in sorted(tracks, key=lambda t: t.get("opened") or 0):
+        if t.get("kind") not in kinds or t.get("id") == main or t.get("race"):
+            continue
+        race.start(t, bracket=0)
+        t["served"] = t.get("opened")
+        for _ in range(len(race.rungs)):
+            if t["race"]["status"] != "running" or (t.get("exps") or 0) < t["race"]["budget"]:
+                break
+            race.decide(t, tracks, gen, effort=t["race"]["budget"])
+    running = [t for t in tracks if (t.get("race") or {}).get("status") == "running" and t.get("id") != main]
+    if len(running) > keep:
+        rank = {t["id"]: race.standing(t, tracks) for t in running}
+        running.sort(key=lambda t: (-rank[t["id"]], -(t.get("best") if t.get("best") is not None else -1e300)))
+        for i, t in enumerate(running[keep:]):
+            t["race"]["status"] = "waiting"
+            t["race"]["queue"] = i
+            t["race"]["decisions"].append({
+                "gen": gen, "rung": t["race"]["budget"], "best": t.get("best"), "go": True, "cap": True,
+                "why": f"qualifies to race again; {len(running)} earlier explorations do, so it waits its turn "
+                       f"(place {i + 1} of {len(running) - keep}, the strongest at equal effort first)"})
+    status = {}
+    for t in tracks:
+        if t.get("race"):
+            status[t["race"]["status"]] = status.get(t["race"]["status"], 0) + 1
+    return status
+
+
+def take_waiting(tracks, gen=None):
+    """The next waiting track (the strongest first), made to race again; None if none waits."""
+    waiting = [t for t in tracks if (t.get("race") or {}).get("status") == "waiting"]
+    if not waiting:
+        return None
+    t = min(waiting, key=lambda t: (t["race"].get("queue", 0), t.get("opened") or 0))
+    r = t["race"]
+    r["status"] = "running"
+    r["budget"] = max(r["budget"], (t.get("exps") or 0) + 1)
+    r["decisions"].append({"gen": gen, "rung": r["budget"], "best": t.get("best"), "go": True,
+                           "why": "its turn came: racing again"})
+    return t
 
 
 def record_curve(t, gen=None):

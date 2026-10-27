@@ -8,7 +8,8 @@ then `python -m helix9.run --out runs/v9warm/v9-s1 --gens 800` resumes it as a v
 As helix8/warm.py (every program, finding, track, hill and the history kept; generations continue the source's
 numbering; the warm start counts as a record), plus:
 - the **continuation pack** (helix9/pack.py) restored: the constructions it holds and every program's signature, so
-  the source can be the run folder as pushed to GitHub, with no local files;
+  the source can be the run folder as pushed to GitHub, with no local files (files pushed gzipped because of their
+  size, name.jsonl.gz, are read as well);
 - the **replay's map** (helix9/replay.py), if given: its codebook and the coordinates of the programs it read, so the
   design map starts with what the earlier run already knows;
 - **the race, applied retroactively** to the earlier run's explorations (restarts, bold experiments, flips): each is
@@ -18,14 +19,16 @@ numbering; the warm start counts as a record), plus:
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import shutil
+import tempfile
 from dataclasses import asdict, fields
 from pathlib import Path
 
 from helix8.warm import prepare as prepare8
 from helix9.pack import jl, restore
-from helix9.race import Race, record_curve
+from helix9.race import Race, record_curve, retro_judge
 from helix9.run import Config
 
 RETRO_KINDS = ("restart", "bold", "flip")
@@ -57,22 +60,44 @@ def retro_race(out, cfg, log=print):
     tracks = last.get("tracks") or []
     for t in tracks:
         t["curve"] = curves.get(t["id"], [])
-    status = {}
-    for t in sorted(tracks, key=lambda t: t.get("opened") or 0):
-        if t.get("kind") not in RETRO_KINDS or t["id"] == last.get("main") or t.get("race"):
-            continue
-        race.start(t, bracket=0)
-        t["served"] = t.get("opened")
-        for _ in range(len(cfg.race_rungs)):
-            if t["race"]["status"] != "running" or (t.get("exps") or 0) < t["race"]["budget"]:
-                break
-            race.decide(t, tracks, last.get("gen"), effort=t["race"]["budget"])
-        status[t["race"]["status"]] = status.get(t["race"]["status"], 0) + 1
+    keep = max(1, int(getattr(cfg, "running_cap", 3)) - 1)
+    status = retro_judge(race, tracks, last.get("gen"), keep, kinds=RETRO_KINDS, main=last.get("main"))
     last["tracks"] = tracks
     (out / "tracks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows[:-1]) + json.dumps(last) + "\n")
     live = [t["id"] for t in tracks if (t.get("race") or {}).get("status") == "running"]
-    log(f"the race, applied to the earlier explorations: {status}; racing again: {', '.join(live[:12]) or 'none'}")
+    log(f"the race, applied to the earlier explorations: {status}; racing again: {', '.join(live[:12]) or 'none'}"
+        + (f"; {status['waiting']} more qualify and wait their turn (one is taken whenever a new exploration opens, "
+           f"in turn with new drops)" if status.get("waiting") else ""))
     return status
+
+
+def stage_source(src, tmp):
+    """The source as earlier versions' warm starts read it (plain files): a file pushed to GitHub as name.jsonl.gz or
+    in chunks (name/, helix9/publish.py) is unpacked into `tmp`, next to links to the other files. Returns the folder
+    to read (src itself if every file is plain)."""
+    from helix9.publish import read_chunks
+    src = Path(src)
+    packed = {}
+    for f in src.iterdir():
+        if f.is_file() and f.name.endswith(".jsonl.gz") and f.name != "trace.jsonl.gz" and not (src / f.name[:-3]).exists():
+            packed[f.name[:-3]] = f
+        elif f.is_dir() and (f / "index.json").exists() and f.name != "trace" and not (src / f"{f.name}.jsonl").exists():
+            packed[f"{f.name}.jsonl"] = f
+    if not packed:
+        return src
+    tmp = Path(tmp)
+    tmp.mkdir(parents=True, exist_ok=True)
+    skip = set(packed.values())
+    for f in src.iterdir():
+        if f not in skip and f.name not in ("trace", "trace.jsonl.gz"):
+            (tmp / f.name).symlink_to(f.resolve())
+    for name, f in packed.items():
+        if f.is_dir():
+            (tmp / name).write_bytes(read_chunks(f))
+        else:
+            with gzip.open(f, "rb") as fi, (tmp / name).open("wb") as fo:
+                shutil.copyfileobj(fi, fo, 1 << 20)
+    return tmp
 
 
 def prepare(src, out, mode="continue", seed=1, budget=60.0, label="", pack=None, replay=None, log=print, **cfg_kw):
@@ -80,10 +105,12 @@ def prepare(src, out, mode="continue", seed=1, budget=60.0, label="", pack=None,
     if (out / "state.json").exists():
         log(f"{out} exists already: nothing done (it resumes as it is)")
         return out
-    prepare8(src, out, mode, seed, budget, label)
+    with tempfile.TemporaryDirectory(dir=out.parent if out.parent.exists() else None) as tmp:
+        prepare8(stage_source(src, Path(tmp) / "src"), out, mode, seed, budget, label)
     if pack and Path(pack).is_dir() and (Path(pack) / "manifest.json").exists():
         restore(pack, out, log=log)
     state = json.loads((out / "state.json").read_text())
+    state["warm_source"] = str(src)
     known = {f.name for f in fields(Config)}
     cfg = Config(**{k: v for k, v in state["config"].items() if k in known and k != "condition"})
     for k, v in cfg_kw.items():

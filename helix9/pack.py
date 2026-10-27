@@ -15,9 +15,13 @@ hills, would be lost.
   - `signatures.jsonl`: the output signature of every verified program (64 numbers each: small);
   - `constructions-NNN.npz`: the constructions of the programs a continuation may build on, in order of importance
     (the record, the tops of known hills, every track's best, the record's lineage, the strongest programs, the
-    latest generations) until the size budget is used (default 50 MB), compressed losslessly (float64);
+    latest generations) until the size budget is used (default 80 MB, in files of at most 40 MB: GitHub refuses
+    files over 100 MB), compressed losslessly (float64);
   - `manifest.json`: what was found, verified, rejected and packed, with a SHA-256 of every packed array.
-- **restore**: unpacks the constructions into a run folder (checking each SHA-256) and adds the signatures.
+  With `--base` (an earlier run's pack, e.g. the pack of the run this one continued), constructions already in the
+  base (same SHA-256) are not packed again: the new pack holds only what is new and names its base.
+- **restore**: unpacks the constructions into a run folder (its base's first, checking each SHA-256) and adds the
+  signatures.
 
 A continuation built on a pack is lossless for every packed program. A program outside the pack keeps its code,
 score and place in the history; if the run ever needs its construction (to build on it), v9 rebuilds it by running
@@ -26,7 +30,9 @@ its code again from its nearest packed ancestor (helix9/run.py, `ensure_construc
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
+import os
 import importlib
 import io
 import json
@@ -38,12 +44,29 @@ import numpy as np
 from helix8.hills import shape_signature
 
 
-def jl(path):
+def read_text(path):
+    """A file's text, in any form a run folder pushed to GitHub has it: `name.jsonl`, `name.jsonl.gz`, or `name/` in
+    gzipped chunks with an index.json (helix9/publish.py)."""
     p = Path(path)
-    if not p.exists():
+    if p.exists():
+        return p.read_text()
+    gz = p.with_name(p.name + ".gz")
+    if gz.exists():
+        with gzip.open(gz, "rt") as f:
+            return f.read()
+    folder = p.with_name(p.name.split(".")[0])
+    if (folder / "index.json").exists():
+        from helix9.publish import read_chunks
+        return read_chunks(folder).decode()
+    return None
+
+
+def jl(path):
+    text = read_text(path)
+    if text is None:
         return []
     out = []
-    for line in p.read_text().splitlines():
+    for line in text.splitlines():
         if line.strip():
             try:
                 out.append(json.loads(line))
@@ -112,7 +135,19 @@ def priorities(run):
     return order, progs
 
 
-def build(run, search, out=None, budget_mb=50.0, problem=None, chunk_mb=40.0, log=print):
+def pack_chain(pack):
+    """[pack, its base, the base's base, ...] (each a folder with manifest.json)."""
+    chain, seen = [], set()
+    pack = Path(pack)
+    while pack is not None and (pack / "manifest.json").exists() and pack.resolve() not in seen:
+        seen.add(pack.resolve())
+        chain.append(pack)
+        base = json.loads((pack / "manifest.json").read_text()).get("base")
+        pack = (pack / base) if base else None
+    return chain
+
+
+def build(run, search, out=None, budget_mb=80.0, problem=None, chunk_mb=40.0, base=None, log=print):
     run = Path(run)
     out = Path(out) if out else run / "pack"
     state = json.loads((run / "state.json").read_text()) if (run / "state.json").exists() else {}
@@ -146,7 +181,13 @@ def build(run, search, out=None, budget_mb=50.0, problem=None, chunk_mb=40.0, lo
             rejected[pid] = f"{c}: {why}"
         if not ok and pid not in rejected:
             missing.append(pid)
+    in_base = {}
+    for b in (pack_chain(base) if base else []):
+        for pid, h in (json.loads((b / "manifest.json").read_text()).get("sha256") or {}).items():
+            in_base.setdefault(pid, h)
     out.mkdir(parents=True, exist_ok=True)
+    if (out / "manifest.json").exists():               # written last: present only for a finished pack
+        (out / "manifest.json").unlink()
     for old in out.glob("constructions-*.npz"):
         old.unlink()
     sigs = []
@@ -156,7 +197,7 @@ def build(run, search, out=None, budget_mb=50.0, problem=None, chunk_mb=40.0, lo
             if s is not None:
                 sigs.append({"id": pid, "sig": [round(float(x), 10) for x in s]})
     (out / "signatures.jsonl").write_text("".join(json.dumps(r) + "\n" for r in sorted(sigs, key=lambda r: r["id"])))
-    packed, why_packed, used, chunk, chunk_bytes, n_chunk, hashes = [], {}, 0, {}, 0, 0, {}
+    packed, why_packed, used, chunk, chunk_bytes, n_chunk, hashes, from_base = [], {}, 0, {}, 0, 0, {}, []
 
     def flush():
         nonlocal chunk, chunk_bytes, n_chunk
@@ -169,6 +210,9 @@ def build(run, search, out=None, budget_mb=50.0, problem=None, chunk_mb=40.0, lo
         if pid not in found:
             continue
         arr = np.asarray(found[pid][1], dtype=float)
+        if in_base.get(pid) == sha(arr):
+            from_base.append(pid)
+            continue
         buf = io.BytesIO()
         np.savez_compressed(buf, a=arr)
         size = len(buf.getvalue())
@@ -188,33 +232,48 @@ def build(run, search, out=None, budget_mb=50.0, problem=None, chunk_mb=40.0, lo
                 "valid": sum(1 for p in progs.values() if p.get("valid") and p.get("score") is not None),
                 "verified": len(found), "rejected": rejected, "missing": len(missing), "signatures": len(sigs),
                 "packed": packed, "why": why_packed, "sha256": hashes, "bytes": used, "budget_mb": budget_mb,
-                "chunks": n_chunk, "seconds": round(time.time() - t0, 1)}
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=1))
+                "chunks": n_chunk, "seconds": round(time.time() - t0, 1),
+                "base": os.path.relpath(Path(base).resolve(), out.resolve()) if base and in_base else None,
+                "in_base": from_base,
+                "not_packed": [pid for pid, _ in order if pid in found and pid not in hashes and pid not in from_base]}
+    (out / ".manifest.json.tmp").write_text(json.dumps(manifest, indent=1))
+    os.replace(out / ".manifest.json.tmp", out / "manifest.json")
     log(f"pack: {len(found)} of {manifest['valid']} valid programs verified ({len(rejected)} rejected, {len(missing)} "
         f"not found); {len(sigs)} signatures; {len(packed)} constructions packed ({used / 1e6:.1f} MB of "
-        f"{budget_mb:g}) in {n_chunk} files")
+        f"{budget_mb:g}) in {n_chunk} files" + (f", {len(from_base)} more already in the base pack" if from_base else "")
+        + (f"; {len(manifest['not_packed'])} of the programs a continuation may build on didn't fit (rebuilt on demand)"
+           if manifest["not_packed"] else ""))
     return manifest
 
 
 def restore(pack, out, log=print):
-    """Unpacks a pack into run folder `out`: constructions/<id>.npy (each checked against its SHA-256) and the
-    signatures (merged into signatures.jsonl, for programs the run has)."""
-    pack, out = Path(pack), Path(out)
-    man = json.loads((pack / "manifest.json").read_text())
+    """Unpacks a pack (and its base packs) into run folder `out`: constructions/<id>.npy (each checked against its
+    SHA-256) and the signatures (merged into signatures.jsonl, for programs the run has)."""
+    out = Path(out)
+    chain = pack_chain(pack)
+    if not chain:
+        raise SystemExit(f"pack: {pack} has no manifest.json")
     (out / "constructions").mkdir(parents=True, exist_ok=True)
     n, bad = 0, []
-    for f in sorted(pack.glob("constructions-*.npz")):
-        with np.load(f) as z:
-            for pid in z.files:
-                arr = z[pid]
-                if man["sha256"].get(pid) != sha(arr):
-                    bad.append(pid)
-                    continue
-                np.save(out / "constructions" / f"{pid}.npy", arr)
-                n += 1
+    for pk in reversed(chain):                           # the oldest base first; a newer pack overrides
+        man = json.loads((pk / "manifest.json").read_text())
+        for f in sorted(pk.glob("constructions-*.npz")):
+            with np.load(f) as z:
+                for pid in z.files:
+                    arr = z[pid]
+                    if man["sha256"].get(pid) != sha(arr):
+                        bad.append(pid)
+                        continue
+                    np.save(out / "constructions" / f"{pid}.npy", arr)
+                    n += 1
     have = {p["id"] for p in jl(out / "programs.jsonl")}
     old = {r["id"] for r in jl(out / "signatures.jsonl")}
-    add = [r for r in jl(pack / "signatures.jsonl") if r["id"] in have and r["id"] not in old]
+    add, seen = [], set(old)
+    for pk in chain:
+        for r in jl(pk / "signatures.jsonl"):
+            if r["id"] in have and r["id"] not in seen:
+                seen.add(r["id"])
+                add.append(r)
     with (out / "signatures.jsonl").open("a") as f:
         for r in add:
             f.write(json.dumps(r) + "\n")
@@ -231,13 +290,14 @@ def main(argv=None):
     b.add_argument("--run", required=True, help="the run folder as on GitHub (programs.jsonl, hills, tracks, best.npy)")
     b.add_argument("--search", default="", help="comma-separated folders holding <id>.npy constructions")
     b.add_argument("--out", default=None, help="default: <run>/pack")
-    b.add_argument("--budget-mb", type=float, default=50.0)
+    b.add_argument("--budget-mb", type=float, default=80.0)
+    b.add_argument("--base", default=None, help="an earlier pack: constructions it holds are not packed again")
     r = sub.add_parser("restore")
     r.add_argument("--pack", required=True)
     r.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     if a.cmd == "build":
-        build(a.run, [s for s in a.search.split(",") if s], a.out, a.budget_mb)
+        build(a.run, [s for s in a.search.split(",") if s], a.out, a.budget_mb, base=a.base)
     else:
         restore(a.pack, a.out)
 
