@@ -1,6 +1,9 @@
 # Notes for agents working in this repo
 
-- **Latest (October 27, night): the research case** (`docs/RESEARCH_CASE.md`): the research question (can a discovery system map the space it searches, steer past its model's prior, and change that space when it runs dry?), three research questions, the evidence in hand, and a plan to NeurIPS 2027. Before it, a narrower first pass (`docs/RESEARCH_DIRECTION.md`) and a survey brief (`docs/SURVEY_BRIEF.md`).
+- **Latest (October 28): the v9 job analysed** (`docs/V9_RESULTS.md`), the night's conversation verbatim
+  (`docs/CONVERSATION_2026-10-28.md`), and every idea and open decision from it (`docs/IDEAS.md`, top section). v10 is
+  Shreyas's to design, after discussion.
+- **Before that (October 27, night): the research case** (`docs/RESEARCH_CASE.md`): the research question (can a discovery system map the space it searches, steer past its model's prior, and change that space when it runs dry?), three research questions, the evidence in hand, and a plan to NeurIPS 2027. Before it, a narrower first pass (`docs/RESEARCH_DIRECTION.md`) and a survey brief (`docs/SURVEY_BRIEF.md`).
 - **Before that (October 27): v9 built** (`helix9/`, `docs/V9_DESIGN.md`; the simulator's results in `docs/V9_SIM.md`; the
   job continuing v8-s1 in `docs/V9_JOB.md`, `scripts/run_v9_warm.sh`; the viewer `viz/mapview.html`). The request and
   to-do: `docs/BRIEF_2026-10-27.md`; the reasoning: `docs/SEARCH_SPACE_MODEL.md`.

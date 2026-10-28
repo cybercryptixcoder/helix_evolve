@@ -4,6 +4,19 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 28, 2026 (early morning): the axes, warm starts, discovery and model intelligence
+
+- **Discussed** (verbatim record: `docs/CONVERSATION_2026-10-28.md`): finding all the axes (not provable for an open
+  space; completeness at the top level, from the mathematics, from outside solutions, by saturation, with residual
+  and invariant alarms; the repeated invariant audit with a sorting and stopping rule); warm starts (the field: allowed
+  and labelled for discovery claims, from scratch for method claims; leaning to borrowing only ideas, as axes); whether
+  Helix is a discovery system; whether discovery is agnostic to model intelligence above an implementation threshold
+  (a falsifiable claim and an experiment across models); the model as a compiler over borrowed axes (closest
+  ancestors: component-based algorithm design).
+- **Every idea and open decision:** `docs/IDEAS.md`, new top section.
+
+---
+
 ## October 28, 2026: the v9 job analysed; constructions on GitHub made complete
 
 - **The v9 job** (`docs/V9_RESULTS.md`): record +2.5e-13 over generations 701-800. 70% of experiments worked on the
