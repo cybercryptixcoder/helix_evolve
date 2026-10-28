@@ -1,5 +1,7 @@
 # Helix: the publication bar and a research direction
 
+**Superseded** (October 27, night) by `docs/RESEARCH_CASE.md`, the research question and the case for it; kept for its tables.
+
 October 27, 2026 (late). A first survey, after the advisor's review asked two things: what a publication in this area
 looks like (is improving one problem, AC2, publishable, or only a method that improves many?), and what similar work
 exists in other contexts, so the project can be positioned and defended against "it is a rearrangement of known
