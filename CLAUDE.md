@@ -1,6 +1,7 @@
 # Notes for agents working in this repo
 
-- **Latest (October 27): v9 built** (`helix9/`, `docs/V9_DESIGN.md`; the simulator's results in `docs/V9_SIM.md`; the
+- **Latest (October 27, late): the research direction** (`docs/RESEARCH_DIRECTION.md`: the publication bar, where our AC2 result stands, and direction A, the design map as an instrument) and the brief for a separate survey agent (`docs/SURVEY_BRIEF.md`; hand it over alone, without the rest of the repo).
+- **Before that (October 27): v9 built** (`helix9/`, `docs/V9_DESIGN.md`; the simulator's results in `docs/V9_SIM.md`; the
   job continuing v8-s1 in `docs/V9_JOB.md`, `scripts/run_v9_warm.sh`; the viewer `viz/mapview.html`). The request and
   to-do: `docs/BRIEF_2026-10-27.md`; the reasoning: `docs/SEARCH_SPACE_MODEL.md`.
 - **Fresh session? Read `docs/HANDOFF_2026-10-24.md` first** (everything: versions, lessons, VM, open tasks; the VRP in `docs/VRP_CONTEXT.md`). Then **`docs/BRIEF_2026-10-24.md`** (the current request: v8, a register of hills, `helix8/`,

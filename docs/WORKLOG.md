@@ -4,6 +4,27 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 27, 2026 (late): the publication bar, and a research direction
+
+- **The request** (22:29): the advisor asked what a publication in this area looks like (one problem, or a method
+  across many?) and what similar work exists, to position the project. Wanted: an unbiased brief for a survey agent,
+  and my own research and a direction.
+- **The brief**: `docs/SURVEY_BRIEF.md`. It never shows the agent our system and forbids novelty verdicts: Part 1 is
+  the bar (inventory, one problem or many, public reviews, evaluation norms, venues, record histories), Part 2 maps
+  nine mechanism families (Helix's, described generically) in this field and neighbouring ones, Part 3 synthesises
+  without recommending.
+- **The first survey**: `docs/RESEARCH_DIRECTION.md`. Findings: ML main tracks took methods on 4-9 problems; the one
+  two-problem method (ImprovEvolve) was a workshop poster; single-problem AC2 papers are mathematics. Our 0.94144 is
+  below seven AI results (0.9449 to 0.96258) and above only the best result without an LLM (0.94136), by 0.00008.
+  The field now expects simple baselines at matched budgets (Simple Baselines: the search space matters more than
+  the search algorithm) and tuning ceilings (EvoTrace: re-tuning constants matched the final best in 13 of 15 cases).
+- **Recommended direction**: A, the design map as an instrument, tested on the public EvoTrace traces (121 runs,
+  4 frameworks) and our own: is it read reliably, does it predict which changes help, does it explain cycling. B (a
+  matched-budget method study) needs about a thousand machine-hours, so later; C (our long traces as data) folds into
+  A; D (AC2 as mathematics) is out of reach.
+
+---
+
 ## October 27, 2026 (evening): v9 tested live, with the real model
 
 - **The request** (17:27): testing means testing live with the real model, always (a temporary key given; it lives
