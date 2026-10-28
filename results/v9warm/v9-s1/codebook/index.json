@@ -1,0 +1,16 @@
+{
+ "file": "codebook.jsonl",
+ "lines_per_chunk": 20,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 11,
+   "sha256": "34ee6b8eca753e519fd1efc142e7c74133d6147ec21eebcbbbf3d43a6c8be9c9",
+   "gens": [
+    700,
+    710
+   ]
+  }
+ ],
+ "lines": 11
+}

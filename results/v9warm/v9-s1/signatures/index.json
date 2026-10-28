@@ -1,0 +1,16 @@
+{
+ "file": "signatures.jsonl",
+ "lines_per_chunk": 4913,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 3235,
+   "sha256": "373c1c24ae9e2951a6b7f0f97d1f17a8730def1b10d660da611a4ea8066afc79",
+   "gens": [
+    null,
+    null
+   ]
+  }
+ ],
+ "lines": 3235
+}
