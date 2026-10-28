@@ -244,3 +244,41 @@ pack: 3235 of 3441 valid programs verified (206 rejected, 0 not found); 3235 sig
 01:16:53 [v9-s1] gen 779: tidied A37: 9 options -> 7
 01:16:53 [v9-s1] gen 779: tidied A49: 9 options -> 6
 01:16:53 [v9-s1] gen 779: tidied A75: 9 options -> 4
+01:20:47 [v9-s1] gen 779: best 0.941442 (p4194, deep, track T278, hill H22); stall 78 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 77 hills; map 16 decisions (16 steering), 1015 programs placed; 10 reworded option(s) merged into the ones they repeat; T200 races again (its turn in the queue of earlier explorations); T200 waits its turn to race (4 racing; among the weakest at equal effort); 236 s
+01:20:49 [v9-s1] gen 780: consolidated: 5 decisions merged, 11 left
+01:20:50 [v9-s1] gen 780: tidied A48: 13 options -> 6
+01:20:50 [v9-s1] gen 780: tidied A4: 9 options -> 6
+01:20:50 [v9-s1] gen 780: tidied A5: 9 options -> 6
+01:23:52 [v9-s1] gen 780: best 0.941442 (p4194, deep, track T278, hill H22); stall 79 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 77 hills; map 13 decisions (13 steering), 1021 programs placed; 5 duplicate decision(s) merged (16 -> 11); 13 reworded option(s) merged into the ones they repeat; T200 races again (its turn in the queue of earlier explorations); discovery: A84 (How is the search space structured / factorised before local optimisation (full…); T200 goes on to the next rung (16 experiments): no longer rising, but best 0.941442 at 8 experiments is at or above the cohort's 50% quantile (0.871189); T200 waits its turn to race (4 racing; among the weakest at equal effort); 184 s
+01:23:54 [v9-s1] gen 781: tidied A49: 8 options -> 6
+01:23:54 [v9-s1] gen 781: tidied A73: 8 options -> 6
+01:23:54 [v9-s1] gen 781: tidied A36: 7 options -> 7
+01:26:41 [v9-s1] gen 781: best 0.941442 (p4194, deep, track T278, hill H22); stall 80 (typical 1.5), level 2; slots 1 main, 1 track, 1 drop; deep 0/3 gained, wide 0/3 gained; 77 hills; map 13 decisions (13 steering), 1027 programs placed; T291 landed 0/4 target decisions (missing: A5 -> Adaptive refinement or multigrid; A36 -> Exact convolution with analytic backprop; A73 -> Joint discrete period/row search; A82 -> a new option); 4 reworded option(s) merged into the ones they repeat; T291 opened (a drop to A5 -> Adaptive refinement or multigrid; A36 -> Exact convolution with analytic backprop; A73 -> Joint discrete period/row search; A82 -> a new option, from p4194); T291 waits its turn to race (4 racing; among the weakest at equal effort); 168 s
+01:26:43 [v9-s1] gen 782: tidied A36: 7 options -> 6
+01:29:59 [v9-s1] gen 782: best 0.941442 (p4214, wide, track T268, hill H22); stall 81 (typical 1.5), level 2; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 1/3 gained; 77 hills; map 13 decisions (13 steering), 1034 programs placed; T292 landed 1/1 target decisions; 1 reworded option(s) merged into the ones they repeat; T292 opened (a flip of A73 -> a new option on p4194); T292 waits its turn to race (4 racing; among the weakest at equal effort); 198 s
+01:30:08 [v9-s1] gen 783: tidied A1: 9 options -> 6
+01:30:08 [v9-s1] gen 783: tidied A2: 9 options -> 6
+01:30:08 [v9-s1] gen 783: tidied A3: 9 options -> 6
+01:33:28 [v9-s1] gen 783: best 0.941442 (p4214, wide, track T268, hill H22); stall 82 (typical 1.5), level 2; slots 1 main, 1 track, 1 backtrack; deep 0/3 gained, wide 0/3 gained; 77 hills; map 14 decisions (14 steering), 1041 programs placed; the Cartographer's scan added 1 decision(s) to the map; 9 reworded option(s) merged into the ones they repeat; T293 opened (a backtrack to p1437); T293 landed on H39 (distance 0.006); T293 is now the top of H39 (0.941424); 209 s
+01:33:31 [v9-s1] gen 784: tidied A48: 9 options -> 6
+01:33:31 [v9-s1] gen 784: tidied A49: 9 options -> 6
+01:33:31 [v9-s1] gen 784: tidied A73: 9 options -> 6
+01:35:52 [v9-s1] gen 784: best 0.941442 (p4214, wide, track T268, hill H22); stall 83 (typical 1.5), level 2; slots 1 main, 1 track, 1 ablate; deep 0/3 gained, wide 0/3 gained; 77 hills; map 15 decisions (15 steering), 1047 programs placed; T294 landed 1/1 target decisions; 9 reworded option(s) merged into the ones they repeat; discovery: A86 (How is the objective's quadratic form (the autoconvolution energy) computed — v…); T294 opened (an ablation of A49 -> Single local trajectory on p4214); T294 waits its turn to race (4 racing; among the weakest at equal effort); 143 s
+01:38:43 [v9-s1] gen 785: best 0.941442 (p4214, wide, track T268, hill H22); stall 84 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 77 hills; map 15 decisions (15 steering), 1056 programs placed; T200 races again (its turn in the queue of earlier explorations); T282 goes on to the next rung (16 experiments): no longer rising, but best 0.941442 at 8 experiments is at or above the cohort's 50% quantile (0.941415); T200 waits its turn to race (4 racing; among the weakest at equal effort); 171 s
+01:42:00 [v9-s1] gen 786: best 0.941442 (p4214, wide, track T268, hill H22); stall 85 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 77 hills; map 15 decisions (15 steering), 1062 programs placed; T200 races again (its turn in the queue of earlier explorations); T200 waits its turn to race (4 racing; among the weakest at equal effort); 197 s
+01:45:50 [v9-s1] gen 787: best 0.941442 (p4214, wide, track T268, hill H22); stall 86 (typical 1.5), level 2; slots 1 main, 1 track, 1 drop; deep 0/3 gained, wide 1/3 gained; 77 hills; map 15 decisions (15 steering), 1069 programs placed; T295 landed 1/3 target decisions (missing: A73 -> Joint discrete period/row search; A82 -> Adaptive allocation: measure R gain per second pe…); T295 opened (a drop to A4 -> a new option; A73 -> Joint discrete period/row search; A82 -> Adaptive allocation: measure R gain per second pe…, from p4214); T295 waits its turn to race (4 racing; among the weakest at equal effort); T295 landed on H1 (distance 0.045); 230 s
+01:46:00 [v9-s1] gen 788: tidied A1: 12 options -> 6
+01:46:00 [v9-s1] gen 788: tidied A3: 9 options -> 6
+01:46:00 [v9-s1] gen 788: tidied A5: 9 options -> 8
+01:49:10 [v9-s1] gen 788: best 0.941442 (p4214, wide, track T268, hill H22); stall 87 (typical 1.5), level 2; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 77 hills; map 16 decisions (16 steering), 1076 programs placed; T296 landed 0/1 target decisions (missing: A5 -> Adaptive refinement or multigrid); 10 reworded option(s) merged into the ones they repeat; discovery: A87 (How is the resolution/grid size chosen and evolved during the search (fixed N, …); T296 opened (a flip of A5 -> Adaptive refinement or multigrid on p4214); T296 waits its turn to race (4 racing; among the weakest at equal effort); 198 s
+01:49:12 [v9-s1] gen 789: tidied A48: 9 options -> 6
+01:49:12 [v9-s1] gen 789: tidied A49: 9 options -> 6
+01:49:12 [v9-s1] gen 789: tidied A82: 9 options -> 6
+01:52:41 [v9-s1] gen 789: best 0.941442 (p4268, deep, track T279, hill H22); stall 88 (typical 1.5), level 2; slots 1 main, 1 track, 1 backtrack; deep 0/3 gained, wide 0/3 gained; 77 hills; map 16 decisions (16 steering), 1082 programs placed; 9 reworded option(s) merged into the ones they repeat; T297 opened (a backtrack to p1256); T297 landed on H3 (distance 0.004); 210 s
+01:52:42 [v9-s1] gen 790: consolidated: 3 decisions merged, 13 left
+01:52:43 [v9-s1] gen 790: tidied A49: 12 options -> 6
+01:52:43 [v9-s1] gen 790: tidied A5: 10 options -> 6
+01:52:43 [v9-s1] gen 790: tidied A36: 8 options -> 6
+01:52:43 [v9-s1] gen 790: dropped 1 decisions that fewer than 3 programs make
+01:55:49 [v9-s1] gen 790: best 0.941442 (p4268, deep, track T279, hill H22); stall 89 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 77 hills; map 12 decisions (12 steering), 1089 programs placed; 3 duplicate decision(s) merged (16 -> 13); 12 reworded option(s) merged into the ones they repeat; 1 decision(s) dropped: fewer than 3 programs make them; T200 races again (its turn in the queue of earlier explorations); T293 paused (no gain on its own best); T200 waits its turn to race (4 racing; among the weakest at equal effort); 188 s
+01:55:50 [v9-s1] gen 791: tidied A75: 7 options -> 5
