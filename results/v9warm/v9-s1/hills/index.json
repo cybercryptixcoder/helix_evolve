@@ -1,0 +1,43 @@
+{
+ "file": "hills.jsonl",
+ "lines_per_chunk": 119,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 119,
+   "sha256": "3a552a723372b705915cfadfa21bf3d8389c05d533055972abfca01943802584",
+   "gens": [
+    291,
+    409
+   ]
+  },
+  {
+   "name": "part-0002.jsonl.gz",
+   "lines": 119,
+   "sha256": "6c126c3a48bf7927c85bdacdb073a341422d79a6db2bd918892721f2ad5bb0bb",
+   "gens": [
+    410,
+    528
+   ]
+  },
+  {
+   "name": "part-0003.jsonl.gz",
+   "lines": 119,
+   "sha256": "59b85f0872ae407016a246ad8cc695207e182ac6f33b8428e14e49f4ce5b8adc",
+   "gens": [
+    529,
+    647
+   ]
+  },
+  {
+   "name": "part-0004.jsonl.gz",
+   "lines": 63,
+   "sha256": "34508a4687e834482b7330699fae48915b2758e564b9571677187a3fbb96cf3f",
+   "gens": [
+    648,
+    710
+   ]
+  }
+ ],
+ "lines": 420
+}

@@ -1,0 +1,35 @@
+vault: uploaded constructions-001.npz (1301 constructions)
+vault: uploaded constructions-002.npz (1156 constructions)
+vault: uploaded constructions-003.npz (778 constructions)
+vault: constructions-v8-s1: 3235 of 3441 constructions verified and uploaded in 3 files (206 failed the check, 0 not found)
+pack: 3235 of 3441 valid programs verified (206 rejected, 0 not found); 3235 signatures; 238 constructions packed (80.0 MB of 80) in 2 files; 121 of the programs a continuation may build on didn't fit (rebuilt on demand)
+20:37:30 [v9-s1] resuming after generation 700 (dropped 0 programs of the unfinished one)
+20:40:55 [v9-s1] gen 701: best 0.941442 (p3596, deep, track T234, hill H22); stall 0 (typical 1.5), level 0; slots 3 main; deep 0/3 gained, wide 0/3 gained; 73 hills; map 13 decisions (13 steering), 466 programs placed; 204 s
+20:44:08 [v9-s1] gen 702: best 0.941442 (p3596, deep, track T234, hill H22); stall 1 (typical 1.5), level 0; slots 3 main; deep 0/3 gained, wide 0/3 gained; 73 hills; map 13 decisions (13 steering), 473 programs placed; 193 s
+20:44:20 [v9-s1] gen 703: tidied A1: 9 options -> 6
+20:44:20 [v9-s1] gen 703: tidied A3: 9 options -> 6
+20:44:20 [v9-s1] gen 703: tidied A4: 9 options -> 6
+20:46:53 [v9-s1] gen 703: best 0.941442 (p3596, deep, track T234, hill H22); stall 2 (typical 1.5), level 1; slots 2 main, 1 track; deep 0/3 gained, wide 0/3 gained; 73 hills; map 15 decisions (15 steering), 479 programs placed; the Cartographer's scan added 2 decision(s) to the map; 9 reworded option(s) merged into the ones they repeat; 164 s
+20:46:58 [v9-s1] gen 704: tidied A5: 9 options -> 6
+20:46:58 [v9-s1] gen 704: tidied A6: 9 options -> 6
+20:46:58 [v9-s1] gen 704: tidied A8: 9 options -> 6
+20:51:49 [v9-s1] gen 704: best 0.941442 (p3596, deep, track T234, hill H22); stall 3 (typical 1.5), level 1; slots 2 main, 1 drop; deep 0/3 gained, wide 1/3 gained; 73 hills; map 16 decisions (16 steering), 484 programs placed; T243 landed 2/3 target decisions (missing: A37 -> a new option); 9 reworded option(s) merged into the ones they repeat; discovery: A43 (What resolution/grid size is used for the final answer, and how is the coarse-t…); T243 opened (a drop to A2 -> Low-dimensional parametric family; A36 -> Black-box FFT/convolution with autodiff; A37 -> a new option, from p3596); 293 s
+20:54:37 [v9-s1] gen 705: best 0.941442 (p3596, deep, track T234, hill H22); stall 4 (typical 1.5), level 1; slots 2 main, 1 track; deep 1/3 gained, wide 0/3 gained; 73 hills; map 16 decisions (16 steering), 488 programs placed; T239 gained (0.796239 -> 0.797129); T243 paused by the race at 2 experiments: no valid program that changed its start; 167 s
+20:57:45 [v9-s1] gen 706: best 0.941442 (p3596, deep, track T234, hill H22); stall 5 (typical 1.5), level 2; slots 1 main, 1 track, 1 flip; deep 1/3 gained, wide 1/3 gained; 73 hills; map 16 decisions (16 steering), 495 programs placed; T244 landed 1/1 target decisions; T239 gained (0.797129 -> 0.799274); T244 opened (a flip of A2 -> Low-dimensional parametric family on p3596); 187 s
+21:02:29 [v9-s1] gen 707: best 0.941442 (p3596, deep, track T234, hill H22); stall 6 (typical 1.5), level 2; slots 1 main, 1 track, 1 backtrack; deep 0/3 gained, wide 0/3 gained; 73 hills; map 16 decisions (16 steering), 502 programs placed; T245 opened (a backtrack to p3640); T244 paused by the race at 2 experiments: no valid program that changed its start; T195 landed on H30 (distance 0.000); 284 s
+21:02:40 [v9-s1] gen 708: tidied A1: 9 options -> 6
+21:02:40 [v9-s1] gen 708: tidied A3: 9 options -> 6
+21:02:40 [v9-s1] gen 708: tidied A5: 9 options -> 6
+21:05:19 [v9-s1] gen 708: best 0.941442 (p3596, deep, track T234, hill H22); stall 7 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 74 hills; map 17 decisions (17 steering), 509 programs placed; 9 reworded option(s) merged into the ones they repeat; T49 races again (its turn in the queue of earlier explorations); discovery: A44 (How is the objective's non-smooth max (peak of f*f) smoothed to make it differe…); T49 gained (0.902634 -> 0.902671); T124 gained (0.868343 -> 0.868419); T49 goes on to the next rung (8 experiments): still rising (best 0.902671 at 4 experiments); T124 woken by a gain from the wide loop (race: on to 8 experiments); T124 waits its turn to race (4 racing; among the weakest at equal effort); new hill H74, found by T124 (restart): 0.868419, distance 0.146 from the nearest known hill (H68); 169 s
+21:05:23 [v9-s1] gen 709: consolidated: 5 decisions merged, 12 left
+21:05:27 [v9-s1] gen 709: tidied A6: 15 options -> 8
+21:05:27 [v9-s1] gen 709: tidied A2: 12 options -> 9
+21:05:27 [v9-s1] gen 709: tidied A30: 12 options -> 6
+21:09:36 [v9-s1] gen 709: best 0.941442 (p3596, deep, track T234, hill H22); stall 8 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 74 hills; map 12 decisions (12 steering), 516 programs placed; 5 duplicate decision(s) merged (17 -> 12); 16 reworded option(s) merged into the ones they repeat; T94 races again (its turn in the queue of earlier explorations); T94 gained (0.913983 -> 0.913999); T49 waits its turn to race (4 racing; among the weakest at equal effort); 256 s
+21:09:39 [v9-s1] gen 710: tidied A2: 9 options -> 6
+21:09:39 [v9-s1] gen 710: tidied A7: 9 options -> 6
+21:09:39 [v9-s1] gen 710: tidied A8: 9 options -> 6
+21:15:52 [v9-s1] gen 710: best 0.941442 (p3596, deep, track T234, hill H22); stall 9 (typical 1.5), level 2; slots 1 main, 1 track, 1 drop; deep 0/3 gained, wide 0/3 gained; 74 hills; map 12 decisions (12 steering), 522 programs placed; T246 landed 3/4 target decisions (missing: A4 -> Surrogate scalarisation with L-BFGS-B); 9 reworded option(s) merged into the ones they repeat; T246 opened (a drop to A2 -> a new option; A4 -> Surrogate scalarisation with L-BFGS-B; A5 -> a new option; A7 -> Adaptive bandit budget reallocation, from p3596); T246 waits its turn to race (4 racing; among the weakest at equal effort); 375 s
+21:15:55 [v9-s1] gen 711: tidied A1: 8 options -> 6
+21:15:55 [v9-s1] gen 711: tidied A5: 8 options -> 6
+21:15:55 [v9-s1] gen 711: tidied A6: 8 options -> 6

@@ -1,0 +1,16 @@
+{
+ "file": "rebuilt.jsonl",
+ "lines_per_chunk": 19425,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 25,
+   "sha256": "5e5afc87d53088d1dc6806978861106925bd1660a5ed4b608ccc29d95e84ccf4",
+   "gens": [
+    701,
+    711
+   ]
+  }
+ ],
+ "lines": 25
+}

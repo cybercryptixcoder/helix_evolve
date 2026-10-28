@@ -1,0 +1,16 @@
+{
+ "file": "annotations.jsonl",
+ "lines_per_chunk": 8576,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 128,
+   "sha256": "f9627429003b203d0db7dd4f0a4c9ab59cc79877108f005bf46be4c26a17235c",
+   "gens": [
+    700,
+    709
+   ]
+  }
+ ],
+ "lines": 128
+}
