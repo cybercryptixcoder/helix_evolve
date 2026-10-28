@@ -15,6 +15,17 @@ design map. Script: `scripts/run_v9_warm.sh`. It runs on the VM, gently (the bud
 | Disk | about 1 GB in `runs/v9warm` (constructions of new programs are 0.8 MB each); refuses to start below 3 GB free |
 | Results | pushed to `results/v9warm/` every 40 minutes and at the end (below) |
 
+## Every construction on GitHub (a release)
+
+The job also uploads **every** verified construction of v8-s1 (all 3,441, about 1.4 GB compressed) to a GitHub
+release, `constructions-v8-s1`, once, before the run (`helix9/vault.py`: files of at most 400 MB, a manifest with
+every array's SHA-256, resumable), and at the end every construction of the v9 run to `constructions-v9-s1-g<gen>`.
+Releases sit outside the git history, so clones stay small. A later start on a machine without the local folder
+restores them from the release (checked) instead: from then on the continuation is lossless from GitHub alone. The
+upload uses `gh` if it is logged in, else the token git pushes with; if it fails, the job says so and carries on
+(the constructions stay on the VM, and the next start retries). *Untested live: this sandbox may not create releases
+(GitHub answers 403 here); the logic is tested against a stand-in, and the first VM start is its live test.*
+
 ## What comes from GitHub, and what from the VM
 
 The continuation is built from GitHub's copy of v8-s1, so it could run on any machine. One thing GitHub didn't have:
@@ -86,16 +97,20 @@ Settings (environment variables): `ADD` (100) or `GENS` (800), `HOURS` (24), `RE
 > 2. Start the job in the background, exactly like this (one command):
 >    `cd /home/ubuntu/helix_v5_run && HELIX4_SLOTS_DIR=/home/ubuntu/helix_v5_run/runs/v4/.slots setsid nohup bash scripts/run_v9_warm.sh > v9_warm.log 2>&1 < /dev/null &`
 > 3. Don't change any setting: other agents share this machine, and the job is sized for it.
-> 4. Wait about 20 minutes (its first start builds a pack before the run begins), then read the last
+> 4. Wait about 45 minutes (its first start builds a pack and uploads every v8 construction to a GitHub release before
+>    the run begins), then read the last
 >    30 lines of /home/ubuntu/helix_v5_run/v9_warm.log and the last 10 lines of
 >    /home/ubuntu/helix_v5_run/runs/v9warm/v9-s1.log once. A good start shows, in order:
 >    "crash test passed (v9: 2 generations with a fake model, report, publish, pack)", "model answers",
 >    "GitHub: can push", "the source: results/v8warm/v8-s1 (v8), generation 700, 3625 programs, record 0.941441744
->    (p3596)", a line starting "pack:" with how many constructions were verified, "the replay: done already", the
+>    (p3596)", a line starting "pack:" with how many constructions were verified, "every construction of v8-s1 to
+>    GitHub, as release constructions-v8-s1" followed by a line starting "vault:" with how many were uploaded,
+>    "the replay: done already", the
 >    replay's verdict lines ("Reliability: 12 of 13 ...", "The model's knowledge: ..."), "the warm start",
 >    "v9-s1 continues from generation 700 to generation 800", "constructions the pack doesn't hold: taken from" and
 >    "running". The run log should show "resuming after generation 700" and then "gen 701: ..." (a generation takes
->    3 to 8 minutes). If the pack is still being built at 20 minutes, wait 15 more and read again, once.
+>    3 to 8 minutes). If the pack or the upload is still running at 45 minutes, wait 30 more and read again, once.
+>    A line "(the upload failed ...)" or "vault: failed" doesn't stop the job: report it exactly.
 >    A line starting with "preflight:" or "warm start:", or a Traceback, means the job stopped: report those lines
 >    exactly, and don't edit anything to fix it.
 > 5. Report what you saw (quote the lines, including the "pack:" line and the replay's verdict lines), the output of

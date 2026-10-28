@@ -192,6 +192,23 @@ PY
 LOCAL_HAVE=""
 IFS=',' read -ra dirs <<< "$LOCAL_SEARCH"
 for d in "${dirs[@]}"; do [ -n "$d" ] && [ -d "$d" ] && LOCAL_HAVE="$LOCAL_HAVE${LOCAL_HAVE:+,}$(cd "$d" && pwd)"; done
+# every construction on GitHub, as release files (helix9/vault.py): the source's go up once from this machine; on a
+# machine without the local folder they come down from GitHub instead, so a continuation is lossless from GitHub alone
+SRC_TAG="${SRC_TAG:-constructions-$(basename "$SRC")}"
+if [ -n "$LOCAL_HAVE" ] && [ "$PUSH" = "1" ] && [ "$STOPPING" = "0" ]; then
+  if "$PY" -m helix9.vault exists --tag "$SRC_TAG" > /dev/null 2>&1; then
+    echo "== every construction of $(basename "$SRC") is on GitHub already (release $SRC_TAG)"
+  else
+    echo "== every construction of $(basename "$SRC") to GitHub, as release $SRC_TAG (verified first; about 1.4 GB, once)"
+    run_child "$LOG" $NICE_CMD "$PY" -m helix9.vault upload --run "$SRC" --folder "$LOCAL_HAVE" --tag "$SRC_TAG" \
+      || echo "   (the upload failed or was stopped; see $LOG. The constructions stay on this machine; the next start tries again)"
+    grep -E "^vault:" "$LOG" | tail -1 | sed 's/^/   /'
+  fi
+elif [ -z "$LOCAL_HAVE" ] && "$PY" -m helix9.vault exists --tag "$SRC_TAG" > /dev/null 2>&1; then
+  echo "== no local constructions: restoring every construction of $(basename "$SRC") from GitHub (release $SRC_TAG)"
+  "$PY" -m helix9.vault download --tag "$SRC_TAG" --out "runs/vault/$(basename "$SRC")" 2>&1 | tail -1 | sed 's/^/   /'
+  [ -d "runs/vault/$(basename "$SRC")" ] && LOCAL_HAVE="$(cd "runs/vault/$(basename "$SRC")" && pwd)"
+fi
 export HELIX9_LOCAL_CONSTRUCTIONS="$LOCAL_HAVE"
 
 if [ ! -f "$DIR/state.json" ]; then
@@ -385,6 +402,14 @@ echo "== the run's own continuation pack (only what its source's pack doesn't ho
 $NICE_CMD "$PY" -m helix9.pack build --run "$DIR" --search "$DIR/constructions" --out "$RESULTS/$NAME/pack" --budget-mb "$PACK_MB" \
     $([ -f "$PACK/manifest.json" ] && echo "--base $PACK") 2>&1 | tail -1 | sed 's/^/   /'
 git_push "$MSG" "$RESULTS"
+if [ "$PUSH" = "1" ]; then
+  echo "== every construction of $NAME to GitHub, as release constructions-$NAME-g$done_gens"
+  if $NICE_CMD "$PY" -m helix9.vault upload --run "$DIR" --folder "$DIR/constructions" --tag "constructions-$NAME-g$done_gens" >> "$LOG" 2>&1; then
+    grep -E "^vault:" "$LOG" | tail -1 | sed 's/^/   /'
+  else
+    echo "   (the upload failed: $(grep -E '^vault:' "$LOG" | tail -1); the constructions stay in $DIR/constructions; running this script again retries)"
+  fi
+fi
 echo "== the report: $RESULTS/REPORT.md; the map: viz/mapview.html (source \"v9 on the autocorrelation problem (live)\", or $RESULTS/$NAME/mapview.json)"
 "$PY" - "$DIR" <<'PY' 2>/dev/null || true
 import json, sys
