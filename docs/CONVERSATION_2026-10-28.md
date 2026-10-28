@@ -419,3 +419,33 @@ It's also cheap to try. One round of the audit on v9's 77 hills is a few model c
 **What was done:** this record (`docs/CONVERSATION_2026-10-28.md`) and the ideas document (`docs/IDEAS.md`), pushed.
 
 ---
+
+## 9. v10: borrow the field's axes, two runs, break the record
+
+**Shreyas, October 28, 18:21.** The full text of this message was lost when the session's context was compacted;
+what survives is the summary's record, with these excerpts in his words:
+
+> Okay, now can we look up the research on the second-order relation problem, find what the state of the art looks
+> like, borrow those axes, and then allow our model to work with them? … I want this run to be the one that breaks
+> the record. I want us to have some level of confidence … This is kind of where we prove our point … two things …
+> 1. Run one evolutionary run where we literally give it the program and use that as a warm start. 2. Don't give it
+> the program, but give it the concept and essentially use that as an axis. … not just for the best program in the
+> world, but also for many of the top programs … collect is different approaches … Perhaps we would need somewhere to
+> even bias the setup such that these axes are more important … Our Atlas already knows the extent to which the
+> current approaches work … we need to make sure that is the case. … The record, by the way, is 0.97-something
+> because I see that in the Einstein arena. I need you to find all the literature, or if not literature, then all the
+> GitHub repositories, or if not GitHub repositories, all the posts … not only the number but the actual solution
+> itself … We will do two runs: 1. Only the axes … 2. Both the warm start of the best program in the world and also
+> the axes … We 10 will be the one to break the record, and I need you to tell me that with some level of confidence
+> … If there are other things that need to be fixed or added, or removed … they can also be removed … getting the
+> test job ready, writing the prompt for the agent … The first step … extensive research online … That internet
+> research part is very important … This is meant to be deep research online … By the end of this turn, I want you to
+> come back with a run ready to deploy. You can implement things that we discussed last night as well, if it helps us
+> here.
+
+**What was done:** the research (`docs/AC2_SOTA.md`), v10 (`docs/V10_DESIGN.md`, `helix10/`), the two-run job with
+the Aether prompt and the odds (`docs/V10_JOB.md`, `scripts/run_v10.sh`), tested live; the request and decisions in
+`docs/BRIEF_2026-10-28.md`. The reply's substance: the record is 0.963588110582, not 0.97; the field's own polish,
+measured on one CPU core, adds +3.8e-8 to it and stops, so on the VM a record has to come from a structural idea the
+field doesn't have; odds about 3% for v10-warm and under 0.5% for v10-axes, with v10-axes the cleaner test of the
+research question (concepts only; the field's polish moves our record by 7e-9).

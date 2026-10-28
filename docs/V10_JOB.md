@@ -37,9 +37,27 @@ progress, up to 20 minutes, and pushes) - only on Shreyas's order.
 
 ## Tested live (October 28, in the cloud session, with the real model)
 
-See "Live test" below, filled in from the test run (`runs/v10test`, not pushed): both jobs end to end, side by side,
-from GitHub's v9-s1 alone (every construction restored from the releases), the field's constructions verified, the
-field's methods run, two generations each, a stop signal mid-generation and the resume.
+Both jobs, end to end, side by side, exactly as the VM will run them (`scripts/run_v10.sh`, 150 s per program, two
+generations each; PUSH=0 and a test folder, so nothing went to GitHub), from GitHub's v9-s1 alone:
+
+| Stage | Result |
+| --- | --- |
+| Preflight | crash test (2 generations, fake model, report, publish, pack), a real model call: passed in both |
+| Constructions of v9-s1 | no local folder here, so restored from the releases: 3,235 + 1,055 (the VM uses its own folders and uploads the 298 GitHub lacks) |
+| The field's constructions | 14 of 14 from data/field_ac2, each checked by SHA-256 and re-scored |
+| Warm start, axes | 9 decisions (5 on the map's own), 38 new options, 14 findings; 18 s |
+| Warm start, warm | the same, 14 imports on their own tracks; the field's methods on the record: Dinkelbach polish +3.25e-8, velocity cycles +0 (on one core its cycles can't recover their own noise), the transfer on Hyra's (repeat 3x, pad to 2M) +7.3e-8 |
+| Generations | 11 min a generation with both running, 6.5-7 min alone |
+| What the planner did with the field | first generation of v10-axes, its own words: "The one lever this run has never pulled is the field's method behind every construction above 0.962 ... all three slots bet on that cascade". Borrowed flips each generation (Anderson-accelerated L-BFGS, irregular blocks, simulated annealing, the exact max); read-back landed 1/1 on two of them |
+| v9's failures | the three racing copies of the record (T278, T279, T282, 13-26 experiments on H22) stopped racing at once |
+| 2M programs | the record polished by the coder's own program (+2.8e-9); a simulated-annealing flip at 2M ran (-8.6e-6, then +1.1e-8); one program killed at its CPU or memory limit (handled) |
+| Stop and resume | a stop signal two minutes into a warm generation: it finished the generation (9 minutes), published, verified, packed and exited; started again, it pushed, resumed at 802 and finished |
+| End | publish (borrowed.json included), report, verification (helix, DeepMind's code, the arena's code agree: v10-warm 0.963588145916, +3.5e-8 over the record), continuation packs |
+| Disk | 430 MB of constructions for the warm run after 2 generations (14 imports included), 285 MB for the axes run |
+
+Fixed because of the test: the verification refused 2M constructions (it now uses the run's limit, the arena's own
+verifier, and FFT convolution in DeepMind's code above 200k); a v10 continuation added the field's findings twice;
+the wide loop's replacement bases (off the record's hill) were sampled too flatly, missing the imports.
 
 ## How likely is a record
 

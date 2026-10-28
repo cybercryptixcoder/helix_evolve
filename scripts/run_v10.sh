@@ -377,18 +377,24 @@ from pathlib import Path
 import numpy as np
 from tools.verify_ac2 import verify, ALPHAEVOLVE_MAY_2025
 root, out = Path(sys.argv[1]), Path(sys.argv[2])
+REC = 0.963588110582029
 rows = [verify(ALPHAEVOLVE_MAY_2025, "AlphaEvolve, May 2025 (DeepMind's published 50-step construction)")]
 for f in sorted(root.glob("*/best.npy")):
-    rows.append(verify(np.load(f), f.parent.name))
+    rows.append(verify(np.load(f), f.parent.name, max_n=2_000_000))
 lines = ["# Verification of the Helix v10 jobs' constructions", "",
-         "Every best construction re-scored three independent ways (`tools/verify_ac2.py`): Helix's evaluator, "
-         "DeepMind's own verification code (ported line by line), and exact rational arithmetic. Digits are truncated, "
-         "not rounded.", "", "| Construction | Steps | Helix | DeepMind's code | Exact | All agree |", "|---|---|---|---|---|---|"]
+         "Every best construction re-scored independently (`tools/verify_ac2.py`): Helix's evaluator, DeepMind's own "
+         "verification code (ported line by line), EinsteinArena's verifier (as its API publishes it) and, up to "
+         "400,000 steps, exact rational arithmetic. Digits are truncated, not rounded. The arena's record is "
+         f"{REC:.12f}; a new arena #1 needs {REC + 1e-5:.12f}.", "",
+         "| Construction | Steps | Helix | DeepMind's code | Arena's code | Exact | All agree | Against the record |",
+         "|---|---|---|---|---|---|---|---|"]
 for r in rows:
     if not r.get("valid"):
-        lines.append(f"| {r['label']} | - | INVALID: {r.get('problem')} | | | |")
+        lines.append(f"| {r['label']} | - | INVALID: {r.get('problem')} | | | | | |")
         continue
-    lines.append(f"| {r['label']} | {r['N']} | {r['helix']:.12f} | {r['deepmind_code']:.12f} | {r.get('exact_str', '-')} | {r['agree']} |")
+    d = r["arena_code"] - REC
+    lines.append(f"| {r['label']} | {r['N']} | {r['helix']:.12f} | {r['deepmind_code']:.12f} | {r['arena_code']:.12f} | "
+                 f"{r.get('exact_str', '-')} | {r['agree']} | {d:+.3e} |")
 out.write_text("\n".join(lines) + "\n")
 print("\n".join("   " + l for l in lines[4:]))
 PY

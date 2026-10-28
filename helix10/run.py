@@ -316,9 +316,10 @@ class Run(Run9):
         extra = on[self.cfg.record_hill_wide:]
         if extra:
             side = [q for q in pool if not self.on_record_hill(q) and self.has_construction(q)]
+            alpha = 1.0 if level == 0 else self.cfg.wide_alpha_stalled          # as v7's sampling at this level
             for i in extra:
                 if side:
-                    parents[i] = self.archive.sample_parent(rng, side, alpha=self.cfg.wide_alpha_stalled)
+                    parents[i] = self.archive.sample_parent(rng, side, alpha=alpha)
         return parents
 
     def upkeep(self, gen):

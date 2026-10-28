@@ -89,12 +89,18 @@ def add_findings(out, gen, log=print):
     path = out / "findings.jsonl"
     events = jl(path)
     n = sum(1 for e in events if e.get("op") == "new")
+    have = {e.get("claim") for e in events if e.get("op") == "new" and e.get("kind") == "field"}
+    added = 0
     with path.open("a") as fh:
         for claim, source in sota.FINDINGS:
+            if claim in have:                                   # a v10 source has it already
+                continue
             n += 1
+            added += 1
             fh.write(json.dumps({"op": "new", "id": f"F{n}", "gen": gen, "kind": "field", "claim": claim,
                                  "source": source, "evidence": [], "links": []}) + "\n")
-    log(f"the field's findings: {len(sota.FINDINGS)} added to the Atlas (kind field, with sources)")
+    log(f"the field's findings: {added} added to the Atlas (kind field, with sources)"
+        + (f"; {len(sota.FINDINGS) - added} were there already" if added < len(sota.FINDINGS) else ""))
 
 
 def import_field(out, cfg, field_dir, gen, log=print, run_programs=True):
