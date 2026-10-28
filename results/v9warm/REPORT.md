@@ -2,9 +2,9 @@
 
 ## v9-s1
 
-- Generations 191-742: best 0.941229688 -> 0.941441744 (p3884, track T263); the main track now: T27.
-- Exploration levels: level 0: 94 generations, level 1: 16 generations, level 2: 442 generations.
-- Planned experiments by slot: main 756, track 644, backtrack 68, flip 68, restart 61, revive 25, bold 24, drop 7, ablate 3.
+- Generations 191-754: best 0.941229688 -> 0.941441744 (p3956, track T268); the main track now: T27.
+- Exploration levels: level 0: 94 generations, level 1: 16 generations, level 2: 454 generations.
+- Planned experiments by slot: main 768, track 660, backtrack 70, flip 70, restart 61, revive 25, bold 24, drop 10, ablate 4.
 
 ### Records (58)
 
@@ -69,7 +69,7 @@
 | 379 | 0.941440148 | p1522 | deep | main | T27 |
 | 384 | 0.941441203 | p1554 | deep | main | T27 |
 
-### Side tracks opened (117)
+### Side tracks opened (119)
 
 | Track | Kind | Opened | From | Experiments | Its best | Last gain |
 |---|---|---|---|---|---|---|
@@ -102,13 +102,13 @@
 | T37 | bold | 230 | p0001 | 6 | 0.882478 (p0831) | 274 |
 | T38 | revive F474 | 232 | p0555 | 8 | 0.941243 (p0566) | 232 |
 | T39 | backtrack | 234 | p0447 | 2 | 0.940995 (p0579) | 234 |
-| T40 | bold | 234 | p0001 | 3 | 0.881071 (p0583) | 235 |
+| T40 | bold | 234 | p0001 | 4 | 0.881673 (p3964) | 746 |
 | T41 | revive F385 | 236 | p0573 | 2 | 0.941243 (p0588) | 236 |
 | T42 | backtrack | 237 | p0491 | 2 | 0.940795 (p0597) | 237 |
 | T43 | bold | 238 | p0001 | 3 | 0.687061 (p0610) | 239 |
 | T44 | revive F450 | 240 | p0573 | 7 | 0.941243 (p0622) | 240 |
 | T45 | backtrack | 242 | p0217 | 5 | 0.940517 (p0914) | 286 |
-| T46 | bold | 243 | p0001 | 8 | 0.913033 (p2101) | 469 |
+| T46 | bold | 243 | p0001 | 9 | 0.913038 (p4016) | 753 |
 | T47 | revive F291 | 244 | p0616 | 20 | 0.941243 (p0670) | 244 |
 | T48 | backtrack | 246 | p0032 | 2 | 0.939463 (p0661) | 246 |
 | T49 | bold | 248 | p0001 | 6 | 0.902685 (p3935) | 742 |
@@ -129,7 +129,7 @@
 | T64 | bold | 266 | p0001 | 4 | 0.878912 (p3585) | 694 |
 | T65 | revive F583 | 266 | p0778 | 2 | 0.941243 (p0786) | 266 |
 | T66 | backtrack | 268 | p0702 | 6 | 0.941205 (p0810) | 270 |
-| T67 | bold | 269 | p0001 | 4 | 0.882045 (p0816) | 271 |
+| T67 | bold | 269 | p0001 | 5 | 0.882045 (p0816) | 271 |
 | T68 | revive F580 | 270 | p0778 | 2 | 0.941243 (p0808) | 270 |
 | T69 | backtrack | 272 | p0786 | 14 | 0.941243 (p0921) | 272 |
 | T70 | bold | 273 | p0001 | 2 | - | 273 |
@@ -185,11 +185,13 @@
 | T241 | backtrack | 698 | p3563 | 2 | - | 698 |
 | T245 | backtrack | 707 | p3640 | 1 | - | 707 |
 | T249 | backtrack | 713 | p3670 | 1 | - | 713 |
-| T252 | backtrack | 718 | p1233 | 1 | 0.941292 (p3746) | 718 |
-| T255 | backtrack | 723 | p1398 | 1 | 0.941405 (p3785) | 723 |
+| T252 | backtrack | 718 | p1233 | 2 | 0.941292 (p3746) | 718 |
+| T255 | backtrack | 723 | p1398 | 2 | 0.941405 (p3785) | 723 |
 | T259 | backtrack | 729 | p1457 | 2 | 0.941431 (p3834) | 729 |
 | T262 | backtrack | 734 | p3414 | 1 | - | 734 |
-| T266 | backtrack | 740 | p0957 | 1 | 0.941256 (p3918) | 740 |
+| T266 | backtrack | 740 | p0957 | 2 | 0.941256 (p3918) | 740 |
+| T269 | backtrack | 745 | p1472 | 1 | 0.941435 (p3955) | 745 |
+| T273 | backtrack | 751 | p3843 | 1 | 0.941442 (p4002) | 751 |
 
 ### Generation by generation
 
@@ -747,28 +749,41 @@
 | 740 | 0.941441744 |  | 39 / 1.5 | 2 | main, track:T231, backtrack | 0.941442 | T266 opened (a backtrack to p0957); T266 landed on H24 (distance 0.071); T266 is now the top of H24 (0.941256) |
 | 741 | 0.941441744 |  | 40 / 1.5 | 2 | main, track:T231, track:T118 | 0.941442 | T118 gained (0.879545 -> 0.880075); T231 waits its turn to race (4 racing; among the weakest at equal effort) |
 | 742 | 0.941441744 |  | 41 / 1.5 | 2 | main, track:T259, track:T49 | 0.941431 | T49 gained (0.902671 -> 0.902685); T259 paused (no gain on its own best); T49 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 743 | 0.941441744 |  | 42 / 1.5 | 2 | main, track:T255, drop | 0.941442 | T255 paused (no gain on its own best); T266 paused (no gain on its own best); T267 opened (a drop to A37 -> Fixed sequential phases; A45 -> Treat the array as genuinely aperiodic and let th…; A48 -> Local descent and structural edits; A51 -> Differential evolution plus multi-start refinement, from p3884); T267 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 744 | 0.941441744 |  | 43 / 1.5 | 2 | main, track:T252, flip | 0.941442 | T252 paused (no gain on its own best); T268 opened (a flip of A45 -> Search over the period P and row count jointly as… on p3884); T118 waits its turn to race (4 racing; among the weakest at equal effort); T268 landed on H22 (distance 0.004); new hill H76, found by T252 (backtrack): 0.941292, distance 0.141 from the nearest known hill (H24) |
+| 745 | 0.941441744 |  | 44 / 1.5 | 2 | main, track:T268, backtrack | 0.941442 | T269 opened (a backtrack to p1472); T268 goes on to the next rung (4 experiments): still rising (best 0.941442 at 2 experiments); T269 landed on H22 (distance 0.048) |
+| 746 | 0.941441744 |  | 45 / 1.5 | 2 | main, track:T268, track:T40 | 0.941442 | T40 gained (0.881071 -> 0.881673); T40 goes on to the next rung (8 experiments): still rising (best 0.881673 at 4 experiments); T268 goes on to the next rung (8 experiments): no longer rising, but best 0.941442 at 4 experiments is at or above the cohort's 50% quantile (0.933144); T40 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 747 | 0.941441744 |  | 46 / 1.5 | 2 | main, track:T268, track:T158 | 0.941442 | T85 gained (0.941267 -> 0.941268); T158 gained (0.879313 -> 0.879480); T158 waits its turn to race (4 racing; among the weakest at equal effort); T85 landed on H3 (distance 0.011); T85 climbed from H22 into H3 |
+| 748 | 0.941441744 |  | 47 / 1.5 | 2 | main, track:T268, ablate | 0.941442 | T270 opened (an ablation of A47 -> Hard argmax with tie averaging on p3956); T268 goes on to the next rung (16 experiments): no longer rising, but best 0.941442 at 8 experiments is at or above the cohort's 50% quantile (0.938361); T270 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 749 | 0.941441744 |  | 48 / 1.5 | 2 | main, track:T268, drop | 0.941442 | T271 opened (a drop to A1 -> Minimax/Dinkelbach reformulation; A4 -> a new option; A46 -> a new option; A49 -> a new option, from p3956); T271 waits its turn to race (4 racing; among the weakest at equal effort); T121 landed on H22 (distance 0.045); T271 landed on H22 (distance 0.023) |
+| 750 | 0.941441744 |  | 49 / 1.5 | 2 | main, track:T268, flip | 0.941442 | T272 opened (a flip of A1 -> Penalty/augmented-Lagrangian constrained on p3956); T272 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 751 | 0.941441744 |  | 50 / 1.5 | 2 | main, track:T268, backtrack | 0.941442 | T273 opened (a backtrack to p3843); T273 landed on H30 (distance 0.000) |
+| 752 | 0.941441744 |  | 51 / 1.5 | 2 | main, track:T268, track:T67 | 0.941442 | T67 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 753 | 0.941441744 |  | 52 / 1.5 | 2 | main, track:T268, track:T46 | 0.941442 | T46 gained (0.913033 -> 0.913038); T268 goes on to the next rung (32 experiments): no longer rising, but best 0.941442 at 16 experiments is at or above the cohort's 50% quantile (0.941435); T46 waits its turn to race (4 racing; among the weakest at equal effort) |
+| 754 | 0.941441744 |  | 53 / 1.5 | 2 | main, track:T268, drop | 0.941442 | T147 gained (0.941440 -> 0.941441); T274 opened (a drop to A1 -> Minimax/Dinkelbach reformulation; A3 -> Structured non-uniform support patterns; A5 -> a new option; A37 -> Pareto set over secondary criteria, from p3956); T274 waits its turn to race (4 racing; among the weakest at equal effort) |
 
-### Hills (75: 21 on the map after its first generation, 54 found since)
+### Hills (76: 21 on the map after its first generation, 55 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H30 | 0.941442 (p2809) | 447 | T115 (flip) | 18 | This program optimises in a squared-parameter space (h = v²) with unconstrained L-BFGS-B, guaranteeing positivity without clipping, whereas the record works directly on h with explicit non-negativity handling. It replace |
+| H30 | 0.941442 (p2809) | 447 | T115 (flip) | 19 | This program optimises in a squared-parameter space (h = v²) with unconstrained L-BFGS-B, guaranteeing positivity without clipping, whereas the record works directly on h with explicit non-negativity handling. It replace |
 | H50 | 0.941442 (p2637) | 549 | T166 (backtrack) | 0 | This program abandons the record lineage's discrete structural edits (split/merge, randomized asymmetric lifts, non-commensurate quotient cascades) in favor of a purely continuous L-BFGS pipeline on a fixed support, so t |
-| H22 | 0.941441 (p1610) | 388 | T85 (flip) | 39 | This program abandons the record lineage's structural-edit escape strategy (split/merge, non-commensurate lifts, quotient cascades, jitter) and instead escapes local optima by shrinking the array to a smaller N, re-optim |
+| H22 | 0.941441 (p1610) | 388 | T85 (flip) | 43 | This program abandons the record lineage's structural-edit escape strategy (split/merge, non-commensurate lifts, quotient cascades, jitter) and instead escapes local optima by shrinking the array to a smaller N, re-optim |
 | H2 | 0.941441 (p1554) | 291 | T27 (backtrack) | 53 | This program abandons the record's cycling beta-softmax window schedule and instead runs a fixed ladder of four increasing beta values (1e4 to 1e7), each followed by a sharp L-BFGS pass and a peak-window polish, with ear |
 | H59 | 0.941430 (p3027) | 609 | T147 (flip) | 0 | This program abandons the record's discrete structural edits (split/merge, non-commensurate lifts, randomized asymmetric splitting) in favor of a purely gradient-based coarse-to-fine cascade: it coarsens the current best |
 | H61 | 0.941417 (p3144) | 627 | T205 (backtrack) | 0 | This program abandons the record's discrete structural edits (randomized asymmetric splitting, non-commensurate 3:2 lifts, and coarse-to-fine quotient cascades) in favor of a purely gradient-based pipeline: a high-beta s |
 | H39 | 0.941408 (p2904) | 495 | T139 (backtrack) | 1 | This program optimizes a smooth log-sum-exp surrogate of the max (beta ladder, tie-averaged and kappa-penalized soft-max variants) instead of relying on discrete structural edits like split/merge and randomized asymmetri |
-| H3 | 0.941405 (p3785) | 291 | L1 (line) | 8 | This program abandons the record's zero-revival, tail-revival, and beta-softmax peak-window perturbation stages, instead running a coarse-to-fine homotopy: it coarsens the start to several lower resolutions, optimizes ea |
+| H3 | 0.941405 (p3785) | 291 | L1 (line) | 9 | This program abandons the record's zero-revival, tail-revival, and beta-softmax peak-window perturbation stages, instead running a coarse-to-fine homotopy: it coarsens the start to several lower resolutions, optimizes ea |
 | H45 | 0.941391 (p2476) | 525 | T154 (backtrack) | 0 | This program keeps the record's N=104992 structure and only lifts to N=209984 late (Phase B), spending its first 20% on a full-array tie-gradient polish, peak-window block polishes with alternating high-beta sharpening,  |
 | H43 | 0.941369 (p2430) | 507 | T145 (backtrack) | 1 | This program abandons the record's discrete structural edits (splitting, merging, non-commensurate lifts, quotient cascades) and instead runs a purely continuous L-BFGS-B pipeline on a fixed 104992-cell array, using a be |
+| H76 | 0.941292 (p3746) | 744 | T252 (backtrack) | 0 | This program abandons the record's discrete structural edits (splitting/merging, non-commensurate lifts, quotient cascades) entirely and instead runs a continuous cap-constrained optimization ladder: it repeatedly lowers |
 | H24 | 0.941256 (p3918) | 409 | T83 (revive) | 2 | This program optimizes the continuous piecewise-linear autocorrelation via a log-parameterized L-BFGS on active cells, using a beta-smoothed soft-max surrogate for the inf-norm and a peak-window ladder that repeatedly re |
 | H4 | 0.940680 (p1697) | 291 | T21 (backtrack) | 0 | This program works almost entirely in log-space on the active support (L-BFGS on log heights with a fixed active set), whereas the record's program relies on linear-space global L-BFGS plus beta-softmax window polishing  |
 | H5 | 0.940517 (p0914) | 291 | T45 (backtrack) | 0 | This program runs a single continuous L-BFGS-B optimization in log-space over all active entries with a fixed 60s deadline and no coarse/refine cycles, zero-revival, pruning, or stochastic perturbation stages, relying in |
 | H40 | 0.937208 (p2657) | 496 | T131 (flip) | 1 | This program optimises a smooth surrogate of the max (soft-max with inverse temperature beta) plus a variance penalty over the near-max region, rather than relying on exact-tie subgradient handling and discrete structura |
 | H11 | 0.933314 (p1222) | 291 | L4 (line) | 0 | This program works on a fixed N=8192 grid from the start (prolongating the start by cumulative-mass interpolation) and relies on a beta-softmax homotopy (betas 32→2048) with active-set pruning and peak-window exact polis |
 | H23 | 0.913999 (p3686) | 405 | T94 (restart) | 0 | This program abandons the record's spiky-comb lineage entirely: it starts from a dense quadratic-residue (QR) comb with a smooth envelope and optimizes in log-space with L-BFGS, never using the discrete split/merge, jitt |
-| H15 | 0.913033 (p2101) | 291 | T46 (bold) | 1 | This program optimises a low-dimensional parametric family (capped power-law spike plus plateau, fit by differential evolution and least-squares) at N=2048 and then prolongates to N=8192, rather than starting from the re |
+| H15 | 0.913038 (p4016) | 291 | T46 (bold) | 1 | This program optimises a low-dimensional parametric family (capped power-law spike plus plateau, fit by differential evolution and least-squares) at N=2048 and then prolongates to N=8192, rather than starting from the re |
 | H6 | 0.912389 (p2066) | 291 | L8 (line) | 0 | This program spends nearly its entire budget refining the given start directly with a single long line-search loop (sharp L-BFGS, peak-window polishes, and a beta-softmax pass), rather than the record's alternating cycle |
 | H7 | 0.909695 (p0528) | 291 | L6 (line) | 0 | This program works at a much higher resolution from the start (upsampling the start 4x via cumulative-mass prolongation plus Gaussian smoothing) and runs a coarse-to-fine beta-annealing schedule on the full vector before |
 | H8 | 0.909439 (p1649) | 291 | L3 (line) | 0 | This program works on a fixed 256000-step grid and spends its whole budget on a single sharp L-BFGS in log-space plus a beta-softmax peak-window ladder, rather than the record's alternating cycles of linear-space global  |
@@ -828,39 +843,36 @@
 | H60 | 0.666667 (p3029) | 611 | T197 (restart) | 0 | This program optimizes a single fixed-resolution vector (N=65536) with L-BFGS in log-space using an exact-tie gradient of the true objective, rather than the record's multi-scale lift/polish cascade over commensurate and |
 | H52 | 0.542847 (p2668) | 554 | T168 (flip) | 0 | This program runs a coarse-to-fine evolutionary search over a periodic quotient (period ~32) with discrete structural mutations (block swap/reverse/roll/multiply/neighbour-mean) plus periodic L-BFGS polishing, rather tha |
 
-Decisions every hill shared (mapped at generation 742):
+Decisions every hill shared (mapped at generation 750):
 
-- D1: Parametrisation of the array being optimised (all: Optimise raw non-negative heights h directly with L-BFGS-B bounds (0, None), rescaling by 1/sqrt(max knot) after each pass); flipped at generation 414 by T99 (on H22); generation 434 by T109 (unplaced ); generation 438 by T111 (unplaced ); generation 450 by T117 (on H22); generation 462 by T123 (unplaced ); generation 470 by T127 (unplaced ); generation 510 by T147 (on H22); generation 516 by T150 (on H22); generation 564 by T174 (unplaced ); generation 582 by T183 (top H56); generation 606 by T195 (on H30); generation 630 by T207 (on H22); generation 678 by T231 (on H22)
-- D2: How the inf-norm (max of f*f) is handled in the objective (all: Soft tie-averaged / anchored / power-a surrogate for the max (beta-free tie gradient, single-anchor gradient, or L^a norm with a ladder), never an exact hard m…); flipped at generation 410 by T97 (on H2); generation 430 by T107 (on H22); generation 458 by T121 (unplaced ); generation 482 by T133 (on H22); generation 558 by T171 (unplaced ); generation 588 by T186 (on H30); generation 690 by T237 (on H22)
-- D3: Escape mechanism from local optima (all: Continuous homotopy ladders (beta/power sharpening, coarse-to-fine resolution, peak-window polish) on a frozen zero pattern; no discrete support re-selection); flipped at generation 402 by T93 (on H22); generation 498 by T141 (top H33); generation 522 by T153 (unplaced ); generation 528 by T156 (founder H47); generation 534 by T159 (founder H48); generation 612 by T198 (on H30); generation 624 by T204 (on H30); generation 684 by T234 (on H22)
-- D4: Resolution changes / upsampling (all: Commensurate integer-ratio lifts (2x, 4x) or plain zero-insertion dilation, folding back by even-quotient or pairwise downsample); flipped at generation 390 by T87 (top H22); generation 426 by T105 (on H22); generation 594 by T189 (on H30); generation 696 by T240 (on H30)
-- D5: Which quotient is used when coarsening (all: The even quotient h[0::2] (or block-mean over 32 rows); odd cells are discarded); flipped at generation 398 by T91 (on H22); generation 442 by T113 (unplaced ); generation 454 by T119 (unplaced ); generation 466 by T125 (unplaced ); generation 486 by T135 (founder H37); generation 540 by T162 (on H22); generation 546 by T165 (unplaced ); generation 552 by T168 (founder H53); generation 660 by T222 (on H30)
-- D6: Objective form during optimisation (all: Minimise -log(num) + 2 log(sum) + log(max) (equivalently maximise the ratio in log space) with analytic gradients backpropagated through the convolution); flipped at generation 394 by T89 (on H22); generation 570 by T177 (unplaced ); generation 576 by T180 (top H30); generation 648 by T216 (unplaced )
-- D7: Search schedule / time allocation (all: A single deterministic ladder of stages (power/beta ladder, then anchor bands, then peak-window polish) with fixed fractions of the budget and early exit on ti…); flipped at generation 406 by T95 (on H22); generation 504 by T144 (on H22); generation 618 by T201 (on H22); generation 636 by T210 (unplaced ); generation 654 by T219 (founder H69)
-- D8: Handling of the zero support (all: The 67.5%-zero comb pattern is frozen; perturbations and gradients only touch currently-active cells); flipped at generation 301 by T85 (founder H22); generation 418 by T101 (on H22); generation 446 by T115 (founder H30); generation 474 by T129 (on H22); generation 478 by T131 (top H40); generation 492 by T138 (on H22); generation 600 by T192 (unplaced ); generation 642 by T213 (unplaced ); generation 666 by T225 (on H30)
+- D1: objective landscape used for gradient polishing (all: minimise the smooth log-domain surrogate -log(num)+2log(sum)+log(max) (with tie-averaged or anchored max, or an a-power ladder), then accept only exact-R impro…); flipped at generation 414 by T99 (on H22); generation 434 by T109 (unplaced ); generation 438 by T111 (unplaced ); generation 450 by T117 (on H22); generation 462 by T123 (unplaced ); generation 470 by T127 (unplaced ); generation 510 by T147 (on H22); generation 516 by T150 (on H22); generation 564 by T174 (unplaced ); generation 582 by T183 (top H56); generation 606 by T195 (on H30); generation 630 by T207 (on H22); generation 678 by T231 (on H22)
+- D2: support/zero pattern handling (all: freeze the sparse comb support: L-BFGS-B with lower bound 0 on active cells only, so exact zeros are never re-selected or revived); flipped at generation 410 by T97 (on H2); generation 430 by T107 (on H22); generation 458 by T121 (on H22); generation 482 by T133 (on H22); generation 558 by T171 (unplaced ); generation 588 by T186 (on H30); generation 690 by T237 (on H22)
+- D3: array length / resolution (all: keep N fixed at the start's length; escapes come from coarsening/folding within that N, never from changing the final N); flipped at generation 402 by T93 (on H22); generation 498 by T141 (top H33); generation 522 by T153 (unplaced ); generation 528 by T156 (founder H47); generation 534 by T159 (founder H48); generation 612 by T198 (on H30); generation 624 by T204 (on H30); generation 684 by T234 (on H22)
+- D4: escape mechanism from local optima (all: resolution/representation changes: fold to a quotient (tile a period P), coarsen by stride, or recenter by a shift, then re-polish); flipped at generation 390 by T87 (top H22); generation 426 by T105 (on H22); generation 594 by T189 (on H30); generation 696 by T240 (on H30)
+- D5: parametrisation of the optimised variables (all: optimise h directly (non-negative, clipped) with L-BFGS-B; no squared/log parametrisation in the record chain); flipped at generation 398 by T91 (on H22); generation 442 by T113 (unplaced ); generation 454 by T119 (unplaced ); generation 466 by T125 (unplaced ); generation 486 by T135 (founder H37); generation 540 by T162 (on H22); generation 546 by T165 (unplaced ); generation 552 by T168 (founder H53); generation 660 by T222 (on H30)
+- D6: time allocation / stopping (all: fixed wall-clock deadline with per-phase time slices and early exit on no gain; phases run in a fixed order (a-ladder, anchors, peak window, recenter)); flipped at generation 394 by T89 (on H22); generation 570 by T177 (unplaced ); generation 576 by T180 (top H30); generation 648 by T216 (unplaced )
+- D7: peak/inf-norm treatment (all: handle the max via tie-averaged gradient at near-max knots (or a single anchor), with a soft a-power ladder to sharpen; no hard constraint projection); flipped at generation 406 by T95 (on H22); generation 504 by T144 (on H22); generation 618 by T201 (on H22); generation 636 by T210 (unplaced ); generation 654 by T219 (founder H69)
+- D8: starting point (all: start from the provided start array and only accept exact-R improvements; no multi-start from random or structured seeds); flipped at generation 301 by T85 (on H3); generation 418 by T101 (on H22); generation 446 by T115 (founder H30); generation 474 by T129 (on H22); generation 478 by T131 (top H40); generation 492 by T138 (on H22); generation 600 by T192 (unplaced ); generation 642 by T213 (unplaced ); generation 666 by T225 (on H30)
 
-### The design map (16 decisions, 757 programs placed)
+### The design map (13 decisions, 846 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A45: Is periodicity of the iterate detected and exploited via a folded Newton-CG on the period? | Period-folded Newton-CG; Reshape to (rows, P), average rows to on; Treat the array as genuinely aperiodic a; Search over the period P and row count j | 73% of 11 (kappa 0.46) | 20% |
-| A31: How is the iterate rescaled/normalized after each step (rescale by 1/sqrt(max f*f), no res | Rescale by 1/sqrt(max); No rescaling, free scale; Fix L1 mass to 1; Fix inf-norm to 1; Analytic scale or block parameterization ... | 97% of 148 (kappa 0.89) | 13% |
-| A5: Resolution / grid size strategy | Fixed single resolution; Free N / multi-resolution; Coarse-to-fine homotopy ladder; Adaptive refinement or multigrid; Fixed N, temporary lifts only ... | 88% of 147 (kappa 0.82) | 6% |
-| A3: Handling of zero entries / support | Frozen sparse support, active cells only; Continuous sparsity penalty with revival; Combinatorial support search; Structured non-uniform support patterns; Prune/revive reselection heuristic sweep ... | 87% of 147 (kappa 0.77) | 5% |
-| A1: Objective parametrisation / domain in which the ratio is optimised | Smooth surrogate of ratio; Minimax/Dinkelbach reformulation; Penalty/augmented-Lagrangian constrained; Other functional/global proxy; Hard projection/renormalization ... | 74% of 147 (kappa 0.54) | 5% |
-| A2: Representation of the unknown function f | Dense grid heights; Low-dimensional parametric family; Cumulative/quantile/moving-mesh; Discrete/sparse/multiscale structure; Fourier/spectral/autocorrelation domain ... | 93% of 148 (kappa 0.77) | - |
-| A4: Core local optimiser | Quasi-Newton L-BFGS-B with gradients; Second-order Newton/trust-region/SQP; Derivative-free stochastic global search; Projected/accelerated first-order method; Stochastic gradient / Adam minibatch ... | 99% of 147 (kappa 0.85) | - |
-| A36: Is the autoconvolution computed as a black-box FFT/convolution, or is its quadratic/Gram/T | Black-box FFT/convolution with autodiff; Explicit Gram/Toeplitz quadratic form; Fourier-domain diagonalization; Exact convolution with analytic backprop; Exact continuous autocorrelation of inte ... | 86% of 147 (kappa 0.28) | - |
-| A37: How is the final answer selected from the candidates found (single best-R array, ensemble/ | Single best-R array; Ensemble or average top candidates; Pareto set over secondary criteria; Fixed sequential phases; Adaptive bandit budget reallocation ... | 95% of 148 (kappa 0.34) | - |
-| A46: How is the coarse-to-fine ladder initialised and what target shape is used for deconvoluti | Builds target from the current peak plat; Coarsens/lifts by mass-preserving block  | 100% of 5 (kappa 1.00) | - |
-| A47: How are ties/near-maxima of the f*f peak handled in the objective (single argmax vs. smoot | Smooth softmax/LSE peak surrogate; Hard argmax with tie averaging; Constrained max via projection/penalty; Global reparam / full-array polish; Shift invariance and symmetry handling ... | 100% of 148 (kappa 1.00) | - |
-| A48: How is the initial iterate chosen (provided start, deterministic ramp, random sparse comb, | Provided start or deterministic ramp; Random sparse comb initialization; Analytic extremal or spectral seed; Local descent and structural edits; Population or annealing global search ... | 90% of 148 (kappa 0.83) | - |
-| A49: How is the search structured globally (single local trajectory from the start vs. a popula | Single local trajectory; Population evolutionary over coarse reps; Resolution/smoothing homotopy ladders; Support re-selection add-drop; Stochastic basin hopping ... | 80% of 15 (kappa 0.74) | - |
-| A51: How is the time/iteration budget allocated across phases (fixed fractional schedule vs ada | Fixed fractional schedule with deadlines; Adaptive budget by improvement rate; Single long L-BFGS run; Differential evolution plus multi-start ; Local L-BFGS-B from fewer starts ... | 80% of 15 (kappa 0.34) | - |
-| A60: How is the grid resolution managed during the search (fixed single resolution vs. progress | Prolongs the start to double N, then opt; Stays on the original grid; no prolongat; Commensurate integer-ratio lifts (2x, 4x; Non-commensurate 3:2 or 5:3 lifts built ; Optimise at a fixed N throughout and nev | 100% of 1 (kappa 1.00) | - |
-| A61: Which stride/offset (even vs odd vs averaged pairings, or random offset) is used when coar | The even quotient h[0::2] (or block-mean; Rotate over even / odd / averaged pairin; Use a random stride offset per coarsenin | 100% of 1 (kappa 1.00) | - |
+| A45: Is periodicity of the iterate detected and exploited via a folded Newton-CG on the period? | Period-folded Newton-CG; Deterministic period recentering and ret; Aperiodic arbitrary support; Joint discrete search over period and ro; Even-quotient or block-mean coarsening ... | 84% of 19 (kappa 0.77) | 22% |
+| A47: How are ties/near-maxima of the f*f peak handled in the objective (single argmax vs. smoot | Softmax/LogSumExp surrogate for max; Hard argmax with tie averaging; Constrained max via projection/penalty; Global reparam / symmetry handling; Anchored/alternating near-max knot selec ... | 100% of 156 (kappa 1.00) | 8% |
+| A5: Resolution / grid size strategy | Fixed single resolution; Free N / multi-resolution; Coarse-to-fine homotopy ladder; Adaptive refinement or multigrid; Fixed N with temporary lifts ... | 89% of 155 (kappa 0.84) | 6% |
+| A48: How is the initial iterate chosen (provided start, deterministic ramp, random sparse comb, | Provided start or deterministic ramp; Random sparse comb initialization; Analytic extremal or spectral seed; Local descent and structural edits; Population or annealing global search ... | 90% of 156 (kappa 0.85) | 5% |
+| A49: How is the search structured globally (single local trajectory from the start vs. a popula | Single local trajectory; Population/evolutionary search; Homotopy and resolution ladders; Structured block/period moves; Fixed/adaptive schedule with deadlines ... | 87% of 23 (kappa 0.77) | 5% |
+| A1: Objective parametrisation / domain in which the ratio is optimised | Smooth surrogate of ratio; Minimax/Dinkelbach reformulation; Penalty/augmented-Lagrangian constrained; Other functional/global proxy; Hard projection/renormalization ... | 74% of 155 (kappa 0.55) | - |
+| A2: Representation of the unknown function f | Dense grid heights; Low-dimensional parametric family; Cumulative/quantile/moving-mesh; Discrete/sparse/multiscale structure; Fourier/spectral/autocorrelation domain ... | 99% of 156 (kappa 0.80) | - |
+| A3: Handling of zero entries / support | Frozen sparse support, active cells only; Continuous sparsity penalty with revival; Combinatorial support search; Structured non-uniform support patterns; Prune/revive reselection heuristic sweep ... | 86% of 155 (kappa 0.76) | - |
+| A4: Core local optimiser | L-BFGS-B quasi-Newton with gradients; Second-order Newton/trust-region/SQP; Derivative-free stochastic global search; Projected/accelerated first-order method; Stochastic gradient / Adam minibatch ... | 99% of 155 (kappa 0.85) | - |
+| A36: Is the autoconvolution computed as a black-box FFT/convolution, or is its quadratic/Gram/T | Black-box FFT/convolution with autodiff; Explicit Gram/Toeplitz quadratic form; Fourier-domain diagonalization / spectra; Exact convolution with analytic backprop; Exact continuous autocorrelation of inte ... | 86% of 155 (kappa 0.27) | - |
+| A37: How is the final answer selected from the candidates found (single best-R array, ensemble/ | Single best-R array; Ensemble or average top candidates; Pareto set over secondary criteria; Fixed sequential phases; Adaptive bandit budget reallocation ... | 93% of 156 (kappa 0.51) | - |
+| A62: Is the unknown function warped through a monotone mass-preserving change of variables (har | Harmonic warp reparametrisation; Monotone warp resampling search | 0% of 1 (kappa 0.00) | - |
+| A66: Does the program actually run an optimisation/search at all, or just return the provided s | Actively optimises (tiling, L-BFGS-B, re; No search: returns start verbatim (or co | 100% of 1 (kappa 1.00) | - |
 
-### Explorations chosen from the map (17: 7 drops, 7 flips, 3 ablates)
+### Explorations chosen from the map (23: 10 drops, 9 flips, 4 ablates)
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
@@ -874,13 +886,19 @@ Decisions every hill shared (mapped at generation 742):
 | T253 | drop | 721 | A2 -> Low-dimensional parametric fam; A5 -> Adaptive refinement or multigr; A30 -> a new option, unlike the liste; A36 -> a new option, unlike the liste | 2/4 | 1 | 0.847932 | waiting at 2 | candidate  |
 | T254 | flip | 722 | A30 -> Explicit recentering to canoni | 0/1 | 15 | 0.775473 | waiting at 2 | founder H75 |
 | T256 | ablate | 724 | A3 -> Dense arrays, no forced zeros | 1/1 | 1 | 0.941390 | waiting at 2 | on H30 |
-| T257 | drop | 727 | A37 -> Pareto set over secondary crit; A47 -> Shift invariance and symmetry ; A48 -> Random sparse comb initializat; A49 -> Support re-selection add-drop | 1/4 | 1 | 0.805084 | waiting at 2 | candidate  |
+| T257 | drop | 727 | A37 -> Pareto set over secondary crit; A47 -> Global reparam / symmetry hand; A48 -> Random sparse comb initializat; A49 -> Support re-selection add-drop | 1/4 | 1 | 0.805084 | waiting at 2 | candidate  |
 | T258 | flip | 728 | A48 -> Random sparse comb initializat | 0/1 | 1 | - | waiting at 2 | -  |
-| T260 | drop | 732 | A47 -> Smooth softmax/LSE peak surrog; A48 -> a new option, unlike the liste; A49 -> Stochastic basin hopping; A51 -> Adaptive budget by improvement | 3/4 | 1 | - | waiting at 2 | -  |
+| T260 | drop | 732 | A47 -> Softmax/LogSumExp surrogate fo; A48 -> a new option, unlike the liste; A49 -> Stochastic basin hopping/resta; A51 -> Adaptive budget by improvement | 3/4 | 1 | - | waiting at 2 | -  |
 | T261 | flip | 733 | A51 -> Adaptive budget by improvement | 1/1 | 1 | - | waiting at 2 | -  |
-| T263 | ablate | 736 | A31 -> Rescale by 1/sqrt(max) | 1/1 | 6 | 0.904781 | waiting at 2 | on H22 |
-| T264 | drop | 738 | A1 -> Minimax/Dinkelbach reformulati; A4 -> Projected/accelerated first-or; A45 -> Treat the array as genuinely a; A51 -> Single long L-BFGS run | - | 1 | - | waiting at 2 | -  |
+| T263 | ablate | 736 | A31 -> Rescale by 1/sqrt(max) | 1/1 | 9 | 0.904781 | waiting at 2 | on H22 |
+| T264 | drop | 738 | A1 -> Minimax/Dinkelbach reformulati; A4 -> Projected/accelerated first-or; A45 -> Aperiodic arbitrary support; A51 -> Single long L-BFGS run | - | 1 | - | waiting at 2 | -  |
 | T265 | flip | 739 | A45 -> a new option, unlike the liste | 0/1 | 1 | 0.637916 | waiting at 2 | on H1 |
+| T267 | drop | 743 | A37 -> Fixed sequential phases; A45 -> Aperiodic arbitrary support; A48 -> Local descent and structural e; A51 -> Differential evolution plus mu | 1/4 | 1 | - | waiting at 2 | -  |
+| T268 | flip | 744 | A45 -> Joint discrete search over per | 1/1 | 19 | 0.941442 | running at 16 | on H22 |
+| T270 | ablate | 748 | A47 -> Hard argmax with tie averaging | 1/1 | 1 | - | waiting at 2 | -  |
+| T271 | drop | 749 | A1 -> Minimax/Dinkelbach reformulati; A4 -> a new option, unlike the liste; A46 -> a new option, unlike the liste; A49 -> a new option, unlike the liste | 3/4 | 1 | 0.718656 | waiting at 2 | on H22 |
+| T272 | flip | 750 | A1 -> Penalty/augmented-Lagrangian c | 0/1 | 1 | - | waiting at 2 | -  |
+| T274 | drop | 754 | A1 -> Minimax/Dinkelbach reformulati; A3 -> Structured non-uniform support; A5 -> a new option, unlike the liste; A37 -> Pareto set over secondary crit | 4/4 | 1 | - | waiting at 2 | -  |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
@@ -894,26 +912,28 @@ Decisions every hill shared (mapped at generation 742):
 - generation 732, p3679 vs p3677: How is the search time allocated between global/period-level exploration (e.g. simulated annealing over a tiled period) and local L-BFGS refinement? (A55, new)
 - generation 736, p3778 vs p3777: How is the search budget allocated across the coarse-to-fine homotopy ladder / refinement stages (e.g., how many revival sweeps, peak-window passes, or restarts are run before the deadline)? (A56, new)
 - generation 740, p3780 vs p3773: How is the grid resolution managed during the search (fixed single resolution vs. progressive prolongation/refinement to a finer grid)? (A60, new)
+- generation 744, p3809 vs p3808: How is the time/iteration budget allocated across phases (fixed fractional schedule vs adaptive vs single run)? (A51, an existing axis)
+- generation 752, p0001 vs p3972: Does the program actually run an optimisation/search at all, or just return the provided start unchanged? (A66, new)
 
-### Constructions rebuilt on demand (103)
+### Constructions rebuilt on demand (129)
 
-- p1771 (generation 734): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p2065 (generation 734): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.908560 (recorded 0.908560)
-- p2839 (generation 735): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941304 (recorded 0.941304)
-- p2755 (generation 735): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p2084 (generation 735): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p0714 (generation 736): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941243 (recorded 0.941243)
-- p0214 (generation 736): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941103 (recorded 0.941103)
-- p3468 (generation 737): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.939957 (recorded 0.939957)
-- p3241 (generation 737): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p0138 (generation 738): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.940559 (recorded 0.940559)
-- p0167 (generation 738): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.908692 (recorded 0.908692)
-- p3250 (generation 738): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p2781 (generation 739): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.856636 (recorded 0.856636)
-- p0901 (generation 740): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.851828 (recorded 0.851828)
-- p0359 (generation 740): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.827555 (recorded 0.827555)
-- p0957 (generation 740): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941256 (recorded 0.941256)
-- p0869 (generation 742): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941243 (recorded 0.941243)
-- p0886 (generation 742): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.903677 (recorded 0.903677)
-- p2029 (generation 743): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
-- p1751 (generation 743): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.909436 (recorded 0.909436)
+- p0813 (generation 746): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941205 (recorded 0.941205)
+- p1618 (generation 746): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941441 (recorded 0.941441)
+- p3368 (generation 747): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p0472 (generation 747): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941243 (recorded 0.941243)
+- p1582 (generation 747): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941267 (recorded 0.941267)
+- p1693 (generation 748): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p2054 (generation 749): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p0785 (generation 749): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.871948 (recorded 0.871948)
+- p1072 (generation 750): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941272 (recorded 0.941272)
+- p3218 (generation 750): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p1002 (generation 751): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941267 (recorded 0.941267)
+- p0747 (generation 751): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.907161 (recorded 0.907161)
+- p2441 (generation 752): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941248 (recorded 0.941248)
+- p0795 (generation 752): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941243 (recorded 0.941243)
+- p0370 (generation 753): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941243 (recorded 0.941243)
+- p1753 (generation 753): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p3047 (generation 754): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941440 (recorded 0.941440)
+- p2208 (generation 754): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
+- p1391 (generation 754): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941401 (recorded 0.941401)
+- p1830 (generation 755): from /home/ubuntu/helix_v5_run/runs/v8warm/v8-s1/constructions, 0.941442 (recorded 0.941442)
