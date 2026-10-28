@@ -33,6 +33,29 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
+## v10: v9 plus the field's knowledge, in two runs (October 28, 2026), job ready
+
+- **Why.** v9's job (docs/V9_RESULTS.md) moved the record by 2.5e-13: 8 distinct hills top out within 3e-7 of
+  0.94144, and every Helix hill shares assumptions that are not axes on its map. The October 28 discussion proposed
+  borrowing the axes from the field once per problem (an idea as an axis: the third level of borrowing), and Shreyas
+  asked for two runs: the field's concepts only, and the field's best constructions and programs plus the concepts.
+- **The research** (docs/AC2_SOTA.md): the record is **0.963588110582** (EinsteinArena #1, July 2026, n = 1,999,999;
+  a new arena #1 needs 0.963598). 14 constructions downloaded and verified (data/field_ac2), one per family and
+  approach; the methods from 30 arena threads, ClaudeExplorer's repo and notes, JSAgent's wiki and the papers.
+  **Measured:** the field's own polish, rewritten for one CPU core, gains +3.8e-8 on the record and stops (the arena
+  needs 1e-5); on our 0.94144 it gains 7e-9.
+- **What it adds** (docs/V10_DESIGN.md, `helix10/`): 9 decisions and 38 options from the field on the design map
+  (5 on decisions the map had), every option tried once as a flip of the record, then half the new explorations on
+  them; 14 findings of kind "field" in the Atlas, with sources; the warm mode's 14 imported constructions (own tracks
+  and hills) and 3 field methods as programs; constructions up to 2,000,000 steps, kept by reference when unchanged
+  and removed when nothing needs them.
+- **v9's failures, fixed:** copies of known hills stop racing after their first rung (any kind); first rung at 3
+  experiments, and a young track is never queued; at most one wide base a generation on the record's hill; at least
+  two of three planned experiments explore; upkeep every third generation.
+- **The job** (docs/V10_JOB.md, `scripts/run_v10.sh`): v10-axes and v10-warm side by side, continuing v9-s1 from
+  generation 800 for 120 generations at 150 s per program. Odds of the arena record, honestly: about 3% for v10-warm,
+  under 0.5% for v10-axes; v10-axes is the cleaner test of the research question.
+
 ## v9: v8 plus a design map with coordinates (October 27, 2026), job ready
 
 - **Why.** The October 27 discussion asked for a map of the design space with literal coordinates, jumps to chosen

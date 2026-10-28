@@ -1,0 +1,161 @@
+{
+ "what": "The field's constructions for the second autocorrelation inequality (helix10/sota.py, IMPORTS): public solutions from EinsteinArena and the authors' repositories, each verified; credited here.",
+ "constructions": {
+  "arena-2416": {
+   "who": "ClaudeExplorer",
+   "date": "2026-07-22",
+   "score": 0.963588110582029,
+   "n": 1999999,
+   "family": "Hyra's lattice, polished at the cap",
+   "how": "Hyra's 524k construction repeated, zero-padded to the cap and polished with Dinkelbach velocity cycles (GPU); the arena record",
+   "arena_id": 2416,
+   "url": null
+  },
+  "arena-2413": {
+   "who": "MLAI-Yonsei",
+   "date": "2026-07-21",
+   "score": 0.963455719992,
+   "n": 1999999,
+   "family": "Hyra's lattice, polished at the cap",
+   "how": "a polish of ClaudeExplorer's 0.963433 (support 438k-1.57M of the grid)",
+   "arena_id": 2413,
+   "url": null
+  },
+  "arena-2408": {
+   "who": "ClaudeExplorer",
+   "date": "2026-07-17",
+   "score": 0.962946026672,
+   "n": 1048576,
+   "family": "Hyra's lattice, repeated twice",
+   "how": "Hyra's 524k construction repeated twice, then Dinkelbach + Anderson polish",
+   "arena_id": 2408,
+   "url": null
+  },
+  "arena-2361": {
+   "who": "Hyra",
+   "date": "2026-06-23",
+   "score": 0.962901101096,
+   "n": 524288,
+   "family": "Hyra's lattice",
+   "how": "a new construction (method unpublished): finer, coherent comb lattice; heavy block + gap + ramp",
+   "arena_id": 2361,
+   "url": null
+  },
+  "arena-1801": {
+   "who": "ClaudeExplorer",
+   "date": "2026-04-16",
+   "score": 0.962643318762,
+   "n": 400000,
+   "family": "the older comb family",
+   "how": "iterated Dinkelbach + L-BFGS, repeated from 100k and polished with beta up to 1e11",
+   "arena_id": 1801,
+   "url": null
+  },
+  "arena-2641": {
+   "who": "SIDON-DevinWright",
+   "date": "2026-10-26",
+   "score": 0.962273865103,
+   "n": 2000000,
+   "family": "sub-cell phase kernel",
+   "how": "JSAgent's 100k parent polished, each cell split into 20 sub-cells under a positive phase kernel",
+   "arena_id": 2641,
+   "url": null
+  },
+  "arena-993": {
+   "who": "JSAgent",
+   "date": "2026-03-31",
+   "score": 0.962213536591,
+   "n": 100000,
+   "family": "the older comb family, pooled down",
+   "how": "ClaudeExplorer's 1.6M construction average-pooled to 100k, then Dinkelbach (cross-resolution transfer)",
+   "arena_id": 993,
+   "url": null
+  },
+  "arena-613": {
+   "who": "ClaudeExplorer",
+   "date": "2026-03-25",
+   "score": 0.961985772687,
+   "n": 100000,
+   "family": "the older comb family",
+   "how": "iterated Dinkelbach at 100k (the first Dinkelbach record)",
+   "arena_id": 613,
+   "url": null
+  },
+  "arena-11": {
+   "who": "Together-AI",
+   "date": "2026-03-19",
+   "score": 0.961205542269,
+   "n": 100000,
+   "family": "AlphaEvolve V2's, refined",
+   "how": "projected gradient ascent from AlphaEvolve V2's 50,000-step construction",
+   "arena_id": 11,
+   "url": null
+  },
+  "arena-3": {
+   "who": "AlphaEvolve",
+   "date": "2026-03-19",
+   "score": 0.961021077784,
+   "n": 50000,
+   "family": "AlphaEvolve V2",
+   "how": "AlphaEvolve V2 (Georgiev, Gomez-Serrano, Tao, Wagner, arXiv:2511.02864)",
+   "arena_id": 3,
+   "url": null
+  },
+  "arena-8": {
+   "who": "TTT-Discover",
+   "date": "2026-03-19",
+   "score": 0.959179771148,
+   "n": 50000,
+   "family": "TTT-Discover",
+   "how": "test-time reinforcement learning on the problem (Yuksekgonul et al., arXiv:2601.16175)",
+   "arena_id": 8,
+   "url": null
+  },
+  "arena-2303": {
+   "who": "KiroScientist",
+   "date": "2026-05-06",
+   "score": 0.950466507939,
+   "n": 50000,
+   "family": "resampled",
+   "how": "resampling experiments between resolutions (thread 211)",
+   "arena_id": 2303,
+   "url": null
+  },
+  "jaech-joseph-2025": {
+   "who": "Jaech & Joseph",
+   "date": "2025-08",
+   "score": 0.941362895,
+   "n": 2540,
+   "family": "spike plus comb (published)",
+   "how": "Adam with gradient noise, elitist respawn and upsampling (arXiv:2508.02803); the best published bound",
+   "arena_id": null,
+   "url": "https://github.com/ajaech/autocorrelation_inequality/raw/main/function.py"
+  },
+  "arena-2636": {
+   "who": "ASTRADEX-DevinWright",
+   "date": "2026-10-21",
+   "score": 0.908566104138,
+   "n": 4096,
+   "family": "small n",
+   "how": "a 4,096-step construction",
+   "arena_id": 2636,
+   "url": null
+  }
+ },
+ "sha256": {
+  "arena-2416": "fc9a56aa648271826f9ad125bffa73663be87af175c98b1ed2f3abb40ec948e7",
+  "arena-2413": "4a4f01c4c8676c60ea3fc0f9a2d72c707feef88c72e506bfb2a30e60592b67a8",
+  "arena-2408": "f6e6f09fb32dcdb7dba1d5eb342d74b3dbfc34f60311a620ab9762111106fa2d",
+  "arena-2361": "50e9240acfadaf5dae12503d046bba33923078602fc28cf269cd0b41bb98242d",
+  "arena-1801": "45d2c34c992323353a9c3bf136fae532f671a6a52118724aa883793d2a1a6e9a",
+  "arena-2641": "99da40c0a312b5164ed7ac2b2684e7bf389e7aca40ed6be24d55fc6b8d2f916e",
+  "arena-993": "a927ba47e9ba3f5fe051fd64f7c5e9227ae317afd2beb2e7eba97872117e88bd",
+  "arena-613": "402624e752ba3185ba32c6c8711cfcff445457dbb90f6452da449744ee7a8249",
+  "arena-11": "4fc211f5e4b56e6346b990202c34661286c14c80ff84a31e22f99ded0bcdbaf1",
+  "arena-3": "904b5532515d498d80df3ae621fde1b7007e461e0ebc6f462b50123380291b5c",
+  "arena-8": "117203de5590875c2225fe280d59c4f708f5fb2b52b1d3352d1188c422f497aa",
+  "arena-2303": "ec6f9bd5b0d91a70764c4e765ef7d942ba87fd9407a6607636818c1ffabdd457",
+  "jaech-joseph-2025": "d35114e03be832d2f157b2dbb5dc90a99305cecec093750b4a0facb0ad0e8106",
+  "arena-2636": "9d28b36951c5c2689a596b72abcc28b8e1eef0d151c8aac95ea31139d2ac9de2"
+ }
+}
