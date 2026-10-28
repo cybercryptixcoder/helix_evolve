@@ -4,6 +4,24 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 28, 2026 (evening): v10, the field's axes, two runs
+
+- **Research** (docs/AC2_SOTA.md): the record is 0.963588110582 (arena #1; a new arena #1 needs 0.963598), not
+  0.97. Read all 30 arena threads (120 replies), the arena's top 30 solutions, ClaudeExplorer's repo and the notes
+  behind the July record, JSAgent's wiki, Together AI's repo, Jaech & Joseph's construction and the papers. Families:
+  Hyra's fine coherent lattice (the record and its predecessors are polishes of it), the older comb family,
+  AlphaEvolve V2's triplets, TTT-Discover's. 14 constructions verified and stored (data/field_ac2, 13 MB).
+- **Measured:** the field's iterated Dinkelbach polish (rewritten for one CPU core) on the record: +3.40e-8, +3.3e-9,
+  +4.2e-10, +3.9e-11, then about 1.4e-11 a round (+3.79e-8 after eight 133 s rounds; the arena's gate is 1e-5). On our 0.94144:
+  +7e-9, then nothing. At 2M one evaluation with its gradient takes 0.5 s on one core.
+- **Built v10** (docs/V10_DESIGN.md, helix10/): borrowed axes with exploration bias, field findings in the Atlas,
+  the warm mode (imports and the field's methods as programs), v9's race and budget failures fixed, 2M constructions
+  with references and clean-up. Tests: tests/test_helix10.py (9).
+- **The job** (docs/V10_JOB.md, scripts/run_v10.sh): MODE=axes and MODE=warm side by side; the first to reach the
+  vault also uploads v9-s1's 298 missing constructions (v9's pending task). Tested live end to end (see V10_JOB.md).
+
+---
+
 ## October 28, 2026 (early morning): the axes, warm starts, discovery and model intelligence
 
 - **Discussed** (verbatim record: `docs/CONVERSATION_2026-10-28.md`): finding all the axes (not provable for an open

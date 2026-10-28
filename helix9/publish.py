@@ -31,10 +31,11 @@ import sys
 from pathlib import Path
 
 CHUNK_MB = float(os.environ.get("PUBLISH_CHUNK_MB", "4"))     # raw size a chunk aims at (chosen once per file)
-PLAIN = ("state.json", "summary.json", "history.jsonl", "noise.json", "codebook.json", "env.json")
+PLAIN = ("state.json", "summary.json", "history.jsonl", "noise.json", "codebook.json", "env.json", "borrowed.json",
+         "gc.jsonl")
 CHUNKED = ("programs.jsonl", "trace.jsonl", "tracks.jsonl", "hills.jsonl", "plans.jsonl", "findings.jsonl",
            "codebook.jsonl", "coords.jsonl", "annotations.jsonl", "discoveries.jsonl", "rebuilt.jsonl",
-           "signatures.jsonl")
+           "signatures.jsonl", "refs.jsonl")
 FULL_ONLY = ("best.py", "best.npy")
 
 
