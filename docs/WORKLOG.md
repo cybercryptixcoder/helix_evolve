@@ -4,6 +4,28 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 27, 2026 (night): the research question, and the case for it
+
+- **The request** (22:59): survey further as the research agent, conceptually and constructively, and make the case
+  for a paper worth reading (the research question as the crux, Helix as the method, records as results).
+- **The question** (`docs/RESEARCH_CASE.md`): can a discovery system map the space it searches, steer to where its
+  model would not go, and change that space when it runs dry? Principle: make the design space explicit, move in it on
+  purpose, change it when it is exhausted. Three ways past a model's prior: re-weight (selection), retrain (weights),
+  re-represent (the prompt, conditioned on a map); Helix is the third, without training.
+- **Why now**: the field's own results point there: Artificial Hivemind (NeurIPS 2025 best paper), RL bounded by the
+  base model (NeurIPS 2025 runner-up), PlanSearch (ICLR 2025), LLMs fail to explore without summary statistics
+  (NeurIPS 2024), Simple Baselines (search space over search algorithm), EvoTrace (30% re-introduced lines), Georgiev
+  et al. (prompt framing is a hidden input), a NeurIPS 2026 workshop on diversity-driven search, and a 2026 debate on
+  whether AI can change its own conceptual space (Boden's transformational creativity).
+- **Three research questions**: RQ1 where searches go and why they stall (priors and trajectories read onto the map,
+  including EvoTrace's public runs); RQ2 can a search map its space and steer by it (validity; matched budget against
+  simple, framework and generic-diversity baselines); RQ3 can it change its space, and do breakthroughs come from that
+  (invariants, as in insight by constraint relaxation; plateau timing; replays).
+- **The plan**: six work packages to NeurIPS 2027 (projected May 21), pilots by December 20; about 2,500 CPU-hours and
+  $2,000-5,000 of model calls (estimates).
+
+---
+
 ## October 27, 2026 (late): the publication bar, and a research direction
 
 - **The request** (22:29): the advisor asked what a publication in this area looks like (one problem, or a method
