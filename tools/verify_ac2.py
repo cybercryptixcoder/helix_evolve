@@ -47,8 +47,14 @@ ALPHAEVOLVE_MAY_2025 = [
 
 
 def deepmind_score(heights):
-    """DeepMind's verification cell, ported line by line (only the loop is vectorised)."""
-    convolution_2 = np.convolve(heights, heights)
+    """DeepMind's verification cell, ported line by line (only the loop is vectorised; above 200,000 steps the
+    convolution is done by FFT, since np.convolve's direct sum would take days at 2,000,000)."""
+    h = np.asarray(heights, dtype=float)
+    if len(h) <= 200_000:
+        convolution_2 = np.convolve(h, h)
+    else:
+        from scipy.signal import fftconvolve
+        convolution_2 = fftconvolve(h, h)
     num_points = len(convolution_2)
     x_points = np.linspace(-0.5, 0.5, num_points + 2)
     x_intervals = np.diff(x_points)
@@ -74,6 +80,8 @@ def exact_score(heights):
     """
     h = np.asarray(heights, dtype=float)
     n = len(h)
+    if n > 400_000:
+        return None, "skipped above 400,000 steps (too slow in exact integers); the arena's own verifier is the judge"
     if n <= 12000:
         fr = [Fraction(float(x)) for x in h]
         den = max(f.denominator for f in fr)
@@ -105,18 +113,41 @@ def exact_score(heights):
     return _ratio(conv, int(hi.sum()) ** 2), "exact, heights rounded at 2^30, integer convolution by limbs (checked)"
 
 
-def verify(heights, label=""):
-    h, problem = ac2.check(np.asarray(heights, dtype=float))
+def arena_score(h):
+    """EinsteinArena's verifier for this problem (problem 3, as its API publishes it), line by line."""
+    from scipy.signal import oaconvolve
+    f = np.maximum(np.asarray(h, dtype=float), 0.0)
+    convolution = oaconvolve(f, f, mode="full")
+    num_conv_points = len(convolution)
+    x_points = np.linspace(-0.5, 0.5, num_conv_points + 2)
+    x_intervals = np.diff(x_points)
+    y_points = np.concatenate(([0], convolution, [0]))
+    y1, y2 = y_points[:-1], y_points[1:]
+    l2_norm_squared = float(np.sum((x_intervals / 3) * (y1 ** 2 + y1 * y2 + y2 ** 2)))
+    norm_1 = np.sum(np.abs(convolution)) / (num_conv_points + 1)
+    norm_inf = np.max(np.abs(convolution))
+    return float(l2_norm_squared / (norm_1 * norm_inf))
+
+
+def verify(heights, label="", max_n=None):
+    old = ac2.MAX_N
+    ac2.MAX_N = max(old, int(max_n or 0))           # v4.7 and later allow larger constructions (v10: 2,000,000)
+    try:
+        h, problem = ac2.check(np.asarray(heights, dtype=float))
+    finally:
+        ac2.MAX_N = old
     if h is None:
         return {"label": label, "valid": False, "problem": problem}
-    out = {"label": label, "valid": True, "N": int(len(h)), "helix": ac2.score(h), "deepmind_code": deepmind_score(h)}
+    out = {"label": label, "valid": True, "N": int(len(h)), "helix": ac2.score(h), "deepmind_code": deepmind_score(h),
+           "arena_code": arena_score(h)}
     frac, how = exact_score(h)
     out["exact_how"] = how
     if frac is not None:
         out["exact"] = float(frac)
         out["exact_str"] = str(frac.numerator * 10 ** 12 // frac.denominator).rjust(13, "0")
         out["exact_str"] = out["exact_str"][:-12] + "." + out["exact_str"][-12:]
-    out["agree"] = abs(out["helix"] - out["deepmind_code"]) < 1e-9 and (frac is None or abs(float(frac) - out["helix"]) < 1e-7)
+    out["agree"] = (abs(out["helix"] - out["deepmind_code"]) < 1e-9 and abs(out["helix"] - out["arena_code"]) < 1e-9
+                    and (frac is None or abs(float(frac) - out["helix"]) < 1e-7))
     return out
 
 

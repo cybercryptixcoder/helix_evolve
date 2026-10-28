@@ -164,9 +164,10 @@ FINDINGS = [
      "empty band beside it, a graded ramp of bumps over the rest (mirroring f leaves R unchanged). Hyra's comb is a "
      "fine coherent lattice: period 2.8e-3 of n, coherence 0.86, against 5.4e-3 and 0.39 for the older family.",
      thread(254)),
-    ("Near the optimum f*f is two-level: about 41% of lags within 1% of the max. With phi = g/max g, 1 - R = "
+    ("Near the optimum f*f is two-level (41% of lags within 1% of the max). With phi = g/max g, 1 - R = "
      "sum phi(1 - phi) / sum phi: about 2/3 of the loss lives in the level transitions (phi in [0.1, 0.9]), under 5% "
-     "of the lags; crossings are 8-11 cells wide at best.", CE12),
+     "of the lags. Crossings are 8-11 cells wide at best, but a tail of wide ramps carries most of the transition loss; "
+     "narrowing them to that floor would be worth about +0.019 (their estimate).", CE12),
     ("The record (0.963588 at 2M) is a kinked vertex: its max is unique to 1e-10; about 4,000 lags lie within 1e-8 "
      "of it and 322,000 within 1e-7. Every smooth direction lowers R; exact single-coordinate moves still gain about "
      "1e-10 each. The Dinkelbach polish on one CPU core gains +3.4e-8 in 133 s, +3.8e-8 in 18 minutes, then nothing.",

@@ -180,3 +180,11 @@ def test_the_fields_constructions_are_verified_on_reading(tmp_path, field_dir):
 def test_the_target_is_the_record_plus_the_arenas_gate():
     assert abs(sota.ARENA_TARGET - 0.963598110582029) < 1e-15
     assert all(len(c) <= 400 for c, _ in sota.FINDINGS)
+
+
+def test_the_verifier_judges_two_million_steps_with_the_arenas_code(field_dir):
+    from tools.verify_ac2 import verify
+    r = verify(np.load(field_dir / "arena-2416.npy"), "record", max_n=2_000_000)
+    assert r["valid"] and r["agree"] and r["N"] == 1_999_999
+    assert abs(r["arena_code"] - sota.RECORD["score"]) < 1e-12
+    assert not verify(np.load(field_dir / "arena-2416.npy"), "record")["valid"]      # the default limit still holds
