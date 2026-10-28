@@ -366,3 +366,42 @@ def test_the_job_repairs_lines_cut_off_by_a_hard_stop(tmp_path):
     assert sorted(repair_jsonl(tmp_path)) == ["a.jsonl", "c.jsonl"]
     assert (tmp_path / "a.jsonl").read_text() == '{"x": 1}\n{"x": 2}\n'
     assert (tmp_path / "b.jsonl").read_text() == '{"x": 1}\n' and (tmp_path / "c.jsonl").read_text() == '{"x": 1}\n'
+
+
+def test_the_vault_uploads_every_verified_construction_and_restores_them(tmp_path, monkeypatch):
+    """helix9/vault.py's logic, against a stand-in for GitHub's releases (the real API is exercised on the VM)."""
+    import shutil as _sh
+    from helix9 import vault
+    r = fake_run(tmp_path / "run", gens=2)
+
+    class FakeGitHub:
+        def __init__(self):
+            self.rel, self.store, self.uploads = None, tmp_path / "release", 0
+            self.store.mkdir()
+
+        def release(self, tag, create=False, note=""):
+            if self.rel is None and create:
+                self.rel = {"tag": tag, "upload_url": "x{?name}", "assets": []}
+            if self.rel is not None:
+                self.rel["assets"] = [{"name": f.name, "id": f.name, "url": str(f)} for f in self.store.iterdir()]
+            return self.rel
+
+        def upload(self, rel, path, name):
+            self.uploads += 1
+            _sh.copy(path, self.store / name)
+
+        def download(self, asset, dest):
+            _sh.copy(asset["url"], dest)
+    gh = FakeGitHub()
+    monkeypatch.setattr(vault, "CHUNK_MB", 0.0001)               # one construction per file
+    cons = tmp_path / "run" / "constructions"
+    wrong = next(q.id for q in r.archive.valid() if (cons / f"{q.id}.npy").exists() and q.role != "seed")
+    np.save(cons / f"{wrong}.npy", np.load(cons / f"{wrong}.npy") * 2 + 1)   # a wrong one: left out
+    man = vault.upload(tmp_path / "run", [str(cons)], "t", log=lambda m: None, gh=gh)
+    assert man["rejected"] >= 1 and wrong not in man["sha256"] and man["verified"] > 3
+    assert len(man["files"]) == man["verified"]
+    assert vault.upload(tmp_path / "run", [str(cons)], "t", log=lambda m: None, gh=gh) is None   # complete already
+    n = vault.download("t", tmp_path / "restored", log=lambda m: None, gh=gh)
+    assert n == man["verified"]
+    for pid in man["sha256"]:
+        assert np.array_equal(np.load(tmp_path / "restored" / f"{pid}.npy"), np.load(cons / f"{pid}.npy"))
