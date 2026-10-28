@@ -79,8 +79,15 @@ def sha(arr):
     return hashlib.sha256(np.ascontiguousarray(np.asarray(arr, dtype=float)).tobytes()).hexdigest()
 
 
-def problem_module(name):
-    return importlib.import_module(f"helix4.problems.{name}")
+def problem_module(name, config=None):
+    """The problem's scorer, with the run's own size limit (v4.7 and later raise ac2's step limit with `max_n`; judging
+    a run's constructions by the module's default limit rejected valid ones)."""
+    mod = importlib.import_module(f"helix4.problems.{name}")
+    max_n = (config or {}).get("max_n")
+    if max_n and getattr(mod, "MAX_N", None) and int(max_n) > int(mod.MAX_N):
+        from helix47.run import ProblemView
+        return ProblemView(mod, max_n)
+    return mod
 
 
 def verify(problem, arr, p, rtol=1e-12):
@@ -151,7 +158,7 @@ def build(run, search, out=None, budget_mb=80.0, problem=None, chunk_mb=40.0, ba
     run = Path(run)
     out = Path(out) if out else run / "pack"
     state = json.loads((run / "state.json").read_text()) if (run / "state.json").exists() else {}
-    prob = problem_module(problem or (state.get("config") or {}).get("problem") or "ac2")
+    prob = problem_module(problem or (state.get("config") or {}).get("problem") or "ac2", state.get("config"))
     order, progs = priorities(run)
     folders = [Path(f) for f in search if f and Path(f).is_dir()]
     found, rejected, missing = {}, {}, []

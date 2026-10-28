@@ -64,7 +64,12 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   reliably after the map's upkeep, which live testing showed was needed: without it the map grew to 874 decisions; the
   model ranks later changes weakly, +0.06 to +0.16), the job end to end with a stop and resume, a cold run, and the
   planted problem (the real coder built 8 of 9 target decisions; the run reached the planted taller hill).
-- **Status:** job ready, not run on the VM yet.
+- **The job's result** (`docs/V9_RESULTS.md`): 100 generations, the record moved by 2.5e-13. The map ran as designed, but
+  exploration was starved: flips and ablations that landed back on the record's hill tied it and held the race's slots
+  (117 of 199 exploration experiments), so 49 new explorations got one experiment each; drops near the record landed at
+  0.58-0.85 and were never climbed; 42% of asked-for decision values landed. Eight distinct hills top out within 3e-7
+  of 0.94144: the current space may be saturated there.
+- **Status:** run; analysed. v10 is Shreyas's to design.
 
 ## v8: v7 plus a register of hills (October 24, 2026), job ready
 

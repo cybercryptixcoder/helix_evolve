@@ -404,7 +404,10 @@ $NICE_CMD "$PY" -m helix9.pack build --run "$DIR" --search "$DIR/constructions" 
 git_push "$MSG" "$RESULTS"
 if [ "$PUSH" = "1" ]; then
   echo "== every construction of $NAME to GitHub, as release constructions-$NAME-g$done_gens"
-  if $NICE_CMD "$PY" -m helix9.vault upload --run "$DIR" --folder "$DIR/constructions" --tag "constructions-$NAME-g$done_gens" >> "$LOG" 2>&1; then
+  # only what the source's release doesn't hold, naming it as the base: a download of this release restores the chain
+  VBASE=""; "$PY" -m helix9.vault exists --tag "$SRC_TAG" > /dev/null 2>&1 && VBASE="$SRC_TAG"
+  if $NICE_CMD "$PY" -m helix9.vault upload --run "$DIR" --folder "$DIR/constructions${LOCAL_HAVE:+,$LOCAL_HAVE}" \
+      --tag "constructions-$NAME-g$done_gens" --base "$VBASE" >> "$LOG" 2>&1; then
     grep -E "^vault:" "$LOG" | tail -1 | sed 's/^/   /'
   else
     echo "   (the upload failed: $(grep -E '^vault:' "$LOG" | tail -1); the constructions stay in $DIR/constructions; running this script again retries)"
