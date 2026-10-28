@@ -4,6 +4,22 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 28, 2026: the v9 job analysed; constructions on GitHub made complete
+
+- **The v9 job** (`docs/V9_RESULTS.md`): record +2.5e-13 over generations 701-800. 70% of experiments worked on the
+  record's hill (4.7 of 6 programs a generation handed back their start). The race was captured by flips and
+  ablations that tied the record on its own hill; 49 new explorations got one experiment each; drops landed at
+  0.58-0.85 and never climbed; 42% of asked-for decision values landed; 8 hills top out within 3e-7 of 0.94144.
+- **Lossless from GitHub:** 298 valid constructions were missing from the releases because the uploader used the
+  default 200,000-step limit instead of the run's 1,000,000 (also the cause of v8's 206 "failed verification").
+  Fixed in `helix9/pack.py` and `helix9/vault.py`; releases now name their base releases and a download restores the
+  chain; the job's end-of-run upload builds on its source's release. Tests pass; the chain reading checked live on
+  the real releases. One upload remains, on the VM (prompt in `docs/V9_RESULTS.md`).
+- **Shreyas's v10 ideas** (to discuss, not built): drop many far-apart points, climb each quickly, keep the best hills,
+  drop again away from explored regions; reject hills quickly.
+
+---
+
 ## October 27, 2026 (night): the research question, and the case for it
 
 - **The request** (22:59): survey further as the research agent, conceptually and constructively, and make the case

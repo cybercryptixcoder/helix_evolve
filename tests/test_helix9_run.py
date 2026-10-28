@@ -405,3 +405,55 @@ def test_the_vault_uploads_every_verified_construction_and_restores_them(tmp_pat
     assert n == man["verified"]
     for pid in man["sha256"]:
         assert np.array_equal(np.load(tmp_path / "restored" / f"{pid}.npy"), np.load(cons / f"{pid}.npy"))
+
+
+def test_a_release_builds_on_its_base_and_restores_the_whole_chain(tmp_path, monkeypatch):
+    """A later release holds only what its base releases lack; downloading it restores everything."""
+    import shutil as _sh
+    from helix9 import vault
+    r = fake_run(tmp_path / "run", gens=2)
+
+    class FakeGitHub:
+        def __init__(self):
+            self.rels = {}
+
+        def release(self, tag, create=False, note=""):
+            if tag not in self.rels and create:
+                (tmp_path / "rel" / tag).mkdir(parents=True)
+                self.rels[tag] = {"tag": tag, "upload_url": f"{tag}{{?name}}"}
+            if tag not in self.rels:
+                return None
+            d = tmp_path / "rel" / tag
+            self.rels[tag]["assets"] = [{"name": f.name, "id": f.name, "url": str(f)} for f in d.iterdir()]
+            return self.rels[tag]
+
+        def upload(self, rel, path, name):
+            _sh.copy(path, tmp_path / "rel" / rel["tag"] / name)
+
+        def download(self, asset, dest):
+            _sh.copy(asset["url"], dest)
+    gh = FakeGitHub()
+    cons = tmp_path / "run" / "constructions"
+    ids = sorted(q.id for q in r.archive.valid() if (cons / f"{q.id}.npy").exists())
+    first = tmp_path / "first"
+    first.mkdir()
+    for pid in ids[: len(ids) // 2]:
+        _sh.copy(cons / f"{pid}.npy", first / f"{pid}.npy")
+    m1 = vault.upload(tmp_path / "run", [str(first)], "a", log=lambda m: None, gh=gh)
+    m2 = vault.upload(tmp_path / "run", [str(cons)], "b", log=lambda m: None, gh=gh, base=["a"])
+    assert m2["base"] == ["a"] and m2["in_base"] == m1["verified"]
+    assert not set(m1["sha256"]) & set(m2["sha256"])                  # nothing uploaded twice
+    n = vault.download("b", tmp_path / "restored", log=lambda m: None, gh=gh)
+    assert n == m1["verified"] + m2["verified"] == len(ids)
+    for pid in ids:
+        assert np.array_equal(np.load(tmp_path / "restored" / f"{pid}.npy"), np.load(cons / f"{pid}.npy"))
+
+
+def test_the_pack_judges_constructions_by_the_runs_own_step_limit():
+    from helix9.pack import problem_module, verify
+    from helix4.problems import ac2
+    a = np.random.default_rng(0).random(ac2.MAX_N + 10)
+    rec = {"score": float(ac2.score(a)), "n": a.size}
+    assert not verify(problem_module("ac2"), a, rec)[0]
+    assert verify(problem_module("ac2", {"max_n": 1_000_000}), a, rec)[0]
+    assert ac2.MAX_N == 200_000                                        # the module itself is left unchanged

@@ -134,21 +134,52 @@ class GitHub:
 
 
 # ---------------------------------------------------------------------------------------------- upload / download
-def upload(run, folders, tag, log=print, gh=None):
-    """Every verified construction of the run's programs into release `tag`. Returns the manifest."""
+def manifest_of(tag, gh):
+    """The manifest of release `tag`, or None."""
+    rel = gh.release(tag)
+    assets = {a["name"]: a for a in (rel or {}).get("assets", [])}
+    if "manifest.json" not in assets:
+        return None
+    tmp = Path(tempfile.mkdtemp(prefix="vault-", dir=os.environ.get("VAULT_TMP") or None))
+    try:
+        gh.download(assets["manifest.json"], tmp / "manifest.json")
+        return json.loads((tmp / "manifest.json").read_text())
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def held_by(tags, gh):
+    """{program id: tag} for every construction the releases `tags` (and their own bases) hold."""
+    held = {}
+    for tag in tags or []:
+        man = manifest_of(tag, gh)
+        if man is None:
+            raise RuntimeError(f"base release {tag} is missing or incomplete")
+        held.update(held_by(man.get("base"), gh))
+        held.update({pid: tag for pid in man["sha256"]})
+    return held
+
+
+def upload(run, folders, tag, log=print, gh=None, base=None):
+    """Every verified construction of the run's programs into release `tag`, except those the releases `base` already
+    hold (a download of `tag` restores those too). Returns the manifest."""
     run = Path(run)
     gh = gh or GitHub()
+    base = [b for b in (base or []) if b and b != tag]
+    held = held_by(base, gh)
     rel = gh.release(tag, create=True, note=f"Every verified construction of {run.name} (helix9/vault.py).")
     have = {a["name"]: a for a in rel.get("assets", [])}
     if "manifest.json" in have:
         log(f"vault: {tag} is complete already ({len(have) - 1} files)")
         return None
     state = json.loads((run / "state.json").read_text()) if (run / "state.json").exists() else {}
-    prob = problem_module((state.get("config") or {}).get("problem") or "ac2")
+    prob = problem_module((state.get("config") or {}).get("problem") or "ac2", state.get("config"))
     progs = [p for p in jl(run / "programs.jsonl") if p.get("valid") and p.get("score") is not None]
     folders = [Path(f) for f in folders if f and Path(f).is_dir()]
     found, rejected, missing = {}, 0, 0
     for p in progs:
+        if p["id"] in held:
+            continue
         seen = False
         for f in folders:
             c = f / f"{p['id']}.npy"
@@ -168,7 +199,8 @@ def upload(run, folders, tag, log=print, gh=None):
                 missing += 1
     ids = sorted(found, key=lambda pid: int(pid[1:]) if pid[1:].isdigit() else 0)
     manifest = {"run": run.name, "tag": tag, "programs": len(progs), "verified": len(ids), "rejected": rejected,
-                "missing": missing, "files": {}, "sha256": {}}
+                "missing": missing, "base": base, "in_base": sum(p["id"] in held for p in progs),
+                "files": {}, "sha256": {}}
     tmp = Path(tempfile.mkdtemp(prefix="vault-", dir=os.environ.get("VAULT_TMP") or None))
     try:
         part, chunk, size = 0, {}, 0
@@ -201,13 +233,18 @@ def upload(run, folders, tag, log=print, gh=None):
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     log(f"vault: {tag}: {len(ids)} of {len(progs)} constructions verified and uploaded in {part} files "
-        f"({rejected} failed the check, {missing} not found)")
+        f"({manifest['in_base']} held by {', '.join(base) or 'no base'}, {rejected} failed the check, {missing} not found)")
     return manifest
 
 
-def download(tag, out, log=print, gh=None):
-    """Restores release `tag` into folder `out` (each array checked against its SHA-256). Returns the count."""
+def download(tag, out, log=print, gh=None, _seen=None):
+    """Restores release `tag`, and first the releases it names as its base, into folder `out` (each array checked
+    against its SHA-256). Returns the count."""
     gh = gh or GitHub()
+    _seen = _seen if _seen is not None else set()
+    if tag in _seen:
+        return 0
+    _seen.add(tag)
     rel = gh.release(tag)
     if rel is None:
         raise SystemExit(f"vault: no release {tag}")
@@ -221,6 +258,8 @@ def download(tag, out, log=print, gh=None):
         gh.download(assets["manifest.json"], tmp / "manifest.json")
         man = json.loads((tmp / "manifest.json").read_text())
         n, bad = 0, []
+        for b in man.get("base") or []:
+            n += download(b, out, log=log, gh=gh, _seen=_seen)
         for name, pids in man["files"].items():
             if all((out / f"{pid}.npy").exists() for pid in pids):
                 n += len(pids)
@@ -250,6 +289,7 @@ def main(argv=None):
     u.add_argument("--run", required=True)
     u.add_argument("--folder", required=True, help="comma-separated folders of <id>.npy constructions")
     u.add_argument("--tag", required=True)
+    u.add_argument("--base", default="", help="comma-separated releases already holding part of the run")
     d = sub.add_parser("download")
     d.add_argument("--tag", required=True)
     d.add_argument("--out", required=True)
@@ -265,7 +305,7 @@ def main(argv=None):
 
 def _main(a):
     if a.cmd == "upload":
-        upload(a.run, a.folder.split(","), a.tag)
+        upload(a.run, a.folder.split(","), a.tag, base=[b for b in a.base.split(",") if b])
     elif a.cmd == "download":
         download(a.tag, a.out)
     else:
