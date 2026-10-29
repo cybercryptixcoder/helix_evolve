@@ -1,0 +1,61 @@
+{
+ "file": "hills.jsonl",
+ "lines_per_chunk": 104,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 104,
+   "sha256": "1362cfd61aa828d88687d2f0959059f2838fd82dcc13c4f735757921e55925f1",
+   "gens": [
+    291,
+    394
+   ]
+  },
+  {
+   "name": "part-0002.jsonl.gz",
+   "lines": 104,
+   "sha256": "6b88830e5eef8fea39d0669bf1d93924f4be1bc78cd5508331976dc50ed07ad0",
+   "gens": [
+    395,
+    498
+   ]
+  },
+  {
+   "name": "part-0003.jsonl.gz",
+   "lines": 104,
+   "sha256": "521ceb6c7546ba3eadbc4a39c29f089c32b24f1d1a6c1da2bebf08ce3f4ee52a",
+   "gens": [
+    499,
+    602
+   ]
+  },
+  {
+   "name": "part-0004.jsonl.gz",
+   "lines": 104,
+   "sha256": "dcbbb17976cdcc0e3e28b537f38e2c262cd5f1e95214d056f24b5eb7ed745109",
+   "gens": [
+    603,
+    706
+   ]
+  },
+  {
+   "name": "part-0005.jsonl.gz",
+   "lines": 104,
+   "sha256": "ea219ee61617808f21c3adfb1a122d36e40057fa7b760f72edbd09719aa56010",
+   "gens": [
+    707,
+    810
+   ]
+  },
+  {
+   "name": "part-0006.jsonl.gz",
+   "lines": 1,
+   "sha256": "854c93a55e35c3a5b0c381d5ad60eeaaac33d74397201996a0df4546162e9818",
+   "gens": [
+    811,
+    811
+   ]
+  }
+ ],
+ "lines": 521
+}
