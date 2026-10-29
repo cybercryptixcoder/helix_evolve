@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 54)
+## The climb, by generation (every run has finished 55)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -12,7 +12,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 20 | 0.904080512 | 0.862784436 |
 | 30 | 0.945939512 | 0.864678463 |
 | 40 | 0.946464794 | 0.866112124 |
-| 54 | 0.946542298 | 0.904522743 |
+| 55 | 0.946542588 | 0.904522743 |
 
 ## The climb, by CPU (11.1 CPU hours on programs so far)
 
@@ -28,7 +28,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 54 | 335 | 11.7 | 974 | 10,548,294 | 0.946542298319 (p0335) |
+| v102-helix | 55 | 342 | 11.9 | 992 | 10,801,255 | 0.946542587548 (p0341) |
 | v102-helix-s2 | 56 | 350 | 11.1 | 989 | 10,544,952 | 0.904522743418 (p0328) |
 
 ## Against the published LLM-driven systems
@@ -49,17 +49,17 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.946542298319 (p0335, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.946542587548 (p0341, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 8 (8 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 54 | 0.946542298 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 55 | 0.946542298 | running | yes |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 20 | 0.913710213 | running |  |
-| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 26 | 0.866743679 | running |  |
-| T7 | A17 -> Small-mass runs of f first | 5 | 25 | 0.840084457 | running |  |
+| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 27 | 0.866802859 | running |  |
+| T7 | A17 -> Small-mass runs of f first | 5 | 26 | 0.840084457 | running |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 6 | 0.809568289 | running |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
