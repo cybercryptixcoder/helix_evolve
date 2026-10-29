@@ -55,6 +55,18 @@ has stopped after N min", the preflight, the warm start ("size class n <= 100,00
 first generation; in v101_field.log, the streams starting once the runs exist. Restarting any of them is the same
 command; each resumes.
 
+### Tested live (October 28, 21:00-21:35, real model, as the VM will run it; 120 s per program to keep it short)
+
+| Step | Result |
+| --- | --- |
+| The pause | a live v10-axes job mid-generation got one stop signal from v101-axes; it finished its generation, published, packed and exited after 8 minutes; v101-axes waited for its lock and continued from its generation 801 |
+| Warm starts | axes: the class's record is ours (0.941441744, 92,514 steps once trimmed); warm: JSAgent's seed imported, the field's methods on it (+2.4e-11), main track reset to it; the 2M imports stay known but out of the class |
+| A generation each | 8 min (axes) and 7 min (warm) with the bar running alongside; the planner built borrowed flips (Adam with elitist respawn, a piecewise-constant autoconvolution, zero-padding to the step limit) |
+| The bar | the field's program from the same starts: +7.4e-9 on ours, +3e-11 on the seed and flat after 4 rounds; from nothing, 0.849 after 2 rounds |
+| The comparison | `COMPARISON.md` written by every push of every job |
+| The invariant audit | first version: the real model called the scorer's formula and the timing code "decisions", and they were confirmed. Fixed: both readings get the full problem statement and must each sort an item as a design decision, and one the map already has is dropped. Rerun live: the scorer and the convolution routine were sorted out; kept were real choices (no auxiliary variable for the max; a single trajectory, not a population; no imposed structure; the best exact iterate is returned) |
+| Also found and fixed | the bar read a run's state mid-warm-start (now waits for the finished v10.1 start); another run's folder reused program ids (extents now verified by length and score; a job reads only its own mode's v10 folder); the comparison looked for the bar in the wrong folder |
+
 ---
 
 ## v10 (the first two runs, at 2,000,000 steps; paused by v10.1)

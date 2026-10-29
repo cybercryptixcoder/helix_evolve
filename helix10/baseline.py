@@ -187,7 +187,8 @@ def report(root, out=None):
              "| Run | Start | Best | Gain | CPU (s) | The field's program, same start and CPU | Its CPU (s) | Helix ahead by |",
              "|---|---|---|---|---|---|---|---|"]
     fst = {}
-    for f in sorted((root / "field" / "streams").glob("*.json")) if (root / "field" / "streams").exists() else []:
+    sdir = next((d for d in (root / "v101-field" / "streams", root / "field" / "streams") if d.exists()), None)
+    for f in sorted(sdir.glob("*.json")) if sdir else []:
         s = json.loads(f.read_text())
         fst[s["name"]] = s
     for mode in ("axes", "warm"):

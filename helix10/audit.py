@@ -10,9 +10,12 @@ they can be varied. One round:
    (1) a constraint of the problem (not an axis), (2) a detail below the level of design (Python, arrays, floating
    point), or (3/4) a real design decision that could be made otherwise, with 2-3 concrete alternatives. Decisions
    already on the map are shown so they aren't repeated.
-2. **Verify.** A second reading, on a different sample (the best programs of other tracks, recent programs), checks
-   each proposed decision program by program. It counts only if at least `min_share` of them do the same thing: the
-   describer can't invent an invariant, and one it misreads in a single program doesn't survive.
+2. **Verify.** A second reading, on a different sample (the best programs of other tracks, recent programs), sorts
+   each proposed decision again, independently, and checks it program by program. It counts only if that reading also
+   calls it a design decision and at least `min_share` of the programs do the same thing: the describer can't invent
+   an invariant, and a constraint of the problem or a computing detail misread as a decision doesn't survive (found
+   live: a first reading called the scorer's formula and the timing code "decisions"), and one the map already has in
+   other words is dropped too. Both readings get the full problem statement, so they can tell what the problem fixes.
 3. **Split.** Each confirmed invariant becomes a decision on the map: the shared choice as one option, the alternatives
    as the others, queued as targets exactly like the field's options (helix10/run.py: every one is built as a flip of
    the record, then raced). Building the alternatives is what tells "varyable but irrelevant" (the race stops them; the
@@ -47,16 +50,22 @@ PROPOSE = """{problem}
 List what EVERY one of these programs does the same way, at the level of design concepts: how the solution is \
 represented (its form, its size, its grid), what is optimised and how the maximum or other hard parts are handled, \
 how the search starts, what moves it makes, what it accepts, how it spends its time, what it assumes about the \
-solution's shape. Sort each item:
-- "problem": a constraint of the problem itself, which every valid program must respect (not a choice);
-- "detail": below the level of design (the language, libraries, numeric types, array layout, logging, timing code);
-- "decision": a real design choice that some program could make differently. For each, give 2-3 concrete \
-alternatives a program could build instead, each in at most 15 words.
+solution's shape. Sort each item strictly:
+- "problem": fixed by the problem statement above, so every valid program must do it: how the score is defined or \
+computed, the form of a valid answer, the interface, the time limit. Not a choice.
+- "detail": how a program computes or organises things without changing which solution it finds: the convolution \
+routine (direct or FFT), how time is measured or enforced, caching, numeric types, array layout, logging.
+- "decision": a choice about the solution or the search that could change which solution is found or how good it is. \
+For each, give 2-3 concrete alternatives a program could build instead, each in at most 15 words.
+When unsure between "decision" and the other two, choose the other two: a false "decision" wastes experiments.
 
 Answer: {{"invariants": [{{"what": "...", "category": "problem" | "detail" | "decision", "alternatives": ["...", \
-"..."], "why": "one line: why another choice might matter here"}}]}} with at most 8 items, decisions first."""
+"..."], "why": "one line: why another choice might change the result"}}]}} with at most 8 items, decisions first."""
 
 VERIFY = """{problem}
+
+## Decisions already on the design map
+{known}
 
 ## The claims to check: each says something every program does
 {claims}
@@ -65,10 +74,18 @@ VERIFY = """{problem}
 {programs}
 
 ## Your task
-For each claim and each program, in order, say whether the program does that same thing (true) or something \
-different (false). If a program doesn't show it either way, answer true only if its approach clearly implies it.
+For each claim, first sort it, independently of how it was proposed:
+- "problem": fixed by the problem statement above (how the score is defined or computed, the form of a valid \
+answer, the interface, the time limit);
+- "detail": changes how a program computes or organises things but not which solution it finds (the convolution \
+routine, timing code, caching, numeric types);
+- "decision": a choice about the solution or the search that could change which solution is found or how good it is.
+Say also whether it is the same decision as one already on the map (its id, like "A4"), or null if it is new.
+Then, for each program in order, say whether it does that same thing (true) or something different (false). If a \
+program doesn't show it either way, answer true only if its approach clearly implies it.
 
-Answer: {{"checks": [{{"claim": 1, "same": [true, false, ...]}}, ...]}} with one list of {k} booleans per claim."""
+Answer: {{"checks": [{{"claim": 1, "category": "problem" | "detail" | "decision", "on_map": "A4" | null, "same": \
+[true, false, ...]}}, ...]}} with one list of {k} booleans per claim."""
 
 
 def program_block(p, chars):
@@ -120,7 +137,7 @@ def audit(run, gen, k=8, chars=3500, min_share=0.75, log=print):
     if len(first) < 3 or len(second) < 3:
         row["skipped"] = "too few programs to compare"
         return row
-    problem = run.problem.TITLE
+    problem = run.problem.DESCRIPTION              # the full statement: what is fixed by the problem, and what isn't
     known = "\n".join(f"- {a}: {run.cb.axes[a]['question'] or run.cb.name(a)}" for a in run.cb.active_axes()) or "-"
     user = PROPOSE.format(problem=problem, known=known, k=len(first),
                           programs="\n\n".join(program_block(p, chars) for p in first))
@@ -134,11 +151,11 @@ def audit(run, gen, k=8, chars=3500, min_share=0.75, log=print):
     if not decisions:
         return row
     claims = "\n".join(f"{i}. {short(x['what'], 200)}" for i, x in enumerate(decisions, 1))
-    user = VERIFY.format(problem=problem, claims=claims, k=len(second),
+    user = VERIFY.format(problem=problem, known=known, claims=claims, k=len(second),
                          programs="\n\n".join(program_block(p, chars) for p in second))
     checks = parse(run.call("auditor", SYSTEM, user, temperature=0.0, max_tokens=2000, effort="none", gen=gen),
                    "checks")
-    share = {}
+    share, sorted_out = {}, {}
     for c in checks:
         if not isinstance(c, dict):
             continue
@@ -149,8 +166,13 @@ def audit(run, gen, k=8, chars=3500, min_share=0.75, log=print):
         same = [bool(v) for v in (c.get("same") or [])][: len(second)]
         if 0 <= i < len(decisions) and same:
             share[i] = sum(same) / len(second)
+            if not str(c.get("category", "")).lower().startswith("decision"):
+                sorted_out[i] = str(c.get("category") or "?")      # the second reading sorts it out of the decisions
+            elif c.get("on_map") and run.cb.resolve(str(c["on_map"]).strip()) in run.cb.active_axes():
+                sorted_out[i] = f"on the map already ({run.cb.resolve(str(c['on_map']).strip())})"
+    row["sorted_out"] = [{"what": short(decisions[i]["what"], 200), "as": cat} for i, cat in sorted_out.items()]
     for i, x in enumerate(decisions):
-        if share.get(i, 0.0) < min_share:
+        if share.get(i, 0.0) < min_share or i in sorted_out:
             continue
         what = " ".join(str(x["what"]).split())[:150]
         if run.cb.find_axis(what) is not None:
@@ -207,7 +229,7 @@ def fake_reply(user):
     if "## The claims to check" in user:
         k = int(re.search(r"## The programs \((\d+);", user).group(1))
         n = len(re.findall(r"^\d+\. ", user.split("## The claims to check")[1].split("## The programs")[0], re.M))
-        return json.dumps({"checks": [{"claim": i + 1, "same": [True] * k} for i in range(n)]})
+        return json.dumps({"checks": [{"claim": i + 1, "category": "decision", "same": [True] * k} for i in range(n)]})
     return json.dumps({"invariants": [
         {"what": "a fake shared grid of equal steps", "category": "decision",
          "alternatives": ["steps of free widths", "a smooth parametric bump"], "why": "a test"},
