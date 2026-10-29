@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 25)
+## The climb, by generation (every run has finished 26)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -10,23 +10,23 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 5 | 0.898159459 | 0.842954069 |
 | 10 | 0.898269086 | 0.860071723 |
 | 20 | 0.904080512 | 0.862784436 |
-| 25 | 0.938047870 | 0.863465596 |
+| 26 | 0.944645586 | 0.863548361 |
 
-## The climb, by CPU (5.0 CPU hours on programs so far)
+## The climb, by CPU (5.3 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 0.50 | 0.852896164 | 0.842087492 |
-| 1.26 | 0.898257458 | 0.857510119 |
-| 2.52 | 0.903340524 | 0.862564420 |
-| 3.79 | 0.904080512 | 0.862784436 |
-| 5.05 | 0.938047870 | 0.863548361 |
+| 0.53 | 0.852896164 | 0.842209958 |
+| 1.32 | 0.898257458 | 0.857510119 |
+| 2.63 | 0.903340524 | 0.862564420 |
+| 3.95 | 0.904080512 | 0.862804903 |
+| 5.26 | 0.944645586 | 0.863552810 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 25 | 157 | 5.0 | 450 | 4,171,472 | 0.938047869792 (p0156) |
+| v102-helix | 26 | 163 | 5.3 | 466 | 4,358,665 | 0.944645586096 (p0161) |
 | v102-helix-s2 | 30 | 189 | 5.8 | 521 | 5,076,920 | 0.864678462962 (p0184) |
 
 ## Against the published LLM-driven systems
@@ -38,7 +38,7 @@ Their values and budgets as they report them (TTT-Discover's Table 2, arXiv:2601
 | AlphaEvolve (May 2025) | Gemini 2.0 Pro + Flash | 0.8962 | not stated | not stated | 25 (generation 4) | not yet |
 | Best-of-25,600 samples | gpt-oss-120b | 0.9344 | 25,600 | 10 min | 151 (generation 24) | not yet |
 | OpenEvolve | gpt-oss-120b | 0.9449 | 25,600 | 10 min | not yet | not yet |
-| ThetaEvolve, without RL | R1-Distill-Qwen3-8B | 0.9434 | 51,200 | 350 s | not yet | not yet |
+| ThetaEvolve, without RL | R1-Distill-Qwen3-8B | 0.9434 | 51,200 | 350 s | 163 (generation 26) | not yet |
 | ThetaEvolve, with RL | R1-Distill-Qwen3-8B (trained at test time) | 0.9469 | 33,280 | 350 s | not yet | not yet |
 | TTT-Discover | gpt-oss-120b (trained at test time) | 0.9591 | 25,600 | 10 min | not yet | not yet |
 | AlphaEvolve V2 (Nov 2025; 50,000 steps) | Gemini 2.0 Pro + Flash | 0.9610 | not stated | not stated | not yet | not yet |
@@ -54,13 +54,13 @@ Explorations built from nothing: 7 (7 around an option of the field, 0 new desig
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 25 | 0.938047870 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 26 | 0.944645586 | running | yes |
+| T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 8 | 0.913606163 | running |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 10 | 0.836412101 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 10 | 0.812645766 | running |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
-| T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 7 | 0.797606359 | running |  |
-| T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 4 | 0.762754081 | running |  |
+| T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 5 | 0.774356550 | running |  |
 
 The field's options built at least once: 7 of 38.
 
