@@ -169,7 +169,7 @@ system we chose. What is achievable:
 5. **Two alarms:** residuals (same coordinates, very different heights: an unmeasured decision exists) and the
    invariant audit (decisions every program makes the same way, invisible to residuals).
 
-#### 3.4 The repeated invariant audit (*open; Shreyas's idea*)
+#### 3.4 The repeated invariant audit (*implemented in v10.1, `helix10/audit.py`; Shreyas's idea*)
 
 > "Do you think it's possible to run a loop where you ask, 'What does every programme do in the same way?' over and
 > over until there is nothing uniformly common between all of the programmes?"

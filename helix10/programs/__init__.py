@@ -27,9 +27,13 @@ def _split_doc(text):
     return text[:end], text[end:]
 
 
-def load(name):
+def load(name, cap=None):
+    """The program's code; `cap`: the run's step limit (the resolution transfer repeats and pads up to it)."""
     if name == "dinkelbach_polish":
         return (HERE / "dinkelbach_polish.py").read_text()
     doc, tail = _split_doc((HERE / f"{name}.py").read_text())
     _, polisher = _split_doc(core())
-    return f"{doc}\n{polisher.strip()}\n\n\n{tail.strip()}\n"
+    code = f"{doc}\n{polisher.strip()}\n\n\n{tail.strip()}\n"
+    if cap:
+        code = code.replace("CAP = 2_000_000", f"CAP = {int(cap):_}")
+    return code

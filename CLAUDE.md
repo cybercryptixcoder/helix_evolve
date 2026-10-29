@@ -1,6 +1,9 @@
 # Notes for agents working in this repo
 
-- **Latest (October 28, evening): v10 built** (`helix10/`, `docs/V10_DESIGN.md`): the field's knowledge on the
+- **Latest (October 28, late): v10.1** (`docs/V10_JOB.md`, top; `scripts/run_v101.sh`): Helix against the world's best
+  program at the same constraint (n <= 100,000, 300 s per program; the bar in `helix10/baseline.py`), the invariant
+  audit (`helix10/audit.py`), the v10 runs paused and continued.
+- **Before that (October 28, evening): v10 built** (`helix10/`, `docs/V10_DESIGN.md`): the field's knowledge on the
   second autocorrelation inequality (`docs/AC2_SOTA.md`: the record is 0.963588110582, arena #1; the constructions in
   `data/field_ac2`) as borrowed axes, Atlas findings and, in the warm mode, starting points; two jobs side by side
   (`docs/V10_JOB.md`, `scripts/run_v10.sh`, the Aether prompt, the odds). Request and to-do: `docs/BRIEF_2026-10-28.md`.

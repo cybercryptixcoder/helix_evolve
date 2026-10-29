@@ -1,4 +1,63 @@
-# The Helix v10 jobs (October 28, 2026)
+# The Helix v10 and v10.1 jobs (October 28, 2026)
+
+## v10.1 (October 28, 20:42): Helix against the world's best program, at the same constraint
+
+**Why.** At 2,000,000 steps our CPU can't optimise a new idea far enough to show its height, so v10 could only lose
+to a record polished for weeks on GPUs (measured: the field's own polish adds +3.8e-8 to it here, then stops). The
+fair test of Helix's claim (it searches the field's ideas as axes and finds what the field's own approach doesn't) is
+at a size where our compute matches the field's, against the field's program given exactly our constraint.
+
+**The constraint, for everyone:** constructions of at most **100,000 steps** (zero ends don't count), **300 CPU
+seconds per program**, the same total CPU, the same start. The best known construction in that class is
+**0.962273842955** (JSAgent's public seed); the arena's best entry in it is 0.962214.
+
+| Job | What it is | Starts from |
+| --- | --- | --- |
+| **v101-axes** | v10-axes continued (paused first, gracefully) in the size class: the field's ideas as axes only | our record, 0.9414417 (92,514 steps once its zero ends are trimmed) |
+| **v101-warm** | v10-warm continued (paused first) in the size class: the field's constructions and methods plus the axes | the class's best, JSAgent's 0.962273842955, polished once by the field's methods |
+| **v101-field** | the bar: the world's best program (ClaudeExplorer's iterated Dinkelbach alternating with the velocity cycles behind the July record), chained, under the same constraint, in three streams: from v101-axes's start, from v101-warm's start, and from nothing | the same starts; matched to its run in CPU seconds; a stream that goes 10 rounds without a gain has converged and stops |
+
+**Also new:** the invariant audit ("what does every program do the same way?", docs/IDEAS.md 3.4), every 10
+generations in both runs (`helix10/audit.py`): a describer names what the strongest, most different programs all do
+the same way and sorts it (a constraint of the problem, a detail below design, or a design decision); a second
+reading on a different sample confirms it (at least 75% share it); each confirmed decision goes on the map with its
+alternatives, which are built and raced like the field's options; after two empty rounds it rests until the record
+moves.
+
+**What would prove the claim** (`results/v101/COMPARISON.md` is written at every push):
+
+| Result | What it shows |
+| --- | --- |
+| v101-warm ends above v101-field's warm stream (same start, same CPU) | Searching the field's ideas beats the field's own best program at equal resources |
+| v101-warm ends above 0.962273842955 | A new best known construction with n <= 100,000 (and above the arena's 0.962214 in that class) |
+| v101-axes ends above v101-field's axes stream by more than 1e-6 | From our own lineage, the ideas as axes do what the field's program can't (it adds 7e-9 and stops) |
+| A gain traced on the map to a borrowed option or an audited invariant | The gain came from the axes, not from luck in polishing |
+
+My expectation, honestly: the field's program converges within a few rounds from both starts, so the bar is low in
+compute but high in quality (both starts are polished vertices). A clear gain for v101-axes is about even odds; a
+gain for v101-warm above the field's program, about one in three; by more than 1e-6, about one in ten.
+
+### The prompt for Aether (v10.1)
+
+> In /home/ubuntu/helix_v5_run, run `git pull`. Then start the three Helix v10.1 jobs, each once. By Shreyas's order,
+> the first two pause the running v10 job of the same mode themselves (one stop signal; it finishes its generation
+> and pushes, which can take up to about 40 minutes) and then continue where it left off; don't stop anything
+> yourself.
+> `MODE=axes setsid nohup bash scripts/run_v101.sh > v101_axes.log 2>&1 < /dev/null &`
+> `MODE=warm setsid nohup bash scripts/run_v101.sh > v101_warm.log 2>&1 < /dev/null &`
+> `MODE=field setsid nohup bash scripts/run_v101.sh > v101_field.log 2>&1 < /dev/null &`
+> One hour later, report the last 25 lines of v101_axes.log, v101_warm.log and v101_field.log, and the output of
+> `df -h .` and `free -m`. Don't stop, restart or kill anything, don't change any file, and don't set up any cron
+> job, timer, monitor or check-in: Shreyas checks in himself.
+
+What it should report: in v101_axes.log and v101_warm.log, "pausing v10-axes" (or "isn't running"), then "v10-...
+has stopped after N min", the preflight, the warm start ("size class n <= 100,000", the record in the class), and a
+first generation; in v101_field.log, the streams starting once the runs exist. Restarting any of them is the same
+command; each resumes.
+
+---
+
+## v10 (the first two runs, at 2,000,000 steps; paused by v10.1)
 
 Two runs side by side on the VM, continuing v9-s1 (generation 800, record 0.9414417) with the field's knowledge
 (docs/V10_DESIGN.md, docs/AC2_SOTA.md). Script: `scripts/run_v10.sh` (its header has every setting).
