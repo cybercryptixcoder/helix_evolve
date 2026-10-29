@@ -44,6 +44,13 @@
    "key": "target",
    "question": "Which part of f*f does the program's step aim at",
    "attached": false
+  },
+  "A21": {
+   "key": "audit",
+   "question": "Every program so far: Whether the breakpoint geometry of the step function is a degree of freedom: all programs fix equal-width cells anchored at the start of the support, . Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 10
   }
  },
  "values": {
@@ -236,6 +243,24 @@
    "name": "Small-mass runs of f first",
    "note": "packet ascent's order (EinsteinArena thread 92 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
    "axis_key": "target"
+  },
+  "A21.v2": {
+   "name": "Let cell boundaries be free continuous variables (non-uniform widths)",
+   "origin": "audit",
+   "gen": 10,
+   "note": "an alternative to what every program so far does (Whether the breakpoint geometry of the step function is a degree of freedom: all programs fix equal-width cells anchored at the start of the support, ): the invariant audit, generation 10; If the extremal f is not aligned to an equal-width grid starting at 0, moving the breakpoints or the phase changes the achievable R for the same number of cells."
+  },
+  "A21.v3": {
+   "name": "Optimise a global sub-cell offset/phase of the whole support",
+   "origin": "audit",
+   "gen": 10,
+   "note": "an alternative to what every program so far does (Whether the breakpoint geometry of the step function is a degree of freedom: all programs fix equal-width cells anchored at the start of the support, ): the invariant audit, generation 10; If the extremal f is not aligned to an equal-width grid starting at 0, moving the breakpoints or the phase changes the achievable R for the same number of cells."
+  },
+  "A21.v4": {
+   "name": "Keep equal-width cells fixed from the interval start (current behaviour)",
+   "origin": "audit",
+   "gen": 10,
+   "note": "an alternative to what every program so far does (Whether the breakpoint geometry of the step function is a degree of freedom: all programs fix equal-width cells anchored at the start of the support, ): the invariant audit, generation 10; If the extremal f is not aligned to an equal-width grid starting at 0, moving the breakpoints or the phase changes the achievable R for the same number of cells."
   }
  },
  "matched": {}
