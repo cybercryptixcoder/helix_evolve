@@ -34,3 +34,13 @@
 02:23:26 field: scratch round 10 (velocity_cycles): 0.877164733798; best 0.877164733798; 1461 s CPU
 02:27:37 field: axes round 11 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 1400 s CPU
 02:27:37 field: stream axes converged: no gain in 10 rounds (1400 s CPU; more compute had stopped helping)
+02:35:02 field: warm round 10 (velocity_cycles): 0.962273842985; best 0.962273842985; 1351 s CPU
+02:35:25 field: scratch round 11 (dinkelbach_polish): 0.877169026438; best 0.877169026438; 1477 s CPU
+02:35:29 field: warm round 11 (dinkelbach_polish): 0.962273842985; best 0.962273842985; 1354 s CPU
+02:35:29 field: stream warm converged: no gain in 10 rounds (1354 s CPU; more compute had stopped helping)
+02:40:14 field: scratch round 12 (velocity_cycles): 0.877246500889; best 0.877246500889; 1740 s CPU
+02:50:53 field: scratch round 13 (dinkelbach_polish): 0.877253263104; best 0.877253263104; 1757 s CPU
+02:59:28 field: scratch round 14 (velocity_cycles): 0.877338182258; best 0.877338182258; 2022 s CPU
+03:03:56 field: scratch round 15 (dinkelbach_polish): 0.877341480249; best 0.877341480249; 2036 s CPU
+03:05:59 field: stop requested: finishing the round in progress, then stopping
+03:09:06 field: scratch round 16 (velocity_cycles): 0.877389771573; best 0.877389771573; 2299 s CPU
