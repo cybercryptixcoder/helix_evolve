@@ -2,28 +2,28 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 2)
+## The climb, by generation (every run has finished 3)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
 | 1 | 0.802665035 | 0.842087388 |
-| 2 | 0.852896164 | 0.842087492 |
+| 3 | 0.853568835 | 0.842087492 |
 
-## The climb, by CPU (0.4 CPU hours on programs so far)
+## The climb, by CPU (0.5 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 0.04 | 0.666666667 | 0.666666667 |
-| 0.10 | 0.666666667 | 0.666666667 |
-| 0.20 | 0.666666667 | 0.842087388 |
-| 0.30 | 0.802665035 | 0.842087492 |
-| 0.40 | 0.852896164 | 0.842087492 |
+| 0.05 | 0.666666667 | 0.666666667 |
+| 0.13 | 0.666666667 | 0.666666667 |
+| 0.26 | 0.802665035 | 0.842087388 |
+| 0.39 | 0.802665035 | 0.842087492 |
+| 0.52 | 0.852896164 | 0.842209958 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 2 | 13 | 0.4 | 36 | 197,331 | 0.852896164479 (p0013) |
+| v102-helix | 3 | 19 | 0.6 | 56 | 341,533 | 0.853568834910 (p0017) |
 | v102-helix-s2 | 4 | 25 | 0.5 | 73 | 433,103 | 0.842209958260 (p0022) |
 
 ## Against the published LLM-driven systems
@@ -47,14 +47,15 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 Helix's record: 0.853568834910 (p0017, n = 16384), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
-Explorations built from nothing: 2 (2 around an option of the field, 0 new designs from the map). Their climbs:
+Explorations built from nothing: 3 (3 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 2 | 0.852896164 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 3 | 0.853568835 | running | yes |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 1 | 0.782304882 | running |  |
+| T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 1 | 0.752598795 | running |  |
 
-The field's options built at least once: 2 of 38.
+The field's options built at least once: 3 of 38.
 
 ## Where Helix's progress came from (v102-helix-s2)
 
