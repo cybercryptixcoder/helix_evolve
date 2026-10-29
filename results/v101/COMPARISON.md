@@ -4,7 +4,7 @@ Size class n <= 100,000 steps, the same CPU seconds per program and in total, th
 
 | Run | Start | Best | Gain | CPU (s) | The field's program, same start and CPU | Its CPU (s) | Helix ahead by |
 |---|---|---|---|---|---|---|---|
-| v101-axes | 0.941441744965 | 0.941441752903 (p4437) | +7.938e-09 | 5922 | 0.941441752245 (3 rounds) | 313 | +6.577e-10 |
-| v101-warm | 0.962273842985 | 0.962273842985 (p4410) | +2.220e-16 | 1427 | 0.962273842985 (2 rounds) | 271 | +0.000e+00 |
+| v101-axes | 0.941441744965 | 0.941441754495 (p4445) | +9.530e-09 | 6655 | 0.941441752245 (4 rounds) | 581 | +2.250e-09 |
+| v101-warm | 0.962273842985 | 0.962273842985 (p4410) | +2.220e-16 | 1704 | 0.962273842985 (2 rounds) | 271 | +0.000e+00 |
 
 The world's best program from nothing, at the same constraint: 0.866357886775 after 3 rounds, 346 s CPU.
