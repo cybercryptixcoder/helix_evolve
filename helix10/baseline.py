@@ -45,8 +45,8 @@ def arm_state(arm):
     """(warm generation, best program dict at the start, CPU seconds spent since) for a v10.1 run folder."""
     arm = Path(arm)
     st = json.loads((arm / "state.json").read_text()) if (arm / "state.json").exists() else None
-    if st is None:
-        return None, None, 0.0
+    if st is None or (st.get("config") or {}).get("condition") != "v10.1" or not (arm / "extents.json").exists():
+        return None, None, 0.0                            # not a v10.1 run yet (its warm start may be in progress)
     w = st.get("warm_gen") if st.get("warm_gen") is not None else st["gen_done"]
     cap = (st.get("config") or {}).get("max_n")
     ext = json.loads((arm / "extents.json").read_text()) if (arm / "extents.json").exists() else {}
