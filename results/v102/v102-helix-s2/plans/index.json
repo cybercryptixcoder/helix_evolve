@@ -1,0 +1,16 @@
+{
+ "file": "plans.jsonl",
+ "lines_per_chunk": 284,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 4,
+   "sha256": "9f53e389b2f503407d49d14eb517389ca940c778f542ad9bcd90ae22fe8ead03",
+   "gens": [
+    1,
+    4
+   ]
+  }
+ ],
+ "lines": 4
+}
