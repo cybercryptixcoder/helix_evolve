@@ -14,22 +14,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 40 | 0.946464794 | 0.866112124 |
 | 57 | 0.946543251 | 0.904524431 |
 
-## The climb, by CPU (11.4 CPU hours on programs so far)
+## The climb, by CPU (11.7 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 1.14 | 0.898159459 | 0.857120371 |
-| 2.86 | 0.904041397 | 0.862564666 |
-| 5.72 | 0.945662592 | 0.864140809 |
-| 8.58 | 0.946464794 | 0.866112124 |
-| 11.44 | 0.946540824 | 0.904524431 |
+| 1.17 | 0.898159459 | 0.857120371 |
+| 2.92 | 0.904041397 | 0.862564666 |
+| 5.83 | 0.945870416 | 0.864678463 |
+| 8.75 | 0.946464830 | 0.866112124 |
+| 11.67 | 0.946541683 | 0.904524431 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 57 | 354 | 12.4 | 1031 | 11,307,948 | 0.946543250572 (p0353) |
-| v102-helix-s2 | 58 | 362 | 11.4 | 1022 | 10,944,054 | 0.904524431015 (p0355) |
+| v102-helix-s2 | 59 | 369 | 11.7 | 1040 | 11,171,312 | 0.904524431015 (p0355) |
 
 ## Against the published LLM-driven systems
 
@@ -76,12 +76,12 @@ Explorations built from nothing: 7 (7 around an option of the field, 0 new desig
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 35 | 0.904524431 | running | yes |
+| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 36 | 0.904524431 | running | yes |
+| T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 32 | 0.873040858 | running |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T9 | A20 -> Use no regularization | 53 | 3 | 0.863917176 | running |  |
-| T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 31 | 0.860616209 | running |  |
-| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 25 | 0.853756071 | running |  |
-| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 27 | 0.814872856 | running |  |
+| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 25 | 0.853762476 | running |  |
+| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 28 | 0.814911691 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 
 The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 15.
