@@ -207,11 +207,11 @@ def apply(run, row, gen):
     return added
 
 
-def due(rows, gen, last_record, every=10, stop_after=2):
-    """True if an audit should run at generation `gen`."""
+def due(rows, gen, last_record, every=10, stop_after=2, first=None):
+    """True if an audit should run at generation `gen` (the first one not before generation `first`, if given)."""
     rows = [r for r in rows if not r.get("skipped")]      # a round skipped for want of programs doesn't count
     if not rows:
-        return True
+        return first is None or gen >= first     # a cold start's first programs share only their youth
     last = rows[-1]
     if gen - last["gen"] < every:
         return False

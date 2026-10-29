@@ -34,7 +34,7 @@ v10.2 runs under these systems' constraints, or under tighter ones:
   TTT-Discover and OpenEvolve state no limit. The limit is enforced exactly (`helix10.run.ExactView`), and the
   verification re-checks every best construction.
 - **150 CPU seconds per program** (single-threaded, on a 2-core VM shared by two runs). Theirs: 10 minutes or 350 s.
-- **About 1,000 programs in all** (6 a generation, about 150-200 generations in 80 hours). Theirs: 25,600 to 51,200.
+- **400 generations, 2,400 programs in all** (6 a generation; Shreyas, 02:41: 300-500 generations from scratch; about 5-7 days, the deadline of 240 hours only a backstop). Theirs: 25,600 to 51,200.
 
 The measure is the published value and **the number of programs Helix needed to pass it**
 (`helix10/compare.py`, results/v102/COMPARISON.md). A value passed with fewer programs, less time per program and a
@@ -95,7 +95,7 @@ reference stream to exactly their limit.
   stop signal; the v10.1 job finishes its generation and pushes, and the v10.2 job waits for it.
 - `ARM=field`: optional. It is the world's best program (ClaudeExplorer's iterated Dinkelbach and velocity cycles)
   chained from nothing, using at most half of seed 1's CPU, and is reported at equal CPU.
-- 150 s per program, at most 50,000 steps, up to 400 generations or 80 hours.
+- 150 s per program, at most 50,000 steps, 400 generations (a 240-hour deadline as a backstop).
 
 ## Possible ablation (not built): the same knowledge without the axes
 
@@ -114,8 +114,8 @@ The field's own optimisers from nothing reach 0.90-0.93. Its program from nothin
 
 | Outcome, by the end (either seed) | Odds |
 | --- | --- |
-| Above AlphaEvolve (0.8962) and best-of-25,600 (0.9344), with under 1,000 programs | about 85% |
-| Above ThetaEvolve without RL (0.9434) and OpenEvolve (0.9449), with 1/25 of their programs | about 45% |
+| Above AlphaEvolve (0.8962) and best-of-25,600 (0.9344), with a small fraction of their programs | about 85% |
+| Above ThetaEvolve without RL (0.9434) and OpenEvolve (0.9449), with under a tenth of their programs | about 50% |
 | Above ThetaEvolve with RL (0.9469) | about 35% |
 | Above TTT-Discover (0.9591) or AlphaEvolve V2 (0.9610) | about 10% |
 

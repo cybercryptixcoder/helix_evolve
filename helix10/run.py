@@ -268,7 +268,8 @@ class Run(Run9):
         if not self.cfg.audit_every or not self.cb.active_axes():
             return
         rows = self._jsonl("audits.jsonl")
-        if not AU.due(rows, gen, self.last_record(), self.cfg.audit_every, self.cfg.audit_stop):
+        first = self.cfg.audit_every if self.cfg.mode == "cold" else None
+        if not AU.due(rows, gen, self.last_record(), self.cfg.audit_every, self.cfg.audit_stop, first):
             return
         try:
             row = AU.audit(self, gen, min_share=self.cfg.audit_min_share, log=self.log)
@@ -318,15 +319,17 @@ class Run(Run9):
         by_axis = Counter()
         for a, v, _ in vals:
             by_axis[a] += tries[v]
-        cands = [(tries[v], by_axis[a], i, a, v) for i, (a, v, _) in enumerate(vals) if base.get(a) != v]
+        audit = {v for v, x in self.borrowed.get("values", {}).items() if x.get("origin") == "audit"}
+        cands = [(tries[v], self.cb.resolve_value(v) in audit or v in audit, by_axis[a], i, a, v)
+                 for i, (a, v, _) in enumerate(vals) if base.get(a) != v]
         if not cands:
             return None
         low = min(c[0] for c in cands)
         if low > 0 and self.rng10.random() > self.cfg.borrow_share:
             return None                                  # coverage done: the map's own choices take this one
         cands = [c for c in cands if c[0] == low]
-        cands.sort(key=lambda c: (c[1], self.rng10.random()))
-        _, _, _, a, v = cands[0]
+        cands.sort(key=lambda c: (c[1], c[2], self.rng10.random()))     # the field's before the audit's, axes in turn
+        _, _, _, _, a, v = cands[0]
         coord = {**base, a: v}
         return coord, {a: v}, None
 
@@ -487,6 +490,36 @@ class Run(Run9):
             self.log(f"[{self.name}] gen {gen}: build child crashed: {exc}\n{traceback.format_exc()}")
             return self.add(Program(id="", gen=gen, role="deep", parent=exp.get("base"), intent="(crashed)", code="",
                                     plan=exp, error=f"internal error: {exc}")), None
+
+    def annotate(self, gen, children, exps):
+        """v9's annotation; then, for a design built from nothing, a target option the reader named in its own words
+        (a new option born this generation on the target's decision) is the target: merged into it, so the build
+        isn't told it missed what it built, and the field's option keeps its programs."""
+        landings = super().annotate(gen, children, exps)
+        for t in self.tracks.values():
+            lg, mis = t.get("landing") or {}, t.get("mismatch") or {}
+            if not t.get("built") or not mis or lg.get("gen") != gen:
+                continue
+            got = self.coord(lg.get("pid")) or {}
+            for a, v in list(mis.items()):
+                g = got.get(a)
+                if not g or is_new(v) or "." not in g:
+                    continue
+                ax = self.cb.axes.get(self.cb.resolve(a)) or {}
+                info = (ax.get("values") or {}).get(g) or {}
+                if info.get("born") == gen and info.get("source") not in ("borrowed", "audit") \
+                        and g not in self.borrowed.get("values", {}):
+                    self.cb.merge_value(g, v, gen)
+                    del mis[a]
+                    self.map_events.append(f"{t['id']}: the reading '{short(info.get('name'), 60)}' is its target "
+                                           f"{self.cb.resolve_value(v)} in other words (merged)")
+            if not mis:
+                t.pop("mismatch", None)
+                lg["matched"] = lg.get("of", lg.get("matched"))
+                landings = [x if not x.startswith(f"{t['id']} landed ") else
+                            f"{t['id']} landed {lg['of']}/{lg['of']} target decisions (read in other words)"
+                            for x in landings]
+        return landings
 
     def exploring(self, plan):
         t = self.tracks.get((plan or {}).get("track") or "")

@@ -25,7 +25,8 @@
 #      its lock, however long that takes. If it isn't running, nothing happens. Nothing else is ever stopped;
 #   1. preflight: packages, disk, a crash test with a fake model (the run, the reference, the reports), a real model
 #      call, GitHub;
-#   2. the run (from Code Zero), up to GENS generations or the deadline; progress every 10 minutes, a push every 40;
+#   2. the run (from Code Zero), up to GENS = 400 generations (Shreyas, 02:41: 300-500 from scratch); the deadline
+#      (240 h) is only a backstop; progress every 10 minutes, a push every 40;
 #   3. the end: the comparison, the verification of every best construction, a push.
 #
 # Robust by design (docs/AETHER.md, sections 4 and 4b): one copy per NAME (a lock); runs from a snapshot of itself;
@@ -33,11 +34,11 @@
 # progress and pushes; retries on errors; installs no cron job or timer; waits while disk or model are down.
 #
 # Estimated: about 20-30 minutes a generation per run while both seeds run (6 programs of 150 s each, two slots
-# shared), so about 150-200 generations each in 80 hours. Memory about 3 GB in all. Disk: under 500 MB per run.
+# shared): 400 generations take about 5-7 days. Memory about 3 GB in all. Disk: under 500 MB per run.
 # Model: about 25 calls a generation per run (reported).
 #
 # Settings: ARM [required]  SEED [1]  NAME [v102-$ARM, -s$SEED for another seed]  BUDGET [150]  CAP [50000]
-#   GENS [400]  HOURS [80]  PATIENCE [10] (ARM=field)  SHARE [0.5] (ARM=field)  EVAL_SLOTS [2]  MIN_FREE_MB [1500]
+#   GENS [400]  HOURS [240]  PATIENCE [10] (ARM=field)  SHARE [0.5] (ARM=field)  EVAL_SLOTS [2]  MIN_FREE_MB [1500]
 #   START_DISK_MB [2000]  MIN_DISK_MB_RUN [1200]  STOP_GRACE_S [1800]  MAX_RETRIES [3]  PUSH [1]  FAKE [0]  TICK [600]
 #   PUSH_EVERY [4]  PAUSE_V101 [1]
 #
@@ -61,7 +62,7 @@ NAME="${NAME:-v102-$ARM$SUFFIX}"
 BUDGET="${BUDGET:-150}"
 CAP="${CAP:-50000}"
 GENS="${GENS:-400}"
-HOURS="${HOURS:-80}"
+HOURS="${HOURS:-240}"
 PATIENCE="${PATIENCE:-10}"
 SHARE="${SHARE:-0.5}"
 RESET_DEADLINE="${RESET_DEADLINE:-0}"

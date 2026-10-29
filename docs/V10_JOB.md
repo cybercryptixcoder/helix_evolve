@@ -6,8 +6,8 @@ Design, the published baselines and the odds: `docs/V102_DESIGN.md`. In short:
 - two seeds of Helix from Code Zero, with the field's 9 decisions and 38 options on the design map and its findings in
   the Atlas;
 - every new exploration is built from nothing on its own track and judged on its own climb;
-- the constraint is the published systems' or tighter: at most 50,000 steps, 150 s per program, about 1,000
-  programs (theirs: 25,600 to 51,200);
+- the constraint is the published systems' or tighter: at most 50,000 steps, 150 s per program, 400
+  generations, 2,400 programs (theirs: 25,600 to 51,200);
 - the report is results/v102/COMPARISON.md: the programs Helix needed to pass each published value (AlphaEvolve
   0.8962, best-of-25,600 0.9344, ThetaEvolve 0.9434/0.9469, OpenEvolve 0.9449, TTT-Discover 0.9591, AlphaEvolve V2
   0.9610).
@@ -34,7 +34,14 @@ Restarting either is the same command; each resumes. The optional reference stre
 
 ### Tested (October 29, in the cloud session)
 
-LIVE_TABLE
+| Step | Result |
+| --- | --- |
+| Crash tests | both seeds through the whole job with a fake model (pause, preflight, run, report, publish, verification); resume after a stop; tests/test_helix10.py, 18 passing, 4 of them new for v10.2 |
+| The pause | a stand-in v10.1 job holding the lock got one stop signal and the v10.2 job waited for its lock |
+| Live, real model | seed 1: 5 generations (3 alone at 40 s per program, then 2 more through the job script, resumed); seed 2 alongside: 2 generations (60 s per program); about 4.5 minutes a generation at 60 s |
+| What happened | seed 1 went from 0.667 to 0.8631 in 5 generations. The record changed track 4 times, and each time a new exploration took it: three designs built from nothing around field options, then a flip on its own line. Coarse-to-fine came first (0.832), then a later option the planner chose (0.847), then [small, big, small] triplets (0.848, best 0.860). Seed 2 was at 0.820 after 2 generations. The planner turned each field option into a whole program (multigrid Dinkelbach, Gaussian-bump combs), and the step limit read 50,000 everywhere |
+| Found and fixed | (1) The audit ran at generation 3 of a cold run and put trivial invariants (fixed random seeds) ahead of the field's options. It now first runs at generation 10, and the field's options are built before the audit's. (2) The reader named a build's target option in its own words, so a new option was created and the build was told it had missed its target. Such a reading is now merged into the target. |
+| Not ours | tests/test_helix47.py has one test that fails the same way without these changes (a text check in the v4.7 map view) |
 
 ---
 
