@@ -2,11 +2,11 @@
 
 ## v102-helix
 
-- Generations 1-36: best 0.666666667 -> 0.946437408 (p0222, track T2); the main track now: T2.
-- Exploration levels: level 0: 33 generations, level 1: 3 generations.
-- Planned experiments by slot: track 64, main 36, build 7, flip 1.
+- Generations 1-37: best 0.666666667 -> 0.946451675 (p0229, track T2); the main track now: T2.
+- Exploration levels: level 0: 34 generations, level 1: 3 generations.
+- Planned experiments by slot: track 66, main 37, build 7, flip 1.
 
-### Records (29)
+### Records (30)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -39,6 +39,7 @@
 | 34 | 0.946299297 | p0210 | wide | mutation | T2 |
 | 35 | 0.946388763 | p0214 | deep | main | T2 |
 | 36 | 0.946437408 | p0222 | deep | main | T2 |
+| 37 | 0.946451675 | p0229 | deep | main | T2 |
 
 ### Side tracks opened (0)
 
@@ -83,15 +84,16 @@
 | 34 | 0.946299297 | yes | 0 / 1 | 0 | main, track:T8, track:T9 | 0.913710 | T6 gained (0.848026 -> 0.848140); T8 goes on to the next rung (24 experiments): still rising (best 0.913710 at 12 experiments) |
 | 35 | 0.946388763 | yes | 0 / 1 | 0 | main, track:T6, track:T7 | 0.848146 | T6 gained (0.848140 -> 0.848146); T7 gained (0.838727 -> 0.839035) |
 | 36 | 0.946437408 | yes | 0 / 1 | 0 | main, track:T6, track:T8 | 0.913710 | T1 gained (0.795302 -> 0.795340) |
+| 37 | 0.946451675 | yes | 0 / 1 | 0 | main, track:T7, track:T9 | 0.839592 | T7 gained (0.839035 -> 0.839592) |
 
 ### Hills (9: 2 on the map after its first generation, 7 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.946437 (p0222) | 1 | T2 (build) | 0 | This program optimizes a smooth log-sum-exp surrogate of the sup-norm with an annealed sharpness parameter inside a Dinkelbach loop, rather than directly maximizing the exact ratio. It uses L-BFGS-B with analytic gradien |
+| H2 | 0.946452 (p0229) | 1 | T2 (build) | 0 | This program optimizes a smooth log-sum-exp surrogate of the sup-norm with an annealed sharpness parameter inside a Dinkelbach loop, rather than directly maximizing the exact ratio. It uses L-BFGS-B with analytic gradien |
 | H8 | 0.913710 (p0197) | 16 | T8 (build) | 0 | This program abandons the record's high-resolution climb entirely, instead starting from the given start and running a prune-refine-upsample loop that repeatedly zeroes the smallest fraction of cells and re-optimises ins |
 | H6 | 0.848146 (p0218) | 7 | T6 (build) | 0 | This program builds a hand-crafted spike-plus-decaying-comb seed at n=512 and then doubles resolution in four stages (512→1024→2048→4096), spending only 20% of budget on the first stage and re-annealing beta from 1e4 upw |
-| H7 | 0.839035 (p0215) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
+| H7 | 0.839592 (p0228) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
 | H3 | 0.804847 (p0022) | 2 | T3 (flip) | 0 | This program optimizes a Dinkelbach-style surrogate (smooth-max minus λ·num) with L-BFGS-B gradients on a fixed grid, rather than the record's approach of building a tuned small-n construction and carefully upsampling it |
 | H4 | 0.803713 (p0035) | 4 | T4 (build) | 0 | This program starts from the given `start` and refines it with local, parameterised moves (run scaling, additive cosine packets, constant-run shifts, bump replacement, and pairwise mass transfer), each tuned by a 1-D gri |
 | H5 | 0.801808 (p0031) | 6 | T5 (build) | 0 | This program uses linear interpolation to upsample between fixed ladder sizes (256→4096) rather than repeat-based upsampling, and it anneals the smooth-max exponent p from 4 to 400 within each stage instead of re-anneali |
@@ -109,16 +111,16 @@ Decisions every hill shared (mapped at generation 21):
 - D7: Escape mechanism from local optima (all: Small low-frequency Fourier-mode perturbation ('kick') followed by re-polishing, or Gaussian noise / smoothing blends, with a fixed small amplitude)
 - D8: Normalization / constraint handling (all: Fix ||f||_1 = 1 by renormalizing after every step (mass-preserving projection), treating the ratio as scale-invariant)
 
-### The design map (18 decisions, 216 programs placed)
+### The design map (18 decisions, 222 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
 | A12: How is f >= 0 enforced | f = w^2 exactly (a cell at zero stays at; Clip or project to f >= 0 after each ste; An explicit support mask pruned on purpo; none imposed; f is unconstrained and sca; fix //f//_1 or //f//_2 to a constant to  ... | 100% of 19 (kappa 1.00) | 22% |
 | A18: How is the objective (the convolution and its norms) computed numerically? | compute f*f by direct convolution on the; evaluate the ratio analytically for a pa; use FFT-based convolution with careful n | 100% of 19 (kappa 1.00) | 19% |
-| A3: What quantity does the search optimise while it runs? | Minimax dual active-set weights; Exact line search on R; Alternating projection to target; Direct ratio maximisation; Bisection on ratio feasibility ... | 100% of 19 (kappa 1.00) | 12% |
 | A2: How is the first solution built? | constant ones (or the externally supplie; random smooth function (e.g. low-frequen; a hand-designed bump/indicator-like shap; Random Gaussian packet mixture (8 bumps ; Deterministic analytic seeds: single bum ... | 79% of 19 (kappa 0.73) | 11% |
-| A23: How is the resolution of the returned final answer chosen (native, truncated, pooled, or b | Evaluate a handful of candidate resoluti; Return the native high-resolution field ; Choose the output resolution by a valida; A separate polish pass at the largest gr; No separate polish; keep one beta schedu ... | 89% of 19 (kappa 0.85) | 9% |
-| A1: How is a candidate solution represented? | a dense real-valued array of samples on ; a parametric analytic form (e.g. Gaussia; a sparse / low-degree representation (e.; Raw nonnegative knot values on a uniform; Low-dimensional basis: spline/B-spline c ... | 84% of 19 (kappa 0.69) | 8% |
+| A23: How is the resolution of the returned final answer chosen (native, truncated, pooled, or b | Evaluate a handful of candidate resoluti; Return the native high-resolution field ; Choose the output resolution by a valida; A separate polish pass at the largest gr; No separate polish; keep one beta schedu ... | 89% of 19 (kappa 0.85) | 10% |
+| A3: What quantity does the search optimise while it runs? | Minimax dual active-set weights; Exact line search on R; Alternating projection to target; Direct ratio maximisation; Bisection on ratio feasibility ... | 100% of 19 (kappa 1.00) | 10% |
+| A1: How is a candidate solution represented? | a dense real-valued array of samples on ; a parametric analytic form (e.g. Gaussia; a sparse / low-degree representation (e.; Raw nonnegative knot values on a uniform; Low-dimensional basis: spline/B-spline c ... | 84% of 19 (kappa 0.69) | 7% |
 | A4: Which moves or update steps change a solution? | no search at all: return the provided st; local gradient-free search (coordinate/p; population-based evolutionary search ove | 100% of 19 (kappa 1.00) | - |
 | A5: How does the search accept worse solutions or escape a local optimum? | Probabilistic acceptance of worse; Restart on stall; Small noise kick then re-polish; Gradient-guided perturbation re-polish; Low-frequency Fourier mode perturbation ... | 79% of 19 (kappa 0.67) | - |
 | A7: Which parts, if any, are solved exactly? |  | - | - |
@@ -136,14 +138,14 @@ Decisions every hill shared (mapped at generation 21):
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
-| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 36 | 0.946437 | running | founder H2 |
+| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 37 | 0.946452 | running | founder H2 |
 | T3 | flip | 1 | A18 -> a new option, unlike the liste | 1/1 | 6 | 0.804847 | paused at 6 | founder H3 |
 | T4 | build | 2 | A9 -> Exact line search on R per blo | 1/1 | 6 | 0.803713 | paused at 6 | founder H4 |
 | T5 | build | 3 | A10 -> A softmax- or p-norm-weighted  | 1/1 | 6 | 0.801808 | paused at 6 | founder H5 |
 | T6 | build | 4 | A14 -> A tall spike plus a comb of sm | 1/1 | 16 | 0.848146 | running at 12 | founder H6 |
-| T7 | build | 5 | A17 -> Small-mass runs of f first | 1/1 | 15 | 0.839035 | running at 12 | founder H7 |
+| T7 | build | 5 | A17 -> Small-mass runs of f first | 1/1 | 16 | 0.839592 | running at 12 | founder H7 |
 | T8 | build | 14 | A11 -> Adam stochastic ascent with re | 1/1 | 13 | 0.913710 | running at 12 | founder H8 |
-| T9 | build | 18 | A12 -> f = w^2 exactly (a cell at zer | 1/1 | 9 | 0.774369 | running at 6 | founder H9 |
+| T9 | build | 18 | A12 -> f = w^2 exactly (a cell at zer | 1/1 | 10 | 0.774369 | running at 6 | founder H9 |
 
 ## v102-helix-s2
 
