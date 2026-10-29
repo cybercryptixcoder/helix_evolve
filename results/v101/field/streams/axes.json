@@ -4,8 +4,8 @@
  "start": "v101-axes's record at its start, p4407 (0.941441744965)",
  "start_score": 0.9414417449645592,
  "best": 0.9414417522451916,
- "cpu": 852.72,
- "rounds": 6,
- "since_gain": 5,
+ "cpu": 1124.94,
+ "rounds": 8,
+ "since_gain": 7,
  "finished": null
 }
