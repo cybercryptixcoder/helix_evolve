@@ -31,13 +31,43 @@ from pathlib import Path
 
 import numpy as np
 
-from helix4.archive import Archive, short
+from helix4 import prompts as P4
+from helix4.archive import Archive, Program, short
 from helix4.llm import FakeLLM
+from helix47.run import ProblemView
 from helix7.memory import Atlas7
+from helix9 import race as _race
 from helix9 import prompts as P
+from helix9.codebook import is_new
 from helix9.run import Config as Config9, Run as Run9, fake_answer as fake9
 
 BIG_REF = ".ref"
+BUILD_KINDS = ("build",)
+_race.GROUPS.setdefault("build", "new")      # a design built from nothing races with the other new designs
+
+BUILD_SLOT = ("Slot {n} (explore: a new design, built from nothing): write a whole new program around this design, "
+              "starting from Code Zero ({base}), not from the record and not as a change to any existing program:\n"
+              "{blueprint}\n{rest}It opens its own track: its later experiments continue from its own construction, "
+              "and it is judged on its own climb, against the other new designs at equal effort, never against the "
+              "record. Plan the strongest version of this design that can be built and run in {budget:.0f} s; a first "
+              "score below the record is expected.")
+BUILD_CODER_NOTE = """This experiment builds a new design from nothing:
+{blueprint}
+Write a complete new program around these decisions. Don't patch the base program (Code Zero, a trivial start) and \
+don't copy any other program: `start` is Code Zero's trivial construction, and the program may ignore it and build its \
+own. Push the design as far as the budget allows: it is judged on its own climb, against other new designs at the \
+same effort, not against the overall record.{alt}"""
+
+
+class ExactView(ProblemView):
+    """The problem with exactly `max_n` as its step limit (helix47's ProblemView never goes below the module's own
+    limit, 200,000, so v10.1's 100,000 class was enforced only by the archive: programs of up to 200,000 steps ran and
+    were then hidden). The text, the check and the evaluator all say `max_n`."""
+
+    def __init__(self, mod, max_n):
+        self._mod = mod
+        self.max_n = int(max_n)
+        self.DESCRIPTION = self._text(mod.DESCRIPTION)
 
 
 @dataclass
@@ -61,6 +91,12 @@ class Config(Config9):
     audit_every: int = 10             # the invariant audit (helix10/audit.py): every this many generations ...
     audit_stop: int = 2               # ... resting after this many empty rounds in a row, until the record moves
     audit_min_share: float = 0.75     # an invariant counts if this share of a second sample shares it
+    # ---- v10.2 (docs/V102_DESIGN.md): explorations build from nothing and are judged on their own climb
+    build: bool = False               # a new exploration (a borrowed option, a drop) is built from Code Zero, not
+                                      # patched onto the record, on its own track
+    build_cap: int = 4                # at most this many of those race at once; past it, the slot serves a racing one
+    wide_own: bool = False            # the wide loop: at most one parent on the record's track, the others the bests
+                                      # of the live explorations (their own lines), inspired by their own track
 
 
 def trim(c):
@@ -168,8 +204,11 @@ class Run(Run9):
 
     def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         super().__init__(out, cfg, llm=llm, gens=gens, log=log, problem=problem)
-        if self.cfg.condition == "v10.1":
-            self.VERSION = "v10.1"                         # the size-class comparison (docs/V10_JOB.md)
+        if self.cfg.condition in ("v10.1", "v10.2"):
+            self.VERSION = self.cfg.condition              # the size-class comparisons (docs/V10_JOB.md)
+        if problem is None and getattr(self.problem, "max_n", None) != self.cfg.max_n:
+            self.problem = ExactView(self.problem._mod, self.cfg.max_n)   # the limit exactly (helix47 can't lower it)
+            self.problem_text = self.problem.DESCRIPTION
         self.archive.__class__ = Archive10
         self.archive.big_n = self.cfg.big_n
         self.archive.max_n = self.cfg.max_n
@@ -237,6 +276,8 @@ class Run(Run9):
         except Exception as exc:                                    # noqa: BLE001  (never lose the run)
             self.log(f"[{self.name}] gen {gen}: the invariant audit failed: {exc}")
             return
+        if row.get("skipped"):
+            return                                                  # too few programs yet: asked again next time
         if added:
             self.save_borrowed()
         self._append("audits.jsonl", row)
@@ -293,59 +334,126 @@ class Run(Run9):
         if self.map_ready():
             n_explore = max(n_explore, min(self.cfg.min_explore, self.cfg.deep - 1))
         slots = super().make_slots(gen, n_explore)
-        if not self.map_ready() or not self.borrowed.get("values"):
-            return slots
         best = self.archive.best()
-        pick = self.pick_borrow(best)
-        if pick is None:
+        pick = self.pick_borrow(best) if self.map_ready() and self.borrowed.get("values") else None
+        i = None
+        if pick is not None:
+            coord, change, rating = pick
+            new = [j for j, s in enumerate(slots) if s["kind"] not in ("main", "track")]
+            racing = [j for j, s in enumerate(slots) if s["kind"] == "track"]
+            i = new[0] if new else (racing[-1] if racing and gen % 2 == 0 else None)
+        if i is not None:
+            old = slots[i]
+            if old.get("kind") == "track":
+                t = self.tracks.get(old.get("track"))
+                if t is not None:
+                    t["served"] = t.get("served", gen) - 1          # it keeps its turn
+            if self.cfg.build:                                  # v10.2: built from nothing, on its own track
+                slots[i] = {"kind": "build", "map": True, "built": True, "target": change, "target_coord": change,
+                            "rating": rating, "base": self.seed_program().id, "borrowed": True}
+            else:
+                slots[i] = {"kind": "flip", "map": True, "target": change, "target_coord": coord, "rating": rating,
+                            "base": best.id, "borrowed": True}
+        if self.cfg.build and self.map_ready():
+            slots = self.cap_builds(gen, slots)
+        if i is None and not any(s.get("built") or s.get("capped") for s in slots):
             return slots
-        coord, change, rating = pick
-        new = [i for i, s in enumerate(slots) if s["kind"] not in ("main", "track")]
-        racing = [i for i, s in enumerate(slots) if s["kind"] == "track"]
-        i = new[0] if new else (racing[-1] if racing and gen % 2 == 0 else None)
-        if i is None:
-            return slots
-        old = slots[i]
-        if old.get("kind") == "track":
-            t = self.tracks.get(old.get("track"))
-            if t is not None:
-                t["served"] = t.get("served", gen) - 1          # it keeps its turn
-        slots[i] = {"kind": "flip", "map": True, "target": change, "target_coord": coord, "rating": rating,
-                    "base": best.id, "borrowed": True}
         slots = self.fill_slot_texts(slots, best)
-        a, v = next(iter(change.items()))
+        if i is None or slots[i].get("kind") not in ("build", "flip") or not slots[i].get("borrowed"):
+            return slots
+        a, v = next(iter(slots[i]["target"].items()))
         info = self.borrowed.get("values", {}).get(v) or {}
         note = info.get("note") or next((n for aa, vv, n in self.borrowed_values() if vv == v), "")
+        judged = (f"it opens its own track and is judged on its own climb, against the other new designs at equal "
+                  f"effort (first after {self.cfg.race_rungs[0]} experiments), never against the record"
+                  if self.cfg.build else f"the race gives it {self.cfg.race_rungs[0]} experiments before judging it")
         if info.get("origin") == "audit":
             slots[i]["text"] += (f"\nThis option is {short(note, 300)}. Every program so far made this decision the "
                                  f"same way, so nobody knows whether another choice is better. Build it properly (a "
-                                 f"design to test, not a detail): the race gives it {self.cfg.race_rungs[0]} "
-                                 f"experiments before judging it.")
+                                 f"design to test, not a detail): {judged}.")
         else:
             slots[i]["text"] += (f"\nThis option comes from the field (the literature or EinsteinArena), not from this "
                                  f"run: {short(note, 300)}. Build it properly (it is a design to test, not a detail): "
-                                 f"the race gives it {self.cfg.race_rungs[0]} experiments before judging it.")
+                                 f"{judged}.")
         return slots
 
-    # ---------------------------------------------------------------- v9's failures, fixed
-    def is_copy(self, t):
-        """A racing exploration that, after its first rung, sits on a known hill below that hill's top: a copy of a
-        known design (v9 stopped only drops and restarts this way, so copies of the record held the race)."""
-        return (bool(t.get("race")) and t["id"] != self.main_track() and t.get("hill_status") == "on"
-                and t.get("exps", 0) >= self.cfg.race_rungs[0])
+    # ---------------------------------------------------------------- v10.2: explorations built from nothing
+    def built_running(self):
+        return [t for t in self.tracks.values() if t.get("built") and (t.get("race") or {}).get("status") == "running"
+                and t["id"] != self.main_track()]
 
-    def live(self, t):
-        if self.is_copy(t):
-            return False
-        b = self.archive.programs.get(t.get("best_id") or "")
-        if b is not None and not self.archive.in_class(b):
-            return False                                   # its best is outside the run's size class
-        return super().live(t)
+    def cap_builds(self, gen, slots):
+        """At most `build_cap` built explorations race at once: past it, a slot that would open a new one serves a
+        racing track instead (the one served longest ago), so the ones open get the experiments to climb."""
+        running = len(self.built_running())
+        served = {s.get("track") for s in slots if s["kind"] == "track"}
+        for i, s in enumerate(slots):
+            if not s.get("built"):
+                continue
+            if running < self.cfg.build_cap:
+                running += 1
+                continue
+            cands = sorted((t for t in self.tracks.values() if t["id"] not in served and t.get("race")
+                            and self.live(t)), key=lambda t: (t.get("served", t["opened"]), t["opened"]))
+            if not cands:
+                continue                                    # nothing else to serve: it opens anyway
+            t = cands[0]
+            t["served"] = gen
+            served.add(t["id"])
+            slots[i] = {"kind": "track", "track": t["id"], "capped": True}
+            self.map_events.append(f"{t['id']} served instead of a new design ({running} built explorations racing, "
+                                   f"the cap)")
+        return slots
+
+    def target_slot(self, kind, best):
+        """v9's targets; in v10.2 a drop (a new design from the map) is built from nothing, on its own track."""
+        s = super().target_slot(kind, best)
+        if s is not None and self.cfg.build and kind == "drop":
+            rest = {a: v for a, v in (s.get("target_coord") or {}).items() if a not in s["target"] and not is_new(v)}
+            s.update(built=True, base=self.seed_program().id, design=rest)
+        return s
+
+    def fill_slot_texts(self, slots, best):
+        built = [s for s in slots if s.get("built")]
+        for s in built:
+            s["map"] = False
+        try:
+            slots = super().fill_slot_texts(slots, best)
+        finally:
+            for s in built:
+                s["map"] = True
+        for s in built:
+            bp = self.blueprint_lines(s["target"])
+            rest = (f"For its other decisions, the design the map sampled it in (take them unless the design needs "
+                    f"otherwise):\n{self.blueprint_lines(s['design'])}\n" if s.get("design") else
+                    "Its other decisions are yours to choose for this design.\n")
+            s["text"] = BUILD_SLOT.format(n=s["n"], base=s["base"], blueprint=bp, rest=rest, budget=self.cfg.budget)
+            s["options"] = [s["base"]]
+        return slots
+
+    def open_track(self, gen, kind, root, revives=None, flips=None, target=None):
+        if kind != "build":
+            return super().open_track(gen, kind, root, revives, flips, target)
+        tid = super().open_track(gen, "drop", root, target=target)
+        t = self.tracks[tid]
+        t["kind"], t["built"] = "build", True
+        t["source"] = f"a new design built from nothing around {self.blueprint_short(target)}"
+        return tid
 
     def assign(self, gen, s, e):
         """A plan may name any program as its base; one outside the size class (the 2M imports) can't be a start: its
         program would only fail on length. The experiment goes to the main track's best instead, and says so."""
         x = super().assign(gen, s, e)
+        if x and s.get("built"):
+            t = self.tracks.get(x.get("track") or "")
+            if t is not None:
+                t["built"] = True
+                if s.get("design"):
+                    t["design"] = s["design"]
+                if t["kind"] == "drop":
+                    t["source"] = f"a new design from the map built from nothing: {self.blueprint_short(s['target'])}"
+            x["built"], x["design"] = True, s.get("design")
+            return x
         b = self.archive.programs.get(str((x or {}).get("base") or ""))
         if x and b is not None and not self.archive.in_class(b):
             main = self.tracks.get(self.main_track()) or {}
@@ -355,6 +463,65 @@ class Run(Run9):
             x["change"] = (f"{x.get('change') or ''}\n\n(The plan named {b.id} as its base, but it has {b.n:,} steps, "
                            f"outside this run's limit of {self.cfg.max_n:,}; it can't be a start. Build on {new}.)")
         return x
+
+    def deep_child(self, gen, exp):
+        if exp.get("built"):
+            return self.build_child(gen, exp)
+        return super().deep_child(gen, exp)
+
+    def build_child(self, gen, exp):
+        try:
+            base = self.archive.programs[exp["base"]]
+            bp = self.blueprint_lines(exp["target"])
+            if exp.get("design"):
+                bp += "\nIts other decisions (as the map sampled them):\n" + self.blueprint_lines(exp["design"])
+            note = BUILD_CODER_NOTE.format(blueprint=bp, alt=self.alt_note())
+            user = (f"{self.problem.DESCRIPTION}\n\n{self.program_block(base, 'The base program (Code Zero)')}\n\n"
+                    f"## The experiment to implement\nHypothesis: {exp.get('hypothesis')}\nChange: {exp.get('change')}\n"
+                    f"Target: {exp.get('prediction')}\n\n{self.task_text("Code Zero's")}\n\n{note}\n\n{P4.CODE_FORMAT}")
+            code, summary = self.write_code("coder", self.coder_system(), user, gen)
+            return self.child(gen, "deep", base, code, short(exp.get("hypothesis") or exp.get("change"), 300), exp,
+                              summary)
+        except Exception as exc:                                     # noqa: BLE001  (never lose the run)
+            import traceback
+            self.log(f"[{self.name}] gen {gen}: build child crashed: {exc}\n{traceback.format_exc()}")
+            return self.add(Program(id="", gen=gen, role="deep", parent=exp.get("base"), intent="(crashed)", code="",
+                                    plan=exp, error=f"internal error: {exc}")), None
+
+    def exploring(self, plan):
+        t = self.tracks.get((plan or {}).get("track") or "")
+        if t and t.get("built") and t["id"] != self.main_track():
+            return True
+        return super().exploring(plan)
+
+    def wide_child(self, gen, parent, inspiration):
+        """v10.2: a wide child of an exploration is inspired by nothing but itself (the record's code would pull it
+        back towards the record's design)."""
+        if self.cfg.wide_own and self.track_of(parent) != self.main_track():
+            inspiration = None
+        return super().wide_child(gen, parent, inspiration)
+
+    # ---------------------------------------------------------------- v9's failures, fixed
+    def is_copy(self, t):
+        """A racing exploration that, after its first rung, sits on a known hill below that hill's top: a copy of a
+        known design (v9 stopped only drops and restarts this way, so copies of the record held the race)."""
+        if t.get("built"):
+            return False          # v10.2: a design built from nothing is judged on its own climb only (it may pass
+                                  # by a known hill on its way up)
+        return (bool(t.get("race")) and t["id"] != self.main_track() and t.get("hill_status") == "on"
+                and t.get("exps", 0) >= self.cfg.race_rungs[0])
+
+    def live(self, t):
+        if self.is_copy(t):
+            return False
+        b = self.archive.programs.get(t.get("best_id") or "")
+        if b is not None and not self.archive.in_class(b):
+            return False                                   # its best is outside the run's size class
+        if t.get("built") and t.get("race") and t["id"] != self.main_track():
+            if t["race"].get("status") == "finished":      # past the last rung: on while it keeps gaining
+                return t.get("misses", 0) < 2
+            return self.race.live(t)                       # v9 drops a drop on a known hill; a build climbs on
+        return super().live(t)
 
     def tracks_view(self):
         """v9's view without the tracks whose best is outside the size class (they stay in the Atlas and the hills)."""
@@ -404,6 +571,8 @@ class Run(Run9):
         return bool(main.get("hill")) and t.get("hill") == main.get("hill")
 
     def wide_parents(self, rng, pool, level):
+        if self.cfg.wide_own:
+            return self.wide_own_parents(rng, pool, level)
         parents = super().wide_parents(rng, pool, level)
         if not parents:
             return parents
@@ -416,6 +585,33 @@ class Run(Run9):
                 if side:
                     parents[i] = self.archive.sample_parent(rng, side, alpha=alpha)
         return parents
+
+    def wide_own_parents(self, rng, pool, level):
+        """v10.2: one parent from the record's track (by rank), the others the bests of the live explorations, those
+        with the fewest wide children first (each climbs on its own line); v10's rule fills what is left."""
+        main = self.main_track()
+        have = [q for q in pool if self.has_construction(q)]
+        parents = []
+        own = [q for q in have if self.track_of(q) == main]
+        if own:
+            parents.append(self.archive.sample_parent(rng, own, alpha=1.0))
+        widened = Counter(self.track_of(self.archive.programs.get(q.parent)) for q in self.archive.programs.values()
+                          if q.role == "wide" and q.parent in self.archive.programs)
+        ids = {q.id for q in have}
+        lines = [t for t in self.tracks.values() if t["id"] != main and self.live(t) and t.get("best_id") in ids]
+        lines.sort(key=lambda t: (widened[t["id"]], rng.random()))
+        for t in lines[: self.cfg.wide - len(parents)]:
+            parents.append(self.archive.programs[t["best_id"]])
+        if len(parents) < self.cfg.wide:
+            cfg_own, self.cfg.wide_own = self.cfg.wide_own, False
+            try:
+                more = self.wide_parents(rng, pool, level)
+            finally:
+                self.cfg.wide_own = cfg_own
+            parents += [q for q in more if q.id not in {p.id for p in parents}][: self.cfg.wide - len(parents)]
+            while more and len(parents) < self.cfg.wide:
+                parents.append(more[len(parents) % len(more)])
+        return parents[: self.cfg.wide]
 
     def upkeep(self, gen):
         """v9's upkeep, every `upkeep_every` generations; a borrowed option is never merged away into one of the
@@ -493,6 +689,29 @@ class Run(Run9):
             rows.append("Decisions that interact (the best option of one depends on the other): "
                         + ", ".join(f"{a} x {b}" for a, b in self.model.pairs))
         return "\n".join(rows)
+
+    # ---------------------------------------------------------------- v10.2: a cold start with the field's knowledge
+    def seed(self):
+        """A cold start (mode "cold"): before Code Zero runs, the field's decisions and options go on the design map
+        (the generic questions are there already) and its findings into the Atlas, at generation 0. Nothing of the
+        field's code or constructions: the run starts from Code Zero."""
+        if self.cfg.mode == "cold" and not (self.dir / "borrowed.json").exists():
+            from helix9.codebook import Codebook
+            from helix9.run import SEED_AXES
+            from helix10.warm import add_findings, seed_axes
+            (self.dir / "codebook.jsonl").unlink(missing_ok=True)      # a seeding cut off by a stop is done again
+            self.cb = Codebook()
+            if self.cfg.seed_axes:
+                for q in SEED_AXES:
+                    self.cb.add_axis(q, 0, "seed")
+            self.borrowed = seed_axes(self.cb, 0, self.log)
+            with (self.dir / "codebook.jsonl").open("a") as fh:
+                fh.write(json.dumps({"gen": 0, "codebook": self.cb.to_json()}) + "\n")
+            add_findings(self.dir, 0, self.log)
+            (self.dir / "extents.json").write_text("{}")
+            self.save_borrowed()                         # last: its presence says the seeding is complete
+            self.memory = AtlasField(self)
+        return super().seed()
 
     # ---------------------------------------------------------------- the generation
     def generation(self, gen):

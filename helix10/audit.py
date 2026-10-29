@@ -209,6 +209,7 @@ def apply(run, row, gen):
 
 def due(rows, gen, last_record, every=10, stop_after=2):
     """True if an audit should run at generation `gen`."""
+    rows = [r for r in rows if not r.get("skipped")]      # a round skipped for want of programs doesn't count
     if not rows:
         return True
     last = rows[-1]

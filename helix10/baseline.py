@@ -45,9 +45,14 @@ def arm_state(arm):
     """(warm generation, best program dict at the start, CPU seconds spent since) for a v10.1 run folder."""
     arm = Path(arm)
     st = json.loads((arm / "state.json").read_text()) if (arm / "state.json").exists() else None
-    if st is None or (st.get("config") or {}).get("condition") != "v10.1" or not (arm / "extents.json").exists():
+    cond = (st or {}).get("config", {}).get("condition")
+    if st is None or cond not in ("v10.1", "v10.2") \
+            or (cond == "v10.1" and not (arm / "extents.json").exists()):
         return None, None, 0.0                            # not a v10.1 run yet (its warm start may be in progress)
-    w = st.get("warm_gen") if st.get("warm_gen") is not None else st["gen_done"]
+    if cond == "v10.1":
+        w = st.get("warm_gen") if st.get("warm_gen") is not None else st["gen_done"]
+    else:
+        w = 0                                             # v10.2: a cold start; everything after Code Zero counts
     cap = (st.get("config") or {}).get("max_n")
     ext = json.loads((arm / "extents.json").read_text()) if (arm / "extents.json").exists() else {}
     progs = jl(arm / "programs.jsonl")
@@ -134,12 +139,13 @@ class Stream:
               f"{self.s['cpu']:.0f} s CPU")
 
 
-def run(out, arms, budget=300.0, cap=sota.CLASS_N, mem_mb=1500, patience=10, poll=60, hours=72.0, log=print):
+def run(out, arms, budget=300.0, cap=sota.CLASS_N, mem_mb=1500, patience=10, poll=60, hours=72.0, log=print,
+        share=1.0):
     from helix4.problems import ac2
-    from helix47.run import ProblemView
+    from helix10.run import ExactView
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    problem = ProblemView(ac2, cap)
+    problem = ExactView(ac2, cap)                                 # the step limit exactly (v10.1 ran with 200,000)
     streams = [Stream(out, name, arm, cap) for name, arm in arms]
     deadline = time.time() + hours * 3600
     said = set()
@@ -156,8 +162,8 @@ def run(out, arms, budget=300.0, cap=sota.CLASS_N, mem_mb=1500, patience=10, pol
             if st.s.get("finished"):
                 continue
             _, _, arm_cpu = arm_state(st.arm)
-            if st.s["cpu"] >= arm_cpu:                            # it runs only while its total is below the run's
-                continue
+            if st.s["cpu"] >= share * arm_cpu:                    # it runs only while its total is below the run's
+                continue                                          # (v10.2: a share of it; compared at equal CPU)
             st.round(problem, budget, mem_mb, log)
             moved = True
             if st.s["since_gain"] >= patience:
@@ -226,10 +232,13 @@ def main(argv=None):
     ap.add_argument("--out", required=True, help="the field job's folder (or, with --report, the markdown file)")
     ap.add_argument("--axes", default=None, help="the axes run's folder")
     ap.add_argument("--warm", default=None, help="the warm run's folder")
+    ap.add_argument("--scratch", default=None, help="v10.2: only the stream from nothing, matched in CPU to this run")
     ap.add_argument("--budget", type=float, default=300.0)
     ap.add_argument("--cap", type=int, default=sota.CLASS_N)
     ap.add_argument("--patience", type=int, default=10)
     ap.add_argument("--hours", type=float, default=72.0)
+    ap.add_argument("--share", type=float, default=1.0, help="run while the stream's CPU is below this share of its "
+                    "run's (v10.2: 0.5; the comparison is made at equal CPU)")
     ap.add_argument("--report", default=None, help="write the comparison for this root folder (runs/v101)")
     a = ap.parse_args(argv)
     if a.report:
@@ -244,8 +253,11 @@ def main(argv=None):
         log("field: stop requested: finishing the round in progress, then stopping")
     for sg in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(sg, stop)
-    arms = [(n, d) for n, d in (("axes", a.axes), ("warm", a.warm), ("scratch", a.axes)) if d]
-    return run(a.out, arms, a.budget, a.cap, patience=a.patience, hours=a.hours, log=log)
+    if a.scratch:
+        arms = [("scratch", a.scratch)]
+    else:
+        arms = [(n, d) for n, d in (("axes", a.axes), ("warm", a.warm), ("scratch", a.axes)) if d]
+    return run(a.out, arms, a.budget, a.cap, patience=a.patience, hours=a.hours, log=log, share=a.share)
 
 
 if __name__ == "__main__":
