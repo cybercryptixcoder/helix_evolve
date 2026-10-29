@@ -116,11 +116,11 @@ Decisions every hill shared (mapped at generation 17):
 
 ## v102-helix-s2
 
-- Generations 1-20: best 0.666666667 -> 0.862784436 (p0125, track T5); the main track now: T5.
-- Exploration levels: level 0: 17 generations, level 1: 2 generations, level 2: 1 generations.
-- Planned experiments by slot: track 34, main 20, build 5, flip 1.
+- Generations 1-21: best 0.666666667 -> 0.862804903 (p0134, track T5); the main track now: T5.
+- Exploration levels: level 0: 18 generations, level 1: 2 generations, level 2: 1 generations.
+- Planned experiments by slot: track 36, main 21, build 5, flip 1.
 
-### Records (13)
+### Records (14)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -137,6 +137,7 @@ Decisions every hill shared (mapped at generation 17):
 | 14 | 0.862564420 | p0087 | deep | main | T5 |
 | 19 | 0.862783505 | p0119 | wide | mutation | T5 |
 | 20 | 0.862784436 | p0125 | deep | main | T5 |
+| 21 | 0.862804903 | p0134 | deep | main | T5 |
 
 ### Side tracks opened (0)
 
@@ -165,14 +166,15 @@ Decisions every hill shared (mapped at generation 17):
 | 18 | 0.862564666 |  | 3 / 1 | 1 | main, track:T2, track:T4 | 0.846634 | T2 gained (0.811150 -> 0.846634); T4 gained (0.809019 -> 0.809786); T6 gained (0.844825 -> 0.844938) |
 | 19 | 0.862783505 | yes | 4 / 1 | 2 | main, track:T6, track:T7 | 0.851437 | T2 gained (0.846634 -> 0.847345); T7 gained (0.851370 -> 0.851523) |
 | 20 | 0.862784436 | yes | 0 / 1 | 0 | main, track:T2, track:T4 | 0.847346 | T4 gained (0.809786 -> 0.809863); T6 gained (0.844938 -> 0.846812); T7 gained (0.851523 -> 0.851724); T2 goes on to the next rung (24 experiments): still rising (best 0.847345 at 12 experiments) |
+| 21 | 0.862804903 | yes | 0 / 1 | 0 | main, track:T6, track:T7 | 0.851724 | T2 gained (0.847345 -> 0.847919); T4 gained (0.809863 -> 0.810004) |
 
 ### Hills (6: 2 on the map after its first generation, 4 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H4 | 0.862784 (p0125) | 6 | T5 (build) | 0 | This program optimises the full autocorrelation ratio directly via Dinkelbach iterations on a square-root variable with a soft-max surrogate for the infinity norm, rather than isolating the level-transition loss and pert |
+| H4 | 0.862805 (p0134) | 6 | T5 (build) | 0 | This program optimises the full autocorrelation ratio directly via Dinkelbach iterations on a square-root variable with a soft-max surrogate for the infinity norm, rather than isolating the level-transition loss and pert |
 | H6 | 0.851724 (p0123) | 9 | T7 (build) | 0 | This program optimises a smooth soft-max surrogate of the sup-norm (exponential penalty with β annealed 500→2000→8000) via Dinkelbach iterations on a squared-weight parametrisation, rather than perturbing along a transit |
-| H3 | 0.847345 (p0121) | 2 | T2 (build) | 3 | This program optimises a smooth soft-max surrogate of the sup-norm (log-sum-exp with increasing sharpness β) via L-BFGS on a squared-parameterisation w↦w², rather than hill-climbing heights directly. It adds Anderson ext |
+| H3 | 0.847919 (p0129) | 2 | T2 (build) | 3 | This program optimises a smooth soft-max surrogate of the sup-norm (log-sum-exp with increasing sharpness β) via L-BFGS on a squared-parameterisation w↦w², rather than hill-climbing heights directly. It adds Anderson ext |
 | H5 | 0.846812 (p0127) | 9 | T6 (build) | 0 | This program seeds a hand-built spike-plus-decaying-comb shape and refines it with a Dinkelbach-style ascent that maximizes num − λ·l1·linf via random contiguous-block scaling, rather than starting from the record's symm |
 | H2 | 0.842964 (p0038) | 1 | T1 (seed) | 0 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
 | H1 | 0.666667 (p0001) | 1 | - | 0 | the starting program (Code Zero) |
@@ -188,16 +190,16 @@ Decisions every hill shared (mapped at generation 17):
 - D7: time / budget allocation (all: a single CPU-time deadline with a fixed phase split (e.g. ~95s phase A then move loop until deadline-10s), one process)
 - D8: acceptance criterion for moves (all: strict improvement of R (accept only if r_new > cur_R + tiny epsilon), i.e. monotone hill climbing)
 
-### The design map (22 decisions, 119 programs placed)
+### The design map (22 decisions, 125 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A5: How does the search accept worse solutions or escape a local optimum? | anneal beta and keep best R; random multiplicative restarts and coord; random kicks on stalled gradient ascent; strict improvement of R (accept only if ; allow worsening moves with a temperature ... | 67% of 12 (kappa 0.56) | 27% |
-| A4: Which moves or update steps change a solution? | L-BFGS-B steps on w=sqrt(f); multiplicative coordinate descent on h; projected gradient ascent with adaptive ; projected gradient ascent on h; contiguous-run operations: scale/zero bo ... | 58% of 12 (kappa 0.51) | 22% |
-| A11: Which local optimiser solves the inner problem | L-BFGS on smooth surrogate; L-BFGS with Anderson acceleration; Adam with noise and respawn; Simulated annealing or random search; Single closed-form candidate ... | 67% of 12 (kappa 0.56) | 9% |
-| A8: How is the time budget split between phases? | ignored entirely; no time-aware search o; allocate budget across a coarse-to-fine ; use budget for a stochastic optimizer (s; a fixed step-size schedule or fixed iter; adaptive step sizes from a line search o ... | 83% of 12 (kappa 0.73) | 7% |
-| A16: Once converged, how does the program try to leave the local optimum | Small noise (about 1e-8 x max f), then a; Perturb along the gradient of the transi; Perturb only the lowest 1-5% Fourier mod; Structural surgery on blocks (shift, sca; Exact single-coordinate moves on the tie ... | 58% of 12 (kappa 0.46) | 7% |
+| A5: How does the search accept worse solutions or escape a local optimum? | anneal beta and keep best R; random multiplicative restarts and coord; random kicks on stalled gradient ascent; strict improvement of R (accept only if ; allow worsening moves with a temperature ... | 67% of 12 (kappa 0.56) | 28% |
+| A4: Which moves or update steps change a solution? | L-BFGS-B steps on w=sqrt(f); multiplicative coordinate descent on h; projected gradient ascent with adaptive ; projected gradient ascent on h; contiguous-run operations: scale/zero bo ... | 58% of 12 (kappa 0.51) | 24% |
+| A11: Which local optimiser solves the inner problem | L-BFGS on smooth surrogate; L-BFGS with Anderson acceleration; Adam with noise and respawn; Simulated annealing or random search; Single closed-form candidate ... | 67% of 12 (kappa 0.56) | 11% |
+| A16: Once converged, how does the program try to leave the local optimum | Small noise (about 1e-8 x max f), then a; Perturb along the gradient of the transi; Perturb only the lowest 1-5% Fourier mod; Structural surgery on blocks (shift, sca; Exact single-coordinate moves on the tie ... | 58% of 12 (kappa 0.46) | 9% |
 | A1: How is a candidate solution represented? | a fixed-length dense real vector of leng; a piecewise-constant function on a nonun; a parametric family (e.g. Gaussian mixtu; variable-length dense vector with resamp; a nonnegative height vector on a fixed u ... | 92% of 12 (kappa 0.82) | 6% |
+| A8: How is the time budget split between phases? | ignored entirely; no time-aware search o; allocate budget across a coarse-to-fine ; use budget for a stochastic optimizer (s; a fixed step-size schedule or fixed iter; adaptive step sizes from a line search o ... | 83% of 12 (kappa 0.73) | 5% |
 | A2: How is the first solution built? | return start unchanged if given, else a ; use start as a seed and locally perturb/; ignore start and always construct from s; a smooth analytic bump (sine-power) or t; random multi-start over many random init ... | 58% of 12 (kappa 0.39) | - |
 | A3: What quantity does the search optimise while it runs? | Dinkelbach surrogate A - lambda*L1*LSE; exact ratio R with exact argmax gradient | 70% of 10 (kappa 0.27) | - |
 | A6: How is the problem's scale handled (all at once, coarse to fine, in parts)? | fixed resolution chosen up front (option; continuously refine resolution as a func; optimise at coarse resolution then inter | 100% of 11 (kappa 1.00) | - |
@@ -219,9 +221,9 @@ Decisions every hill shared (mapped at generation 17):
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
-| T2 | build | 1 | A11 -> L-BFGS with Anderson accelerat | 1/1 | 12 | 0.847345 | running at 12 | founder H3 |
+| T2 | build | 1 | A11 -> L-BFGS with Anderson accelerat | 1/1 | 12 | 0.847919 | running at 12 | founder H3 |
 | T3 | flip | 1 | A9 -> Alternating projection: push f | 1/1 | 3 | 0.723900 | paused at 6 | on H3 |
-| T4 | build | 2 | A13 -> Average-pool a finer construct | 1/1 | 9 | 0.809863 | running at 6 | top H3 |
-| T5 | build | 3 | A16 -> Perturb along the gradient of  | 1/1 | 15 | 0.862784 | running | founder H4 |
-| T6 | build | 4 | A14 -> A tall spike plus a comb of sm | 1/1 | 8 | 0.846812 | running at 6 | founder H5 |
-| T7 | build | 7 | A10 -> A fixed mild smooth max (beta  | 0/1 | 7 | 0.851724 | running at 6 | founder H6 |
+| T4 | build | 2 | A13 -> Average-pool a finer construct | 1/1 | 9 | 0.810004 | running at 6 | top H3 |
+| T5 | build | 3 | A16 -> Perturb along the gradient of  | 1/1 | 16 | 0.862805 | running | founder H4 |
+| T6 | build | 4 | A14 -> A tall spike plus a comb of sm | 1/1 | 9 | 0.846812 | running at 6 | founder H5 |
+| T7 | build | 7 | A10 -> A fixed mild smooth max (beta  | 0/1 | 8 | 0.851724 | running at 6 | founder H6 |
