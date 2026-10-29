@@ -65,3 +65,16 @@ hand, as in v9.
 - **v10-warm** starts at the record. Polishing it on this CPU is exhausted at +3.8e-8 (measured); the arena needs
   +1e-5. So a record from v10-warm has to come from a structural change the field hasn't found, built and polished
   within 150 CPU seconds per program at 2M. That is the honest difficulty; docs/V10_JOB.md gives the odds.
+
+## v10.1: the same comparison at a fair constraint (October 28, 20:42)
+
+Why: at 2,000,000 steps a new idea can't be optimised far enough on our CPU to show its height (docs/V10_JOB.md), so
+the test moves to a size where our compute matches the field's, against the field's program under the same rules.
+
+| Part | File | What it does |
+| --- | --- | --- |
+| The size class | `run.py` (Archive10), `warm.py` | A run sees only programs of at most `max_n` steps, counting a construction's support (its zero ends trimmed, exactly score-neutral; extents verified by length and score, `extents.json`); larger programs stay in the log, the Atlas and the hills as knowledge; a start is trimmed before a program gets it; the main track is reset to the class's record |
+| The class's best | `sota.py`, `data/field_ac2` | JSAgent's public 100k seed (0.962273842955), the best known construction with n <= 100,000, imported; the warm run starts from it, polished once by the field's methods |
+| The bar | `baseline.py` | The world's best program (iterated Dinkelbach alternating with velocity cycles), chained under the same constraint from the same starts, matched in CPU seconds to each run; stops when converged (10 rounds without a gain); `results/v101/COMPARISON.md` |
+| The invariant audit | `audit.py` | "What does every program do the same way?" every 10 generations: proposed by one reading, sorted (problem constraint, detail, design decision), confirmed by a second reading on a different sample (75% must share it), split into a decision with alternatives that are built and raced; rests after two empty rounds until the record moves (docs/IDEAS.md 3.4) |
+| The handover | `scripts/run_v101.sh` | Pauses the v10 job of the same mode (one stop signal; it finishes its generation and pushes), waits for it, and continues from its folder; hard links instead of copies for its constructions |

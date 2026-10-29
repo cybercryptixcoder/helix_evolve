@@ -4,6 +4,22 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 28, 2026 (late evening): v10.1, the fair comparison, the invariant audit
+
+- **Decided with Shreyas:** the odds at 2M were a compute limit (each idea judged before it could be climbed), not a
+  limit of what the system can write; the claim is tested at equal constraint instead: n <= 100,000, 300 s per
+  program, the same total CPU and start, against the world's best program run under that constraint.
+- **Found:** JSAgent's public 100k seed scores 0.962273842955 (verified with the arena's verifier), above the arena's
+  best entry at that size (0.962214): the class's best known construction, now imported.
+- **Built:** the size class (trim-aware, verified extents), the bar (`helix10/baseline.py`), the invariant audit
+  (`helix10/audit.py`, with IDEAS 3.4's sorting, a second-sample check and the stopping rule), and the handover job
+  (`scripts/run_v101.sh`) that pauses each v10 job gracefully and continues from its folder.
+- **Caught in testing:** another run's folder can reuse a program id (the two v10 runs diverge after v9), so a
+  construction found there gave a 2M program a false 90k extent; extents are now verified by length and score, and a
+  job searches only its own mode's v10 folder.
+
+---
+
 ## October 28, 2026 (evening): v10, the field's axes, two runs
 
 - **Research** (docs/AC2_SOTA.md): the record is 0.963588110582 (arena #1; a new arena #1 needs 0.963598), not

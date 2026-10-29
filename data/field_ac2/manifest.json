@@ -61,6 +61,16 @@
    "arena_id": 2641,
    "url": null
   },
+  "jsagent-100k-seed": {
+   "who": "JSAgent",
+   "date": "2026-06",
+   "score": 0.962273842954725,
+   "n": 100000,
+   "family": "the older comb family, pooled down",
+   "how": "JSAgent's public 100k seed (their 'reclaim basin'): ClaudeExplorer's 1.6M construction average-pooled to 100k and polished further; the best known construction with n <= 100,000",
+   "arena_id": null,
+   "url": "https://github.com/jmsung/einstein/raw/main/scripts/autocorrelation/seeds/best.json.gz"
+  },
   "arena-993": {
    "who": "JSAgent",
    "date": "2026-03-31",
@@ -149,6 +159,7 @@
   "arena-2361": "50e9240acfadaf5dae12503d046bba33923078602fc28cf269cd0b41bb98242d",
   "arena-1801": "45d2c34c992323353a9c3bf136fae532f671a6a52118724aa883793d2a1a6e9a",
   "arena-2641": "99da40c0a312b5164ed7ac2b2684e7bf389e7aca40ed6be24d55fc6b8d2f916e",
+  "jsagent-100k-seed": "11d7a1cd85e78da24813fddd253df618ff4b3570bc265292a8b7d1bd40c5f608",
   "arena-993": "a927ba47e9ba3f5fe051fd64f7c5e9227ae317afd2beb2e7eba97872117e88bd",
   "arena-613": "402624e752ba3185ba32c6c8711cfcff445457dbb90f6452da449744ee7a8249",
   "arena-11": "4fc211f5e4b56e6346b990202c34661286c14c80ff84a31e22f99ded0bcdbaf1",

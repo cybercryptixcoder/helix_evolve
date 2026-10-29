@@ -103,39 +103,102 @@ def add_findings(out, gen, log=print):
         + (f"; {len(sota.FINDINGS) - added} were there already" if added < len(sota.FINDINGS) else ""))
 
 
-def import_field(out, cfg, field_dir, gen, log=print, run_programs=True):
-    """The field's constructions as programs with their own tracks, then the field's methods run on the record."""
+def in_class(p, cap, extents):
+    return not cap or (p.get("n") or 0) <= cap or (extents.get(p["id"]) or 10 ** 12) <= cap
+
+
+def support_extents(out, cap, log=print):
+    """{program id: steps between its first and last nonzero step} for every program larger than `cap` whose
+    construction is at hand (this run's folder, or the local folders in HELIX9_LOCAL_CONSTRUCTIONS). A program
+    whose support fits within `cap` stays in the run's size class: trimming the zeros at its ends changes nothing."""
+    import os
+    from helix4.problems.ac2 import score as ac2_score
+    folders = [out / "constructions"] + [Path(f) for f in os.environ.get("HELIX9_LOCAL_CONSTRUCTIONS", "").split(",") if f]
+    ext = {}
+    for p in jl(out / "programs.jsonl"):
+        if not p.get("valid") or (p.get("n") or 0) <= cap:
+            continue
+        for f in folders:
+            c = f / f"{p['id']}.npy"
+            if c.exists():
+                try:
+                    a = np.asarray(np.load(c), dtype=float)
+                    # the file must be this program's (another run's folder may reuse its id): length and score
+                    if len(a) != p.get("n") or p.get("score") is None or a.max() <= 0 \
+                            or abs(ac2_score(np.maximum(a, 0) / a.max()) - p["score"]) > 1e-9:
+                        continue
+                    nz = np.flatnonzero(a > 0)
+                    ext[p["id"]] = int(nz[-1] - nz[0] + 1) if len(nz) else 0
+                except Exception:                                   # noqa: BLE001
+                    continue
+                break
+    n_in = sum(1 for e in ext.values() if e <= cap)
+    log(f"size class n <= {cap:,}: {n_in} of the {len(ext)} larger constructions at hand fit once their zero ends "
+        f"are trimmed")
+    return ext
+
+
+def set_main(out, cap, extents, log=print):
+    """The main track becomes the track of the best program in the size class."""
+    from helix7.run import FIRST_TRACK
+    rows = jl(out / "tracks.jsonl")
+    if not rows:
+        return None
+    progs = [p for p in jl(out / "programs.jsonl") if p.get("valid") and p.get("score") is not None
+             and in_class(p, cap, extents)]
+    best = max(progs, key=lambda p: (p["score"], -p["gen"]))
+    tid = (best.get("plan") or {}).get("track") or (best.get("plan") or {}).get("line") or FIRST_TRACK
+    last = rows[-1]
+    last["main"] = tid
+    for t in last.get("tracks", []):
+        if t["id"] == tid:
+            t["misses"] = 0
+    (out / "tracks.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows[:-1]) + json.dumps(last) + "\n")
+    log(f"the record in the size class: {best['id']} ({best['score']:.12f}, n = {best.get('n')}); main track {tid}")
+    return best
+
+
+def import_field(out, cfg, field_dir, gen, log=print, run_programs=True, extents=None):
+    """The field's constructions as programs with their own tracks (those already imported by an earlier v10 run are
+    kept), then the field's methods run once on the best of them within the run's size class."""
     from helix4.problems import ac2
     from helix47.evaluate import evaluate
     from helix47.run import ProblemView
     from helix10.programs import load
-    field_dir = Path(field_dir)
     from helix10.run import Archive10
-    problem = ProblemView(ac2, cfg.max_n)
+    field_dir = Path(field_dir)
+    extents = extents if extents is not None else {}
+    problem = ProblemView(ac2, cfg.max_n)                 # the run's own size class
+    anysize = ProblemView(ac2, sota.MAX_N)               # every import is recorded (the Atlas and the hills know it)
     arch = Archive10(out)
-    arch.big_n = cfg.big_n
+    arch.big_n, arch.max_n, arch.extents = cfg.big_n, cfg.max_n, extents
     rows = jl(out / "tracks.jsonl")
     last = rows[-1] if rows else {"gen": gen, "tracks": [], "main": None}
     tracks = {t["id"]: t for t in last.get("tracks", [])}
     nt = len(tracks) + 1
-    by_key = {}
+    by_key = {p.plan["import"]: p for p in arch.programs.values()
+              if p.role == "import" and (p.plan or {}).get("import")}
+    if by_key:
+        log(f"field: {len(by_key)} constructions imported already (by the source run)")
     for item in sorted(sota.IMPORTS, key=lambda x: -x["score"]):
+        if item["key"] in by_key:
+            continue
         f = field_dir / f"{item['key']}.npy"
         if not f.exists():
             log(f"field: {item['key']} not at hand; skipped")
             continue
-        h, why = problem.check(np.load(f))
+        h, why = anysize.check(np.load(f))
         if h is None:
             log(f"field: {item['key']} refused: {why}")
             continue
-        s = problem.score(h)
+        s = anysize.score(h)
         if abs(s - item["score"]) > 1e-9:
             log(f"field: {item['key']} refused: scores {s:.12f}, listed {item['score']:.12f}")
             continue
         while f"T{nt}" in tracks:
             nt += 1
         tid = f"T{nt}"
-        _, fb = problem.feedback(h, None, {"cpu": 0, "wall": 0}, cfg.budget)
+        _, fb = anysize.feedback(h, None, {"cpu": 0, "wall": 0}, cfg.budget)
         src = f"{item.get('arena_id') and 'EinsteinArena solution ' + str(item['arena_id']) or item.get('url')}"
         p = Program(id=arch.new_id(), gen=gen, role="import", parent=None,
                     intent=f"the field's construction: {item['who']} ({item['date']}), {item['family']}: {item['how']}",
@@ -143,25 +206,34 @@ def import_field(out, cfg, field_dir, gen, log=print, run_programs=True):
                     n=int(len(h)), feedback=[f"imported from {src}"] + fb,
                     summary=f"imported: {item['who']}, {item['family']}")
         arch.add(p, h)
+        if len(h) > (cfg.max_n or len(h)):
+            nz = np.flatnonzero(h > 0)
+            extents[p.id] = int(nz[-1] - nz[0] + 1)
         tracks[tid] = {"id": tid, "kind": "import", "root": p.id, "opened": gen,
                        "source": f"the field's construction by {item['who']} ({item['date']}; {item['family']})",
                        "revives": None, "best": s, "best_id": p.id, "misses": cfg.track_patience, "last_gain": gen,
                        "closing": 0.0, "exps": 0, "hill": None, "hill_status": None, "import": item["key"]}
         by_key[item["key"]] = p
         log(f"field: {item['key']} ({item['who']}, n = {len(h):,}) imported as {p.id} on {tid}: {s:.12f}")
-    rec = by_key.get(f"arena-{sota.RECORD['arena_id']}") or (max(by_key.values(), key=lambda q: q.score)
-                                                             if by_key else None)
-    if rec is None:
-        raise SystemExit("field: no construction of the field could be imported")
+    inside = [p for p in by_key.values() if arch.in_class(p)]
+    if not inside:
+        raise SystemExit("field: no construction of the field fits the run's size class")
+    rec = max(inside, key=lambda q: q.score)
     main = rec.plan["track"]
     last["main"] = main
     tracks[main]["misses"] = 0
+    log(f"field: the best construction in the size class (n <= {cfg.max_n:,}): {rec.id} ({rec.plan['import']}, "
+        f"{rec.score:.12f}); main track {main}")
     if run_programs:
         jobs = [("dinkelbach_polish", rec), ("velocity_cycles", rec)]
-        if "arena-2361" in by_key:
-            jobs.append(("resolution_transfer", by_key["arena-2361"]))
+        half = [p for p in inside if 2 * (p.n or 0) <= cfg.max_n]
+        if half:
+            jobs.append(("resolution_transfer", max(half, key=lambda q: q.score)))
+        done = {(p.parent, (p.plan or {}).get("field_program")) for p in arch.programs.values()}
         for name, base in jobs:
-            code = load(name)
+            if (base.id, name) in done:
+                continue
+            code = load(name, cap=cfg.max_n)
             start = arch.construction(base.id)
             res = evaluate(problem, code, start, cfg.budget, cfg.mem_mb)
             tid = base.plan["track"]
@@ -183,8 +255,33 @@ def import_field(out, cfg, field_dir, gen, log=print, run_programs=True):
     return by_key
 
 
+class _linked_copies:
+    """While warm-starting, constructions are hard-linked instead of copied when the filesystem allows it: they are
+    never changed in place, and a v10 source's 2M-step constructions would otherwise double their disk use."""
+
+    def __enter__(self):
+        import os
+        import helix7.warm as w7
+        self.w7, self.orig = w7, w7.shutil.copy
+
+        def copy(a, b, *args, **kw):
+            try:
+                dst = Path(b) / Path(a).name if Path(b).is_dir() else Path(b)
+                if str(a).endswith(".npy"):
+                    os.link(a, dst)
+                    return str(dst)
+            except OSError:
+                pass
+            return self.orig(a, b, *args, **kw)
+        w7.shutil.copy = copy
+        return self
+
+    def __exit__(self, *exc):
+        self.w7.shutil.copy = self.orig
+
+
 def prepare(src, out, mode="axes", seed=1, budget=150.0, pack=None, field=None, log=print, run_programs=True,
-            **cfg_kw):
+            cap=None, **cfg_kw):
     src, out = Path(src), Path(out)
     if (out / "state.json").exists():
         log(f"{out} exists already: nothing done (it resumes as it is)")
@@ -192,7 +289,7 @@ def prepare(src, out, mode="axes", seed=1, budget=150.0, pack=None, field=None, 
     if mode not in ("axes", "warm"):
         raise SystemExit(f"mode must be axes or warm, not {mode}")
     out.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=out.parent) as tmp:
+    with tempfile.TemporaryDirectory(dir=out.parent) as tmp, _linked_copies():
         staged = stage_source(src, Path(tmp) / "src")
         prepare8(staged, out, "continue", seed, budget, "")
         for f in MAP_FILES:
@@ -209,8 +306,12 @@ def prepare(src, out, mode="axes", seed=1, budget=150.0, pack=None, field=None, 
         setattr(cfg, k, getattr(fresh, k))
     cfg.tidy_values = 12
     cfg.mode, cfg.seed, cfg.budget = mode, seed, budget
+    if cap:
+        cfg.max_n = int(cap)
+        cfg.condition = "v10.1"
     for k, v in cfg_kw.items():
         setattr(cfg, k, v)
+    extents = support_extents(out, cfg.max_n, log) if cfg.max_n < sota.MAX_N else {}
     # the design map: the source's, plus the field's decisions
     rows = [r for r in jl(out / "codebook.jsonl") if r.get("gen", 0) <= warm_gen]
     cb = Codebook(rows[-1]["codebook"]) if rows else Codebook()
@@ -229,13 +330,16 @@ def prepare(src, out, mode="axes", seed=1, budget=150.0, pack=None, field=None, 
     if mode == "warm":
         if not field:
             raise SystemExit("mode warm needs --field (a folder of the field's constructions: python -m helix10.field get)")
-        import_field(out, cfg, field, warm_gen, log, run_programs)
+        import_field(out, cfg, field, warm_gen, log, run_programs, extents=extents)
+    elif cfg.max_n < sota.MAX_N:
+        set_main(out, cfg.max_n, extents, log)
+    (out / "extents.json").write_text(json.dumps(extents))
     state["config"] = asdict(cfg)
-    state["version"] = "v10"
+    state["version"] = "v10.1" if cap else "v10"
     state["mode"] = mode
     state["warm_source"] = str(src)
     (out / "state.json").write_text(json.dumps(state, indent=1))
-    log(f"prepared {out} as a v10 run (mode {mode}) from {src}, after generation {state['gen_done']}")
+    log(f"prepared {out} as a {state['version']} run (mode {mode}) from {src}, after generation {state['gen_done']}")
     return out
 
 
@@ -249,8 +353,10 @@ def main(argv=None):
     ap.add_argument("--pack", default=None)
     ap.add_argument("--field", default=None, help="the field's constructions (python -m helix10.field get --out ...)")
     ap.add_argument("--no-programs", action="store_true", help="warm mode: don't run the field's methods at the start")
+    ap.add_argument("--cap", type=int, default=None, help="v10.1: the size class, n <= cap (100000)")
     a = ap.parse_args(argv)
-    prepare(a.src, a.out, a.mode, a.seed, a.budget, pack=a.pack, field=a.field, run_programs=not a.no_programs)
+    prepare(a.src, a.out, a.mode, a.seed, a.budget, pack=a.pack, field=a.field, run_programs=not a.no_programs,
+            cap=a.cap)
 
 
 if __name__ == "__main__":

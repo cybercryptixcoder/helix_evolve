@@ -58,11 +58,33 @@ class Config(Config9):
     keep_top: int = 12
     gc_age: int = 2
     tidy_values: int = 12             # a decision is tidied above this many options (v9: 6; the field adds some)
+    audit_every: int = 10             # the invariant audit (helix10/audit.py): every this many generations ...
+    audit_stop: int = 2               # ... resting after this many empty rounds in a row, until the record moves
+    audit_min_share: float = 0.75     # an invariant counts if this share of a second sample shares it
+
+
+def trim(c):
+    """The construction without its leading and trailing zero steps (R is unchanged, exactly)."""
+    nz = np.flatnonzero(np.asarray(c) > 0)
+    return c[nz[0]: nz[-1] + 1] if len(nz) else c
 
 
 class Archive10(Archive):
-    """Archive whose large constructions handed back unchanged are kept as a reference to their start."""
+    """Archive whose large constructions handed back unchanged are kept as a reference to their start, and which
+    sees only the programs of the run's size class (v10.1: n <= max_n, counting a construction's support only: zero
+    steps at its ends don't change R)."""
     big_n = 300_000
+    max_n = None
+    extents = {}
+
+    def in_class(self, p):
+        if not self.max_n or (p.n or 0) <= self.max_n:
+            return True
+        e = self.extents.get(p.id)
+        return e is not None and e <= self.max_n
+
+    def valid(self):
+        return [p for p in super().valid() if self.in_class(p)]
 
     def add(self, p, construction=None):
         if construction is not None and p.valid and p.parent and np.asarray(construction).size > self.big_n:
@@ -88,7 +110,10 @@ class Archive10(Archive):
         return pid
 
     def construction(self, pid):
-        return super().construction(self.resolve(pid))
+        c = super().construction(self.resolve(pid))
+        if c is not None and self.max_n and len(c) > self.max_n:
+            c = trim(c)                                     # the same function, within the size class
+        return c
 
     def held(self, pid):
         return (self.dir / "constructions" / f"{self.resolve(pid)}.npy").exists()
@@ -143,8 +168,13 @@ class Run(Run9):
 
     def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         super().__init__(out, cfg, llm=llm, gens=gens, log=log, problem=problem)
+        if self.cfg.condition == "v10.1":
+            self.VERSION = "v10.1"                         # the size-class comparison (docs/V10_JOB.md)
         self.archive.__class__ = Archive10
         self.archive.big_n = self.cfg.big_n
+        self.archive.max_n = self.cfg.max_n
+        ef = self.dir / "extents.json"
+        self.archive.extents = json.loads(ef.read_text()) if ef.exists() else {}
         self.memory = AtlasField(self)
         bf = self.dir / "borrowed.json"
         self.borrowed = json.loads(bf.read_text()) if bf.exists() else {"axes": {}, "values": {}}
@@ -189,6 +219,32 @@ class Run(Run9):
             if r in self.cb.axes and r not in out and r in self.cb.active_axes():
                 out.append(r)
         return out
+
+    def save_borrowed(self):
+        (self.dir / "borrowed.json").write_text(json.dumps(self.borrowed, indent=1))
+
+    def run_audit(self, gen):
+        """The invariant audit, when due (helix10/audit.py)."""
+        from helix10 import audit as AU
+        if not self.cfg.audit_every or not self.cb.active_axes():
+            return
+        rows = self._jsonl("audits.jsonl")
+        if not AU.due(rows, gen, self.last_record(), self.cfg.audit_every, self.cfg.audit_stop):
+            return
+        try:
+            row = AU.audit(self, gen, min_share=self.cfg.audit_min_share, log=self.log)
+            added = AU.apply(self, row, gen)
+        except Exception as exc:                                    # noqa: BLE001  (never lose the run)
+            self.log(f"[{self.name}] gen {gen}: the invariant audit failed: {exc}")
+            return
+        if added:
+            self.save_borrowed()
+        self._append("audits.jsonl", row)
+        dec = [x for x in row.get("proposed", []) if str(x.get("category", "")).startswith("decision")]
+        self.log(f"[{self.name}] gen {gen}: invariant audit: {len(row.get('proposed', []))} shared choices named "
+                 f"({len(dec)} design decisions), {len(row.get('confirmed', []))} confirmed on a second sample, "
+                 f"{len(added)} new decision(s) on the map"
+                 + "".join(f"; '{c['what'][:80]}' ({100 * c['share']:.0f}% share it)" for c in row.get("confirmed", [])))
 
     def borrowed_values(self):
         """[(axis, value, note)] for every borrowed option still on the map."""
@@ -258,11 +314,17 @@ class Run(Run9):
                     "base": best.id, "borrowed": True}
         slots = self.fill_slot_texts(slots, best)
         a, v = next(iter(change.items()))
-        note = (self.borrowed.get("values", {}).get(v) or {}).get("note") or next(
-            (n for aa, vv, n in self.borrowed_values() if vv == v), "")
-        slots[i]["text"] += (f"\nThis option comes from the field (the literature or EinsteinArena), not from this run: "
-                             f"{short(note, 300)}. Build it properly (it is a design to test, not a detail): the race "
-                             f"gives it {self.cfg.race_rungs[0]} experiments before judging it.")
+        info = self.borrowed.get("values", {}).get(v) or {}
+        note = info.get("note") or next((n for aa, vv, n in self.borrowed_values() if vv == v), "")
+        if info.get("origin") == "audit":
+            slots[i]["text"] += (f"\nThis option is {short(note, 300)}. Every program so far made this decision the "
+                                 f"same way, so nobody knows whether another choice is better. Build it properly (a "
+                                 f"design to test, not a detail): the race gives it {self.cfg.race_rungs[0]} "
+                                 f"experiments before judging it.")
+        else:
+            slots[i]["text"] += (f"\nThis option comes from the field (the literature or EinsteinArena), not from this "
+                                 f"run: {short(note, 300)}. Build it properly (it is a design to test, not a detail): "
+                                 f"the race gives it {self.cfg.race_rungs[0]} experiments before judging it.")
         return slots
 
     # ---------------------------------------------------------------- v9's failures, fixed
@@ -275,7 +337,14 @@ class Run(Run9):
     def live(self, t):
         if self.is_copy(t):
             return False
+        b = self.archive.programs.get(t.get("best_id") or "")
+        if b is not None and not self.archive.in_class(b):
+            return False                                   # its best is outside the run's size class
         return super().live(t)
+
+    def backtrack_candidates(self):
+        return [(pid, why) for pid, why in super().backtrack_candidates()
+                if pid in self.archive.programs and self.archive.in_class(self.archive.programs[pid])]
 
     def race_pool(self, gen):
         """v9's cap on racing tracks, with two changes: a copy stops racing (is_copy), and a track that hasn't had its
@@ -371,15 +440,18 @@ class Run(Run9):
         for a in order:
             rel = "" if a in self.axes() else " [read unreliably: not used to steer]"
             share = f"; importance {100 * imp[a]:.0f}%" if a in imp else ""
-            tag = " [a decision from the field]" if a in battx and not self.borrowed["axes"].get(a, {}).get("attached") \
-                else ""
+            info = self.borrowed["axes"].get(a, {})
+            tag = (" [an invariant: every program before it did this the same way]" if info.get("origin") == "audit"
+                   else " [a decision from the field]" if a in battx and not info.get("attached") else "")
             rows.append(f"- {a}: {self.cb.axes[a]['question'] or self.cb.name(a)}{share}{rel}{tag}")
             eff = self.model.effects(a) if (self.model is not None and a in self.model.axes) else {}
             vals = sorted(self.cb.values(a), key=lambda v: (-count[v], v))[: self.cfg.map_values]
             vals += [v for v in bvals.get(a, []) if v not in vals]
             for v in vals:
                 mark = " (the record's)" if rec.get(a) == v else ""
-                field = " [from the field]" if v in bvals.get(a, []) else ""
+                origin = (self.borrowed.get("values", {}).get(v) or {}).get("origin")
+                field = (" [an alternative from the invariant audit]" if origin == "audit"
+                         else " [from the field]" if v in bvals.get(a, []) else "")
                 if count[v]:
                     b = best_by.get(v)
                     e = eff.get(v)
@@ -415,6 +487,7 @@ class Run(Run9):
                 self.log(f"[{self.name}] gen {gen}: {e}")
             self.log(f"[{self.name}] gen {gen}: the field's constructions placed on the map of hills "
                      f"({len(pending)} tracks)")
+        self.run_audit(gen)
         out = super().generation(gen)
         removed = self.gc_constructions(gen)
         if removed:
@@ -423,6 +496,9 @@ class Run(Run9):
 
 
 def fake_answer(role, system, user):
+    if role == "auditor":
+        from helix10.audit import fake_reply
+        return fake_reply(user)
     return fake9(role, system, user)
 
 

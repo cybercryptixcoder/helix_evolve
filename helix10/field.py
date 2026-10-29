@@ -96,7 +96,11 @@ def fetch(out, keys=None, log=print):
                     continue
                 arr = values_of(rows[item["arena_id"]])
             else:
-                arr = np.asarray(json.loads(_get(item["url"])), dtype=float)
+                raw = _get(item["url"])
+                if item["url"].endswith(".gz"):
+                    raw = gzip.decompress(raw)
+                d = json.loads(raw)
+                arr = np.asarray(d.get("values") if isinstance(d, dict) else d, dtype=float)
         except Exception as exc:                                        # noqa: BLE001
             log(f"field: {item['key']}: download failed ({type(exc).__name__}: {str(exc)[:160]})")
             continue

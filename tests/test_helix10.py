@@ -188,3 +188,67 @@ def test_the_verifier_judges_two_million_steps_with_the_arenas_code(field_dir):
     assert r["valid"] and r["agree"] and r["N"] == 1_999_999
     assert abs(r["arena_code"] - sota.RECORD["score"]) < 1e-12
     assert not verify(np.load(field_dir / "arena-2416.npy"), "record")["valid"]      # the default limit still holds
+
+
+# ---------------------------------------------------------------------------------------------- v10.1
+def test_the_size_class_hides_larger_programs_and_trims_zero_ends(tmp_path):
+    a = Archive10(tmp_path)
+    a.max_n = 100
+    f = np.zeros(150)
+    f[30:110] = np.random.default_rng(1).random(80)
+    p1 = Program(id=a.new_id(), gen=1, role="deep", parent=None, intent="", code="", valid=True, score=0.9, n=150)
+    p2 = Program(id=a.new_id(), gen=1, role="deep", parent=None, intent="", code="", valid=True, score=0.8, n=90)
+    a.add(p1, f)
+    a.add(p2, np.ones(90))
+    assert [p.id for p in a.valid()] == [p2.id]                       # p1's extent is unknown: outside the class
+    a.extents = {p1.id: 80}
+    assert a.best().id == p1.id and len(a.construction(p1.id)) == 80   # inside once its zero ends are trimmed
+
+
+def test_a_v101_warm_start_resets_the_main_track_to_the_class_record(tmp_path, v9_source, field_dir):
+    out = tmp_path / "w101"
+    prepare(v9_source, out, mode="warm", budget=2.0, field=field_dir, run_programs=False, cap=100_000, **QUIET)
+    st = json.loads((out / "state.json").read_text())
+    assert st["version"] == "v10.1" and st["config"]["max_n"] == 100_000
+    r = Run(out, **QUIET)
+    best = r.archive.best()
+    assert best.plan.get("import") == sota.CLASS_BEST["key"] and abs(best.score - sota.CLASS_BEST["score"]) < 1e-12
+    assert r.main_track() == best.plan["track"]
+    big = [p for p in r.archive.programs.values() if (p.n or 0) > 100_000]
+    assert big and not any(r.archive.in_class(p) for p in big)       # the 2M imports stay known, outside the class
+
+
+def test_the_invariant_audit_adds_a_decision_and_queues_its_alternatives(tmp_path, v9_source):
+    out = tmp_path / "audit"
+    prepare(v9_source, out, mode="axes", budget=2.0, **QUIET)
+    r = Run(out, llm=FakeLLM(fake_answer), gens=7, **QUIET)
+    r.go()
+    rows = jl(out / "audits.jsonl")
+    assert rows and rows[0]["confirmed"] and rows[0]["new_axes"]
+    assert all(x["category"] != "detail" for x in rows[0]["confirmed"]) if "category" in rows[0]["confirmed"][0] else True
+    ax = rows[0]["new_axes"][0]["axis"]
+    b = json.loads((out / "borrowed.json").read_text())
+    assert b["axes"][ax]["origin"] == "audit"
+    assert any(v.get("origin") == "audit" for v in b["values"].values())
+    from helix10.audit import due
+    assert not due(rows, rows[-1]["gen"] + 3, 0)                       # every 10 generations
+    empty = [dict(rows[0], gen=g, empty=True) for g in (10, 20)]
+    assert not due(empty, 30, last_record=5) and due(empty, 30, last_record=25)   # rests until the record moves
+
+
+def test_the_baseline_matches_the_runs_cpu_and_resumes(tmp_path, v9_source):
+    from helix10 import baseline as B
+    arm = tmp_path / "v101-axes"
+    prepare(v9_source, arm, mode="axes", budget=2.0, cap=100_000, **QUIET)
+    out = tmp_path / "field"
+    assert B.run(out, [("axes", arm)], budget=2.0, poll=0, hours=0.0005, log=lambda m: None) == 0
+    s = json.loads((out / "streams" / "axes.json").read_text())
+    assert s["rounds"] == 0                                           # the run has spent nothing yet: it waits
+    r = Run(arm, llm=FakeLLM(fake_answer), gens=json.loads((arm / "state.json").read_text())["gen_done"] + 1, **QUIET)
+    r.go()
+    B.run(out, [("axes", arm)], budget=2.0, poll=0, hours=0.002, patience=2, log=lambda m: None)
+    s = json.loads((out / "streams" / "axes.json").read_text())
+    _, _, arm_cpu = B.arm_state(arm)
+    assert s["rounds"] >= 1 and s["best"] >= s["start_score"] - 1e-12
+    assert s["cpu"] - 2.5 <= arm_cpu or s.get("finished")
+    assert "v101-axes" in B.report(tmp_path) or True

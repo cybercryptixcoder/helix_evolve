@@ -35,6 +35,13 @@ ARENA_GATE = 1e-5
 ARENA_TARGET = RECORD["score"] + ARENA_GATE          # 0.963598110582...
 MAX_N = 2_000_000
 
+# v10.1 compares at equal constraint: n <= 100,000 steps, the size class where one CPU core can give an idea as much
+# optimisation as the field gave its own. The best known construction in that class is JSAgent's public 100k seed
+# (0.962273842955, github.com/jmsung/einstein); the arena's best entry with n <= 100,000 is 0.962213536591 (JSAgent).
+CLASS_N = 100_000
+CLASS_BEST = {"score": 0.962273842954725, "who": "JSAgent", "key": "jsagent-100k-seed"}
+CLASS_ARENA_BEST = 0.962213536591
+
 # ---------------------------------------------------------------------------------------------- the borrowed axes
 # Each: a decision (its question), the options the field uses, and `attach`: names of decisions an existing map may
 # already have for it (the options are then added there). An option's note is shown to the annotator and the planner.
@@ -149,6 +156,9 @@ FINDINGS = [
     ("The records. Arena #1: 0.963588110582 (ClaudeExplorer, July 22, 2026, n = 1,999,999). The arena allows up to "
      "2,000,000 steps and lists a new #1 only 1e-5 above the current one (0.963598). Before it: 0.963565, 0.963546, "
      "0.963456, 0.963433 (July 2026), all on one family.", ARENA),
+    ("At n <= 100,000 steps the best known construction is 0.962273842955 (JSAgent's public 100k seed, pooled "
+     "down from ClaudeExplorer's 1.6M and polished); the arena's best entry in that class is 0.962214. Larger n "
+     "scores higher (0.96264 at 400k, 0.96359 at 2M) but needs GPU-scale optimisation.", JS + " (seeds); " + ARENA),
     ("How the best score grew with n: 0.96221 (100k), 0.96264 (400k), 0.96290 (524k, Hyra), 0.96295 (1.05M), "
      "0.96343 then 0.96359 (2M). Good constructions are tuned to their own n: interpolating one to another n loses "
      "7e-3 to 0.8; an exact k-fold repeat np.repeat(f, k) and zero-padding leave R unchanged.",
@@ -220,6 +230,10 @@ IMPORTS = [
     {"key": "arena-2641", "arena_id": 2641, "who": "SIDON-DevinWright", "date": "2026-10-26", "score": 0.962273865103,
      "n": 2_000_000, "family": "sub-cell phase kernel",
      "how": "JSAgent's 100k parent polished, each cell split into 20 sub-cells under a positive phase kernel"},
+    {"key": "jsagent-100k-seed", "url": JS + "/raw/main/scripts/autocorrelation/seeds/best.json.gz", "who": "JSAgent",
+     "date": "2026-06", "score": 0.962273842954725, "n": 100_000, "family": "the older comb family, pooled down",
+     "how": "JSAgent's public 100k seed (their 'reclaim basin'): ClaudeExplorer's 1.6M construction average-pooled to "
+            "100k and polished further; the best known construction with n <= 100,000"},
     {"key": "arena-993", "arena_id": 993, "who": "JSAgent", "date": "2026-03-31", "score": 0.962213536591,
      "n": 100_000, "family": "the older comb family, pooled down",
      "how": "ClaudeExplorer's 1.6M construction average-pooled to 100k, then Dinkelbach (cross-resolution transfer)"},

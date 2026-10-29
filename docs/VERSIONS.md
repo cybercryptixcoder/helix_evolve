@@ -33,6 +33,18 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 ---
 
+## v10.1: Helix against the world's best program at the same constraint (October 28, 2026, late), job ready
+
+- **Why.** v10's odds were low for a compute reason: at 2M steps our CPU can't climb a new idea to its height, so it
+  loses to a record polished on GPUs. The fair test of the claim is at n <= 100,000 (our CPU matches the field's
+  compute there), against the field's own best program run under exactly our constraint.
+- **What changes** (docs/V10_DESIGN.md, "v10.1"): the size class (100,000 steps; zero ends trimmed), 300 s per
+  program, JSAgent's public 100k seed (0.962273842955, the class's best) as the warm run's start, the bar
+  (`helix10/baseline.py`: the field's program chained from the same starts, matched in CPU), and the invariant audit
+  (`helix10/audit.py`). The v10 jobs are paused gracefully and continued.
+- **The job** (docs/V10_JOB.md, `scripts/run_v101.sh`): three jobs, axes, warm and field; the comparison in
+  `results/v101/COMPARISON.md`.
+
 ## v10: v9 plus the field's knowledge, in two runs (October 28, 2026), job ready
 
 - **Why.** v9's job (docs/V9_RESULTS.md) moved the record by 2.5e-13: 8 distinct hills top out within 3e-7 of
