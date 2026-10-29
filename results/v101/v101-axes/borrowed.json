@@ -44,6 +44,13 @@
    "key": "target",
    "question": "Which part of f*f does the program's step aim at",
    "attached": true
+  },
+  "A99": {
+   "key": "audit",
+   "question": "Every program so far: After each local solve, the height vector is rescaled by dividing by sqrt(max knot value).. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 820
   }
  },
  "values": {
@@ -241,6 +248,24 @@
    "name": "Zero-pad to the step limit and polish there, letting structure grow into the padding",
    "note": "the single biggest lever of the July record: about 10x faster gains per cycle (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
    "axis_key": "resolution"
+  },
+  "A99.v2": {
+   "name": "Normalize by sum of heights",
+   "origin": "audit",
+   "gen": 820,
+   "note": "an alternative to what every program so far does (After each local solve, the height vector is rescaled by dividing by sqrt(max knot value).): the invariant audit, generation 820; Scale fixing changes L-BFGS conditioning and which local basin is reached."
+  },
+  "A99.v3": {
+   "name": "Normalize by max height",
+   "origin": "audit",
+   "gen": 820,
+   "note": "an alternative to what every program so far does (After each local solve, the height vector is rescaled by dividing by sqrt(max knot value).): the invariant audit, generation 820; Scale fixing changes L-BFGS conditioning and which local basin is reached."
+  },
+  "A99.v4": {
+   "name": "Leave scale unnormalized",
+   "origin": "audit",
+   "gen": 820,
+   "note": "an alternative to what every program so far does (After each local solve, the height vector is rescaled by dividing by sqrt(max knot value).): the invariant audit, generation 820; Scale fixing changes L-BFGS conditioning and which local basin is reached."
   }
  },
  "matched": {
