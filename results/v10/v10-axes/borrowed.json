@@ -1,0 +1,242 @@
+{
+ "axes": {
+  "A1": {
+   "key": "objective",
+   "question": "How is the ratio R optimised: the objective the optimiser actually works on",
+   "attached": true
+  },
+  "A92": {
+   "key": "max",
+   "question": "How is the maximum of f*f (the L-infinity norm) handled in the optimised objective",
+   "attached": false
+  },
+  "A4": {
+   "key": "optimiser",
+   "question": "Which local optimiser solves the inner problem",
+   "attached": true
+  },
+  "A75": {
+   "key": "positivity",
+   "question": "How is f >= 0 enforced",
+   "attached": true
+  },
+  "A5": {
+   "key": "resolution",
+   "question": "How is the number of steps n chosen and changed",
+   "attached": true
+  },
+  "A93": {
+   "key": "envelope",
+   "question": "What is the macro shape (the envelope) of f across its domain",
+   "attached": false
+  },
+  "A94": {
+   "key": "comb",
+   "question": "What is the fine structure of f (the comb of teeth or blocks)",
+   "attached": false
+  },
+  "A95": {
+   "key": "escape",
+   "question": "Once converged, how does the program try to leave the local optimum",
+   "attached": false
+  },
+  "A85": {
+   "key": "target",
+   "question": "Which part of f*f does the program's step aim at",
+   "attached": true
+  }
+ },
+ "values": {
+  "A1.v371": {
+   "name": "Dinkelbach: maximise ||f*f||_2^2 - lambda*||f*f||_1*smoothmax(f*f), then lambda = R, repeated",
+   "note": "iterated Dinkelbach (fractional programming); behind every construction above 0.962 (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "objective"
+  },
+  "A1.v372": {
+   "name": "Gradient steps on R itself (or log R) with a smooth max",
+   "note": "the direct route: vanishing gradients on the flat top (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "objective"
+  },
+  "A1.v373": {
+   "name": "Active-set minimax: the tied maxima of f*f as constraints with dual weights (LP, SLSQP, persistent dual)",
+   "note": "KKT view of the plateau (EinsteinArena thread 43 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions); https://github.com/justinkang221/second-autocorrelation-inequality experiments/12, gpu_pd_optimizer)",
+   "axis_key": "objective"
+  },
+  "A1.v374": {
+   "name": "Exact line search on R per block or run of f (no gradient)",
+   "note": "packet/run-coordinate ascent: +1.5e-5 at 100k, then exhausted (EinsteinArena thread 92 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "objective"
+  },
+  "A1.v375": {
+   "name": "Alternating projection: push f*f towards a two-level target, then project back to f >= 0",
+   "note": "Gerchberg-Saxton/Fienup; no gain in 1,370 trials on the leaders (EinsteinArena thread 212 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "objective"
+  },
+  "A92.v1": {
+   "name": "Exact maximum (a subgradient at the arg max)",
+   "note": "kinked: smooth methods stall at the vertex (EinsteinArena thread 255 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "max"
+  },
+  "A92.v2": {
+   "name": "LogSumExp smooth max normalised by max(f*f), beta annealed upward (1e5 to 1e9 and beyond, up to 1e14)",
+   "note": "the leaders' choice; the normalisation keeps high beta stable (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions); https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "max"
+  },
+  "A92.v3": {
+   "name": "A fixed mild smooth max (beta about 100-500 relative to the max)",
+   "note": "Adam-friendly; too smooth to resolve the 1e-7 ties at the top (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions), CHRONOS)",
+   "axis_key": "max"
+  },
+  "A92.v4": {
+   "name": "A softmax- or p-norm-weighted set of the top lags",
+   "note": "a smooth relative of the active set",
+   "axis_key": "max"
+  },
+  "A4.v161": {
+   "name": "L-BFGS on the smooth surrogate, many iterations per Dinkelbach round",
+   "note": "the leaders' inner solver, 3-5 rounds per beta (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "optimiser"
+  },
+  "A4.v162": {
+   "name": "L-BFGS with Anderson acceleration of the Dinkelbach iterates",
+   "note": "used in the July 2026 polish of the record's basin (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "optimiser"
+  },
+  "A4.v163": {
+   "name": "Adam with gradient noise and elitist respawn of the worst candidates",
+   "note": "Jaech & Joseph 2025 (published 0.94136; their released function has 2,540 steps; https://github.com/ajaech/autocorrelation_inequality)",
+   "axis_key": "optimiser"
+  },
+  "A4.v164": {
+   "name": "Simulated annealing or random search on f",
+   "note": "Boyer & Li 2025 (0.901564, arXiv:2506.16750)",
+   "axis_key": "optimiser"
+  },
+  "A75.v13": {
+   "name": "f = w^2 exactly (a cell at zero stays at zero: the support is locked)",
+   "note": "the leaders' choice; the optimiser can't revive a dead cell (https://github.com/justinkang221/second-autocorrelation-inequality)",
+   "axis_key": "positivity"
+  },
+  "A75.v14": {
+   "name": "Clip or project to f >= 0 after each step",
+   "note": "lets cells die and revive",
+   "axis_key": "positivity"
+  },
+  "A75.v15": {
+   "name": "An explicit support mask pruned on purpose (zero the smallest cells, re-optimise, repeat)",
+   "note": "warm self-pruning: set the record on the first autocorrelation problem (https://github.com/jmsung/einstein, wiki techniques)",
+   "axis_key": "positivity"
+  },
+  "A5.v198": {
+   "name": "Exact k-fold repeat np.repeat(f, k) (R unchanged), then polish at the finer grid",
+   "note": "score-preserving to 1e-16; polish freedom grows with cells per tooth (EinsteinArena thread 212 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions); https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "resolution"
+  },
+  "A5.v199": {
+   "name": "Zero-pad to the size cap (2,000,000) and polish there, letting structure grow into the padding",
+   "note": "the single biggest lever of the July record: about 10x faster gains per cycle (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "resolution"
+  },
+  "A5.v200": {
+   "name": "Average-pool a finer construction down to n, then polish (a basin transplant)",
+   "note": "JSAgent: 1.6M pooled to 100k gave 0.96221, above any native 100k (EinsteinArena thread 180 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "resolution"
+  },
+  "A5.v201": {
+   "name": "Coarse to fine, upsampling by interpolation between stages",
+   "note": "works from small n (Jaech & Joseph); interpolating a tuned construction destroys it (EinsteinArena thread 211 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "resolution"
+  },
+  "A93.v1": {
+   "name": "One heavy comb block holding about 30% of the mass at one end, an empty gap beside it, a graded ramp of bumps",
+   "note": "the blueprint of the best constructions, found independently twice (EinsteinArena thread 254 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "envelope"
+  },
+  "A93.v2": {
+   "name": "A tall spike plus a comb of smaller peaks",
+   "note": "Jaech & Joseph 2025's continuous extremiser (https://github.com/justinkang221/second-autocorrelation-inequality)",
+   "axis_key": "envelope"
+  },
+  "A93.v3": {
+   "name": "A smooth arcsine-like density, 1/sqrt(1 - 4x^2) on [-1/2, 1/2]",
+   "note": "Barnard & Steinerberger: its autoconvolution is flat in the limit (arXiv:1903.08731)",
+   "axis_key": "envelope"
+  },
+  "A93.v4": {
+   "name": "A parametric series sum_j a_j (1 - 4x^2)^(j - 1/2) (about 100 terms)",
+   "note": "Rechnitzer 2026's Bessel-type ansatz (arXiv:2602.07292)",
+   "axis_key": "envelope"
+  },
+  "A93.v5": {
+   "name": "Regular sparse packets under a smooth raised-cosine envelope",
+   "note": "from scratch, caps at 0.903 (EinsteinArena thread 103 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "envelope"
+  },
+  "A94.v1": {
+   "name": "A fine, coherent periodic lattice of teeth (period about 0.3% of the domain)",
+   "note": "Hyra's innovation: half the relative period and twice the coherence of the older family (EinsteinArena thread 254 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "comb"
+  },
+  "A94.v2": {
+   "name": "Contiguous blocks with irregular spacing found by optimisation (hundreds to thousands of blocks)",
+   "note": "the older family: 783 blocks at 100k, 3,133 at 1.6M (EinsteinArena thread 133 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "comb"
+  },
+  "A94.v3": {
+   "name": "A coarser parent with each cell split into about 20 sub-cells under a phase kernel",
+   "note": "NIGHTFALL: a 100k parent to 2M, 0.962274 (EinsteinArena thread 287 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "comb"
+  },
+  "A94.v4": {
+   "name": "Number-theoretic support (Sidon/B2 sets, difference sets, quadratic residues)",
+   "note": "caps at about 0.903 from scratch (EinsteinArena thread 127 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "comb"
+  },
+  "A94.v5": {
+   "name": "Regular [small, big, small] triplets",
+   "note": "the 50k constructions of March 2026 (EinsteinArena thread 59 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "comb"
+  },
+  "A95.v1": {
+   "name": "Small noise (about 1e-8 x max f), then a full re-polish, with momentum along the last improving step",
+   "note": "velocity cycles: sustained gains for 100+ cycles in the record's basin (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "escape"
+  },
+  "A95.v2": {
+   "name": "Perturb along the gradient of the transition loss (lags where f*f crosses between its levels), re-polish",
+   "note": "aims at where 2/3 of the loss lives (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "escape"
+  },
+  "A95.v3": {
+   "name": "Perturb only the lowest 1-5% Fourier modes of f, then re-polish",
+   "note": "about 70% of such moves improved, against about 0% for pixel noise (EinsteinArena thread 180 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "escape"
+  },
+  "A95.v4": {
+   "name": "Structural surgery on blocks (shift, scale, split, merge, remove), then re-polish",
+   "note": "useful early; on the leaders, 6,000 block shifts gained nothing (EinsteinArena thread 212 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "escape"
+  },
+  "A95.v5": {
+   "name": "Exact single-coordinate moves on the tied plateau (incremental update of f*f, no FFT)",
+   "note": "harvests about 1e-10 per move at the vertex (EinsteinArena thread 255 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "escape"
+  },
+  "A85.v4": {
+   "name": "The level transitions of f*f (lags with f*f/max between 0.1 and 0.9)",
+   "note": "about 2/3 of 1 - R lives there, in under 5% of the lags; crossings are 8-11 cells wide (https://github.com/justinkang221/second-autocorrelation-inequality/blob/main/experiments/12_hyra_campaign/NOTES.md)",
+   "axis_key": "target"
+  },
+  "A85.v5": {
+   "name": "Only the tied maxima (the active set of the L-infinity norm)",
+   "note": "the vertex's constraints (EinsteinArena thread 255 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "target"
+  },
+  "A85.v6": {
+   "name": "Small-mass runs of f first",
+   "note": "packet ascent's order (EinsteinArena thread 92 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
+   "axis_key": "target"
+  }
+ },
+ "matched": {}
+}

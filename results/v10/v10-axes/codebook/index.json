@@ -1,0 +1,61 @@
+{
+ "file": "codebook.jsonl",
+ "lines_per_chunk": 20,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 20,
+   "sha256": "b84db1e439f9c5742c34be4b9d6b40006914816fc4fa16ae775daed6c445437a",
+   "gens": [
+    700,
+    719
+   ]
+  },
+  {
+   "name": "part-0002.jsonl.gz",
+   "lines": 20,
+   "sha256": "45a64cef9aa122312b24e4ac5f7008e7b0002b79d53e0a81e2d6c6ea41115aa5",
+   "gens": [
+    720,
+    739
+   ]
+  },
+  {
+   "name": "part-0003.jsonl.gz",
+   "lines": 20,
+   "sha256": "49e5cac06acacc60c6a2845b8f0ff75d873e35ed75742349c9555980bbfd873f",
+   "gens": [
+    740,
+    759
+   ]
+  },
+  {
+   "name": "part-0004.jsonl.gz",
+   "lines": 20,
+   "sha256": "9bf85bbcac2c5400a7c18dfc5e852fab7a0fe76359584e67eac3cae0f90329be",
+   "gens": [
+    760,
+    779
+   ]
+  },
+  {
+   "name": "part-0005.jsonl.gz",
+   "lines": 20,
+   "sha256": "2479a362da1914b55dee5432d92391dac93f1644b516b2ffab91fa35d35047c3",
+   "gens": [
+    780,
+    799
+   ]
+  },
+  {
+   "name": "part-0006.jsonl.gz",
+   "lines": 4,
+   "sha256": "257f0e24517e34097bb09dd09a543118fc6fae4fda291982505e83c03e99885e",
+   "gens": [
+    800,
+    802
+   ]
+  }
+ ],
+ "lines": 104
+}
