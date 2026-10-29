@@ -315,6 +315,11 @@ def prepare(src, out, mode="axes", seed=1, budget=150.0, pack=None, field=None, 
     # the design map: the source's, plus the field's decisions
     rows = [r for r in jl(out / "codebook.jsonl") if r.get("gen", 0) <= warm_gen]
     cb = Codebook(rows[-1]["codebook"]) if rows else Codebook()
+    if cfg.max_n < sota.MAX_N:                                   # v10.1: the options speak of the run's own limit
+        for ax in cb.axes.values():
+            for v in ax.get("values", {}).values():
+                if "size cap (2,000,000)" in v.get("name", ""):
+                    v["name"] = v["name"].replace("size cap (2,000,000)", f"step limit ({cfg.max_n:,})")
     borrowed = seed_axes(cb, warm_gen, log)
     if (out / "borrowed.json").exists():                         # a v10 source: its borrowed options stay borrowed
         old = json.loads((out / "borrowed.json").read_text())

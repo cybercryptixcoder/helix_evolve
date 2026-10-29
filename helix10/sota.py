@@ -95,7 +95,7 @@ AXES = [
      "options": [
          ("Exact k-fold repeat np.repeat(f, k) (R unchanged), then polish at the finer grid",
           "score-preserving to 1e-16; polish freedom grows with cells per tooth (" + thread(212) + "; " + CE12 + ")"),
-         ("Zero-pad to the size cap (2,000,000) and polish there, letting structure grow into the padding",
+         ("Zero-pad to the step limit and polish there, letting structure grow into the padding",
           "the single biggest lever of the July record: about 10x faster gains per cycle (" + CE12 + ")"),
          ("Average-pool a finer construction down to n, then polish (a basin transplant)",
           "JSAgent: 1.6M pooled to 100k gave 0.96221, above any native 100k (" + thread(180) + ")"),
