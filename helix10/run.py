@@ -342,6 +342,32 @@ class Run(Run9):
             return False                                   # its best is outside the run's size class
         return super().live(t)
 
+    def assign(self, gen, s, e):
+        """A plan may name any program as its base; one outside the size class (the 2M imports) can't be a start: its
+        program would only fail on length. The experiment goes to the main track's best instead, and says so."""
+        x = super().assign(gen, s, e)
+        b = self.archive.programs.get(str((x or {}).get("base") or ""))
+        if x and b is not None and not self.archive.in_class(b):
+            main = self.tracks.get(self.main_track()) or {}
+            new = main.get("best_id") or self.archive.best().id
+            x["base_requested"], x["base"] = b.id, new
+            x["track"] = self.track_of(self.archive.programs[new])
+            x["change"] = (f"{x.get('change') or ''}\n\n(The plan named {b.id} as its base, but it has {b.n:,} steps, "
+                           f"outside this run's limit of {self.cfg.max_n:,}; it can't be a start. Build on {new}.)")
+        return x
+
+    def tracks_view(self):
+        """v9's view without the tracks whose best is outside the size class (they stay in the Atlas and the hills)."""
+        hidden = {tid: t for tid, t in self.tracks.items()
+                  if (b := self.archive.programs.get(t.get("best_id") or "")) is not None
+                  and not self.archive.in_class(b) and tid != self.main_track()}
+        for tid in hidden:
+            del self.tracks[tid]
+        try:
+            return super().tracks_view()
+        finally:
+            self.tracks.update(hidden)
+
     def backtrack_candidates(self):
         return [(pid, why) for pid, why in super().backtrack_candidates()
                 if pid in self.archive.programs and self.archive.in_class(self.archive.programs[pid])]
