@@ -6,3 +6,6 @@
 22:16:43 field: scratch round 1 (dinkelbach_polish): 0.845325028403; best 0.845325028403; 53 s CPU
 22:32:21 field: axes round 2 (velocity_cycles): 0.941441752245; best 0.941441752245; 308 s CPU
 22:32:21 field: stream warm starts from v101-warm's record at its start, p4407 (0.962273842985)
+22:34:33 field: warm round 1 (dinkelbach_polish): 0.962273842985; best 0.962273842985; 3 s CPU
+22:55:51 field: scratch round 2 (velocity_cycles): 0.865921527921; best 0.865921527921; 320 s CPU
+23:04:11 field: axes round 3 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 313 s CPU
