@@ -58,6 +58,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 20
+  },
+  "A24": {
+   "key": "audit",
+   "question": "Every program so far: No symmetry or reflection constraint is imposed on h; the full asymmetric height array is free.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 30
+  },
+  "A25": {
+   "key": "audit",
+   "question": "Every program so far: Support topology is unconstrained: zero heights may appear anywhere, so f can have gaps or multiple components.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 30
+  },
+  "A26": {
+   "key": "audit",
+   "question": "Every program so far: No smoothness, total-variation, or height regularization is added; only nonnegativity and the R ratio matter.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 30
   }
  },
  "values": {
@@ -286,6 +307,60 @@
    "origin": "audit",
    "gen": 20,
    "note": "an alternative to what every program so far does (Optimising programs keep and return the best-R array seen, not the final iterate.): the invariant audit, generation 20; The final state after local search or annealing may be worse than an earlier incumbent."
+  },
+  "A24.v2": {
+   "name": "Force even symmetry h[i]=h[N-1-i]",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No symmetry or reflection constraint is imposed on h; the full asymmetric height array is free.): the invariant audit, generation 30; Symmetry shrinks the feasible set and can change the best attainable R."
+  },
+  "A24.v3": {
+   "name": "Optimize half the array and mirror it",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No symmetry or reflection constraint is imposed on h; the full asymmetric height array is free.): the invariant audit, generation 30; Symmetry shrinks the feasible set and can change the best attainable R."
+  },
+  "A24.v4": {
+   "name": "Restrict starts to symmetric shapes",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No symmetry or reflection constraint is imposed on h; the full asymmetric height array is free.): the invariant audit, generation 30; Symmetry shrinks the feasible set and can change the best attainable R."
+  },
+  "A25.v2": {
+   "name": "Force one contiguous positive block",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (Support topology is unconstrained: zero heights may appear anywhere, so f can have gaps or multiple components.): the invariant audit, generation 30; Gaps and multiple components change f*f and the L_inf knot."
+  },
+  "A25.v3": {
+   "name": "Optimize support endpoints explicitly",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (Support topology is unconstrained: zero heights may appear anywhere, so f can have gaps or multiple components.): the invariant audit, generation 30; Gaps and multiple components change f*f and the L_inf knot."
+  },
+  "A25.v4": {
+   "name": "Allow at most two positive components",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (Support topology is unconstrained: zero heights may appear anywhere, so f can have gaps or multiple components.): the invariant audit, generation 30; Gaps and multiple components change f*f and the L_inf knot."
+  },
+  "A26.v2": {
+   "name": "Add a small total-variation penalty",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No smoothness, total-variation, or height regularization is added; only nonnegativity and the R ratio matter.): the invariant audit, generation 30; Regularization biases the shape and can help or hurt escaping local optima."
+  },
+  "A26.v3": {
+   "name": "Add an L2 penalty on heights",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No smoothness, total-variation, or height regularization is added; only nonnegativity and the R ratio matter.): the invariant audit, generation 30; Regularization biases the shape and can help or hurt escaping local optima."
+  },
+  "A26.v4": {
+   "name": "Use no regularization",
+   "origin": "audit",
+   "gen": 30,
+   "note": "an alternative to what every program so far does (No smoothness, total-variation, or height regularization is added; only nonnegativity and the R ratio matter.): the invariant audit, generation 30; Regularization biases the shape and can help or hurt escaping local optima."
   }
  },
  "matched": {}
