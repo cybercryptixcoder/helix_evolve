@@ -28,3 +28,9 @@
 01:32:14 field: scratch round 8 (velocity_cycles): 0.876515852065; best 0.876515852065; 1180 s CPU
 01:37:45 field: axes round 9 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 1130 s CPU
 01:43:08 field: warm round 8 (velocity_cycles): 0.962273842985; best 0.962273842985; 1080 s CPU
+02:00:36 field: scratch round 9 (dinkelbach_polish): 0.876524454682; best 0.876524454682; 1195 s CPU
+02:08:00 field: axes round 10 (velocity_cycles): 0.941441752245; best 0.941441752245; 1396 s CPU
+02:10:29 field: warm round 9 (dinkelbach_polish): 0.962273842985; best 0.962273842985; 1083 s CPU
+02:23:26 field: scratch round 10 (velocity_cycles): 0.877164733798; best 0.877164733798; 1461 s CPU
+02:27:37 field: axes round 11 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 1400 s CPU
+02:27:37 field: stream axes converged: no gain in 10 rounds (1400 s CPU; more compute had stopped helping)
