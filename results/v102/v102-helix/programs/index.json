@@ -1,0 +1,16 @@
+{
+ "file": "programs.jsonl",
+ "lines_per_chunk": 412,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 19,
+   "sha256": "ecfae3885c37692d5a0e9e725a1c0da9ca22f7d122841cc1ff0def3dfff48284",
+   "gens": [
+    0,
+    3
+   ]
+  }
+ ],
+ "lines": 19
+}

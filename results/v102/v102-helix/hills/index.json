@@ -1,0 +1,16 @@
+{
+ "file": "hills.jsonl",
+ "lines_per_chunk": 947,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 3,
+   "sha256": "56266602e5a92c237a4a1513f2daca23ad42604494bb3edccb193911c2e42e1d",
+   "gens": [
+    1,
+    3
+   ]
+  }
+ ],
+ "lines": 3
+}
