@@ -1,0 +1,160 @@
+{
+ "file": "programs.jsonl",
+ "lines_per_chunk": 262,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 262,
+   "sha256": "57158aeac99e1abb974c0339cab0d647dad9003d4ba6e49a53d0df457e1b3cf3",
+   "gens": [
+    0,
+    187
+   ]
+  },
+  {
+   "name": "part-0002.jsonl.gz",
+   "lines": 262,
+   "sha256": "98ea2e38e274d2e566affab5070b69380a3c4bc41015d27e98a89100b6eb3697",
+   "gens": [
+    187,
+    226
+   ]
+  },
+  {
+   "name": "part-0003.jsonl.gz",
+   "lines": 262,
+   "sha256": "3a8b525fb4936bdbb98005095dc92813fe67c3fe9e0d555dae9770964c5bab35",
+   "gens": [
+    226,
+    266
+   ]
+  },
+  {
+   "name": "part-0004.jsonl.gz",
+   "lines": 262,
+   "sha256": "ef4961ef338705dd35c114d5dae2866d299976d8085d54db894d81bf2d3dce16",
+   "gens": [
+    267,
+    308
+   ]
+  },
+  {
+   "name": "part-0005.jsonl.gz",
+   "lines": 262,
+   "sha256": "9b43dde51040bff1c8f946102e4b50f9f732e1d84aa6bbc7a486defed93e9e3c",
+   "gens": [
+    308,
+    350
+   ]
+  },
+  {
+   "name": "part-0006.jsonl.gz",
+   "lines": 262,
+   "sha256": "90cb1e030196374e2b57df6de3c45a28ef4916a3934447ec2bc46713dd75ad37",
+   "gens": [
+    350,
+    387
+   ]
+  },
+  {
+   "name": "part-0007.jsonl.gz",
+   "lines": 262,
+   "sha256": "bfc19f8ccbb01e3f3046fda5b7447fb88c4c5b7ba089c2e105573da618cda35a",
+   "gens": [
+    388,
+    428
+   ]
+  },
+  {
+   "name": "part-0008.jsonl.gz",
+   "lines": 262,
+   "sha256": "1fa14371d861169e1b21c9106195a2a1c904b633edcb499180163f9908ab3010",
+   "gens": [
+    428,
+    469
+   ]
+  },
+  {
+   "name": "part-0009.jsonl.gz",
+   "lines": 262,
+   "sha256": "b2852797c23f642e56f3d6f80bdd91b7fbb8d74fac2efc53c2b30abf1ad3f107",
+   "gens": [
+    469,
+    506
+   ]
+  },
+  {
+   "name": "part-0010.jsonl.gz",
+   "lines": 262,
+   "sha256": "237a40e53707a6f0785b62e6dd8feebe7c0841e28a07d6e5667fa24e8436d5e9",
+   "gens": [
+    506,
+    546
+   ]
+  },
+  {
+   "name": "part-0011.jsonl.gz",
+   "lines": 262,
+   "sha256": "c9c87fe1669a96fc740ed2cf6459dd06ac089a5874317661c3bf42c2b70d929e",
+   "gens": [
+    547,
+    588
+   ]
+  },
+  {
+   "name": "part-0012.jsonl.gz",
+   "lines": 262,
+   "sha256": "7e10038f36a1756c278871b9c51d282aa5e7247577b29642a143686a213d5ca0",
+   "gens": [
+    588,
+    627
+   ]
+  },
+  {
+   "name": "part-0013.jsonl.gz",
+   "lines": 262,
+   "sha256": "3ec6f448081cc8ca28d5d10851bbc01b596b74427fa9b61c1f774f4d7b699e32",
+   "gens": [
+    628,
+    667
+   ]
+  },
+  {
+   "name": "part-0014.jsonl.gz",
+   "lines": 262,
+   "sha256": "4590a5a5cca22f7a2d3f5cfaf5fa9bfd5ceea38168f589c98bab45b4e337f85e",
+   "gens": [
+    668,
+    707
+   ]
+  },
+  {
+   "name": "part-0015.jsonl.gz",
+   "lines": 262,
+   "sha256": "2506a18d3deff734b32f65fe966610fec6bb2b99870949835e3d1157e25b9638",
+   "gens": [
+    707,
+    742
+   ]
+  },
+  {
+   "name": "part-0016.jsonl.gz",
+   "lines": 262,
+   "sha256": "25369b6c9a120f81e01cec25e8335a3ed91be4cae21ee2eb962d04d76d7c913f",
+   "gens": [
+    742,
+    778
+   ]
+  },
+  {
+   "name": "part-0017.jsonl.gz",
+   "lines": 224,
+   "sha256": "a6835ec37c6e894ba957eb0bfef3db3aa6dcfb9ec551010ab6681b2ae08bc08f",
+   "gens": [
+    778,
+    807
+   ]
+  }
+ ],
+ "lines": 4416
+}

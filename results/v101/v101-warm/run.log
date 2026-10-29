@@ -1,0 +1,19 @@
+continue: 4405 programs (4190 valid), 455 constructions copied, best p4404 0.963588148, 7819 findings events, 0 lines of a v4.7 run
+prepared runs/v101/v101-warm as a v8 run (continue) from runs/v10/v10-warm, after generation 806
+size class n <= 100,000: 1499 of the 2620 larger constructions at hand fit once their zero ends are trimmed
+the field's decisions: 9 (5 on decisions the map had), 0 new options, 38 options the map had already
+the field's findings: 1 added to the Atlas (kind field, with sources); 14 were there already
+field: 14 constructions imported already (by the source run)
+field: jsagent-100k-seed (JSAgent, n = 100,000) imported as p4406 on T325: 0.962273842955
+field: the best construction in the size class (n <= 100,000): p4406 (jsagent-100k-seed, 0.962273842955); main track T325
+field: dinkelbach_polish on p4406: 0.9622738429845 (+2.979e-11 on its start), 17.27 s CPU
+field: velocity_cycles on p4406: 0.9622738429547 (+0.000e+00 on its start), 267.31 s CPU
+field: resolution_transfer on p4361: 0.9610210892264 (+1.144e-08 on its start), 40.35 s CPU
+prepared runs/v101/v101-warm as a v10.1 run (mode warm) from runs/v10/v10-warm, after generation 806
+22:15:59 [v101-warm] resuming after generation 806 (dropped 0 programs of the unfinished one)
+22:16:04 [v101-warm] gen 807: the field's constructions placed on the map of hills (1 tracks)
+22:16:45 [v101-warm] gen 807: invariant audit: 8 shared choices named (1 design decisions), 0 confirmed on a second sample, 0 new decision(s) on the map
+22:16:48 [v101-warm] gen 807: tidied A4: 13 options -> 8
+22:16:48 [v101-warm] gen 807: tidied A5: 13 options -> 11
+22:54:14 [v101-warm] gen 807: best 0.962274 (p4410, deep, track T326, hill H78); stall 0 (typical 2), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 81 hills; map 19 decisions (19 steering), 1201 programs placed; T326 landed 0/1 target decisions (missing: A92 -> A fixed mild smooth max (beta about 100-500 relat…); 7 reworded option(s) merged into the ones they repeat; T326 opened (a flip of A92 -> A fixed mild smooth max (beta about 100-500 relat… on p4407); T323 paused by the race at 3 experiments: no valid program that changed its start; 2249 s
+22:54:14 [v101-warm] gen 807: 4 large construction(s) nothing needs any more removed

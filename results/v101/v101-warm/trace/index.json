@@ -1,0 +1,16 @@
+{
+ "file": "trace.jsonl",
+ "lines_per_chunk": 116,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 28,
+   "sha256": "a023ece770ea29aaae74143b99eee7a04dd7c8e9d310a57b924547a496b5684f",
+   "gens": [
+    807,
+    808
+   ]
+  }
+ ],
+ "lines": 28
+}
