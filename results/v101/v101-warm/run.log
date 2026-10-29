@@ -33,3 +33,6 @@ prepared runs/v101/v101-warm as a v10.1 run (mode warm) from runs/v10/v10-warm, 
 01:59:45 [v101-warm] gen 816: tidied A48: 15 options -> 11
 01:59:45 [v101-warm] gen 816: tidied A1: 14 options -> 10
 01:59:45 [v101-warm] gen 816: tidied A4: 14 options -> 8
+02:35:47 [v101-warm] gen 816: best 0.962274 (p4479, deep, track T332, hill H78); stall 9 (typical 2), level 2; slots 1 main, 1 track, 1 flip; deep 1/3 gained, wide 1/3 gained; 82 hills; map 19 decisions (19 steering), 1262 programs placed; T332 landed 0/1 target decisions (missing: A4 -> Derivative-free stochastic global search); T334 landed 1/1 target decisions; T335 landed 1/1 target decisions; 14 reworded option(s) merged into the ones they repeat; T334 gained (0.955142 -> 0.956166); T335 opened (a flip of A1 -> Alternating projection to target on p4458); 2163 s
+02:37:14 [v101-warm] gen 817: invariant audit: 7 shared choices named (2 design decisions), 1 confirmed on a second sample, 1 new decision(s) on the map; 'The program keeps an incumbent selected by exact R and returns it, rather than r' (100% share it)
+02:53:55 stop requested (SIGTERM): finishing the generation in progress (up to 2400 s), then stopping

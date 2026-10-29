@@ -44,6 +44,13 @@
    "key": "target",
    "question": "Which part of f*f does the program's step aim at",
    "attached": true
+  },
+  "A97": {
+   "key": "audit",
+   "question": "Every program so far: The program keeps an incumbent selected by exact R and returns it, rather than returning the last L-BFGS-B iterate.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 817
   }
  },
  "values": {
@@ -236,6 +243,24 @@
    "name": "Small-mass runs of f first",
    "note": "packet ascent's order (EinsteinArena thread 92 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
    "axis_key": "target"
+  },
+  "A97.v2": {
+   "name": "Return the final optimizer iterate",
+   "origin": "audit",
+   "gen": 817,
+   "note": "an alternative to what every program so far does (The program keeps an incumbent selected by exact R and returns it, rather than returning the last L-BFGS-B iterate.): the invariant audit, generation 817; Surrogate and exact R can disagree; incumbent selection changes the final score."
+  },
+  "A97.v3": {
+   "name": "Return the best surrogate-objective iterate",
+   "origin": "audit",
+   "gen": 817,
+   "note": "an alternative to what every program so far does (The program keeps an incumbent selected by exact R and returns it, rather than returning the last L-BFGS-B iterate.): the invariant audit, generation 817; Surrogate and exact R can disagree; incumbent selection changes the final score."
+  },
+  "A97.v4": {
+   "name": "Return the last iterate before timeout",
+   "origin": "audit",
+   "gen": 817,
+   "note": "an alternative to what every program so far does (The program keeps an incumbent selected by exact R and returns it, rather than returning the last L-BFGS-B iterate.): the invariant audit, generation 817; Surrogate and exact R can disagree; incumbent selection changes the final score."
   }
  },
  "matched": {
