@@ -422,26 +422,41 @@ It's also cheap to try. One round of the audit on v9's 77 hills is a few model c
 
 ## 9. v10: borrow the field's axes, two runs, break the record
 
-**Shreyas, October 28, 18:21.** The full text of this message was lost when the session's context was compacted;
-what survives is the summary's record, with these excerpts in his words:
+**Shreyas, October 28, 18:21** (verbatim, as he supplied it again at 20:06):
 
-> Okay, now can we look up the research on the second-order relation problem, find what the state of the art looks
-> like, borrow those axes, and then allow our model to work with them? … I want this run to be the one that breaks
-> the record. I want us to have some level of confidence … This is kind of where we prove our point … two things …
-> 1. Run one evolutionary run where we literally give it the program and use that as a warm start. 2. Don't give it
-> the program, but give it the concept and essentially use that as an axis. … not just for the best program in the
-> world, but also for many of the top programs … collect is different approaches … Perhaps we would need somewhere to
-> even bias the setup such that these axes are more important … Our Atlas already knows the extent to which the
-> current approaches work … we need to make sure that is the case. … The record, by the way, is 0.97-something
-> because I see that in the Einstein arena. I need you to find all the literature, or if not literature, then all the
-> GitHub repositories, or if not GitHub repositories, all the posts … not only the number but the actual solution
-> itself … We will do two runs: 1. Only the axes … 2. Both the warm start of the best program in the world and also
-> the axes … We 10 will be the one to break the record, and I need you to tell me that with some level of confidence
-> … If there are other things that need to be fixed or added, or removed … they can also be removed … getting the
-> test job ready, writing the prompt for the agent … The first step … extensive research online … That internet
-> research part is very important … This is meant to be deep research online … By the end of this turn, I want you to
-> come back with a run ready to deploy. You can implement things that we discussed last night as well, if it helps us
-> here.
+> Okay, now can we look up the research on the second-order relation problem, find what the state of the art looks like, borrow those axes, and then allow our model to work with them? That's what I want to do now, and I want this run to be the one that breaks the record. I want us to have some level of confidence that it would successfully do that at the end of this run.
+>
+> This is kind of where we prove our point: the fact that we can take axes and then search over them, unlike other evolutionary systems that simply take a warm start and try to improve over it. We find the best case even within that axis. This is where we actually test that out and try it.
+>
+> Perhaps it is helpful to do two things here:
+>
+> 1. Run one evolutionary run where we literally give it the program and use that as a warm start.
+>
+> 2. Don't give it the program, but give it the concept and essentially use that as an axis.
+>
+> We do that not just for the best program in the world, but also for many of the top programs in the world. We look at the ultimate best. We look at a couple of other records that other people have set before it, which may not be the best in the world but give us a bunch of different axes. What we're trying to collect is different approaches, and those approaches are what set us up with a search space that we can search and then find good solutions in.
+>
+> Perhaps we would need somewhere to even bias the setup such that these axes are more important than the others, so that we're searching more over these axes. Perhaps that's already the case because the Atlas already has a record that all of these approaches work to this extent and/or they do not work at all. Our Atlas already knows the extent to which the current approaches work.
+>
+> Giving it these new approaches would naturally put the new approaches in a position where they will be explored because we don't know about it yet, and the other ones are already saturated. I presume that our system would naturally be biased towards exploring the newer axes, but we need to make sure that is the case.
+>
+> I want to do a run which is targeted at breaking the record. The record, by the way, is 0.97-something because I see that in the Einstein arena. I need you to find all the literature, or if not literature, then all the GitHub repositories, or if not GitHub repositories, all the posts. Basically, anywhere where there is a solution, like a state-of-the-art solution posted, not only the number but the actual solution itself, so that we can see the proof and see how it works, and then use that as our axes.
+>
+> We will do two runs:
+>
+> 1. Only the axes, and hope that our setup can search for the solution.
+>
+> 2. Both the warm start of the best program in the world and also the axes, and then we allow it to continue from there.
+>
+> We run both of these setups and see if we can actually beat the record. Now is the time to do it. We 10 will be the one to break the record, and I need you to tell me that with some level of confidence. I know there's no way we can guarantee that, but I need there to be a level of confidence in that, because I think we're far enough along. I think we have a setup that should be capable of looking for that solution, given the approach part.
+>
+> If there are other things that need to be fixed or added, or removed, for that matter, because in the last few approaches, a few things hurt more than they helped, they can also be removed. From our discussion last night, if there were any specific things that you feel are important to add before we move on and do the runs, then we can add those in as well.
+>
+> Beyond that, we would essentially move to getting the test job ready, writing the prompt for the agent, and just getting the whole thing ready. The first step for that would be doing extensive research online and looking for the best solutions, the different approaches, and the state-of-the-art approaches. Not just the solutions themselves, but the actual approaches and the different axes that we can draw from there, and then we seed that into our atlas or wherever else our memory system uses it from. Then we take it from there.
+>
+> That internet research part is very important because that's where we're essentially mining the internet for something that allows us to break this record. Research extensively online: not just one or two articles, not just one or two papers, not just one or two GitHub repositories, but everything that we need should be captured. You really need to search pretty well. This is meant to be deep research online, right, because that is the first step that we decided. It really needs to be deep. Then we would have something worth trying with, so let's do that.
+>
+> By the end of this turn, I want you to come back with a run ready to deploy. You can implement things that we discussed last night as well, if it helps us here.
 
 **What was done:** the research (`docs/AC2_SOTA.md`), v10 (`docs/V10_DESIGN.md`, `helix10/`), the two-run job with
 the Aether prompt and the odds (`docs/V10_JOB.md`, `scripts/run_v10.sh`), tested live; the request and decisions in
