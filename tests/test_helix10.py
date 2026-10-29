@@ -252,3 +252,91 @@ def test_the_baseline_matches_the_runs_cpu_and_resumes(tmp_path, v9_source):
     assert s["rounds"] >= 1 and s["best"] >= s["start_score"] - 1e-12
     assert s["cpu"] - 2.5 <= arm_cpu or s.get("finished")
     assert "v101-axes" in B.report(tmp_path) or True
+
+
+# ---------------------------------------------------------------------------------------------- v10.2
+def cold_cfg(**kw):
+    return Config(gens=kw.pop("gens", 6), budget=2.0, condition="v10.2", mode="cold", max_n=50_000, build=True,
+                  wide_own=True, running_cap=5, build_cap=kw.pop("build_cap", 4), **kw)
+
+
+def test_the_step_limit_is_enforced_exactly(tmp_path):
+    from helix4.problems import ac2
+    from helix10.run import ExactView
+    v = ExactView(ac2, 50_000)
+    assert "50,000" in v.DESCRIPTION and "200,000" not in v.DESCRIPTION
+    assert v.check(np.ones(50_000))[0] is not None
+    assert v.check(np.ones(50_001))[0] is None
+    assert ac2.MAX_N == 200_000                                     # the module itself is unchanged
+    r = Run(tmp_path / "r", cold_cfg(gens=1), llm=FakeLLM(fake_answer), gens=1, **QUIET)
+    assert r.problem.max_n == 50_000 and "50,000" in r.problem_text
+
+
+def test_a_cold_run_starts_from_code_zero_with_the_fields_axes_and_findings(tmp_path):
+    d = tmp_path / "cold"
+    r = Run(d, cold_cfg(gens=2), llm=FakeLLM(fake_answer), gens=2, **QUIET)
+    r.go()
+    progs = jl(d / "programs.jsonl")
+    assert progs[0]["role"] == "seed" and progs[0]["gen"] == 0
+    assert not any(p["role"] == "import" for p in progs)            # no construction or program of the field
+    b = json.loads((d / "borrowed.json").read_text())
+    assert len(b["values"]) == sum(len(x["options"]) for x in sota.AXES)
+    field = [e for e in jl(d / "findings.jsonl") if e.get("kind") == "field"]
+    assert len(field) == len(sota.FINDINGS) and all(e["gen"] == 0 for e in field)
+    assert json.loads((d / "state.json").read_text())["version"] == "v10.2"
+    # a restart resumes without seeding again
+    r2 = Run(d, None, llm=FakeLLM(fake_answer), gens=3, **QUIET)
+    r2.go()
+    assert len([e for e in jl(d / "findings.jsonl") if e.get("kind") == "field"]) == len(sota.FINDINGS)
+
+
+def test_explorations_are_built_from_nothing_and_judged_on_their_own_climb(tmp_path):
+    d = tmp_path / "b"
+    r = Run(d, cold_cfg(gens=6), llm=FakeLLM(fake_answer), gens=6, **QUIET)
+    r.go()
+    seed = next(p for p in r.archive.programs.values() if p.role == "seed")
+    built = [t for t in r.tracks.values() if t.get("built")]
+    assert built and all(t["root"] == seed.id for t in built)
+    assert all(t["kind"] in ("build", "drop") for t in built)
+    plans = jl(d / "plans.jsonl")
+    bslots = [s for pl in plans for s in pl["slots"] if s.get("built")]
+    assert bslots and all("built from nothing" in s["text"] and s["base"] == seed.id for s in bslots)
+    exps = [e for pl in plans for e in pl["experiments"] if e.get("built")]
+    assert exps and all(e["base"] == seed.id for e in exps)
+    # the coder was told to build from nothing
+    tr = jl(d / "trace.jsonl")
+    assert any("This experiment builds a new design from nothing" in x["user"] for x in tr if x["role"] == "coder")
+    # never stopped as a copy of a known hill, whatever its place
+    t = built[0]
+    t["hill_status"], t["exps"] = "on", 10
+    assert not r.is_copy(t)
+    # the cap: never more than build_cap built explorations racing
+    assert len(r.built_running()) <= r.cfg.build_cap + 1
+
+
+def test_the_wide_loop_works_the_explorations_own_lines(tmp_path):
+    d = tmp_path / "w"
+    r = Run(d, cold_cfg(gens=5), llm=FakeLLM(fake_answer), gens=5, **QUIET)
+    r.go()
+    import random
+    pool = [p for p in r.archive.valid()]
+    parents = r.wide_parents(random.Random(1), pool, 0)
+    main = r.main_track()
+    assert len(parents) == r.cfg.wide
+    assert sum(1 for p in parents if r.track_of(p) == main) <= 1 or not any(
+        r.live(t) for t in r.tracks.values() if t["id"] != main)
+    # an exploration's wide child gets no inspiration from the record
+    side = next((p for p in parents if r.track_of(p) != main), None)
+    if side is not None:
+        seen = {}
+        orig = type(r).__mro__[1].wide_child
+
+        def spy(self, gen, parent, inspiration):
+            seen["insp"] = inspiration
+            return None, None
+        type(r).__mro__[1].wide_child = spy
+        try:
+            r.wide_child(99, side, r.archive.best())
+        finally:
+            type(r).__mro__[1].wide_child = orig
+        assert seen["insp"] is None

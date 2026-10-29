@@ -134,4 +134,12 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - **standing, amended** (2026-10-28 18:21): for v10's two runs only, by Shreyas's explicit request, the agents are given the field's reference values and findings (with sources), and v10-warm the field's constructions and methods; everything given is listed in `helix10/sota.py` and labelled "from the field". The rule against leaking references and against warm starts stands for every other run.
 - 2026-10-28 20:16 and 20:38: why low odds (answered: compute, at 2M; not the optimiser); what result would prove the capability; then, at 20:42: run the comparison at equal constraint (the world's best program given our limits as the bar), stop the current v10 runs gracefully and continue them, add anything missed after the context compaction, and implement the invariant audit as discussed. Done: v10.1 (`docs/V10_JOB.md`, `scripts/run_v101.sh`, `helix10/baseline.py`, `helix10/audit.py`).
 - **standing** (2026-10-28 20:42, Shreyas's order): the v10.1 jobs may stop their own v10 predecessor of the same mode, once and gracefully; nothing else.
+- **done** (2026-10-29 01:56): v10.2, "1 + 3". An empty start; ideas built from nothing rather than patched onto the
+  champion, each judged on its own climb and kept climbing until it overtakes; bugs fixed; job, Aether prompt and
+  live tests ready (`docs/V102_DESIGN.md`).
+- **done** (2026-10-29 02:12): no home-built "industry" baseline (a basic AlphaEvolve-style rebuild can't stand in for
+  the industry); our own runs with the deep research's axes.
+- **standing** (2026-10-29 02:14): justify Helix against existing published baselines, under the constraint they
+  followed (as with the step limit), for whatever is to be proved. v10.2 is measured against the published LLM
+  systems' values and budgets (TTT-Discover's Table 2, ThetaEvolve, AlphaEvolve V2).
 

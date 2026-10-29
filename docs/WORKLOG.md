@@ -4,6 +4,26 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## October 29, 2026 (night): v10.2, from Code Zero against the published systems
+
+- **Asked (01:56):** "1 + 3": an empty start, and ideas built rather than patched, each judged on its own climb.
+  - **02:12:** no home-built industry baseline (it can't stand in for the industry).
+  - **02:14:** compare with existing published baselines under the constraint they followed.
+- **Researched:** the published LLM systems on AC2, with their budgets.
+  - TTT-Discover's Table 2: best-of-25,600 0.9344, OpenEvolve 0.9449, TTT-Discover 0.9591; all on gpt-oss-120b,
+    25,600 programs, 10 minutes each.
+  - ThetaEvolve: 0.9434 without RL and 0.9469 with RL, on an 8B model, 512 programs a step, 350 s each.
+  - AlphaEvolve: 0.8962; AlphaEvolve V2: 0.9610 at 50,000 steps.
+- **Built:**
+  - the cold start with the field's axes and findings;
+  - explorations built from Code Zero on their own tracks, never stopped as copies, at most 4 racing;
+  - the wide loop on the explorations' own lines;
+  - the exact step limit (`ExactView`; it fixes v10.1's silent 200,000);
+  - the report against the published systems (`helix10/compare.py`: programs needed to pass each value);
+  - the job, two seeds, which pause the v10.1 jobs (`scripts/run_v102.sh`).
+- **Dropped:** the AlphaEvolve-style industry arm, built and then removed at Shreyas's request.
+- **Tests:** 18 v10 tests (4 new); the earlier suites pass. Live test: `docs/V10_JOB.md`.
+
 ## October 28, 2026 (late evening): v10.1, the fair comparison, the invariant audit
 
 - **Decided with Shreyas:** the odds at 2M were a compute limit (each idea judged before it could be climbed), not a

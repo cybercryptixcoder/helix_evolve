@@ -2,6 +2,7 @@
 disk and model, the deadline), around helix10.run.Run.
 
     python -m helix10.job --out runs/v10/v10-warm --gens 920
+    python -m helix10.job --out runs/v102/v102-helix --gens 300 --budget 150 --cold      # v10.2, from Code Zero
 """
 from __future__ import annotations
 
@@ -20,6 +21,9 @@ def main(argv=None):
     ap.add_argument("--gens", type=int, default=None, help="the generation to stop at")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--budget", type=float, default=150.0, help="CPU seconds per program (a new run only)")
+    ap.add_argument("--cold", action="store_true", help="v10.2: a new run from Code Zero with the field's decisions "
+                    "and findings, explorations built from nothing (docs/V102_DESIGN.md)")
+    ap.add_argument("--cap", type=int, default=None, help="the step limit (a new run only; --cold: 100000)")
     ap.add_argument("--fake", action="store_true", help="no model calls (a fake model)")
     a = ap.parse_args(argv)
     log = lambda m: print(time.strftime("%H:%M:%S"), m, flush=True)   # noqa: E731
@@ -35,7 +39,15 @@ def main(argv=None):
         delay = float(os.environ.get("FAKE_DELAY", "0") or 0)
         llm = FakeLLM(lambda role, s, u: "OK" if role == "health" else fake_answer(role, s, u), delay=delay)
     try:
-        run = R(a.out, Config(seed=a.seed, gens=a.gens or 20, budget=a.budget), llm=llm, gens=a.gens, log=log)
+        cfg = Config(seed=a.seed, gens=a.gens or 20, budget=a.budget)
+        if a.cold:
+            from helix10 import sota
+            cfg.condition, cfg.mode, cfg.build, cfg.wide_own = "v10.2", "cold", True, True
+            cfg.running_cap, cfg.build_cap = 5, 4
+            cfg.max_n = a.cap or sota.CLASS_N
+        elif a.cap:
+            cfg.max_n = a.cap
+        run = R(a.out, cfg, llm=llm, gens=a.gens, log=log)
         summary = run.go()
     except SystemExit:
         raise

@@ -163,13 +163,12 @@ def import_field(out, cfg, field_dir, gen, log=print, run_programs=True, extents
     kept), then the field's methods run once on the best of them within the run's size class."""
     from helix4.problems import ac2
     from helix47.evaluate import evaluate
-    from helix47.run import ProblemView
     from helix10.programs import load
-    from helix10.run import Archive10
+    from helix10.run import Archive10, ExactView
     field_dir = Path(field_dir)
     extents = extents if extents is not None else {}
-    problem = ProblemView(ac2, cfg.max_n)                 # the run's own size class
-    anysize = ProblemView(ac2, sota.MAX_N)               # every import is recorded (the Atlas and the hills know it)
+    problem = ExactView(ac2, cfg.max_n)                   # the run's own size class
+    anysize = ExactView(ac2, sota.MAX_N)               # every import is recorded (the Atlas and the hills know it)
     arch = Archive10(out)
     arch.big_n, arch.max_n, arch.extents = cfg.big_n, cfg.max_n, extents
     rows = jl(out / "tracks.jsonl")

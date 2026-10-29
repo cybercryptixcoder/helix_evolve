@@ -1,4 +1,42 @@
-# The Helix v10 and v10.1 jobs (October 28, 2026)
+# The Helix v10, v10.1 and v10.2 jobs (October 28-29, 2026)
+
+## v10.2 (October 29, 01:56-02:14): from Code Zero, the field's ideas as axes, against the published systems
+
+Design, the published baselines and the odds: `docs/V102_DESIGN.md`. In short:
+- two seeds of Helix from Code Zero, with the field's 9 decisions and 38 options on the design map and its findings in
+  the Atlas;
+- every new exploration is built from nothing on its own track and judged on its own climb;
+- the constraint is the published systems' or tighter: at most 50,000 steps, 150 s per program, about 1,000
+  programs (theirs: 25,600 to 51,200);
+- the report is results/v102/COMPARISON.md: the programs Helix needed to pass each published value (AlphaEvolve
+  0.8962, best-of-25,600 0.9344, ThetaEvolve 0.9434/0.9469, OpenEvolve 0.9449, TTT-Discover 0.9591, AlphaEvolve V2
+  0.9610).
+
+### The prompt for Aether (v10.2)
+
+> In /home/ubuntu/helix_v5_run, run `git pull`. Then start the two Helix v10.2 jobs, each once. By Shreyas's order
+> (October 29), they replace the v10.1 jobs: seed 1 pauses v101-axes and v101-field, seed 2 pauses v101-warm (one stop
+> signal each; each finishes its generation and pushes, which can take up to about 40 minutes), then each starts a new
+> run from Code Zero. Don't stop anything yourself.
+> `ARM=helix SEED=1 setsid nohup bash scripts/run_v102.sh > v102_s1.log 2>&1 < /dev/null &`
+> `ARM=helix SEED=2 setsid nohup bash scripts/run_v102.sh > v102_s2.log 2>&1 < /dev/null &`
+> One hour later, report the last 25 lines of v102_s1.log and v102_s2.log, and the output of `df -h .` and `free -m`.
+> Don't stop, restart or kill anything, don't change any file, and don't set up any cron job, timer, monitor or
+> check-in: Shreyas checks in himself.
+
+What it should report, in each log:
+- "pausing v101-..." (or "isn't running"), then "v101-... has stopped after N min";
+- the preflight ("crash test passed", "model answers", "GitHub: can push");
+- "v102-helix...: running", then progress lines ("g1 0.8...").
+
+Restarting either is the same command; each resumes. The optional reference stream:
+`ARM=field setsid nohup bash scripts/run_v102.sh > v102_field.log 2>&1 < /dev/null &`.
+
+### Tested (October 29, in the cloud session)
+
+LIVE_TABLE
+
+---
 
 ## v10.1 (October 28, 20:42): Helix against the world's best program, at the same constraint
 

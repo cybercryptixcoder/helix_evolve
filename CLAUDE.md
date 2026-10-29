@@ -1,6 +1,10 @@
 # Notes for agents working in this repo
 
-- **Latest (October 28, late): v10.1** (`docs/V10_JOB.md`, top; `scripts/run_v101.sh`): Helix against the world's best
+- **Latest (October 29, night): v10.2** (`docs/V102_DESIGN.md`; `docs/V10_JOB.md`, top; `scripts/run_v102.sh`): Helix
+  from Code Zero with the deep research's axes, explorations built from nothing and judged on their own climb, at the
+  published LLM systems' constraint (n <= 50,000), measured against their values and budgets (`helix10/compare.py`).
+  Shreyas: no home-built industry baseline; compare with published ones under their constraints.
+- **Before that (October 28, late): v10.1** (`docs/V10_JOB.md`, top; `scripts/run_v101.sh`): Helix against the world's best
   program at the same constraint (n <= 100,000, 300 s per program; the bar in `helix10/baseline.py`), the invariant
   audit (`helix10/audit.py`), the v10 runs paused and continued.
 - **Before that (October 28, evening): v10 built** (`helix10/`, `docs/V10_DESIGN.md`): the field's knowledge on the

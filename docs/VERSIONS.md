@@ -20,6 +20,24 @@ constant function (R = 0.667).
 Helix's best is **0.9412521** (v7, continuing v4.7's warm run, generation 290). Before that it was 0.9408 (v4
 atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 
+## v10.2 (October 29, 2026): from Code Zero, the field's ideas as axes, against the published systems
+
+- **What it is.** Helix from Code Zero, with the deep research's ideas as axes: 9 decisions and 38 options on the
+  design map, and 15 findings in the Atlas.
+  - Every new exploration is built from nothing on its own track and judged on its own climb, never against the
+    record, until it overtakes.
+  - The wide loop works the explorations' own lines.
+  - The constraint is the published LLM systems' or tighter: at most 50,000 steps, 150 s per program, about 1,000
+    programs (theirs: 25,600 to 51,200).
+  - It is measured against their reported values: AlphaEvolve 0.8962, OpenEvolve 0.9449, ThetaEvolve 0.9469,
+    TTT-Discover 0.9591, AlphaEvolve V2 0.9610.
+- **Why.** v10.1 patched every idea onto converged records, so nothing could separate: 41 of 48 programs moved their
+  start by less than 1e-6 (`docs/V101_ANALYSIS.md`). A home-built "industry" loop was considered and dropped
+  (Shreyas: a basic rebuild can't stand in for the industry); published results under matched constraints replace it.
+- **Fixed:** helix47's ProblemView never went below 200,000 steps, so v10.1's 100,000 class ran with 200,000.
+- **Docs:** `docs/V102_DESIGN.md`, `docs/V10_JOB.md` (v10.2). **Code:** `helix10/run.py` (build, wide_own,
+  ExactView, the cold seed), `helix10/compare.py`, `scripts/run_v102.sh`.
+
 ## The two streams
 
 - **The Atlas stream (conservative):** v4 → v4.5 → v4.6 → v4.7. It keeps v4's architecture:
