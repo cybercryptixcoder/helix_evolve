@@ -3,9 +3,9 @@
  "arm": "runs/v101/v101-axes",
  "start": "nothing (the program's own default start)",
  "start_score": null,
- "best": 0.8762373567749319,
- "cpu": 897.6600000000001,
- "rounds": 6,
+ "best": 0.8762434379016664,
+ "cpu": 914.0600000000001,
+ "rounds": 7,
  "since_gain": 0,
  "finished": null
 }
