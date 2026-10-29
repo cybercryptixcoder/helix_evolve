@@ -69,7 +69,7 @@ The field's options built at least once: 8 of 38.
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.874848295696 (p0295, n = 50000), on track T1: the start of the run.
+Helix's record: 0.874993629946 (p0303, n = 50000), on track T1: the start of the run.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46.
 
 Explorations built from nothing: 6 (6 around an option of the field, 0 new designs from the map). Their climbs:
