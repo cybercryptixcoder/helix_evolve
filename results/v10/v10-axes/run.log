@@ -1,0 +1,9 @@
+continue: 4351 programs (4146 valid), 0 constructions copied (no constructions/ folder: only the best program starts from its construction), best p4331 0.941441744, 7735 findings events, 0 lines of a v4.7 run
+prepared runs/v10/v10-axes as a v8 run (continue) from /home/ubuntu/helix_v5_run/runs/v10/tmpfwauubya/src, after generation 800
+restored 405 constructions and 613 signatures into runs/v10/v10-axes
+the field's decisions: 9 (5 on decisions the map had), 38 new options, 0 options the map had already
+the field's findings: 14 added to the Atlas (kind field, with sources)
+prepared runs/v10/v10-axes as a v10 run (mode axes) from results/v9warm/v9-s1, after generation 800
+19:46:22 [v10-axes] resuming after generation 800 (dropped 0 programs of the unfinished one)
+19:59:51 [v10-axes] gen 801: best 0.941442 (p4331, wide, track T279, hill H22); stall 0 (typical 1.5), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 77 hills; map 18 decisions (18 steering), 1170 programs placed; T273 paused (no gain on its own best); T305 opened (a flip of A4 -> Adam with gradient noise and elitist respawn of t… on p4331); T278 stops racing: after 18 experiments it sits on H22 below that hill's top (a copy of a known design); T279 stops racing: after 26 experiments it sits on H22 below that hill's top (a copy of a known design); T282 stops racing: after 13 experiments it sits on H22 below that hill's top (a copy of a known design); 801 s
+20:20:51 [v10-axes] gen 802: best 0.941442 (p4331, wide, track T279, hill H22); stall 1 (typical 1.5), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 1/3 gained; 77 hills; map 18 decisions (18 steering), 1175 programs placed; T305 landed 0/1 target decisions (missing: A4 -> Adam with gradient noise and elitist respawn of t…); T306 landed 1/1 target decisions; T306 opened (a flip of A94 -> A coarser parent with each cell split into about … on p4331); 1260 s
