@@ -1,0 +1,11 @@
+{
+ "name": "warm",
+ "arm": "runs/v101/v101-warm",
+ "start": "v101-warm's record at its start, p4407 (0.962273842985)",
+ "start_score": 0.962273842984513,
+ "best": 0.962273842984513,
+ "cpu": 0.0,
+ "rounds": 0,
+ "since_gain": 0,
+ "finished": null
+}

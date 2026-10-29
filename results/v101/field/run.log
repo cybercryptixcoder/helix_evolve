@@ -1,0 +1,8 @@
+21:53:26 field: stream axes waits for its run (runs/v101/v101-axes) to start
+21:53:26 field: stream warm waits for its run (runs/v101/v101-warm) to start
+21:53:26 field: stream scratch starts from nothing (the program's own default start)
+22:05:27 field: stream axes starts from v101-axes's record at its start, p4407 (0.941441744965)
+22:08:45 field: axes round 1 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 41 s CPU
+22:16:43 field: scratch round 1 (dinkelbach_polish): 0.845325028403; best 0.845325028403; 53 s CPU
+22:32:21 field: axes round 2 (velocity_cycles): 0.941441752245; best 0.941441752245; 308 s CPU
+22:32:21 field: stream warm starts from v101-warm's record at its start, p4407 (0.962273842985)
