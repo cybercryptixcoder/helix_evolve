@@ -1,0 +1,16 @@
+{
+ "file": "discoveries.jsonl",
+ "lines_per_chunk": 10083,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 23,
+   "sha256": "4371e53a1476f2d5ad3d8c505df68b272aac8b96a9c72f6b9318c12d170a1e6f",
+   "gens": [
+    704,
+    800
+   ]
+  }
+ ],
+ "lines": 23
+}

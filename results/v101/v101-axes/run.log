@@ -1,0 +1,14 @@
+continue: 4412 programs (4202 valid), 479 constructions copied, best p4407 0.941441745, 7872 findings events, 0 lines of a v4.7 run
+prepared runs/v101/v101-axes as a v8 run (continue) from runs/v10/v10-axes, after generation 809
+size class n <= 100,000: 1527 of the 2642 larger constructions at hand fit once their zero ends are trimmed
+the field's decisions: 9 (5 on decisions the map had), 1 new options, 36 options the map had already
+the field's findings: 1 added to the Atlas (kind field, with sources); 14 were there already
+the record in the size class: p4407 (0.941441744965, n = 104992); main track T307
+prepared runs/v101/v101-axes as a v10.1 run (mode axes) from runs/v10/v10-axes, after generation 809
+22:05:08 [v101-axes] resuming after generation 809 (dropped 0 programs of the unfinished one)
+22:05:54 [v101-axes] gen 810: invariant audit: 7 shared choices named (1 design decisions), 0 confirmed on a second sample, 0 new decision(s) on the map
+22:05:56 [v101-axes] gen 810: tidied A5: 13 options -> 12
+22:05:56 [v101-axes] gen 810: tidied A92: 13 options -> 11
+22:15:52 [v101-axes] gen 810: best 0.941442 (p4418, deep, track T314, hill H22); stall 0 (typical 1.5), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 78 hills; map 20 decisions (20 steering), 1226 programs placed; T311 landed 1/1 target decisions; T314 landed 1/1 target decisions; 3 reworded option(s) merged into the ones they repeat; T314 opened (a flip of A95 -> Structural surgery on blocks (shift, scale, split… on p4407); T314 landed on H22 (distance 0.044); T27 landed on H2 (distance 0.000); 598 s
+22:15:52 [v101-axes] gen 810: 1 large construction(s) nothing needs any more removed
+22:35:58 [v101-axes] gen 811: best 0.941442 (p4424, deep, track T314, hill H79); stall 1 (typical 1.5), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 79 hills; map 20 decisions (20 steering), 1232 programs placed; T314 landed 0/1 target decisions (missing: A95 -> Structural surgery on blocks (shift, scale, split…); T312 landed 0/1 target decisions (missing: A92 -> Fixed mild smooth max); T315 landed 1/1 target decisions; T315 opened (a flip of A85 -> Only the tied maxima (the active set of the L-inf… on p4418); new hill H79, found by T307 (flip): 0.941442, distance 0.184 from the nearest known hill (H59); T315 landed on H22 (distance 0.044); 1202 s

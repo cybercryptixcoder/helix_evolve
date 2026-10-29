@@ -1,0 +1,16 @@
+{
+ "file": "coords.jsonl",
+ "lines_per_chunk": 13464,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 3797,
+   "sha256": "09319a02a1992a45c1fa646b864964ef9201d5eab73b7f1ae1d60ca9dfe34d91",
+   "gens": [
+    700,
+    812
+   ]
+  }
+ ],
+ "lines": 3797
+}
