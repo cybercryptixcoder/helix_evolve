@@ -4,8 +4,8 @@
  "start": "v101-warm's record at its start, p4407 (0.962273842985)",
  "start_score": 0.962273842984513,
  "best": 0.9622738429845132,
- "cpu": 812.3199999999999,
- "rounds": 6,
- "since_gain": 5,
+ "cpu": 1079.9399999999998,
+ "rounds": 8,
+ "since_gain": 7,
  "finished": null
 }
