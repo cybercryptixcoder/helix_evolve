@@ -135,7 +135,10 @@ def helix_story(a):
             for v in (t.get("target") or {}).values():
                 if v in vals:
                     tried[v] += 1
-        lines += ["", f"The field's options built at least once: {len(tried)} of {len(vals)}."]
+        field = {v for v, x in vals.items() if x.get("origin") != "audit"}
+        lines += ["", f"The field's options built at least once: {len(set(tried) & field)} of {len(field)}"
+                      + (f"; the invariant audit's alternatives: {len(set(tried) - field)} of {len(vals) - len(field)}"
+                         if len(vals) > len(field) else "") + "."]
     return lines
 
 
