@@ -79,3 +79,12 @@
 16:03:29 [v102-helix] gen 57: tidied A5: 15 options -> 13
 16:03:29 [v102-helix] gen 57: tidied A11: 15 options -> 12
 16:18:17 [v102-helix] gen 57: best 0.946543 (p0353, wide, track T2, hill H2); stall 2 (typical 1), level 1; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 10 hills; map 20 decisions (20 steering), 343 programs placed; the Cartographer's scan added 1 decision(s) to the map; 10 reworded option(s) merged into the ones they repeat; T7 served instead of a new design (4 built explorations racing, the cap); T6 gained (0.866803 -> 0.866940); 900 s
+16:31:53 [v102-helix] gen 58: best 0.946544 (p0355, wide, track T2, hill H2); stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 10 hills; map 20 decisions (20 steering), 348 programs placed; T8 served instead of a new design (4 built explorations racing, the cap); T6 gained (0.866940 -> 0.866959); 812 s
+16:42:35 [v102-helix] gen 59: best 0.946544 (p0366, deep, track T2, hill H2); stall 1 (typical 1), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 10 hills; map 20 decisions (20 steering), 354 programs placed; T10 served instead of a new design (4 built explorations racing, the cap); T6 gained (0.866959 -> 0.866966); 640 s
+16:43:12 [v102-helix] gen 60: invariant audit: 8 shared choices named (4 design decisions), 1 confirmed on a second sample, 1 new decision(s) on the map; 'Search keeps exactly one incumbent height vector and improves it; no population,' (100% share it)
+16:43:16 [v102-helix] gen 60: consolidated: 5 decisions merged, 16 left
+16:43:20 [v102-helix] gen 60: tidied A5: 24 options -> 12
+16:43:20 [v102-helix] gen 60: tidied A8: 22 options -> 17
+16:43:20 [v102-helix] gen 60: tidied A3: 18 options -> 12
+16:54:00 [v102-helix] gen 60: best 0.946545 (p0371, wide, track T2, hill H2); stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 10 hills; map 16 decisions (16 steering), 360 programs placed; 5 duplicate decision(s) merged (21 -> 16); 23 reworded option(s) merged into the ones they repeat; T7 served instead of a new design (4 built explorations racing, the cap); 648 s
+17:05:10 [v102-helix] gen 61: best 0.946545 (p0378, deep, track T2, hill H2); stall 1 (typical 1), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 10 hills; map 16 decisions (16 steering), 366 programs placed; T10 served instead of a new design (4 built explorations racing, the cap); 668 s
