@@ -34,3 +34,7 @@ prepared runs/v101/v101-axes as a v10.1 run (mode axes) from runs/v10/v10-axes, 
 02:35:30 [v101-axes] gen 822: tidied A92: 18 options -> 12
 02:35:30 [v101-axes] gen 822: tidied A95: 16 options -> 11
 02:35:30 [v101-axes] gen 822: tidied A75: 14 options -> 9
+02:53:19 stop requested (SIGTERM): finishing the generation in progress (up to 2400 s), then stopping
+03:04:09 [v101-axes] gen 822: best 0.941442 (p4493, deep, track T326, hill H3); stall 12 (typical 1.5), level 2; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 79 hills; map 22 decisions (22 steering), 1302 programs placed; T319 landed 0/1 target decisions (missing: A75 -> Sparse support plus amplitudes); T325 landed 0/1 target decisions (missing: A95 -> Low Fourier mode perturbation); T326 landed 0/1 target decisions (missing: A99 -> Normalize by sum of heights); 16 reworded option(s) merged into the ones they repeat; T326 opened (a flip of A99 -> Normalize by sum of heights on p4488); 1729 s
+03:04:09 [v101-axes] stopped cleanly after generation 822 (signal SIGTERM); running again resumes from generation 823
+03:04:09 done: v101-axes (v10.1, seed 1): best 0.941442 (p4493, track T326) after 822 generations, 4495 programs, 250 model calls
