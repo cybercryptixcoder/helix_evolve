@@ -1,0 +1,16 @@
+{
+ "file": "tracks.jsonl",
+ "lines_per_chunk": 1232,
+ "parts": [
+  {
+   "name": "part-0001.jsonl.gz",
+   "lines": 4,
+   "sha256": "03bdc995a7ec47670baafba3896df452b0c4262645122573b8855c4b92721609",
+   "gens": [
+    1,
+    4
+   ]
+  }
+ ],
+ "lines": 4
+}
