@@ -1,0 +1,28 @@
+vault: uploaded constructions-001.npz (298 constructions)
+vault: constructions-v9-s1: 298 of 4146 constructions verified and uploaded in 1 files (3848 held by constructions-v8-s1, constructions-v9-s1-g800, 0 failed the check, 0 not found)
+continue: 4351 programs (4146 valid), 0 constructions copied (no constructions/ folder: only the best program starts from its construction), best p4331 0.941441744, 7735 findings events, 0 lines of a v4.7 run
+prepared runs/v10/v10-warm as a v8 run (continue) from /home/ubuntu/helix_v5_run/runs/v10/tmpn47nonae/src, after generation 800
+restored 405 constructions and 613 signatures into runs/v10/v10-warm
+the field's decisions: 9 (5 on decisions the map had), 38 new options, 0 options the map had already
+the field's findings: 14 added to the Atlas (kind field, with sources)
+field: arena-2416 (ClaudeExplorer, n = 1,999,999) imported as p4352 on T305: 0.963588110582
+field: arena-2413 (MLAI-Yonsei, n = 1,999,999) imported as p4353 on T306: 0.963455719992
+field: arena-2408 (ClaudeExplorer, n = 1,048,576) imported as p4354 on T307: 0.962946026673
+field: arena-2361 (Hyra, n = 524,288) imported as p4355 on T308: 0.962901101096
+field: arena-1801 (ClaudeExplorer, n = 400,000) imported as p4356 on T309: 0.962643318763
+field: arena-2641 (SIDON-DevinWright, n = 2,000,000) imported as p4357 on T310: 0.962273865104
+field: arena-993 (JSAgent, n = 100,000) imported as p4358 on T311: 0.962213536592
+field: arena-613 (ClaudeExplorer, n = 100,000) imported as p4359 on T312: 0.961985772688
+field: arena-11 (Together-AI, n = 100,000) imported as p4360 on T313: 0.961205542269
+field: arena-3 (AlphaEvolve, n = 50,000) imported as p4361 on T314: 0.961021077784
+field: arena-8 (TTT-Discover, n = 50,000) imported as p4362 on T315: 0.959179771148
+field: arena-2303 (KiroScientist, n = 50,000) imported as p4363 on T316: 0.950466507940
+field: jaech-joseph-2025 (Jaech & Joseph, n = 2,540) imported as p4364 on T317: 0.941362894974
+field: arena-2636 (ASTRADEX-DevinWright, n = 4,096) imported as p4365 on T318: 0.908566104138
+field: dinkelbach_polish on p4352: 0.9635881445422 (+3.396e-08 on its start), 132.63 s CPU
+field: velocity_cycles on p4352: 0.9635881105820 (+0.000e+00 on its start), 132.78 s CPU
+field: resolution_transfer on p4355: failed: timed out after 405 s wall clock
+prepared runs/v10/v10-warm as a v10 run (mode warm) from results/v9warm/v9-s1, after generation 800
+20:00:37 [v10-warm] resuming after generation 800 (dropped 0 programs of the unfinished one)
+20:00:59 [v10-warm] gen 801: the field's constructions placed on the map of hills (14 tracks)
+20:32:23 [v10-warm] gen 801: best 0.963588 (p4371, deep, track T305, hill H78); stall 0 (typical 1.5), level 0; slots 1 main, 1 track, 1 flip; deep 0/3 gained, wide 0/3 gained; 81 hills; map 18 decisions (18 steering), 1168 programs placed; T319 landed 0/1 target decisions (missing: A4 -> Simulated annealing or random search on f); T273 paused (no gain on its own best); T319 opened (a flip of A4 -> Simulated annealing or random search on f on p4366); T278 stops racing: after 18 experiments it sits on H22 below that hill's top (a copy of a known design); T279 stops racing: after 25 experiments it sits on H22 below that hill's top (a copy of a known design); T282 stops racing: after 13 experiments it sits on H22 below that hill's top (a copy of a known design); T27 landed on H2 (distance 0.000); 1884 s
