@@ -44,6 +44,13 @@
    "key": "target",
    "question": "Which part of f*f does the program's step aim at",
    "attached": false
+  },
+  "A27": {
+   "key": "audit",
+   "question": "Every program so far: Search keeps exactly one incumbent height vector and improves it; no population, restarts, or parallel trajectories.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 60
   }
  },
  "values": {
@@ -236,6 +243,24 @@
    "name": "Small-mass runs of f first",
    "note": "packet ascent's order (EinsteinArena thread 92 (https://einsteinarena.com/problems/second-autocorrelation-inequality, discussions))",
    "axis_key": "target"
+  },
+  "A27.v2": {
+   "name": "Keep a population of diverse height vectors and recombine.",
+   "origin": "audit",
+   "gen": 60,
+   "note": "an alternative to what every program so far does (Search keeps exactly one incumbent height vector and improves it; no population, restarts, or parallel trajectories.): the invariant audit, generation 60; A population or restarts can escape basins that a single trajectory never leaves."
+  },
+  "A27.v3": {
+   "name": "Run independent random restarts and keep the best.",
+   "origin": "audit",
+   "gen": 60,
+   "note": "an alternative to what every program so far does (Search keeps exactly one incumbent height vector and improves it; no population, restarts, or parallel trajectories.): the invariant audit, generation 60; A population or restarts can escape basins that a single trajectory never leaves."
+  },
+  "A27.v4": {
+   "name": "Use beam search over several resampled grids.",
+   "origin": "audit",
+   "gen": 60,
+   "note": "an alternative to what every program so far does (Search keeps exactly one incumbent height vector and improves it; no population, restarts, or parallel trajectories.): the invariant audit, generation 60; A population or restarts can escape basins that a single trajectory never leaves."
   }
  },
  "matched": {}
