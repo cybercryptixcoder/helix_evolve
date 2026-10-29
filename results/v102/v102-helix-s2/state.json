@@ -1,5 +1,5 @@
 {
- "gen_done": 50,
+ "gen_done": 53,
  "config": {
   "condition": "v10.2",
   "seed": 2,
@@ -90,7 +90,7 @@
   "build_cap": 4,
   "wide_own": true
  },
- "t": 1793297844.0833719,
+ "t": 1793300512.4174254,
  "version": "v10.2",
  "warm": null,
  "warm_gen": null,
