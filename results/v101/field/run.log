@@ -15,3 +15,8 @@
 23:39:01 field: warm round 3 (dinkelbach_polish): 0.962273842985; best 0.962273842985; 274 s CPU
 23:46:02 field: scratch round 4 (velocity_cycles): 0.874348519360; best 0.874348519360; 613 s CPU
 23:50:20 field: axes round 5 (dinkelbach_polish): 0.941441752245; best 0.941441752245; 585 s CPU
+23:57:27 field: warm round 4 (velocity_cycles): 0.962273842985; best 0.962273842985; 541 s CPU
+23:58:41 field: scratch round 5 (dinkelbach_polish): 0.874357382414; best 0.874357382414; 631 s CPU
+00:04:22 field: axes round 6 (velocity_cycles): 0.941441752245; best 0.941441752245; 853 s CPU
+00:06:16 field: warm round 5 (dinkelbach_polish): 0.962273842985; best 0.962273842985; 545 s CPU
+00:20:39 field: scratch round 6 (velocity_cycles): 0.876237356775; best 0.876237356775; 898 s CPU
