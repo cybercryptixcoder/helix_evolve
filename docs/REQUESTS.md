@@ -142,4 +142,9 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
 - **standing** (2026-10-29 02:14): justify Helix against existing published baselines, under the constraint they
   followed (as with the step limit), for whatever is to be proved. v10.2 is measured against the published LLM
   systems' values and budgets (TTT-Discover's Table 2, ThetaEvolve, AlphaEvolve V2).
+- **standing** (2026-10-29 17:12): state clearly how something is being implemented, and any gap between that and what
+  was asked for, as soon as it arises; never let a disconnect go unmentioned. (Prompted by the axes: Shreyas pictured
+  each axis as a quantity you can do more or less of; what was built is a question with named, unordered answers.)
+- **doing** (2026-10-29 17:12): keep this discussion short and back-and-forth; first understand where things are
+  before proposing what to do.
 
