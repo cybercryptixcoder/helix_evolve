@@ -26,7 +26,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 17 | 108 | 3.5 | 308 | 2,637,285 | 0.904078400915 (p0107) |
-| v102-helix-s2 | 20 | 128 | 3.7 | 348 | 3,136,164 | 0.862784436374 (p0125) |
+| v102-helix-s2 | 21 | 134 | 3.8 | 365 | 3,318,537 | 0.862804902527 (p0134) |
 
 ## Against the published LLM-driven systems
 
@@ -46,7 +46,7 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.904078400915 (p0107, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.904080511527 (p0110, n = 49152), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 6 (6 around an option of the field, 0 new designs from the map). Their climbs:
@@ -64,17 +64,17 @@ The field's options built at least once: 6 of 38.
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.862784436374 (p0125, n = 50000), on track T5: a new design built from nothing around A16 -> Perturb along the gradient of the transition loss….
+Helix's record: 0.862804902527 (p0134, n = 50000), on track T5: a new design built from nothing around A16 -> Perturb along the gradient of the transition loss….
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6.
 
 Explorations built from nothing: 5 (5 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 15 | 0.862784436 | running | yes |
-| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 7 | 0.851723580 | running |  |
-| T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 12 | 0.847345467 | running |  |
-| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 8 | 0.846811595 | running |  |
-| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 9 | 0.809862529 | running |  |
+| T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 16 | 0.862804903 | running | yes |
+| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 8 | 0.851723580 | running |  |
+| T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 12 | 0.847918769 | running |  |
+| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 9 | 0.846811595 | running |  |
+| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 9 | 0.810003807 | running |  |
 
 The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 6.
