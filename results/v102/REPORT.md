@@ -2,9 +2,9 @@
 
 ## v102-helix
 
-- Generations 1-72: best 0.666666667 -> 0.946547654 (p0447, track T2); the main track now: T2.
-- Exploration levels: level 0: 60 generations, level 1: 12 generations.
-- Planned experiments by slot: track 135, main 72, build 8, flip 1.
+- Generations 1-73: best 0.666666667 -> 0.946547667 (p0452, track T2); the main track now: T2.
+- Exploration levels: level 0: 60 generations, level 1: 13 generations.
+- Planned experiments by slot: track 137, main 73, build 8, flip 1.
 
 ### Records (46)
 
@@ -136,6 +136,7 @@
 | 70 | 0.946547357 |  | 1 / 2 | 0 | main, track:T8, track:T6 | 0.913712 |  |
 | 71 | 0.946547589 |  | 2 / 2 | 0 | main, track:T10, track:T7 | 0.842801 |  |
 | 72 | 0.946547654 |  | 3 / 2 | 1 | main, track:T6, track:T8 | 0.913712 | T1 gained (0.796089 -> 0.796091) |
+| 73 | 0.946547667 |  | 4 / 2 | 1 | main, track:T7, track:T10 | 0.875847 | T7 gained (0.842801 -> 0.842986); T10 gained (0.875050 -> 0.875847) |
 
 ### Hills (10: 2 on the map after its first generation, 8 found since)
 
@@ -143,9 +144,9 @@
 |---|---|---|---|---|---|
 | H2 | 0.946547 (p0422) | 1 | T2 (build) | 0 | This program optimizes a smooth log-sum-exp surrogate of the sup-norm with an annealed sharpness parameter inside a Dinkelbach loop, rather than directly maximizing the exact ratio. It uses L-BFGS-B with analytic gradien |
 | H8 | 0.913712 (p0426) | 16 | T8 (build) | 0 | This program abandons the record's high-resolution climb entirely, instead starting from the given start and running a prune-refine-upsample loop that repeatedly zeroes the smallest fraction of cells and re-optimises ins |
-| H10 | 0.875050 (p0424) | 46 | T10 (build) | 0 | This program seeds from a periodic cosine-tooth envelope rather than from the record's start, and it optimises with a Dinkelbach loop over an LSE-smoothed max (beta up to 1e12) instead of exact-move golden-section/pair p |
+| H10 | 0.875847 (p0450) | 46 | T10 (build) | 0 | This program seeds from a periodic cosine-tooth envelope rather than from the record's start, and it optimises with a Dinkelbach loop over an LSE-smoothed max (beta up to 1e12) instead of exact-move golden-section/pair p |
 | H6 | 0.866966 (p0365) | 7 | T6 (build) | 0 | This program builds a hand-crafted spike-plus-decaying-comb seed at n=512 and then doubles resolution in four stages (512→1024→2048→4096), spending only 20% of budget on the first stage and re-annealing beta from 1e4 upw |
-| H7 | 0.842801 (p0411) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
+| H7 | 0.842986 (p0451) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
 | H3 | 0.804847 (p0022) | 2 | T3 (flip) | 0 | This program optimizes a Dinkelbach-style surrogate (smooth-max minus λ·num) with L-BFGS-B gradients on a fixed grid, rather than the record's approach of building a tuned small-n construction and carefully upsampling it |
 | H4 | 0.803713 (p0035) | 4 | T4 (build) | 0 | This program starts from the given `start` and refines it with local, parameterised moves (run scaling, additive cosine packets, constant-run shifts, bump replacement, and pairwise mass transfer), each tuned by a 1-D gri |
 | H5 | 0.801808 (p0031) | 6 | T5 (build) | 0 | This program uses linear interpolation to upsample between fixed ladder sizes (256→4096) rather than repeat-based upsampling, and it anneals the smooth-max exponent p from 4 to 400 within each stage instead of re-anneali |
@@ -163,12 +164,12 @@ Decisions every hill shared (mapped at generation 72):
 - D7: Time/budget allocation (all: a wall/CPU-time budget split across stages by hand-tuned fractions, with the final stage at the highest resolution)
 - D8: Handling of the support / sparsity (all: keep all cells free (dense) or prune by a fixed threshold / active-set mask, but never change the number of nonzero cells as a discrete design variable)
 
-### The design map (17 decisions, 431 programs placed)
+### The design map (17 decisions, 436 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A23: How is the resolution of the returned final answer chosen (native, truncated, pooled, or b | Evaluate a handful of candidate resoluti; Return the native high-resolution field ; Choose the output resolution by a valida; A separate polish pass at the largest gr; No separate polish; keep one beta schedu ... | 92% of 40 (kappa 0.87) | 4% |
-| A25: How is the final answer selected from the candidates produced during the search? | Keep the best-R candidate found across s; Return the last polished candidate uncon; return start as best, keep new as altern; the single best-scoring construction fou; return an ensemble/average of several ne ... | 83% of 18 (kappa 0.47) | 2% |
+| A23: How is the resolution of the returned final answer chosen (native, truncated, pooled, or b | Evaluate a handful of candidate resoluti; Return the native high-resolution field ; Choose the output resolution by a valida; A separate polish pass at the largest gr; No separate polish; keep one beta schedu ... | 92% of 40 (kappa 0.87) | 5% |
+| A25: How is the final answer selected from the candidates produced during the search? | Keep the best-R candidate found across s; Return the last polished candidate uncon; return start as best, keep new as altern; the single best-scoring construction fou; return an ensemble/average of several ne ... | 83% of 18 (kappa 0.47) | 3% |
 | A12: How is f >= 0 enforced | f = w^2 exactly (a cell at zero stays at; Clip or project to f >= 0 after each ste; An explicit support mask pruned on purpo; none imposed; f is unconstrained and sca; fix //f//_1 or //f//_2 to a constant to  ... | 95% of 40 (kappa 0.89) | 2% |
 | A2: How is the first solution built? | Constant or supplied start; Random smooth Fourier field; Hand-designed bump/comb shape; Random Gaussian packet mixture; Deterministic analytic constructions ... | 78% of 40 (kappa 0.69) | 2% |
 | A1: How is a candidate solution represented? | Dense grid direct values; Parametric analytic form; Sparse low-degree basis; Spline/Fourier basis coefficients; Softmax/log parameterization ... | 98% of 40 (kappa 0.66) | - |
@@ -191,15 +192,15 @@ Interacting decisions in the last fit: ('A15', 'A25'), ('A14', 'A25')
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
-| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 72 | 0.946547 | running | founder H2 |
+| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 73 | 0.946547 | running | founder H2 |
 | T3 | flip | 1 | A18 -> a new option, unlike the liste | 1/1 | 6 | 0.804847 | paused at 6 | founder H3 |
 | T4 | build | 2 | A9 -> Exact line search on R per blo | 1/1 | 6 | 0.803713 | paused at 6 | founder H4 |
 | T5 | build | 3 | A10 -> A softmax- or p-norm-weighted  | 1/1 | 6 | 0.801808 | paused at 6 | founder H5 |
 | T6 | build | 4 | A14 -> A tall spike plus a comb of sm | 1/1 | 37 | 0.866966 | running at 24 | founder H6 |
-| T7 | build | 5 | A17 -> Small-mass runs of f first | 1/1 | 33 | 0.842801 | running at 24 | founder H7 |
+| T7 | build | 5 | A17 -> Small-mass runs of f first | 1/1 | 34 | 0.842986 | running at 24 | founder H7 |
 | T8 | build | 14 | A11 -> Adam stochastic ascent with re | 1/1 | 29 | 0.913712 | running at 24 | founder H8 |
 | T9 | build | 18 | A12 -> f = w^2 exactly (a cell at zer | 1/1 | 12 | 0.774369 | paused at 12 | founder H9 |
-| T10 | build | 44 | A15 -> A fine, coherent periodic latt | 1/1 | 14 | 0.875050 | running at 12 | founder H10 |
+| T10 | build | 44 | A15 -> A fine, coherent periodic latt | 1/1 | 15 | 0.875847 | running at 12 | founder H10 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
