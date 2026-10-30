@@ -142,6 +142,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 141
+  },
+  "A50": {
+   "key": "audit",
+   "question": "Every program so far: All optimize a dense per-cell height vector; no low-dimensional parametric representation of the profile.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 151
+  },
+  "A51": {
+   "key": "audit",
+   "question": "Every program so far: All allow h to be asymmetric; none imposes even symmetry or optimizes only half the array.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 151
   }
  },
  "values": {
@@ -586,6 +600,42 @@
    "origin": "audit",
    "gen": 141,
    "note": "an alternative to what every program so far does (No program regularizes roughness of h in the final objective; smoothing appears only as a temporary surrogate or initialization.): the invariant audit, generation 141; Roughness controls the shape and height of f*f and hence both numerator and L_inf."
+  },
+  "A50.v2": {
+   "name": "Represent h by cubic-spline control points and optimize those",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All optimize a dense per-cell height vector; no low-dimensional parametric representation of the profile.): the invariant audit, generation 151; A parametric family changes the feasible shapes and local optima, possibly finding better plateaus with fewer variables."
+  },
+  "A50.v3": {
+   "name": "Use Fourier/cosine coefficients as the optimization variables",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All optimize a dense per-cell height vector; no low-dimensional parametric representation of the profile.): the invariant audit, generation 151; A parametric family changes the feasible shapes and local optima, possibly finding better plateaus with fewer variables."
+  },
+  "A50.v4": {
+   "name": "Use a Gaussian-mixture or piecewise-linear template sampled to cells",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All optimize a dense per-cell height vector; no low-dimensional parametric representation of the profile.): the invariant audit, generation 151; A parametric family changes the feasible shapes and local optima, possibly finding better plateaus with fewer variables."
+  },
+  "A51.v2": {
+   "name": "Enforce h[i]=h[N-1-i] and optimize half the cells",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All allow h to be asymmetric; none imposes even symmetry or optimizes only half the array.): the invariant audit, generation 151; Symmetry is not required by R but restricting to it changes the search landscape and attainable f*f."
+  },
+  "A51.v3": {
+   "name": "Optimize full array but symmetrize every iterate",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All allow h to be asymmetric; none imposes even symmetry or optimizes only half the array.): the invariant audit, generation 151; Symmetry is not required by R but restricting to it changes the search landscape and attainable f*f."
+  },
+  "A51.v4": {
+   "name": "Alternate symmetric and asymmetric optimization phases",
+   "origin": "audit",
+   "gen": 151,
+   "note": "an alternative to what every program so far does (All allow h to be asymmetric; none imposes even symmetry or optimizes only half the array.): the invariant audit, generation 151; Symmetry is not required by R but restricting to it changes the search landscape and attainable f*f."
   }
  },
  "matched": {}
