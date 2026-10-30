@@ -163,6 +163,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 161
+  },
+  "A58": {
+   "key": "audit",
+   "question": "Every program so far: All programs search over an unconstrained dense height profile: no symmetry, centering, or parametric family is imposed on h.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 181
+  },
+  "A59": {
+   "key": "audit",
+   "question": "Every program so far: All programs optimize continuous real-valued heights; no quantization to discrete levels or binary support is used.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 181
+  },
+  "A60": {
+   "key": "audit",
+   "question": "Every program so far: All programs rely on scale invariance and do not impose sum(h)=1 or max(h)=1 as an active constraint during optimization.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 181
   }
  },
  "values": {
@@ -661,6 +682,60 @@
    "origin": "audit",
    "gen": 161,
    "note": "an alternative to what every program so far does (The overall scale of h is left free during optimization; no constraint fixes sum(h) or max(h), and normalization is only applied after a stage.): the invariant audit, generation 161; Removing the scale degeneracy changes conditioning, zero-cell behavior, and the search path to the same R."
+  },
+  "A58.v2": {
+   "name": "Constrain h to be even about its midpoint",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs search over an unconstrained dense height profile: no symmetry, centering, or parametric family is imposed on h.): the invariant audit, generation 181; Symmetry or parametric restrictions change the attainable shapes and the local optima reached."
+  },
+  "A58.v3": {
+   "name": "Parameterize h by a spline or Gaussian family",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs search over an unconstrained dense height profile: no symmetry, centering, or parametric family is imposed on h.): the invariant audit, generation 181; Symmetry or parametric restrictions change the attainable shapes and the local optima reached."
+  },
+  "A58.v4": {
+   "name": "Search only centered supports with fixed symmetry",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs search over an unconstrained dense height profile: no symmetry, centering, or parametric family is imposed on h.): the invariant audit, generation 181; Symmetry or parametric restrictions change the attainable shapes and the local optima reached."
+  },
+  "A59.v2": {
+   "name": "Restrict heights to 0/1 (binary support)",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs optimize continuous real-valued heights; no quantization to discrete levels or binary support is used.): the invariant audit, generation 181; Discrete height sets change the feasible set and can avoid or create local optima."
+  },
+  "A59.v3": {
+   "name": "Quantize heights to a few levels",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs optimize continuous real-valued heights; no quantization to discrete levels or binary support is used.): the invariant audit, generation 181; Discrete height sets change the feasible set and can avoid or create local optima."
+  },
+  "A59.v4": {
+   "name": "Use integer heights with fixed scale",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs optimize continuous real-valued heights; no quantization to discrete levels or binary support is used.): the invariant audit, generation 181; Discrete height sets change the feasible set and can avoid or create local optima."
+  },
+  "A60.v2": {
+   "name": "Constrain sum(h)=1 inside the optimizer",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs rely on scale invariance and do not impose sum(h)=1 or max(h)=1 as an active constraint during optimization.): the invariant audit, generation 181; Explicit normalization changes gradient conditioning and the path taken by L-BFGS-B."
+  },
+  "A60.v3": {
+   "name": "Constrain max(h)=1 inside the optimizer",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs rely on scale invariance and do not impose sum(h)=1 or max(h)=1 as an active constraint during optimization.): the invariant audit, generation 181; Explicit normalization changes gradient conditioning and the path taken by L-BFGS-B."
+  },
+  "A60.v4": {
+   "name": "Constrain max(f*f)=1 inside the optimizer",
+   "origin": "audit",
+   "gen": 181,
+   "note": "an alternative to what every program so far does (All programs rely on scale invariance and do not impose sum(h)=1 or max(h)=1 as an active constraint during optimization.): the invariant audit, generation 181; Explicit normalization changes gradient conditioning and the path taken by L-BFGS-B."
   }
  },
  "matched": {}
