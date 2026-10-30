@@ -1,0 +1,4 @@
+/home/claude/helix_evolve/experiments/packing_dryrun/pack.py:92: RuntimeWarning: invalid value encountered in divide
+  w = (d0 / d) ** p / d ** 2
+smooth done
+all done
