@@ -16,22 +16,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 80 | 0.946547672 | 0.904524431 |
 | 100 | 0.946550292 | 0.927286941 |
 
-## The climb, by CPU (18.2 CPU hours on programs so far)
+## The climb, by CPU (18.4 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 1.82 | 0.898266870 | 0.860074252 |
-| 4.55 | 0.932126682 | 0.863198432 |
-| 9.09 | 0.946475785 | 0.866112124 |
-| 13.64 | 0.946545864 | 0.904524431 |
-| 18.18 | 0.946548585 | 0.937658443 |
+| 1.84 | 0.898266870 | 0.860074252 |
+| 4.60 | 0.932126682 | 0.863198432 |
+| 9.19 | 0.946485332 | 0.871953081 |
+| 13.79 | 0.946546050 | 0.904524431 |
+| 18.39 | 0.946549264 | 0.937658443 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 100 | 623 | 21.8 | 1826 | 22,110,008 | 0.946550291659 (p0622) |
-| v102-helix-s2 | 103 | 644 | 18.2 | 1823 | 20,735,608 | 0.937658443297 (p0641) |
+| v102-helix-s2 | 104 | 650 | 18.4 | 1840 | 20,949,164 | 0.937658443297 (p0647) |
 
 ## Against the published LLM-driven systems
 
@@ -76,19 +76,20 @@ The field's options built at least once: 9 of 38; the invariant audit's alternat
 Helix's record: 0.937658443297 (p0647, n = 32000), on track T9: a new design built from nothing around A20 -> Use no regularization.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52, T9 from generation 100.
 
-Explorations built from nothing: 10 (10 around an option of the field, 0 new designs from the map). Their climbs:
+Explorations built from nothing: 11 (11 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 25 | 0.937658443 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 26 | 0.937658443 | running | yes |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 49 | 0.879822914 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
-| T10 | A10 -> Level-transition lags | 90 | 6 | 0.869835877 | running |  |
+| T10 | A10 -> Level-transition lags | 90 | 6 | 0.872339166 | running |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
+| T13 | A20 -> Add an L2 penalty on heights | 104 | 1 | 0.849308249 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
-| T11 | A33 -> Min-max plateau-gap surrogate | 101 | 1 | - | running |  |
+| T11 | A33 -> Min-max plateau-gap surrogate | 101 | 2 | 0.723461343 | running |  |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 1 | - | running |  |
 
 The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 21.
