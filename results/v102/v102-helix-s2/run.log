@@ -293,3 +293,9 @@
 15:11:02 [v102-helix-s2] gen 162: tidied A36: 16 options -> 16
 15:11:02 [v102-helix-s2] gen 162: tidied A49: 16 options -> 16
 15:11:02 [v102-helix-s2] gen 162: tidied A4: 15 options -> 15
+15:23:06 [v102-helix-s2] gen 162: best 0.941048 (p1025, wide, track T9, hill H2) RECORD; stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 15 hills; map 20 decisions (20 steering), 913 programs placed; T13 landed 0/1 target decisions (missing: A20 -> Add an L2 penalty on heights); T13 served instead of a new design (4 built explorations racing, the cap); 734 s
+15:32:54 [v102-helix-s2] gen 163: best 0.941060 (p1034, deep, track T9, hill H2) RECORD; stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 15 hills; map 20 decisions (20 steering), 921 programs placed; T11 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.863481 -> 0.863944); 588 s
+15:44:34 [v102-helix-s2] gen 164: best 0.941062 (p1041, deep, track T9, hill H2) RECORD; stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 15 hills; map 21 decisions (21 steering), 927 programs placed; T12 landed 0/1 target decisions (missing: A14 -> Regular small-big-small triplets); T12 served instead of a new design (4 built explorations racing, the cap); discovery: A56 (How is the search's time budget allocated across phases (single L-BFGS-B run vs…); T11 gained (0.863944 -> 0.863997); T13 gained (0.917218 -> 0.917220); 699 s
+15:44:37 [v102-helix-s2] gen 165: tidied A36: 16 options -> 15
+15:44:37 [v102-helix-s2] gen 165: tidied A49: 16 options -> 15
+15:44:37 [v102-helix-s2] gen 165: tidied A4: 15 options -> 15
