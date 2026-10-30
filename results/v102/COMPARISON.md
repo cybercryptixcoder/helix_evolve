@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 170)
+## The climb, by generation (every run has finished 171)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -16,7 +16,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 80 | 0.946547672 | 0.904524431 |
 | 100 | 0.946550292 | 0.927286941 |
 | 150 | 0.946630536 | 0.940687589 |
-| 170 | 0.946766345 | 0.941062496 |
+| 171 | 0.946766433 | 0.941063510 |
 
 ## The climb, by CPU (31.7 CPU hours on programs so far)
 
@@ -32,7 +32,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 170 | 1057 | 36.6 | 3125 | 38,870,309 | 0.946766345214 (p1053) |
+| v102-helix | 171 | 1063 | 36.8 | 3145 | 39,084,116 | 0.946766433066 (p1063) |
 | v102-helix-s2 | 177 | 1140 | 31.7 | 3110 | 36,709,495 | 0.941090505231 (p1139) |
 
 ## Against the published LLM-driven systems
@@ -53,22 +53,22 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.946766345214 (p1053, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.946766433066 (p1063, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 14 (14 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 170 | 0.946765977 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 171 | 0.946765977 | running | yes |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
-| T13 | A5 -> Fourier perturbation | 105 | 33 | 0.871398503 | running |  |
+| T13 | A5 -> Fourier perturbation | 105 | 34 | 0.871413424 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 48 | 0.866965580 | paused |  |
-| T16 | A4 -> Population evolutionary search | 145 | 13 | 0.853350299 | running |  |
+| T16 | A4 -> Population evolutionary search | 145 | 13 | 0.853351855 | running |  |
 | T15 | A12 -> Explicit support mask pruning | 122 | 23 | 0.848537703 | running |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
-| T11 | A4 -> Beam search over grids | 97 | 36 | 0.839291889 | running |  |
+| T11 | A4 -> Beam search over grids | 97 | 37 | 0.839406382 | running |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
 | T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 12 | 0.774368749 | paused |  |
