@@ -1,0 +1,21 @@
+n=10 climb 1: 0.14644 -> 0.14772 in 60 evaluations
+n=10 climb 2: 0.13866 -> 0.14719 in 60 evaluations
+n=10 climb 3: 0.13506 -> 0.14766 in 60 evaluations
+n=10 climb 4: 0.12834 -> 0.14705 in 60 evaluations
+n=10 climb 5: 0.14263 -> 0.14772 in 60 evaluations
+n=10 random sampling, 300 evaluations: best 0.14737
+n=20 climb 1: 0.10587 -> 0.11012 in 60 evaluations
+/home/claude/helix_evolve/experiments/packing_dryrun/pack.py:92: RuntimeWarning: invalid value encountered in divide
+  w = (d0 / d) ** p / d ** 2
+n=20 climb 2: 0.10724 -> 0.10874 in 60 evaluations
+n=20 climb 3: 0.10061 -> 0.10899 in 60 evaluations
+n=20 climb 4: 0.10524 -> 0.10927 in 60 evaluations
+n=20 climb 5: 0.05217 -> 0.11056 in 60 evaluations
+n=20 random sampling, 300 evaluations: best 0.11032
+n=30 climb 1: 0.08517 -> 0.08674 in 60 evaluations
+n=30 climb 2: 0.08507 -> 0.09043 in 60 evaluations
+n=30 climb 3: 0.07818 -> 0.09061 in 60 evaluations
+n=30 climb 4: 0.08537 -> 0.08953 in 60 evaluations
+n=30 climb 5: 0.08473 -> 0.09031 in 60 evaluations
+n=30 random sampling, 300 evaluations: best 0.09056
+all done
