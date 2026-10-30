@@ -51,6 +51,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 60
+  },
+  "A38": {
+   "key": "audit",
+   "question": "Every program so far: Every program runs a single candidate trajectory; no population, ensemble, or maintained multi-start set is used.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 157
   }
  },
  "values": {
@@ -261,6 +268,24 @@
    "origin": "audit",
    "gen": 60,
    "note": "an alternative to what every program so far does (Search keeps exactly one incumbent height vector and improves it; no population, restarts, or parallel trajectories.): the invariant audit, generation 60; A population or restarts can escape basins that a single trajectory never leaves."
+  },
+  "A38.v2": {
+   "name": "CMA-ES population search",
+   "origin": "audit",
+   "gen": 157,
+   "note": "an alternative to what every program so far does (Every program runs a single candidate trajectory; no population, ensemble, or maintained multi-start set is used.): the invariant audit, generation 157; Population/global methods can escape local optima that a single L-BFGS trajectory cannot."
+  },
+  "A38.v3": {
+   "name": "differential evolution over heights",
+   "origin": "audit",
+   "gen": 157,
+   "note": "an alternative to what every program so far does (Every program runs a single candidate trajectory; no population, ensemble, or maintained multi-start set is used.): the invariant audit, generation 157; Population/global methods can escape local optima that a single L-BFGS trajectory cannot."
+  },
+  "A38.v4": {
+   "name": "many independent random restarts with basin hopping",
+   "origin": "audit",
+   "gen": 157,
+   "note": "an alternative to what every program so far does (Every program runs a single candidate trajectory; no population, ensemble, or maintained multi-start set is used.): the invariant audit, generation 157; Population/global methods can escape local optima that a single L-BFGS trajectory cannot."
   }
  },
  "matched": {}

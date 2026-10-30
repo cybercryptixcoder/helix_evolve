@@ -285,3 +285,10 @@
 15:03:51 [v102-helix] gen 156: tidied A4: 20 options -> 20
 15:03:51 [v102-helix] gen 156: tidied A8: 18 options -> 12
 15:03:51 [v102-helix] gen 156: tidied A28: 16 options -> 13
+15:22:20 [v102-helix] gen 156: best 0.946631 (p0971, wide, track T2, hill H2); stall 5 (typical 2), level 1; slots 1 main, 2 track; deep 1/3 gained, wide 2/3 gained; 14 hills; map 16 decisions (16 steering), 929 programs placed; 9 reworded option(s) merged into the ones they repeat; T16 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.835077 -> 0.835141); T15 gained (0.843515 -> 0.844547); T16 gained (0.820094 -> 0.820908); T16 goes on to the next rung (12 experiments): still rising (best 0.820908 at 6 experiments); 1112 s
+15:23:55 [v102-helix] gen 157: invariant audit: 8 shared choices named (2 design decisions), 1 confirmed on a second sample, 1 new decision(s) on the map; 'Every program runs a single candidate trajectory; no population, ensemble, or ma' (88% share it)
+15:38:47 [v102-helix] gen 157: best 0.946631 (p0978, deep, track T2, hill H2); stall 6 (typical 2), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 14 hills; map 17 decisions (17 steering), 935 programs placed; T11 landed 0/1 target decisions (missing: A4 -> Beam search over grids); T13 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.835141 -> 0.835265); T13 gained (0.868662 -> 0.869308); T16 gained (0.820908 -> 0.828500); 892 s
+15:53:11 [v102-helix] gen 158: best 0.946631 (p0985, deep, track T2, hill H2); stall 7 (typical 2), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 2/3 gained; 14 hills; map 17 decisions (17 steering), 941 programs placed; T16 served instead of a new design (4 built explorations racing, the cap); T15 gained (0.844547 -> 0.845228); T16 gained (0.828500 -> 0.829687); 861 s
+15:53:23 [v102-helix] gen 159: tidied A4: 23 options -> 20
+15:53:23 [v102-helix] gen 159: tidied A2: 18 options -> 12
+15:53:23 [v102-helix] gen 159: tidied A3: 18 options -> 14

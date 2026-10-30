@@ -2,9 +2,9 @@
 
 ## v102-helix
 
-- Generations 1-157: best 0.666666667 -> 0.946631019 (p0978, track T2); the main track now: T2.
-- Exploration levels: level 0: 84 generations, level 1: 27 generations, level 2: 46 generations.
-- Planned experiments by slot: track 299, main 157, build 14, flip 1.
+- Generations 1-158: best 0.666666667 -> 0.946631019 (p0985, track T2); the main track now: T2.
+- Exploration levels: level 0: 84 generations, level 1: 27 generations, level 2: 47 generations.
+- Planned experiments by slot: track 301, main 158, build 14, flip 1.
 
 ### Records (57)
 
@@ -232,6 +232,7 @@
 | 155 | 0.946630994 |  | 4 / 2 | 1 | main, track:T11, track:T13 | 0.868662 | T11 gained (0.835018 -> 0.835077); T13 gained (0.868660 -> 0.868662); T15 gained (0.842923 -> 0.843515); T16 gained (0.813946 -> 0.820094) |
 | 156 | 0.946631016 |  | 5 / 2 | 1 | main, track:T15, track:T16 | 0.844547 | T11 gained (0.835077 -> 0.835141); T15 gained (0.843515 -> 0.844547); T16 gained (0.820094 -> 0.820908); T16 goes on to the next rung (12 experiments): still rising (best 0.820908 at 6 experiments) |
 | 157 | 0.946631019 |  | 6 / 2 | 2 | main, track:T11, track:T13 | 0.869308 | T11 gained (0.835141 -> 0.835265); T13 gained (0.868662 -> 0.869308); T16 gained (0.820908 -> 0.828500) |
+| 158 | 0.946631019 |  | 7 / 2 | 2 | main, track:T15, track:T16 | 0.844773 | T15 gained (0.844547 -> 0.845228); T16 gained (0.828500 -> 0.829687) |
 
 ### Hills (14: 2 on the map after its first generation, 12 found since)
 
@@ -241,11 +242,11 @@
 | H8 | 0.914144 (p0677) | 16 | T8 (build) | 0 | This program abandons the record's high-resolution climb entirely, instead starting from the given start and running a prune-refine-upsample loop that repeatedly zeroes the smallest fraction of cells and re-optimises ins |
 | H10 | 0.876149 (p0908) | 46 | T10 (build) | 0 | This program seeds from a periodic cosine-tooth envelope rather than from the record's start, and it optimises with a Dinkelbach loop over an LSE-smoothed max (beta up to 1e12) instead of exact-move golden-section/pair p |
 | H6 | 0.869308 (p0977) | 7 | T6 (build) | 1 | This program builds a hand-crafted spike-plus-decaying-comb seed at n=512 and then doubles resolution in four stages (512→1024→2048→4096), spending only 20% of budget on the first stage and re-annealing beta from 1e4 upw |
-| H13 | 0.844547 (p0970) | 124 | T15 (build) | 0 | This program searches over support masks rather than continuous heights: it proposes discrete mask moves (delete/add/swap/shift/split cells) and re-polishes only the active cells with L-BFGS-B under a smoothed log-sum-ex |
+| H13 | 0.845228 (p0981) | 124 | T15 (build) | 0 | This program searches over support masks rather than continuous heights: it proposes discrete mask moves (delete/add/swap/shift/split cells) and re-polishes only the active cells with L-BFGS-B under a smoothed log-sum-ex |
 | H7 | 0.844130 (p0613) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
 | H11 | 0.835265 (p0976) | 100 | T11 (build) | 0 | This program runs a coarse-to-fine multiresolution ladder (256→16384) with a beam of candidates, using Adam gradient descent on an analytic gradient of R plus golden-section coordinate polish, rather than the record's ex |
+| H14 | 0.829687 (p0982) | 147 | T16 (build) | 0 | This program runs a genetic algorithm (population of 10, mutation/crossover, staged upsampling from 1024 to 16384) rather than the record's exact-coordinate/pair-sweep plus Dinkelbach polish pipeline. It relies on L-BFGS |
 | H12 | 0.829283 (p0688) | 107 | T13 (build) | 0 | This program abandons the record's exact-move polisher and instead optimizes a Dinkelbach-transformed LSE-smoothed max with L-BFGS-B gradients, using exact golden-section coordinate sweeps only as a secondary polish. It  |
-| H14 | 0.828500 (p0974) | 147 | T16 (build) | 0 | This program runs a genetic algorithm (population of 10, mutation/crossover, staged upsampling from 1024 to 16384) rather than the record's exact-coordinate/pair-sweep plus Dinkelbach polish pipeline. It relies on L-BFGS |
 | H3 | 0.804847 (p0022) | 2 | T3 (flip) | 0 | This program optimizes a Dinkelbach-style surrogate (smooth-max minus λ·num) with L-BFGS-B gradients on a fixed grid, rather than the record's approach of building a tuned small-n construction and carefully upsampling it |
 | H4 | 0.803713 (p0035) | 4 | T4 (build) | 0 | This program starts from the given `start` and refines it with local, parameterised moves (run scaling, additive cosine packets, constant-run shifts, bump replacement, and pairwise mass transfer), each tuned by a 1-D gri |
 | H5 | 0.801808 (p0031) | 6 | T5 (build) | 0 | This program uses linear interpolation to upsample between fixed ladder sizes (256→4096) rather than repeat-based upsampling, and it anneals the smooth-max exponent p from 4 to 400 within each stage instead of re-anneali |
@@ -263,7 +264,7 @@ Decisions every hill shared (mapped at generation 154):
 - D7: time allocation between exploration and polishing (all: a fixed fraction (roughly 20-60%) to a coarse/exploratory phase and the remainder to gradient polishing at the finest resolution, with a hard wall-clock deadli…)
 - D8: symmetry / normalization constraints imposed (all: only nonnegativity and sum-normalization; no enforced symmetry, periodicity, or moment constraints on f)
 
-### The design map (17 decisions, 935 programs placed)
+### The design map (17 decisions, 941 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
@@ -291,7 +292,7 @@ Interacting decisions in the last fit: ('A2', 'A14'), ('A5', 'A15')
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
-| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 157 | 0.946631 | running | founder H2 |
+| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 158 | 0.946631 | running | founder H2 |
 | T3 | flip | 1 | A18 -> a new option, unlike the liste | 1/1 | 6 | 0.804847 | paused at 6 | founder H3 |
 | T4 | build | 2 | A9 -> Exact line search on R per blo | 1/1 | 6 | 0.803713 | paused at 6 | founder H4 |
 | T5 | build | 3 | A10 -> A softmax- or p-norm-weighted  | 1/1 | 6 | 0.801808 | paused at 6 | founder H5 |
@@ -304,8 +305,8 @@ Interacting decisions in the last fit: ('A2', 'A14'), ('A5', 'A15')
 | T12 | build | 98 | A14 -> One heavy comb block holding a | - | 3 | - | paused at 3 | -  |
 | T13 | build | 105 | A5 -> Fourier/convolution-space pert | 1/1 | 27 | 0.869308 | running at 24 | top H6 |
 | T14 | build | 116 | A15 -> Number-theoretic support (Sido | 1/1 | 3 | - | paused at 3 | -  |
-| T15 | build | 122 | A12 -> Explicit support mask pruning | 1/1 | 16 | 0.844547 | running at 12 | founder H13 |
-| T16 | build | 145 | A4 -> Population evolutionary search | 1/1 | 6 | 0.828500 | running at 6 | founder H14 |
+| T15 | build | 122 | A12 -> Explicit support mask pruning | 1/1 | 17 | 0.845228 | running at 12 | founder H13 |
+| T16 | build | 145 | A4 -> Population evolutionary search | 1/1 | 7 | 0.829687 | running at 6 | founder H14 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
