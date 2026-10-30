@@ -93,6 +93,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 91
+  },
+  "A43": {
+   "key": "audit",
+   "question": "Every program so far: The search is a single-incumbent trajectory: one current height array is locally improved; no population, ensemble, or diversity archive is maintained. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 121
   }
  },
  "values": {
@@ -411,6 +418,24 @@
    "origin": "audit",
    "gen": 91,
    "note": "an alternative to what every program so far does (The gradient of the exact ratio is derived analytically and passed to the optimiser (jac=True), using convolution/correlation with h.): the invariant audit, generation 91; Gradient accuracy and cost alter the search trajectory and what is reachable in budget."
+  },
+  "A43.v2": {
+   "name": "Maintain a population of shapes and recombine/mutate them",
+   "origin": "audit",
+   "gen": 121,
+   "note": "an alternative to what every program so far does (The search is a single-incumbent trajectory: one current height array is locally improved; no population, ensemble, or diversity archive is maintained): the invariant audit, generation 121; A population can escape narrow basins and discover different plateau/support structures."
+  },
+  "A43.v3": {
+   "name": "Run many independent local ascents and keep the best",
+   "origin": "audit",
+   "gen": 121,
+   "note": "an alternative to what every program so far does (The search is a single-incumbent trajectory: one current height array is locally improved; no population, ensemble, or diversity archive is maintained): the invariant audit, generation 121; A population can escape narrow basins and discover different plateau/support structures."
+  },
+  "A43.v4": {
+   "name": "Use a global evolutionary/CMA-ES search over shape parameters",
+   "origin": "audit",
+   "gen": 121,
+   "note": "an alternative to what every program so far does (The search is a single-incumbent trajectory: one current height array is locally improved; no population, ensemble, or diversity archive is maintained): the invariant audit, generation 121; A population can escape narrow basins and discover different plateau/support structures."
   }
  },
  "matched": {}

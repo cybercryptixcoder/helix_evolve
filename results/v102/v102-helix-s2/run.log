@@ -206,3 +206,12 @@
 04:51:13 [v102-helix-s2] gen 117: tidied A1: 15 options -> 12
 04:51:13 [v102-helix-s2] gen 117: tidied A33: 15 options -> 12
 05:02:06 [v102-helix-s2] gen 117: best 0.939959 (p0716, deep, track T9, hill H2); stall 2 (typical 1), level 1; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 15 hills; map 22 decisions (22 steering), 660 programs placed; the Cartographer's scan added 1 decision(s) to the map; 10 reworded option(s) merged into the ones they repeat; T11 served instead of a new design (4 built explorations racing, the cap); T10 gained (0.872580 -> 0.872581); 698 s
+05:15:08 [v102-helix-s2] gen 118: best 0.939959 (p0716, deep, track T9, hill H2); stall 3 (typical 1), level 1; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 15 hills; map 22 decisions (22 steering), 666 programs placed; T12 landed 0/1 target decisions (missing: A14 -> Regular small-big-small triplets); T13 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.839945 -> 0.839953); 770 s
+05:30:48 [v102-helix-s2] gen 119: best 0.939959 (p0716, deep, track T9, hill H2); stall 4 (typical 1), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 15 hills; map 22 decisions (22 steering), 672 programs placed; T11 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.839953 -> 0.853454); 930 s
+05:31:02 [v102-helix-s2] gen 120: consolidated: 3 decisions merged, 19 left
+05:31:04 [v102-helix-s2] gen 120: tidied A42: 15 options -> 10
+05:31:04 [v102-helix-s2] gen 120: tidied A2: 14 options -> 12
+05:31:04 [v102-helix-s2] gen 120: tidied A32: 13 options -> 6
+05:31:04 [v102-helix-s2] gen 120: dropped 1 decisions that fewer than 3 programs make
+05:43:12 [v102-helix-s2] gen 120: best 0.940039 (p0752, deep, track T9, hill H2) RECORD; stall 5 (typical 1), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 15 hills; map 18 decisions (18 steering), 678 programs placed; T12 landed 0/1 target decisions (missing: A14 -> Regular small-big-small triplets); 3 duplicate decision(s) merged (22 -> 19); 14 reworded option(s) merged into the ones they repeat; 1 decision(s) dropped: fewer than 3 programs make them; T12 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.853454 -> 0.855064); 732 s
+05:44:37 [v102-helix-s2] gen 121: invariant audit: 6 shared choices named (2 design decisions), 1 confirmed on a second sample, 1 new decision(s) on the map; 'The search is a single-incumbent trajectory: one current height array is locally' (100% share it)
