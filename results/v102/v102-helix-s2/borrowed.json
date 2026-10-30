@@ -121,6 +121,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 131
+  },
+  "A47": {
+   "key": "audit",
+   "question": "Every program so far: No program imposes a symmetry or mirror constraint on h; the full asymmetric height array is optimized.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 141
+  },
+  "A48": {
+   "key": "audit",
+   "question": "Every program so far: No program explicitly parameterizes the flat top/plateau of f or f*f; the plateau is only an emergent consequence of maximizing R.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 141
+  },
+  "A49": {
+   "key": "audit",
+   "question": "Every program so far: No program regularizes roughness of h in the final objective; smoothing appears only as a temporary surrogate or initialization.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 141
   }
  },
  "values": {
@@ -511,6 +532,60 @@
    "origin": "audit",
    "gen": 131,
    "note": "an alternative to what every program so far does (Every program fixes the final array length N before the final optimization and never treats N as a jointly optimized continuous variable.): the invariant audit, generation 131; The best achievable R may require a different effective resolution than the chosen N."
+  },
+  "A47.v2": {
+   "name": "Force h even about its center",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program imposes a symmetry or mirror constraint on h; the full asymmetric height array is optimized.): the invariant audit, generation 141; Symmetry changes the autoconvolution plateau and can raise or lower the achievable R."
+  },
+  "A47.v3": {
+   "name": "Optimize only half the array and mirror it",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program imposes a symmetry or mirror constraint on h; the full asymmetric height array is optimized.): the invariant audit, generation 141; Symmetry changes the autoconvolution plateau and can raise or lower the achievable R."
+  },
+  "A47.v4": {
+   "name": "Seed symmetric but let all bins move",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program imposes a symmetry or mirror constraint on h; the full asymmetric height array is optimized.): the invariant audit, generation 141; Symmetry changes the autoconvolution plateau and can raise or lower the achievable R."
+  },
+  "A48.v2": {
+   "name": "Parameterize f as a flat top plus two tails",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program explicitly parameterizes the flat top/plateau of f or f*f; the plateau is only an emergent consequence of maximizing R.): the invariant audit, generation 141; Direct plateau control could trade numerator mass against the L_inf denominator more effectively."
+  },
+  "A48.v3": {
+   "name": "Add a penalty forcing the top-k knots of L equal",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program explicitly parameterizes the flat top/plateau of f or f*f; the plateau is only an emergent consequence of maximizing R.): the invariant audit, generation 141; Direct plateau control could trade numerator mass against the L_inf denominator more effectively."
+  },
+  "A48.v4": {
+   "name": "Constrain the width of the L_inf plateau directly",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program explicitly parameterizes the flat top/plateau of f or f*f; the plateau is only an emergent consequence of maximizing R.): the invariant audit, generation 141; Direct plateau control could trade numerator mass against the L_inf denominator more effectively."
+  },
+  "A49.v2": {
+   "name": "Add a total-variation penalty on h",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program regularizes roughness of h in the final objective; smoothing appears only as a temporary surrogate or initialization.): the invariant audit, generation 141; Roughness controls the shape and height of f*f and hence both numerator and L_inf."
+  },
+  "A49.v3": {
+   "name": "Represent h by a few spline knots",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program regularizes roughness of h in the final objective; smoothing appears only as a temporary surrogate or initialization.): the invariant audit, generation 141; Roughness controls the shape and height of f*f and hence both numerator and L_inf."
+  },
+  "A49.v4": {
+   "name": "Enforce monotone tails on h",
+   "origin": "audit",
+   "gen": 141,
+   "note": "an alternative to what every program so far does (No program regularizes roughness of h in the final objective; smoothing appears only as a temporary surrogate or initialization.): the invariant audit, generation 141; Roughness controls the shape and height of f*f and hence both numerator and L_inf."
   }
  },
  "matched": {}
