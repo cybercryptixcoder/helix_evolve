@@ -18,22 +18,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 150 | 0.946630536 | 0.940687589 |
 | 152 | 0.946630668 | 0.940725209 |
 
-## The climb, by CPU (28.4 CPU hours on programs so far)
+## The climb, by CPU (28.6 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 2.84 | 0.904041397 | 0.862564666 |
-| 7.09 | 0.946299297 | 0.866109860 |
-| 14.18 | 0.946546206 | 0.904524431 |
-| 21.27 | 0.946550184 | 0.939959280 |
-| 28.36 | 0.946600815 | 0.940997060 |
+| 2.86 | 0.904041397 | 0.862564666 |
+| 7.14 | 0.946299297 | 0.866109860 |
+| 14.28 | 0.946546714 | 0.904524431 |
+| 21.42 | 0.946550195 | 0.939959280 |
+| 28.56 | 0.946612673 | 0.940999868 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 152 | 946 | 33.0 | 2787 | 34,594,126 | 0.946630667563 (p0944) |
-| v102-helix-s2 | 157 | 994 | 28.4 | 2758 | 32,057,561 | 0.940997059709 (p0991) |
+| v102-helix-s2 | 158 | 1001 | 28.6 | 2776 | 32,300,780 | 0.940999868069 (p0997) |
 
 ## Against the published LLM-driven systems
 
@@ -53,7 +53,7 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.946630667563 (p0944, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.946630896311 (p0949, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 14 (14 around an option of the field, 0 new designs from the map). Their climbs:
@@ -86,15 +86,15 @@ Explorations built from nothing: 11 (11 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 79 | 0.940997060 | running | yes |
-| T13 | A20 -> Add an L2 penalty on heights | 104 | 25 | 0.917218069 | running |  |
+| T9 | A20 -> Use no regularization | 53 | 80 | 0.940999868 | running | yes |
+| T13 | A20 -> Add an L2 penalty on heights | 104 | 26 | 0.917218069 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T10 | A10 -> Level-transition lags | 90 | 32 | 0.872669841 | running |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 33 | 0.863409787 | running |  |
-| T12 | A14 -> Regular small-big-small triplets | 102 | 24 | 0.862501341 | running |  |
+| T12 | A14 -> Regular small-big-small triplets | 102 | 25 | 0.862501341 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 
