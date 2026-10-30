@@ -18,22 +18,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 150 | 0.946630536 | 0.940687589 |
 | 177 | 0.946766841 | 0.941090505 |
 
-## The climb, by CPU (32.7 CPU hours on programs so far)
+## The climb, by CPU (32.9 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 3.27 | 0.904072817 | 0.862564666 |
-| 8.18 | 0.946464612 | 0.866112124 |
-| 16.35 | 0.946547667 | 0.904524431 |
-| 24.53 | 0.946550333 | 0.940174375 |
-| 32.71 | 0.946630536 | 0.941090510 |
+| 3.29 | 0.904072817 | 0.862564666 |
+| 8.22 | 0.946464612 | 0.866112124 |
+| 16.43 | 0.946547667 | 0.904527016 |
+| 24.65 | 0.946550333 | 0.940174375 |
+| 32.87 | 0.946630642 | 0.941090510 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 177 | 1100 | 37.9 | 3254 | 40,390,634 | 0.946766840976 (p1096) |
-| v102-helix-s2 | 183 | 1181 | 32.7 | 3218 | 38,140,622 | 0.941090510166 (p1166) |
+| v102-helix-s2 | 184 | 1188 | 32.9 | 3235 | 38,369,495 | 0.941090510166 (p1166) |
 
 ## Against the published LLM-driven systems
 
@@ -86,12 +86,12 @@ Explorations built from nothing: 11 (11 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 105 | 0.941090505 | running | yes |
-| T13 | A20 -> Add an L2 penalty on heights | 104 | 37 | 0.918105416 | running |  |
+| T9 | A20 -> Use no regularization | 53 | 106 | 0.941090505 | running | yes |
+| T13 | A20 -> Add an L2 penalty on heights | 104 | 38 | 0.918105416 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
-| T10 | A10 -> Level-transition lags | 90 | 44 | 0.872669841 | running |  |
+| T10 | A10 -> Level-transition lags | 90 | 45 | 0.872669841 | running |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 47 | 0.864982395 | running |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 38 | 0.862510911 | running |  |

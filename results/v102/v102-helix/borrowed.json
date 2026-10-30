@@ -58,6 +58,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 157
+  },
+  "A40": {
+   "key": "audit",
+   "question": "Every program so far: Heights are kept unbounded above; only the lower bound f>=0 is imposed, with no cap, simplex, or upper box.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 177
   }
  },
  "values": {
@@ -286,6 +293,24 @@
    "origin": "audit",
    "gen": 157,
    "note": "an alternative to what every program so far does (Every program runs a single candidate trajectory; no population, ensemble, or maintained multi-start set is used.): the invariant audit, generation 157; Population/global methods can escape local optima that a single L-BFGS trajectory cannot."
+  },
+  "A40.v2": {
+   "name": "Cap each height at a multiple of the mean height",
+   "origin": "audit",
+   "gen": 177,
+   "note": "an alternative to what every program so far does (Heights are kept unbounded above; only the lower bound f>=0 is imposed, with no cap, simplex, or upper box.): the invariant audit, generation 177; An upper cap changes whether spike-dominated or flat-top shapes are reachable."
+  },
+  "A40.v3": {
+   "name": "Constrain sum of squares or max height explicitly",
+   "origin": "audit",
+   "gen": 177,
+   "note": "an alternative to what every program so far does (Heights are kept unbounded above; only the lower bound f>=0 is imposed, with no cap, simplex, or upper box.): the invariant audit, generation 177; An upper cap changes whether spike-dominated or flat-top shapes are reachable."
+  },
+  "A40.v4": {
+   "name": "Use a simplex constraint with fixed total and upper bound",
+   "origin": "audit",
+   "gen": 177,
+   "note": "an alternative to what every program so far does (Heights are kept unbounded above; only the lower bound f>=0 is imposed, with no cap, simplex, or upper box.): the invariant audit, generation 177; An upper cap changes whether spike-dominated or flat-top shapes are reachable."
   }
  },
  "matched": {}
