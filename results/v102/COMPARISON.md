@@ -16,22 +16,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 80 | 0.946547672 | 0.904524431 |
 | 94 | 0.946550167 | 0.904622210 |
 
-## The climb, by CPU (17.2 CPU hours on programs so far)
+## The climb, by CPU (17.3 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 1.72 | 0.898266870 | 0.860074252 |
-| 4.29 | 0.904080512 | 0.862806074 |
-| 8.58 | 0.946464794 | 0.866112124 |
-| 12.87 | 0.946544214 | 0.904524431 |
-| 17.17 | 0.946547669 | 0.904622210 |
+| 1.73 | 0.898266870 | 0.860074252 |
+| 4.34 | 0.904080630 | 0.862994360 |
+| 8.67 | 0.946464794 | 0.866112124 |
+| 13.01 | 0.946544967 | 0.904524431 |
+| 17.34 | 0.946547672 | 0.904628851 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 94 | 586 | 20.4 | 1713 | 20,620,257 | 0.946550167262 (p0583) |
-| v102-helix-s2 | 96 | 602 | 17.2 | 1699 | 19,188,758 | 0.904622210329 (p0572) |
+| v102-helix-s2 | 97 | 608 | 17.3 | 1719 | 19,415,383 | 0.904628851053 (p0605) |
 
 ## Against the published LLM-driven systems
 
@@ -78,12 +78,12 @@ Explorations built from nothing: 8 (8 around an option of the field, 0 new desig
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 73 | 0.904622210 | running | yes |
-| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 45 | 0.879767124 | running |  |
+| T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 74 | 0.904628851 | running | yes |
+| T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 46 | 0.879781781 | running |  |
 | T9 | A20 -> Use no regularization | 53 | 20 | 0.876905871 | running |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
-| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 45 | 0.859584328 | running |  |
+| T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 46 | 0.859587920 | running |  |
 | T10 | A10 -> Level-transition lags | 90 | 3 | 0.848639442 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 
