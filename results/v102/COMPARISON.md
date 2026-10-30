@@ -71,7 +71,7 @@ The field's options built at least once: 8 of 38; the invariant audit's alternat
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.904524431015 (p0457, n = 50000), on track T6: a new design built from nothing around A14 -> A tall spike plus a comb of smaller peaks.
+Helix's record: 0.904527016062 (p0562, n = 2000), on track T6: a new design built from nothing around A14 -> A tall spike plus a comb of smaller peaks.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52.
 
 Explorations built from nothing: 7 (7 around an option of the field, 0 new designs from the map). Their climbs:
