@@ -79,6 +79,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 30
+  },
+  "A36": {
+   "key": "audit",
+   "question": "Every program so far: Nonnegativity is enforced by a smooth reparametrisation h = w^2 (or softplus(w)); the optimiser searches over w, not h directly.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 91
+  },
+  "A37": {
+   "key": "audit",
+   "question": "Every program so far: The gradient of the exact ratio is derived analytically and passed to the optimiser (jac=True), using convolution/correlation with h.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 91
   }
  },
  "values": {
@@ -361,6 +375,42 @@
    "origin": "audit",
    "gen": 30,
    "note": "an alternative to what every program so far does (No smoothness, total-variation, or height regularization is added; only nonnegativity and the R ratio matter.): the invariant audit, generation 30; Regularization biases the shape and can help or hurt escaping local optima."
+  },
+  "A36.v2": {
+   "name": "Optimise h directly and clip/project to nonnegative after each step",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (Nonnegativity is enforced by a smooth reparametrisation h = w^2 (or softplus(w)); the optimiser searches over w, not h directly.): the invariant audit, generation 91; Changes how zeros/support appear and which local optimum is reached."
+  },
+  "A36.v3": {
+   "name": "Use a log-barrier or interior-point penalty on h",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (Nonnegativity is enforced by a smooth reparametrisation h = w^2 (or softplus(w)); the optimiser searches over w, not h directly.): the invariant audit, generation 91; Changes how zeros/support appear and which local optimum is reached."
+  },
+  "A36.v4": {
+   "name": "Use projected gradient or mirror descent on h",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (Nonnegativity is enforced by a smooth reparametrisation h = w^2 (or softplus(w)); the optimiser searches over w, not h directly.): the invariant audit, generation 91; Changes how zeros/support appear and which local optimum is reached."
+  },
+  "A37.v2": {
+   "name": "Finite-difference gradients",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (The gradient of the exact ratio is derived analytically and passed to the optimiser (jac=True), using convolution/correlation with h.): the invariant audit, generation 91; Gradient accuracy and cost alter the search trajectory and what is reachable in budget."
+  },
+  "A37.v3": {
+   "name": "Automatic differentiation",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (The gradient of the exact ratio is derived analytically and passed to the optimiser (jac=True), using convolution/correlation with h.): the invariant audit, generation 91; Gradient accuracy and cost alter the search trajectory and what is reachable in budget."
+  },
+  "A37.v4": {
+   "name": "Derivative-free local search",
+   "origin": "audit",
+   "gen": 91,
+   "note": "an alternative to what every program so far does (The gradient of the exact ratio is derived analytically and passed to the optimiser (jac=True), using convolution/correlation with h.): the invariant audit, generation 91; Gradient accuracy and cost alter the search trajectory and what is reachable in budget."
   }
  },
  "matched": {}
