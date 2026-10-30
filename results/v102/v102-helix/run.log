@@ -273,3 +273,9 @@
 13:48:26 [v102-helix] gen 150: tidied A4: 21 options -> 21
 13:48:26 [v102-helix] gen 150: tidied A8: 17 options -> 15
 13:48:26 [v102-helix] gen 150: tidied A28: 17 options -> 13
+14:02:55 [v102-helix] gen 150: best 0.946631 (p0933, wide, track T2, hill H2) RECORD; stall 1 (typical 2.5), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 14 hills; map 16 decisions (16 steering), 891 programs placed; 3 duplicate decision(s) merged (19 -> 16); 6 reworded option(s) merged into the ones they repeat; T10 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.806600 -> 0.811059); T16 goes on to the next rung (6 experiments): still rising (best 0.811059 at 3 experiments); 875 s
+14:15:21 [v102-helix] gen 151: best 0.946631 (p0939, deep, track T2, hill H2); stall 0 (typical 2), level 0; slots 1 main, 2 track; deep 2/3 gained, wide 2/3 gained; 14 hills; map 16 decisions (16 steering), 897 programs placed; T11 landed 0/1 target decisions (missing: A4 -> Beam search over grids); T11 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.834965 -> 0.835016); T13 gained (0.865513 -> 0.868658); T16 gained (0.811059 -> 0.812272); T13 goes on to the next rung (48 experiments): still rising (best 0.868658 at 24 experiments); T13 is now the top of H6 (0.868658); 743 s
+14:26:14 [v102-helix] gen 152: best 0.946631 (p0944, deep, track T2, hill H2); stall 1 (typical 2), level 0; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 14 hills; map 16 decisions (16 steering), 903 programs placed; T16 served instead of a new design (4 built explorations racing, the cap); T15 gained (0.831293 -> 0.831298); T16 gained (0.812272 -> 0.813182); 649 s
+14:26:18 [v102-helix] gen 153: tidied A4: 21 options -> 17
+14:26:18 [v102-helix] gen 153: tidied A1: 15 options -> 11
+14:26:18 [v102-helix] gen 153: tidied A2: 15 options -> 12
