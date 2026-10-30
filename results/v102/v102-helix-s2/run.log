@@ -299,3 +299,9 @@
 15:44:37 [v102-helix-s2] gen 165: tidied A36: 16 options -> 15
 15:44:37 [v102-helix-s2] gen 165: tidied A49: 16 options -> 15
 15:44:37 [v102-helix-s2] gen 165: tidied A4: 15 options -> 15
+15:55:57 [v102-helix-s2] gen 165: best 0.941062 (p1051, deep, track T9, hill H2); stall 0 (typical 1), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 15 hills; map 21 decisions (21 steering), 933 programs placed; T13 landed 0/1 target decisions (missing: A20 -> Add an L2 penalty on heights); 2 reworded option(s) merged into the ones they repeat; T10 served instead of a new design (4 built explorations racing, the cap); 683 s
+16:12:06 [v102-helix-s2] gen 166: best 0.941062 (p1058, wide, track T9, hill H2); stall 1 (typical 1), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 15 hills; map 21 decisions (21 steering), 940 programs placed; T12 landed 0/1 target decisions (missing: A14 -> Regular small-big-small triplets); T12 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.863997 -> 0.864666); 968 s
+16:29:51 [v102-helix-s2] gen 167: best 0.941062 (p1064, deep, track T9, hill H2); stall 2 (typical 1), level 1; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 15 hills; map 21 decisions (21 steering), 946 programs placed; T10 served instead of a new design (4 built explorations racing, the cap); 1064 s
+16:29:53 [v102-helix-s2] gen 168: tidied A10: 19 options -> 14
+16:29:53 [v102-helix-s2] gen 168: tidied A4: 18 options -> 18
+16:29:53 [v102-helix-s2] gen 168: tidied A2: 15 options -> 15
