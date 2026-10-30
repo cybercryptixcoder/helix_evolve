@@ -17,22 +17,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 100 | 0.946550292 | 0.927286941 |
 | 108 | 0.946550333 | 0.939924742 |
 
-## The climb, by CPU (19.8 CPU hours on programs so far)
+## The climb, by CPU (20.0 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 1.98 | 0.898268919 | 0.862073247 |
-| 4.95 | 0.937953178 | 0.863548361 |
-| 9.90 | 0.946506469 | 0.874993630 |
-| 14.86 | 0.946547097 | 0.904524431 |
-| 19.81 | 0.946550142 | 0.939925143 |
+| 2.00 | 0.898268919 | 0.862073247 |
+| 5.00 | 0.937953178 | 0.863548361 |
+| 10.00 | 0.946506469 | 0.876804810 |
+| 15.00 | 0.946547097 | 0.904524431 |
+| 20.00 | 0.946550142 | 0.939933277 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 108 | 672 | 23.6 | 1976 | 23,908,081 | 0.946550332731 (p0647) |
-| v102-helix-s2 | 111 | 693 | 19.8 | 1968 | 22,418,923 | 0.939925143379 (p0692) |
+| v102-helix-s2 | 112 | 699 | 20.0 | 1984 | 22,603,296 | 0.939933276640 (p0698) |
 
 ## Against the published LLM-driven systems
 
@@ -82,16 +82,16 @@ Explorations built from nothing: 11 (11 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 33 | 0.939924742 | running | yes |
-| T13 | A20 -> Add an L2 penalty on heights | 104 | 3 | 0.915211846 | running |  |
+| T9 | A20 -> Use no regularization | 53 | 34 | 0.939933277 | running | yes |
+| T13 | A20 -> Add an L2 penalty on heights | 104 | 4 | 0.916824915 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T10 | A10 -> Level-transition lags | 90 | 10 | 0.872517374 | running |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
-| T12 | A14 -> Regular small-big-small triplets | 102 | 4 | 0.857737230 | running |  |
-| T11 | A33 -> Min-max plateau-gap surrogate | 101 | 5 | 0.839900879 | running |  |
+| T12 | A14 -> Regular small-big-small triplets | 102 | 5 | 0.858584719 | running |  |
+| T11 | A33 -> Min-max plateau-gap surrogate | 101 | 5 | 0.839938868 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 
 The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 21.
