@@ -203,3 +203,10 @@
 05:40:27 [v102-helix] gen 117: tidied A28: 18 options -> 11
 05:40:27 [v102-helix] gen 117: tidied A4: 17 options -> 12
 05:50:11 [v102-helix] gen 117: best 0.946550 (p0728, deep, track T2, hill H2); stall 31 (typical 2.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 12 hills; map 18 decisions (18 steering), 695 programs placed; 18 reworded option(s) merged into the ones they repeat; T10 served instead of a new design (4 built explorations racing, the cap); T13 gained (0.862492 -> 0.862749); 588 s
+06:04:22 [v102-helix] gen 118: best 0.946550 (p0728, deep, track T2, hill H2); stall 32 (typical 2.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 12 hills; map 18 decisions (18 steering), 700 programs placed; T14 served instead of a new design (4 built explorations racing, the cap); T13 gained (0.862749 -> 0.863177); 850 s
+06:17:20 [v102-helix] gen 119: best 0.946550 (p0728, deep, track T2, hill H2); stall 33 (typical 2.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 12 hills; map 18 decisions (18 steering), 706 programs placed; T10 served instead of a new design (4 built explorations racing, the cap); T13 gained (0.863177 -> 0.863440); 775 s
+06:17:23 [v102-helix] gen 120: consolidated: 4 decisions merged, 14 left
+06:17:28 [v102-helix] gen 120: tidied A3: 36 options -> 15
+06:17:28 [v102-helix] gen 120: tidied A5: 28 options -> 26
+06:17:28 [v102-helix] gen 120: tidied A2: 21 options -> 12
+06:33:08 [v102-helix] gen 120: best 0.946550 (p0728, deep, track T2, hill H2); stall 34 (typical 2.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 12 hills; map 14 decisions (14 steering), 713 programs placed; T11 landed 0/1 target decisions (missing: A4 -> Beam search over grids); 4 duplicate decision(s) merged (18 -> 14); 32 reworded option(s) merged into the ones they repeat; T11 served instead of a new design (4 built explorations racing, the cap); T11 gained (0.826535 -> 0.826538); T13 gained (0.863440 -> 0.863442); 946 s
