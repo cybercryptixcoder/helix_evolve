@@ -156,6 +156,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 151
+  },
+  "A55": {
+   "key": "audit",
+   "question": "Every program so far: The overall scale of h is left free during optimization; no constraint fixes sum(h) or max(h), and normalization is only applied after a stage.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 161
   }
  },
  "values": {
@@ -636,6 +643,24 @@
    "origin": "audit",
    "gen": 151,
    "note": "an alternative to what every program so far does (All allow h to be asymmetric; none imposes even symmetry or optimizes only half the array.): the invariant audit, generation 151; Symmetry is not required by R but restricting to it changes the search landscape and attainable f*f."
+  },
+  "A55.v2": {
+   "name": "Constrain sum(h)=1 throughout the search",
+   "origin": "audit",
+   "gen": 161,
+   "note": "an alternative to what every program so far does (The overall scale of h is left free during optimization; no constraint fixes sum(h) or max(h), and normalization is only applied after a stage.): the invariant audit, generation 161; Removing the scale degeneracy changes conditioning, zero-cell behavior, and the search path to the same R."
+  },
+  "A55.v3": {
+   "name": "Constrain max(h)=1 throughout the search",
+   "origin": "audit",
+   "gen": 161,
+   "note": "an alternative to what every program so far does (The overall scale of h is left free during optimization; no constraint fixes sum(h) or max(h), and normalization is only applied after a stage.): the invariant audit, generation 161; Removing the scale degeneracy changes conditioning, zero-cell behavior, and the search path to the same R."
+  },
+  "A55.v4": {
+   "name": "Optimize an explicit scale variable separately from shape",
+   "origin": "audit",
+   "gen": 161,
+   "note": "an alternative to what every program so far does (The overall scale of h is left free during optimization; no constraint fixes sum(h) or max(h), and normalization is only applied after a stage.): the invariant audit, generation 161; Removing the scale degeneracy changes conditioning, zero-cell behavior, and the search path to the same R."
   }
  },
  "matched": {}
