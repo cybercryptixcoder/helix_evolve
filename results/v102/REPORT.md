@@ -303,11 +303,11 @@ Interacting decisions in the last fit: ('A5', 'A15'), ('A2', 'A15')
 
 ## v102-helix-s2
 
-- Generations 1-148: best 0.666666667 -> 0.940610282 (p0936, track T9); the main track now: T9.
-- Exploration levels: level 0: 89 generations, level 1: 19 generations, level 2: 40 generations.
-- Planned experiments by slot: track 284, main 148, build 11, flip 1.
+- Generations 1-149: best 0.666666667 -> 0.940648920 (p0943, track T9); the main track now: T9.
+- Exploration levels: level 0: 90 generations, level 1: 19 generations, level 2: 40 generations.
+- Planned experiments by slot: track 286, main 149, build 11, flip 1.
 
-### Records (68)
+### Records (69)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -379,6 +379,7 @@ Interacting decisions in the last fit: ('A5', 'A15'), ('A2', 'A15')
 | 146 | 0.940457443 | p0919 | deep | main | T9 |
 | 147 | 0.940557534 | p0925 | wide | mutation | T9 |
 | 148 | 0.940610282 | p0936 | deep | main | T9 |
+| 149 | 0.940648920 | p0943 | deep | main | T9 |
 
 ### Side tracks opened (0)
 
@@ -535,12 +536,13 @@ Interacting decisions in the last fit: ('A5', 'A15'), ('A2', 'A15')
 | 146 | 0.940457443 | yes | 0 / 1 | 0 | main, track:T13, track:T12 | 0.917204 | T13 gained (0.917204 -> 0.917210) |
 | 147 | 0.940557534 | yes | 0 / 1 | 0 | main, track:T11, track:T10 | 0.872670 |  |
 | 148 | 0.940610282 | yes | 0 / 1 | 0 | main, track:T13, track:T12 | 0.917210 | T11 gained (0.859909 -> 0.860288) |
+| 149 | 0.940648920 | yes | 0 / 1 | 0 | main, track:T11, track:T10 | 0.872670 | T11 gained (0.860288 -> 0.860314) |
 
 ### Hills (15: 2 on the map after its first generation, 13 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.940610 (p0936) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
+| H2 | 0.940649 (p0943) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
 | H15 | 0.917210 (p0922) | 107 | T13 (build) | 0 | This program keeps the grid fixed at N=8000 (or 16000) and optimises the full vector with L-BFGS-B on a squared-parameterisation, whereas the record refines only a compact nonzero support and grows resolution via exact R |
 | H9 | 0.904629 (p0605) | 52 | T6 (build) | 0 | This program abandons the spike/comb atom-position search entirely and instead seeds from a dense clipped-arcsine profile, then climbs it with Adam on a coarse (500→1000→2000→4000) multiresolution ladder with multiplicat |
 | H6 | 0.879823 (p0642) | 9 | T7 (build) | 4 | This program optimises a smooth soft-max surrogate of the sup-norm (exponential penalty with β annealed 500→2000→8000) via Dinkelbach iterations on a squared-weight parametrisation, rather than perturbing along a transit |
@@ -567,7 +569,7 @@ Decisions every hill shared (mapped at generation 143):
 - D7: Support structure (all: Keep a mostly sparse/blocky support (exact zeros or near-zeros) with contiguous runs, i.e. a comb-like or block-constant shape)
 - D8: Time allocation (all: A fixed deadline (CPU-time budget, ~90-95% of allotted) split into sequential phases (seed, ladder, polish, perturb))
 
-### The design map (25 decisions, 837 programs placed)
+### The design map (25 decisions, 843 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
@@ -608,9 +610,9 @@ Decisions every hill shared (mapped at generation 143):
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 70 | 0.940610 | running at 12 | top H2 |
-| T10 | build | 90 | A10 -> Level-transition lags | 1/1 | 28 | 0.872670 | running at 24 | on H6 |
-| T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 26 | 0.860288 | running at 24 | on H6 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 71 | 0.940649 | running at 12 | top H2 |
+| T10 | build | 90 | A10 -> Level-transition lags | 1/1 | 29 | 0.872670 | running at 24 | on H6 |
+| T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 27 | 0.860314 | running at 24 | on H6 |
 | T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 21 | 0.862501 | running at 12 | founder H14 |
 | T13 | build | 104 | A20 -> Add an L2 penalty on heights | 0/1 | 21 | 0.917210 | running at 12 | founder H15 |
 
