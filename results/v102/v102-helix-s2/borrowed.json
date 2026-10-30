@@ -100,6 +100,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 121
+  },
+  "A44": {
+   "key": "audit",
+   "question": "Every program so far: Every program uses one contiguous support (possibly with internal zeros) and never represents multiple separated components.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 131
+  },
+  "A45": {
+   "key": "audit",
+   "question": "Every program so far: Every program fixes the support centered in the array and never optimizes a fractional translation or grid alignment.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 131
+  },
+  "A46": {
+   "key": "audit",
+   "question": "Every program so far: Every program fixes the final array length N before the final optimization and never treats N as a jointly optimized continuous variable.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 131
   }
  },
  "values": {
@@ -436,6 +457,60 @@
    "origin": "audit",
    "gen": 121,
    "note": "an alternative to what every program so far does (The search is a single-incumbent trajectory: one current height array is locally improved; no population, ensemble, or diversity archive is maintained): the invariant audit, generation 121; A population can escape narrow basins and discover different plateau/support structures."
+  },
+  "A44.v2": {
+   "name": "Two disjoint bumps",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program uses one contiguous support (possibly with internal zeros) and never represents multiple separated components.): the invariant audit, generation 131; Multi-component autoconvolutions can produce wider, flatter plateaus than a single bump."
+  },
+  "A44.v3": {
+   "name": "Periodic multi-bump train",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program uses one contiguous support (possibly with internal zeros) and never represents multiple separated components.): the invariant audit, generation 131; Multi-component autoconvolutions can produce wider, flatter plateaus than a single bump."
+  },
+  "A44.v4": {
+   "name": "Explicit zero gaps between components",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program uses one contiguous support (possibly with internal zeros) and never represents multiple separated components.): the invariant audit, generation 131; Multi-component autoconvolutions can produce wider, flatter plateaus than a single bump."
+  },
+  "A45.v2": {
+   "name": "Optimize a continuous shift",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the support centered in the array and never optimizes a fractional translation or grid alignment.): the invariant audit, generation 131; Grid alignment changes which knot samples the plateau and can change the discrete R."
+  },
+  "A45.v3": {
+   "name": "Align the max of f*f to a knot",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the support centered in the array and never optimizes a fractional translation or grid alignment.): the invariant audit, generation 131; Grid alignment changes which knot samples the plateau and can change the discrete R."
+  },
+  "A45.v4": {
+   "name": "Randomize offsets between restarts",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the support centered in the array and never optimizes a fractional translation or grid alignment.): the invariant audit, generation 131; Grid alignment changes which knot samples the plateau and can change the discrete R."
+  },
+  "A46.v2": {
+   "name": "Optimize N jointly with heights",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the final array length N before the final optimization and never treats N as a jointly optimized continuous variable.): the invariant audit, generation 131; The best achievable R may require a different effective resolution than the chosen N."
+  },
+  "A46.v3": {
+   "name": "Use nested grids with variable depth",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the final array length N before the final optimization and never treats N as a jointly optimized continuous variable.): the invariant audit, generation 131; The best achievable R may require a different effective resolution than the chosen N."
+  },
+  "A46.v4": {
+   "name": "Treat knot count as a free parameter",
+   "origin": "audit",
+   "gen": 131,
+   "note": "an alternative to what every program so far does (Every program fixes the final array length N before the final optimization and never treats N as a jointly optimized continuous variable.): the invariant audit, generation 131; The best achievable R may require a different effective resolution than the chosen N."
   }
  },
  "matched": {}
