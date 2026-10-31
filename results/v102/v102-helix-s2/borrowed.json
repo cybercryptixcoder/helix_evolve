@@ -233,6 +233,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 241
+  },
+  "A77": {
+   "key": "audit",
+   "question": "Every program so far: Local optimiser is always L-BFGS-B (quasi-Newton) with analytic gradient and box bounds.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 251
   }
  },
  "values": {
@@ -911,6 +918,24 @@
    "origin": "audit",
    "gen": 241,
    "note": "an alternative to what every program so far does (The CPU budget is spent by repeated local optimiser calls/restarts from the current or best point until the deadline, not by one fixed-length run or c): the invariant audit, generation 241; Restart/stopping policy changes how much of the budget goes to escaping versus polishing."
+  },
+  "A77.v2": {
+   "name": "Adam/SGD with momentum and learning-rate schedule",
+   "origin": "audit",
+   "gen": 251,
+   "note": "an alternative to what every program so far does (Local optimiser is always L-BFGS-B (quasi-Newton) with analytic gradient and box bounds.): the invariant audit, generation 251; Different local optimisers find different stationary points and converge at different speeds."
+  },
+  "A77.v3": {
+   "name": "Trust-region Newton or SLSQP with Hessian approximations",
+   "origin": "audit",
+   "gen": 251,
+   "note": "an alternative to what every program so far does (Local optimiser is always L-BFGS-B (quasi-Newton) with analytic gradient and box bounds.): the invariant audit, generation 251; Different local optimisers find different stationary points and converge at different speeds."
+  },
+  "A77.v4": {
+   "name": "Derivative-free Nelder-Mead, Powell, or CMA-ES",
+   "origin": "audit",
+   "gen": 251,
+   "note": "an alternative to what every program so far does (Local optimiser is always L-BFGS-B (quasi-Newton) with analytic gradient and box bounds.): the invariant audit, generation 251; Different local optimisers find different stationary points and converge at different speeds."
   }
  },
  "matched": {}
