@@ -19,22 +19,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 200 | 0.946769783 | 0.941115345 |
 | 210 | 0.946781466 | 0.941115362 |
 
-## The climb, by CPU (39.1 CPU hours on programs so far)
+## The climb, by CPU (39.2 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 3.91 | 0.904080512 | 0.862804903 |
-| 9.76 | 0.946494303 | 0.874993630 |
-| 19.53 | 0.946550142 | 0.939924764 |
-| 29.29 | 0.946624332 | 0.941060016 |
-| 39.06 | 0.946767842 | 0.941115362 |
+| 3.92 | 0.904080512 | 0.862804903 |
+| 9.80 | 0.946494303 | 0.874993630 |
+| 19.59 | 0.946550142 | 0.939924764 |
+| 29.39 | 0.946624614 | 0.941060016 |
+| 39.18 | 0.946767843 | 0.941115362 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 210 | 1309 | 44.2 | 3874 | 47,672,012 | 0.946781466210 (p1308) |
-| v102-helix-s2 | 214 | 1383 | 39.1 | 3776 | 45,584,757 | 0.941115362127 (p1355) |
+| v102-helix-s2 | 215 | 1389 | 39.2 | 3791 | 45,786,357 | 0.941115362127 (p1355) |
 
 ## Against the published LLM-driven systems
 
@@ -91,7 +91,7 @@ Explorations built from nothing: 15 (15 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 136 | 0.941115345 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 137 | 0.941115345 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
@@ -101,8 +101,8 @@ Explorations built from nothing: 15 (15 around an option of the field, 0 new des
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
-| T15 | A40 -> Return final iterate | 192 | 8 | 0.850669645 | running |  |
-| T14 | A42 -> Asymmetric separated support islands | 186 | 13 | 0.814627041 | running |  |
+| T15 | A40 -> Return final iterate | 192 | 9 | 0.850669645 | running |  |
+| T14 | A42 -> Asymmetric separated support islands | 186 | 14 | 0.814637868 | running |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 3 | 0.810699733 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T17 | A61 -> Minimize -log R | 212 | 2 | - | running |  |
