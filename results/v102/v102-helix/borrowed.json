@@ -79,6 +79,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 187
+  },
+  "A45": {
+   "key": "audit",
+   "question": "Every program so far: All use scipy.optimize.minimize with method='L-BFGS-B' as the only continuous local optimizer, with analytic Jacobian and box bounds (0,None).. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 197
+  },
+  "A46": {
+   "key": "audit",
+   "question": "Every program so far: All keep a single incumbent height vector and improve it by local descent; no population, beam, or multi-start ensemble is maintained.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 197
+  },
+  "A47": {
+   "key": "audit",
+   "question": "Every program so far: All optimize all N step heights jointly as continuous variables; no block-coordinate, envelope/comb split, or low-dimensional basis parameterization i. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 197
   }
  },
  "values": {
@@ -361,6 +382,60 @@
    "origin": "audit",
    "gen": 187,
    "note": "an alternative to what every program so far does (Keep the best candidate by exact R, not by the smoothed surrogate value.): the invariant audit, generation 187; Surrogate bias can prefer shapes that are not actually better under the scored R."
+  },
+  "A45.v2": {
+   "name": "projected gradient ascent or Adam",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method='L-BFGS-B' as the only continuous local optimizer, with analytic Jacobian and box bounds (0,None).): the invariant audit, generation 197; The local optimizer determines which stationary shape is reached and how fast."
+  },
+  "A45.v3": {
+   "name": "SLSQP/trust-constr with explicit constraints",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method='L-BFGS-B' as the only continuous local optimizer, with analytic Jacobian and box bounds (0,None).): the invariant audit, generation 197; The local optimizer determines which stationary shape is reached and how fast."
+  },
+  "A45.v4": {
+   "name": "CMA-ES or random/coordinate search",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method='L-BFGS-B' as the only continuous local optimizer, with analytic Jacobian and box bounds (0,None).): the invariant audit, generation 197; The local optimizer determines which stationary shape is reached and how fast."
+  },
+  "A46.v2": {
+   "name": "multi-start from several random seeds",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All keep a single incumbent height vector and improve it by local descent; no population, beam, or multi-start ensemble is maintained.): the invariant audit, generation 197; A population can escape local optima that a single trajectory cannot."
+  },
+  "A46.v3": {
+   "name": "beam of K candidates with cross-over",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All keep a single incumbent height vector and improve it by local descent; no population, beam, or multi-start ensemble is maintained.): the invariant audit, generation 197; A population can escape local optima that a single trajectory cannot."
+  },
+  "A46.v4": {
+   "name": "genetic/evolutionary population",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All keep a single incumbent height vector and improve it by local descent; no population, beam, or multi-start ensemble is maintained.): the invariant audit, generation 197; A population can escape local optima that a single trajectory cannot."
+  },
+  "A47.v2": {
+   "name": "alternate envelope and fine-comb blocks",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All optimize all N step heights jointly as continuous variables; no block-coordinate, envelope/comb split, or low-dimensional basis parameterization i): the invariant audit, generation 197; Parameterization changes the reachable shapes and conditioning."
+  },
+  "A47.v3": {
+   "name": "coordinate descent on height blocks",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All optimize all N step heights jointly as continuous variables; no block-coordinate, envelope/comb split, or low-dimensional basis parameterization i): the invariant audit, generation 197; Parameterization changes the reachable shapes and conditioning."
+  },
+  "A47.v4": {
+   "name": "optimize Fourier/Chebyshev coefficients",
+   "origin": "audit",
+   "gen": 197,
+   "note": "an alternative to what every program so far does (All optimize all N step heights jointly as continuous variables; no block-coordinate, envelope/comb split, or low-dimensional basis parameterization i): the invariant audit, generation 197; Parameterization changes the reachable shapes and conditioning."
   }
  },
  "matched": {}

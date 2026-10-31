@@ -18,22 +18,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 150 | 0.946630536 | 0.940687589 |
 | 197 | 0.946769426 | 0.941110928 |
 
-## The climb, by CPU (36.1 CPU hours on programs so far)
+## The climb, by CPU (36.3 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 3.61 | 0.904078401 | 0.862783505 |
-| 9.03 | 0.946475785 | 0.866112124 |
-| 18.05 | 0.946548585 | 0.937140029 |
-| 27.08 | 0.946550333 | 0.940648920 |
-| 36.11 | 0.946766026 | 0.941115345 |
+| 3.63 | 0.904078401 | 0.862783505 |
+| 9.09 | 0.946475785 | 0.866112124 |
+| 18.17 | 0.946548585 | 0.937140029 |
+| 27.26 | 0.946567566 | 0.940687589 |
+| 36.35 | 0.946766270 | 0.941115345 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 197 | 1228 | 41.6 | 3629 | 44,905,389 | 0.946769426466 (p1225) |
-| v102-helix-s2 | 200 | 1295 | 36.1 | 3528 | 42,308,921 | 0.941115345291 (p1290) |
+| v102-helix-s2 | 201 | 1301 | 36.3 | 3550 | 42,580,570 | 0.941115345291 (p1290) |
 
 ## Against the published LLM-driven systems
 
@@ -87,7 +87,7 @@ Explorations built from nothing: 13 (13 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 122 | 0.941115345 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 123 | 0.941115345 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 44 | 0.918145126 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
@@ -95,9 +95,9 @@ Explorations built from nothing: 13 (13 around an option of the field, 0 new des
 | T10 | A10 -> Level-transition lags | 90 | 48 | 0.872669841 | paused |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 55 | 0.865494379 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
-| T12 | A14 -> Regular small-big-small triplets | 102 | 44 | 0.862511888 | running |  |
+| T12 | A14 -> Regular small-big-small triplets | 102 | 45 | 0.862511888 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
-| T15 | A40 -> Return final iterate | 192 | 3 | 0.848031578 | running |  |
+| T15 | A40 -> Return final iterate | 192 | 4 | 0.848056957 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 6 | 0.790068771 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 
