@@ -240,6 +240,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 251
+  },
+  "A84": {
+   "key": "audit",
+   "question": "Every program so far: All spend the budget as one continuous local-descent/polish run (possibly with restarts) until the deadline, rather than allocating fixed time slices . Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 271
   }
  },
  "values": {
@@ -936,6 +943,24 @@
    "origin": "audit",
    "gen": 251,
    "note": "an alternative to what every program so far does (Local optimiser is always L-BFGS-B (quasi-Newton) with analytic gradient and box bounds.): the invariant audit, generation 251; Different local optimisers find different stationary points and converge at different speeds."
+  },
+  "A84.v2": {
+   "name": "Run fixed iteration counts per resolution then stop",
+   "origin": "audit",
+   "gen": 271,
+   "note": "an alternative to what every program so far does (All spend the budget as one continuous local-descent/polish run (possibly with restarts) until the deadline, rather than allocating fixed time slices ): the invariant audit, generation 271; Time allocation changes how much polishing versus exploration each shape gets."
+  },
+  "A84.v3": {
+   "name": "Split budget equally among several N values",
+   "origin": "audit",
+   "gen": 271,
+   "note": "an alternative to what every program so far does (All spend the budget as one continuous local-descent/polish run (possibly with restarts) until the deadline, rather than allocating fixed time slices ): the invariant audit, generation 271; Time allocation changes how much polishing versus exploration each shape gets."
+  },
+  "A84.v4": {
+   "name": "Use early stopping when R plateaus, then switch family",
+   "origin": "audit",
+   "gen": 271,
+   "note": "an alternative to what every program so far does (All spend the budget as one continuous local-descent/polish run (possibly with restarts) until the deadline, rather than allocating fixed time slices ): the invariant audit, generation 271; Time allocation changes how much polishing versus exploration each shape gets."
   }
  },
  "matched": {}
