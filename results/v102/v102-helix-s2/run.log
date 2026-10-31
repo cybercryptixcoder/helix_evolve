@@ -510,3 +510,5 @@
 15:17:11 [v102-helix-s2] gen 264: tidied A61: 15 options -> 12
 15:17:11 [v102-helix-s2] gen 264: tidied A68: 15 options -> 9
 15:17:11 [v102-helix-s2] gen 264: tidied A66: 14 options -> 11
+15:33:57 [v102-helix-s2] gen 264: best 0.941115 (p1431, deep, track T9, hill H2); stall 63 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 2/3 gained; 19 hills; map 25 decisions (25 steering), 1509 programs placed; 12 reworded option(s) merged into the ones they repeat; T14 served instead of a new design (4 built explorations racing, the cap); discovery: A83 (Is the height profile constrained to be symmetric (h[i]=h[N-1-i]) by constructi…); T16 gained (0.867260 -> 0.868755); 1010 s
+15:47:23 [v102-helix-s2] gen 265: best 0.941115 (p1431, deep, track T9, hill H2); stall 64 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 19 hills; map 25 decisions (25 steering), 1515 programs placed; T15 served instead of a new design (4 built explorations racing, the cap); T18 gained (0.908774 -> 0.908802); 805 s
