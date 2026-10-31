@@ -440,3 +440,9 @@
 07:05:12 [v102-helix-s2] gen 231: tidied A10: 19 options -> 16
 07:05:12 [v102-helix-s2] gen 231: tidied A36: 18 options -> 12
 07:05:12 [v102-helix-s2] gen 231: tidied A48: 18 options -> 15
+07:23:13 [v102-helix-s2] gen 231: best 0.941115 (p1431, deep, track T9, hill H2); stall 30 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 19 hills; map 20 decisions (20 steering), 1319 programs placed; 12 reworded option(s) merged into the ones they repeat; T14 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.832574 -> 0.832578); T18 gained (0.866415 -> 0.866533); 1128 s
+07:37:14 [v102-helix-s2] gen 232: best 0.941115 (p1431, deep, track T9, hill H2); stall 31 (typical 1.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 2/3 gained; 19 hills; map 20 decisions (20 steering), 1324 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T15 gained (0.850823 -> 0.850827); T16 gained (0.832578 -> 0.832623); T18 gained (0.866533 -> 0.866631); 840 s
+07:48:18 [v102-helix-s2] gen 233: best 0.941115 (p1431, deep, track T9, hill H2); stall 32 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 19 hills; map 20 decisions (20 steering), 1330 programs placed; T14 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.832623 -> 0.832629); T18 gained (0.866631 -> 0.866745); T14 goes on to the next rung (48 experiments): still rising (best 0.814686 at 24 experiments); T16 goes on to the next rung (24 experiments): still rising (best 0.832629 at 12 experiments); 663 s
+07:48:20 [v102-helix-s2] gen 234: tidied A56: 17 options -> 12
+07:48:20 [v102-helix-s2] gen 234: tidied A10: 16 options -> 16
+07:48:20 [v102-helix-s2] gen 234: tidied A48: 15 options -> 15
