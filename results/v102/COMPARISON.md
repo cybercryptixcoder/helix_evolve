@@ -19,22 +19,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 200 | 0.946769783 | 0.941115345 |
 | 240 | 0.947990398 | 0.941115363 |
 
-## The climb, by CPU (45.2 CPU hours on programs so far)
+## The climb, by CPU (45.4 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 4.52 | 0.932126682 | 0.863198432 |
-| 11.29 | 0.946540824 | 0.904522743 |
-| 22.59 | 0.946550331 | 0.940119810 |
-| 33.88 | 0.946630994 | 0.941110839 |
-| 45.17 | 0.946787029 | 0.941115363 |
+| 4.54 | 0.932126682 | 0.863198432 |
+| 11.35 | 0.946540824 | 0.904524431 |
+| 22.71 | 0.946550331 | 0.940128505 |
+| 34.06 | 0.946631016 | 0.941110839 |
+| 45.41 | 0.946788702 | 0.941115363 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 240 | 1505 | 50.1 | 4427 | 54,711,880 | 0.947990397754 (p1501) |
-| v102-helix-s2 | 243 | 1563 | 45.2 | 4303 | 52,470,297 | 0.941115362709 (p1431) |
+| v102-helix-s2 | 244 | 1569 | 45.4 | 4320 | 52,690,200 | 0.941115362709 (p1431) |
 
 ## Against the published LLM-driven systems
 
@@ -92,9 +92,9 @@ Explorations built from nothing: 16 (16 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 165 | 0.941115345 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 166 | 0.941115345 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
-| T18 | A57 -> Shift h by half a cell before convolution | 218 | 13 | 0.907417605 | running |  |
+| T18 | A57 -> Shift h by half a cell before convolution | 218 | 14 | 0.908348647 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
@@ -103,7 +103,7 @@ Explorations built from nothing: 16 (16 around an option of the field, 0 new des
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
-| T15 | A40 -> Return final iterate | 192 | 22 | 0.850835077 | running |  |
+| T15 | A40 -> Return final iterate | 192 | 23 | 0.850835077 | running |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 17 | 0.848560256 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 29 | 0.814709154 | running |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |

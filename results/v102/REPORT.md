@@ -435,9 +435,9 @@ Decisions every hill shared (mapped at generation 240):
 
 ## v102-helix-s2
 
-- Generations 1-243: best 0.666666667 -> 0.941115363 (p1431, track T9); the main track now: T9.
-- Exploration levels: level 0: 118 generations, level 1: 28 generations, level 2: 97 generations.
-- Planned experiments by slot: track 469, main 243, build 16, flip 1.
+- Generations 1-244: best 0.666666667 -> 0.941115363 (p1431, track T9); the main track now: T9.
+- Exploration levels: level 0: 118 generations, level 1: 28 generations, level 2: 98 generations.
+- Planned experiments by slot: track 471, main 244, build 16, flip 1.
 
 ### Records (89)
 
@@ -783,6 +783,7 @@ Decisions every hill shared (mapped at generation 240):
 | 241 | 0.941115363 |  | 40 / 1.5 | 2 | main, track:T16, track:T14 | 0.848468 |  |
 | 242 | 0.941115363 |  | 41 / 1.5 | 2 | main, track:T18, track:T15 | 0.907002 | T16 gained (0.848468 -> 0.848548); T18 gained (0.906460 -> 0.907002) |
 | 243 | 0.941115363 |  | 42 / 1.5 | 2 | main, track:T16, track:T14 | 0.848560 | T16 gained (0.848548 -> 0.848560); T18 gained (0.907002 -> 0.907418) |
+| 244 | 0.941115363 |  | 43 / 1.5 | 2 | main, track:T18, track:T15 | 0.907418 | T18 gained (0.907418 -> 0.908349) |
 
 ### Hills (19: 2 on the map after its first generation, 17 found since)
 
@@ -790,7 +791,7 @@ Decisions every hill shared (mapped at generation 240):
 |---|---|---|---|---|---|
 | H2 | 0.941115 (p1290) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
 | H15 | 0.918145 (p1253) | 107 | T13 (build) | 0 | This program keeps the grid fixed at N=8000 (or 16000) and optimises the full vector with L-BFGS-B on a squared-parameterisation, whereas the record refines only a compact nonzero support and grows resolution via exact R |
-| H9 | 0.907418 (p1563) | 52 | T6 (build) | 1 | This program abandons the spike/comb atom-position search entirely and instead seeds from a dense clipped-arcsine profile, then climbs it with Adam on a coarse (500→1000→2000→4000) multiresolution ladder with multiplicat |
+| H9 | 0.908349 (p1566) | 52 | T6 (build) | 1 | This program abandons the spike/comb atom-position search entirely and instead seeds from a dense clipped-arcsine profile, then climbs it with Adam on a coarse (500→1000→2000→4000) multiresolution ladder with multiplicat |
 | H19 | 0.896754 (p1505) | 220 | T18 (build) | 0 | This program abandons the record's exact coordinate-ascent and stochastic velocity-escape machinery entirely, instead using a single L-BFGS-B optimizer on a squared-height parametrization with a log-sum-exp smoothed //f* |
 | H6 | 0.879823 (p0642) | 9 | T7 (build) | 4 | This program optimises a smooth soft-max surrogate of the sup-norm (exponential penalty with β annealed 500→2000→8000) via Dinkelbach iterations on a squared-weight parametrisation, rather than perturbing along a transit |
 | H10 | 0.873788 (p0391) | 60 | T2 (build) | 0 | This program runs a fixed, time-boxed pipeline (two L-BFGS passes, three Fourier-perturbation rounds, a fixed 4000-step Adam phase, then a final L-BFGS polish) rather than the record's adaptive multi-resolution surgery w |
@@ -819,7 +820,7 @@ Decisions every hill shared (mapped at generation 241):
 - D7: time / budget allocation (all: a fixed CPU-time deadline split into phases (coordinate ascent, L-BFGS, Dinkelbach, kicks) with hard cutoffs)
 - D8: starting point (all: a dense clipped-arcsine / parametric seed (or the provided `start`) upsampled to the working resolution)
 
-### The design map (16 decisions, 1390 programs placed)
+### The design map (17 decisions, 1396 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
@@ -839,6 +840,7 @@ Decisions every hill shared (mapped at generation 241):
 | A72: How is the max in the denominator (L-infinity of the autocorrelation) handled during optim | Smooth log-sum-exp surrogate for the max; Exact max (argmax) in the gradient, plus; raise the plateau width by moving mass b; explicitly target the second-highest kno; reformulate as a minimax over lags and s | 100% of 1 (kappa 1.00) | - |
 | A73: Every program so far: Scale/mass is never a search variable: h is either left unnormalised | as every program so far: Scale/mass is n; Optimise a log-scale variable jointly wi; Normalise every iterate to sum h=1 insid; Fix L_inf=1 and optimise the remaining s | 100% of 1 (kappa 1.00) | - |
 | A74: Every program so far: The CPU budget is spent by repeated local optimiser calls/restarts f | as every program so far: The CPU budget ; One long L-BFGS-B run with no restarts; A fixed number of restarts independent o; Stop on gradient tolerance rather than C; a fixed CPU-time deadline split into pha ... | 100% of 1 (kappa 1.00) | - |
+| A75: What is the seed/initial solution shape before optimisation? | Smooth analytic bump seed; Clipped arcsine seed | - | - |
 
 Interacting decisions in the last fit: ('A2', 'A59')
 
@@ -853,16 +855,16 @@ Interacting decisions in the last fit: ('A2', 'A59')
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 165 | 0.941115 | running at 12 | top H2 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 166 | 0.941115 | running at 12 | top H2 |
 | T10 | build | 90 | A10 -> Optimise plateau width | 1/1 | 48 | 0.872670 | paused at 48 | on H6 |
 | T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 58 | 0.865499 | finished at 48 | on H6 |
 | T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 48 | 0.862512 | finished at 48 | founder H14 |
 | T13 | build | 104 | A20 -> Add an L2 penalty on heights | 0/1 | 48 | 0.918145 | finished at 48 | founder H15 |
 | T14 | build | 186 | A42 -> Multiple disjoint support bloc | 1/1 | 29 | 0.814709 | running at 24 | founder H16 |
-| T15 | build | 192 | A40 -> Return final iterate | 1/1 | 22 | 0.850835 | running at 12 | founder H17 |
+| T15 | build | 192 | A40 -> Return final iterate | 1/1 | 23 | 0.850835 | running at 12 | founder H17 |
 | T16 | build | 210 | A62 -> Search only centered supports  | 1/1 | 17 | 0.848560 | running at 12 | founder H18 |
 | T17 | build | 212 | A61 -> Minimize -log R | - | 3 | - | paused at 3 | -  |
-| T18 | build | 218 | A57 -> Half-cell shift of h | 1/1 | 13 | 0.907418 | running at 12 | top H9 |
+| T18 | build | 218 | A57 -> Half-cell shift of h | 1/1 | 14 | 0.908349 | running at 12 | top H9 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
@@ -884,3 +886,4 @@ Interacting decisions in the last fit: ('A2', 'A59')
 - generation 216, p1000 vs p0999: How is the search's time budget allocated across phases (single L-BFGS-B run vs. multi-phase with coordinate ascent and resampling)? (A56, an existing axis)
 - generation 224, p1424 vs p1440: How does the search use the remaining time after reaching full resolution: a distinct multi-scale smoothing/perturbation exploration phase, or just more polishing at the finest scale? (A71, new)
 - generation 240, p0566 vs p0569: How is the max in the denominator (L-infinity of the autocorrelation) handled during optimisation? (A72, new)
+- generation 244, p0650 vs p0647: What is the seed/initial solution shape before optimisation? (A75, new)
