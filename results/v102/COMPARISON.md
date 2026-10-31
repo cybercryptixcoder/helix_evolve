@@ -53,7 +53,7 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.946769783074 (p1238, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.946769783137 (p1245, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 15 (15 around an option of the field, 0 new designs from the map). Their climbs:
@@ -80,7 +80,7 @@ The field's options built at least once: 11 of 38; the invariant audit's alterna
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.941115345291 (p1290, n = 49949), on track T9: a new design built from nothing around A20 -> Use no regularization.
+Helix's record: 0.941115345583 (p1317, n = 49949), on track T9: a new design built from nothing around A20 -> Use no regularization.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52, T9 from generation 100.
 
 Explorations built from nothing: 13 (13 around an option of the field, 0 new designs from the map). Their climbs:

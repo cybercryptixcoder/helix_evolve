@@ -375,3 +375,5 @@
 23:54:12 [v102-helix] gen 198: tidied A24: 15 options -> 12
 23:54:12 [v102-helix] gen 198: tidied A28: 15 options -> 12
 23:54:12 [v102-helix] gen 198: tidied A3: 14 options -> 14
+00:09:58 [v102-helix] gen 198: best 0.946770 (p1233, deep, track T2, hill H2); stall 0 (typical 6), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 14 hills; map 21 decisions (21 steering), 1177 programs placed; 6 reworded option(s) merged into the ones they repeat; T13 served instead of a new design (4 built explorations racing, the cap); T15 gained (0.851882 -> 0.855544); 950 s
+00:24:43 [v102-helix] gen 199: best 0.946770 (p1238, deep, track T2, hill H2); stall 1 (typical 6), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 14 hills; map 21 decisions (21 steering), 1182 programs placed; T17 served instead of a new design (4 built explorations racing, the cap); T17 paused by the race at 3 experiments: no valid program that changed its start; 884 s
