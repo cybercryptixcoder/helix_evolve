@@ -219,6 +219,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 221
+  },
+  "A73": {
+   "key": "audit",
+   "question": "Every program so far: Scale/mass is never a search variable: h is either left unnormalised or pinned to sum h=1 only as a convenience; no separate scale parameter is optimi. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 241
+  },
+  "A74": {
+   "key": "audit",
+   "question": "Every program so far: The CPU budget is spent by repeated local optimiser calls/restarts from the current or best point until the deadline, not by one fixed-length run or c. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 241
   }
  },
  "values": {
@@ -861,6 +875,42 @@
    "origin": "audit",
    "gen": 221,
    "note": "an alternative to what every program so far does (The search variable is the full asymmetric height vector; no even/reflection symmetry h[i]=h[N-1-i] is enforced.): the invariant audit, generation 221; Symmetry constraints change the feasible shape space and effective dimension."
+  },
+  "A73.v2": {
+   "name": "Optimise a log-scale variable jointly with shape",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (Scale/mass is never a search variable: h is either left unnormalised or pinned to sum h=1 only as a convenience; no separate scale parameter is optimi): the invariant audit, generation 241; Scale invariance changes conditioning and which local basin the optimiser follows."
+  },
+  "A73.v3": {
+   "name": "Normalise every iterate to sum h=1 inside the objective",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (Scale/mass is never a search variable: h is either left unnormalised or pinned to sum h=1 only as a convenience; no separate scale parameter is optimi): the invariant audit, generation 241; Scale invariance changes conditioning and which local basin the optimiser follows."
+  },
+  "A73.v4": {
+   "name": "Fix L_inf=1 and optimise the remaining shape",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (Scale/mass is never a search variable: h is either left unnormalised or pinned to sum h=1 only as a convenience; no separate scale parameter is optimi): the invariant audit, generation 241; Scale invariance changes conditioning and which local basin the optimiser follows."
+  },
+  "A74.v2": {
+   "name": "One long L-BFGS-B run with no restarts",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (The CPU budget is spent by repeated local optimiser calls/restarts from the current or best point until the deadline, not by one fixed-length run or c): the invariant audit, generation 241; Restart/stopping policy changes how much of the budget goes to escaping versus polishing."
+  },
+  "A74.v3": {
+   "name": "A fixed number of restarts independent of time",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (The CPU budget is spent by repeated local optimiser calls/restarts from the current or best point until the deadline, not by one fixed-length run or c): the invariant audit, generation 241; Restart/stopping policy changes how much of the budget goes to escaping versus polishing."
+  },
+  "A74.v4": {
+   "name": "Stop on gradient tolerance rather than CPU deadline",
+   "origin": "audit",
+   "gen": 241,
+   "note": "an alternative to what every program so far does (The CPU budget is spent by repeated local optimiser calls/restarts from the current or best point until the deadline, not by one fixed-length run or c): the invariant audit, generation 241; Restart/stopping policy changes how much of the budget goes to escaping versus polishing."
   }
  },
  "matched": {}
