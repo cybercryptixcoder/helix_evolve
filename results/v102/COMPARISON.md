@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 226)
+## The climb, by generation (every run has finished 227)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -17,7 +17,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 100 | 0.946550292 | 0.927286941 |
 | 150 | 0.946630536 | 0.940687589 |
 | 200 | 0.946769783 | 0.941115345 |
-| 226 | 0.946788941 | 0.941115363 |
+| 227 | 0.947592557 | 0.941115363 |
 
 ## The climb, by CPU (42.2 CPU hours on programs so far)
 
@@ -33,7 +33,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 226 | 1415 | 47.2 | 4159 | 51,267,536 | 0.946788940874 (p1415) |
+| v102-helix | 227 | 1421 | 47.4 | 4178 | 51,528,527 | 0.947592556959 (p1419) |
 | v102-helix-s2 | 230 | 1481 | 42.2 | 4059 | 49,172,549 | 0.941115362709 (p1431) |
 
 ## Against the published LLM-driven systems
@@ -46,7 +46,7 @@ Their values and budgets as they report them (TTT-Discover's Table 2, arXiv:2601
 | Best-of-25,600 samples | gpt-oss-120b | 0.9344 | 25,600 | 10 min | 151 (generation 24) | 632 (generation 101) |
 | OpenEvolve | gpt-oss-120b | 0.9449 | 25,600 | 10 min | 169 (generation 27) | not yet |
 | ThetaEvolve, without RL | R1-Distill-Qwen3-8B | 0.9434 | 51,200 | 350 s | 163 (generation 26) | not yet |
-| ThetaEvolve, with RL | R1-Distill-Qwen3-8B (trained at test time) | 0.9469 | 33,280 | 350 s | not yet | not yet |
+| ThetaEvolve, with RL | R1-Distill-Qwen3-8B (trained at test time) | 0.9469 | 33,280 | 350 s | 1,421 (generation 227) | not yet |
 | TTT-Discover | gpt-oss-120b (trained at test time) | 0.9591 | 25,600 | 10 min | not yet | not yet |
 | AlphaEvolve V2 (Nov 2025; 50,000 steps) | Gemini 2.0 Pro + Flash | 0.9610 | not stated | not stated | not yet | not yet |
 
@@ -61,14 +61,14 @@ Explorations built from nothing: 19 (19 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 226 | 0.946788702 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 227 | 0.947592557 | running | yes |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
-| T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 10 | 0.905767978 | running |  |
+| T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 11 | 0.905770974 | running |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
 | T13 | A5 -> Fourier perturbation | 105 | 51 | 0.871745065 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 48 | 0.866965580 | paused |  |
 | T15 | A12 -> Explicit support mask pruning | 122 | 50 | 0.857446654 | finished |  |
-| T16 | A4 -> Population evolutionary search | 145 | 37 | 0.853628002 | running |  |
+| T16 | A4 -> Population evolutionary search | 145 | 38 | 0.853631096 | running |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
 | T11 | A4 -> Beam search over grids | 97 | 51 | 0.840460626 | finished |  |
 | T20 | A4 -> Independent random restarts | 205 | 10 | 0.836376604 | running |  |
