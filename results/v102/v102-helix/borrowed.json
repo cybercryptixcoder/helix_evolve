@@ -135,6 +135,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 247
+  },
+  "A68": {
+   "key": "audit",
+   "question": "Every program so far: All use a single global scalar multiplier lambda = numerator/(LSE or max) recomputed from the current iterate, rather than a fixed penalty or explicit. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 257
   }
  },
  "values": {
@@ -561,6 +568,24 @@
    "origin": "audit",
    "gen": 247,
    "note": "an alternative to what every program so far does (The step grid has a fixed origin/phase; no sub-cell shift or staggered grid is optimized.): the invariant audit, generation 247; Grid phase changes the discretized shape and can change the exact R of the returned step function."
+  },
+  "A68.v2": {
+   "name": "Fixed penalty weight on the max term",
+   "origin": "audit",
+   "gen": 257,
+   "note": "an alternative to what every program so far does (All use a single global scalar multiplier lambda = numerator/(LSE or max) recomputed from the current iterate, rather than a fixed penalty or explicit): the invariant audit, generation 257; The multiplier schedule changes the effective landscape and which plateau shape is reached."
+  },
+  "A68.v3": {
+   "name": "Augmented Lagrangian with multiplier update",
+   "origin": "audit",
+   "gen": 257,
+   "note": "an alternative to what every program so far does (All use a single global scalar multiplier lambda = numerator/(LSE or max) recomputed from the current iterate, rather than a fixed penalty or explicit): the invariant audit, generation 257; The multiplier schedule changes the effective landscape and which plateau shape is reached."
+  },
+  "A68.v4": {
+   "name": "Direct ratio gradient without a multiplier",
+   "origin": "audit",
+   "gen": 257,
+   "note": "an alternative to what every program so far does (All use a single global scalar multiplier lambda = numerator/(LSE or max) recomputed from the current iterate, rather than a fixed penalty or explicit): the invariant audit, generation 257; The multiplier schedule changes the effective landscape and which plateau shape is reached."
   }
  },
  "matched": {}
