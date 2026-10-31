@@ -184,6 +184,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 181
+  },
+  "A63": {
+   "key": "audit",
+   "question": "Every program so far: All programs minimize the negative of R (or a negative surrogate) rather than a monotone transform of R.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 201
+  },
+  "A64": {
+   "key": "audit",
+   "question": "Every program so far: All programs align h's steps to the integer grid and read f*f at integer-offset knots; no half-cell shift or staggered grid.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 201
   }
  },
  "values": {
@@ -736,6 +750,42 @@
    "origin": "audit",
    "gen": 181,
    "note": "an alternative to what every program so far does (All programs rely on scale invariance and do not impose sum(h)=1 or max(h)=1 as an active constraint during optimization.): the invariant audit, generation 181; Explicit normalization changes gradient conditioning and the path taken by L-BFGS-B."
+  },
+  "A63.v2": {
+   "name": "Maximize log R instead of R",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs minimize the negative of R (or a negative surrogate) rather than a monotone transform of R.): the invariant audit, generation 201; Transform changes conditioning and which local optima are reachable."
+  },
+  "A63.v3": {
+   "name": "Minimize -log R",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs minimize the negative of R (or a negative surrogate) rather than a monotone transform of R.): the invariant audit, generation 201; Transform changes conditioning and which local optima are reachable."
+  },
+  "A63.v4": {
+   "name": "Maximize R/(1-R) to sharpen near optimum",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs minimize the negative of R (or a negative surrogate) rather than a monotone transform of R.): the invariant audit, generation 201; Transform changes conditioning and which local optima are reachable."
+  },
+  "A64.v2": {
+   "name": "Shift h by half a cell before convolution",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs align h's steps to the integer grid and read f*f at integer-offset knots; no half-cell shift or staggered grid.): the invariant audit, generation 201; Grid phase changes which knot values sample the piecewise-linear f*f and hence R."
+  },
+  "A64.v3": {
+   "name": "Use vertex-centered instead of cell-centered h",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs align h's steps to the integer grid and read f*f at integer-offset knots; no half-cell shift or staggered grid.): the invariant audit, generation 201; Grid phase changes which knot values sample the piecewise-linear f*f and hence R."
+  },
+  "A64.v4": {
+   "name": "Optimize a continuous sub-cell shift",
+   "origin": "audit",
+   "gen": 201,
+   "note": "an alternative to what every program so far does (All programs align h's steps to the integer grid and read f*f at integer-offset knots; no half-cell shift or staggered grid.): the invariant audit, generation 201; Grid phase changes which knot values sample the piecewise-linear f*f and hence R."
   }
  },
  "matched": {}
