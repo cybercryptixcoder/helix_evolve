@@ -107,6 +107,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 217
+  },
+  "A57": {
+   "key": "audit",
+   "question": "Every program so far: The max in the denominator is handled implicitly as a pointwise function of h; no auxiliary epigraph variable M with constraints L_j <= M is introduce. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 237
   }
  },
  "values": {
@@ -461,6 +468,24 @@
    "origin": "audit",
    "gen": 217,
    "note": "an alternative to what every program so far does (Every program enforces non-negativity by clipping or box bounds on the heights, not by a smooth positive reparameterization.): the invariant audit, generation 217; The parameterization changes boundary behavior and the effective search space."
+  },
+  "A57.v2": {
+   "name": "Introduce epigraph variable M and optimize with constraints L_j <= M.",
+   "origin": "audit",
+   "gen": 237,
+   "note": "an alternative to what every program so far does (The max in the denominator is handled implicitly as a pointwise function of h; no auxiliary epigraph variable M with constraints L_j <= M is introduce): the invariant audit, generation 237; An explicit max variable changes the optimization geometry and could find different shapes."
+  },
+  "A57.v3": {
+   "name": "Use a penalty/barrier on max(L)-M instead of implicit differentiation.",
+   "origin": "audit",
+   "gen": 237,
+   "note": "an alternative to what every program so far does (The max in the denominator is handled implicitly as a pointwise function of h; no auxiliary epigraph variable M with constraints L_j <= M is introduce): the invariant audit, generation 237; An explicit max variable changes the optimization geometry and could find different shapes."
+  },
+  "A57.v4": {
+   "name": "Solve a bilevel problem with an inner max-location update.",
+   "origin": "audit",
+   "gen": 237,
+   "note": "an alternative to what every program so far does (The max in the denominator is handled implicitly as a pointwise function of h; no auxiliary epigraph variable M with constraints L_j <= M is introduce): the invariant audit, generation 237; An explicit max variable changes the optimization geometry and could find different shapes."
   }
  },
  "matched": {}
