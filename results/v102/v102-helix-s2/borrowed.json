@@ -198,6 +198,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 201
+  },
+  "A65": {
+   "key": "audit",
+   "question": "Every program so far: The search follows a single local trajectory from one current height vector; no population, ensemble, or global sampler is maintained.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 211
+  },
+  "A66": {
+   "key": "audit",
+   "question": "Every program so far: At any moment the shape lives on one uniform grid of N equal-width cells; resolution changes only by resampling the same shape to another N.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 211
   }
  },
  "values": {
@@ -786,6 +800,42 @@
    "origin": "audit",
    "gen": 201,
    "note": "an alternative to what every program so far does (All programs align h's steps to the integer grid and read f*f at integer-offset knots; no half-cell shift or staggered grid.): the invariant audit, generation 201; Grid phase changes which knot values sample the piecewise-linear f*f and hence R."
+  },
+  "A65.v2": {
+   "name": "Maintain a population of candidate shapes and evolve them",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (The search follows a single local trajectory from one current height vector; no population, ensemble, or global sampler is maintained.): the invariant audit, generation 211; A population or global sampler can escape local maxima and discover different plateau/support shapes."
+  },
+  "A65.v3": {
+   "name": "Run many independent random restarts and keep the best",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (The search follows a single local trajectory from one current height vector; no population, ensemble, or global sampler is maintained.): the invariant audit, generation 211; A population or global sampler can escape local maxima and discover different plateau/support shapes."
+  },
+  "A65.v4": {
+   "name": "Use basin-hopping or simulated annealing over shapes",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (The search follows a single local trajectory from one current height vector; no population, ensemble, or global sampler is maintained.): the invariant audit, generation 211; A population or global sampler can escape local maxima and discover different plateau/support shapes."
+  },
+  "A66.v2": {
+   "name": "Optimize a coarse-to-fine multigrid hierarchy simultaneously",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (At any moment the shape lives on one uniform grid of N equal-width cells; resolution changes only by resampling the same shape to another N.): the invariant audit, generation 211; The resolution schedule controls which fine structure can emerge and which local optima are reachable."
+  },
+  "A66.v3": {
+   "name": "Use adaptive nonuniform cell widths or mesh refinement",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (At any moment the shape lives on one uniform grid of N equal-width cells; resolution changes only by resampling the same shape to another N.): the invariant audit, generation 211; The resolution schedule controls which fine structure can emerge and which local optima are reachable."
+  },
+  "A66.v4": {
+   "name": "Keep several resolutions as separate candidates and merge them",
+   "origin": "audit",
+   "gen": 211,
+   "note": "an alternative to what every program so far does (At any moment the shape lives on one uniform grid of N equal-width cells; resolution changes only by resampling the same shape to another N.): the invariant audit, generation 211; The resolution schedule controls which fine structure can emerge and which local optima are reachable."
   }
  },
  "matched": {}
