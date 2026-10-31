@@ -79,7 +79,7 @@ The field's options built at least once: 11 of 38; the invariant audit's alterna
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.941110839159 (p1200, n = 49949), on track T9: a new design built from nothing around A20 -> Use no regularization.
+Helix's record: 0.941110839159 (p1206, n = 49949), on track T9: a new design built from nothing around A20 -> Use no regularization.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52, T9 from generation 100.
 
 Explorations built from nothing: 12 (12 around an option of the field, 0 new designs from the map). Their climbs:
