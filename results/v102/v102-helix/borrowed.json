@@ -114,6 +114,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 237
+  },
+  "A63": {
+   "key": "audit",
+   "question": "Every program so far: Search keeps a single incumbent height vector and improves it by local moves; no population, ensemble, or independent parallel trajectories.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 247
+  },
+  "A64": {
+   "key": "audit",
+   "question": "Every program so far: No symmetry reduction is imposed; the full asymmetric height vector is optimized.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 247
+  },
+  "A65": {
+   "key": "audit",
+   "question": "Every program so far: The step grid has a fixed origin/phase; no sub-cell shift or staggered grid is optimized.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 247
   }
  },
  "values": {
@@ -486,6 +507,60 @@
    "origin": "audit",
    "gen": 237,
    "note": "an alternative to what every program so far does (The max in the denominator is handled implicitly as a pointwise function of h; no auxiliary epigraph variable M with constraints L_j <= M is introduce): the invariant audit, generation 237; An explicit max variable changes the optimization geometry and could find different shapes."
+  },
+  "A63.v2": {
+   "name": "Population of K shapes with mutation/crossover and selection",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and improves it by local moves; no population, ensemble, or independent parallel trajectories.): the invariant audit, generation 247; Diversity or multiple trajectories could escape the single local maximum reached by one incumbent."
+  },
+  "A63.v3": {
+   "name": "Simulated annealing over height perturbations with temperature",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and improves it by local moves; no population, ensemble, or independent parallel trajectories.): the invariant audit, generation 247; Diversity or multiple trajectories could escape the single local maximum reached by one incumbent."
+  },
+  "A63.v4": {
+   "name": "Many independent restarts from random/analytic shapes, keep best",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and improves it by local moves; no population, ensemble, or independent parallel trajectories.): the invariant audit, generation 247; Diversity or multiple trajectories could escape the single local maximum reached by one incumbent."
+  },
+  "A64.v2": {
+   "name": "Enforce even symmetry f(x)=f(-x) and optimize half-array",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (No symmetry reduction is imposed; the full asymmetric height vector is optimized.): the invariant audit, generation 247; Restricting or encouraging symmetry changes the feasible set and the attainable R."
+  },
+  "A64.v3": {
+   "name": "Optimize two halves independently then couple them",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (No symmetry reduction is imposed; the full asymmetric height vector is optimized.): the invariant audit, generation 247; Restricting or encouraging symmetry changes the feasible set and the attainable R."
+  },
+  "A64.v4": {
+   "name": "Add a symmetry-breaking penalty or mirror-average step",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (No symmetry reduction is imposed; the full asymmetric height vector is optimized.): the invariant audit, generation 247; Restricting or encouraging symmetry changes the feasible set and the attainable R."
+  },
+  "A65.v2": {
+   "name": "Optimize a continuous sub-cell shift parameter",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (The step grid has a fixed origin/phase; no sub-cell shift or staggered grid is optimized.): the invariant audit, generation 247; Grid phase changes the discretized shape and can change the exact R of the returned step function."
+  },
+  "A65.v3": {
+   "name": "Randomize grid phase per restart and keep best",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (The step grid has a fixed origin/phase; no sub-cell shift or staggered grid is optimized.): the invariant audit, generation 247; Grid phase changes the discretized shape and can change the exact R of the returned step function."
+  },
+  "A65.v4": {
+   "name": "Use a half-cell staggered grid or two interleaved grids",
+   "origin": "audit",
+   "gen": 247,
+   "note": "an alternative to what every program so far does (The step grid has a fixed origin/phase; no sub-cell shift or staggered grid is optimized.): the invariant audit, generation 247; Grid phase changes the discretized shape and can change the exact R of the returned step function."
   }
  },
  "matched": {}
