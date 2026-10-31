@@ -142,6 +142,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 257
+  },
+  "A70": {
+   "key": "audit",
+   "question": "Every program so far: The search is a deterministic single-incumbent local-descent trajectory: each L-BFGS phase starts from the current best or its resample; no population. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 277
   }
  },
  "values": {
@@ -586,6 +593,24 @@
    "origin": "audit",
    "gen": 257,
    "note": "an alternative to what every program so far does (All use a single global scalar multiplier lambda = numerator/(LSE or max) recomputed from the current iterate, rather than a fixed penalty or explicit): the invariant audit, generation 257; The multiplier schedule changes the effective landscape and which plateau shape is reached."
+  },
+  "A70.v2": {
+   "name": "Maintain a diverse population of candidates and evolve/crossover them",
+   "origin": "audit",
+   "gen": 277,
+   "note": "an alternative to what every program so far does (The search is a deterministic single-incumbent local-descent trajectory: each L-BFGS phase starts from the current best or its resample; no population): the invariant audit, generation 277; A different global exploration strategy could land in a better basin and improve exact R."
+  },
+  "A70.v3": {
+   "name": "Run many random restarts from perturbed seeds and keep the best",
+   "origin": "audit",
+   "gen": 277,
+   "note": "an alternative to what every program so far does (The search is a deterministic single-incumbent local-descent trajectory: each L-BFGS phase starts from the current best or its resample; no population): the invariant audit, generation 277; A different global exploration strategy could land in a better basin and improve exact R."
+  },
+  "A70.v4": {
+   "name": "Use simulated annealing or basin hopping to escape local optima",
+   "origin": "audit",
+   "gen": 277,
+   "note": "an alternative to what every program so far does (The search is a deterministic single-incumbent local-descent trajectory: each L-BFGS phase starts from the current best or its resample; no population): the invariant audit, generation 277; A different global exploration strategy could land in a better basin and improve exact R."
   }
  },
  "matched": {}
