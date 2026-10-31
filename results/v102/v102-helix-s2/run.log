@@ -504,3 +504,9 @@
 14:37:27 [v102-helix-s2] gen 261: tidied A72: 17 options -> 10
 14:37:27 [v102-helix-s2] gen 261: tidied A62: 16 options -> 13
 14:37:27 [v102-helix-s2] gen 261: tidied A74: 16 options -> 10
+14:46:14 [v102-helix-s2] gen 261: best 0.941115 (p1431, deep, track T9, hill H2); stall 60 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 19 hills; map 24 decisions (24 steering), 1490 programs placed; the Cartographer's scan added 1 decision(s) to the map; 16 reworded option(s) merged into the ones they repeat; T18 served instead of a new design (4 built explorations racing, the cap); 539 s
+15:04:04 [v102-helix-s2] gen 262: best 0.941115 (p1431, deep, track T9, hill H2); stall 61 (typical 1.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 19 hills; map 24 decisions (24 steering), 1496 programs placed; T14 served instead of a new design (4 built explorations racing, the cap); 1070 s
+15:17:06 [v102-helix-s2] gen 263: best 0.941115 (p1431, deep, track T9, hill H2); stall 62 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 19 hills; map 24 decisions (24 steering), 1502 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.863388 -> 0.867260); T18 gained (0.908724 -> 0.908774); T18 goes on to the next rung (48 experiments): still rising (best 0.908774 at 24 experiments); 780 s
+15:17:11 [v102-helix-s2] gen 264: tidied A61: 15 options -> 12
+15:17:11 [v102-helix-s2] gen 264: tidied A68: 15 options -> 9
+15:17:11 [v102-helix-s2] gen 264: tidied A66: 14 options -> 11
