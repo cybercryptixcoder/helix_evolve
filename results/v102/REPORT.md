@@ -383,9 +383,9 @@ Interacting decisions in the last fit: ('A2', 'A14')
 
 ## v102-helix-s2
 
-- Generations 1-208: best 0.666666667 -> 0.941115351 (p1330, track T9); the main track now: T9.
-- Exploration levels: level 0: 118 generations, level 1: 28 generations, level 2: 62 generations.
-- Planned experiments by slot: track 402, main 208, build 13, flip 1.
+- Generations 1-209: best 0.666666667 -> 0.941115351 (p1350, track T9); the main track now: T9.
+- Exploration levels: level 0: 118 generations, level 1: 28 generations, level 2: 63 generations.
+- Planned experiments by slot: track 404, main 209, build 13, flip 1.
 
 ### Records (89)
 
@@ -696,6 +696,7 @@ Interacting decisions in the last fit: ('A2', 'A14')
 | 206 | 0.941115351 |  | 5 / 1.5 | 2 | main, track:T15, track:T11 | 0.865499 | T14 gained (0.790070 -> 0.790072); T15 gained (0.849987 -> 0.850213); T15 goes on to the next rung (12 experiments): still rising (best 0.850213 at 6 experiments) |
 | 207 | 0.941115351 |  | 6 / 1.5 | 2 | main, track:T14, track:T12 | 0.862512 | T14 gained (0.790072 -> 0.804474); T15 gained (0.850213 -> 0.850655) |
 | 208 | 0.941115351 |  | 7 / 1.5 | 2 | main, track:T15, track:T13 | 0.918145 | T14 gained (0.804474 -> 0.805243) |
+| 209 | 0.941115351 |  | 8 / 1.5 | 2 | main, track:T14, track:T12 | 0.810445 | T14 gained (0.805243 -> 0.812995); T12 finished the race (48 experiments): still rising (best 0.862512 at 48 experiments); it is now an ordinary side track |
 
 ### Hills (17: 2 on the map after its first generation, 15 found since)
 
@@ -715,7 +716,7 @@ Interacting decisions in the last fit: ('A2', 'A14')
 | H5 | 0.849670 (p0170) | 9 | T6 (build) | 0 | This program seeds a hand-built spike-plus-decaying-comb shape and refines it with a Dinkelbach-style ascent that maximizes num − λ·l1·linf via random contiguous-block scaling, rather than starting from the record's symm |
 | H11 | 0.848639 (p0599) | 93 | T10 (build) | 0 | This program optimises the exact-max ratio directly with analytic gradients (FFT-based convolution adjoint and argmax derivative) through a softplus reparametrisation, rather than using Dinkelbach, top-K/LSE surrogates,  |
 | H13 | 0.835514 (p0670) | 104 | T11 (build) | 0 | This program optimises the exact ratio R directly via a log-sum-exp surrogate of the inf-norm with annealed beta (30 to 1e4), rather than the record's flat-top hinge penalty and beta continuation to 1e9+. It seeds from a |
-| H16 | 0.805243 (p1342) | 189 | T14 (build) | 0 | This program abandons the record's knot-level, kink-aware polishing (exact coordinate ascent, pairwise/3-cell moves, Dinkelbach ladders on near-max bands) in favor of a coarse-to-fine pipeline: it screens ~24 hand-specif |
+| H16 | 0.812995 (p1349) | 189 | T14 (build) | 0 | This program abandons the record's knot-level, kink-aware polishing (exact coordinate ascent, pairwise/3-cell moves, Dinkelbach ladders on near-max bands) in favor of a coarse-to-fine pipeline: it screens ~24 hand-specif |
 | H8 | 0.723887 (p0244) | 41 | T8 (build) | 0 | This program fixes N=4000 and optimises a symmetric step function h = [u, u[::-1]] parametrised as u = w², using exact analytic gradients of R (including a tie-averaged max subgradient) rather than the record's multi-res |
 | H1 | 0.666667 (p0001) | 1 | - | 0 | the starting program (Code Zero) |
 
@@ -730,7 +731,7 @@ Decisions every hill shared (mapped at generation 208):
 - D7: Support / sparsity policy (all: Allow dense or near-dense support; zeros arise only from clipping or explicit zeroing of low cells, never as a structural prior)
 - D8: Time allocation across phases (all: Fixed time-boxed phases (fraction of budget per phase) with a 90% CPU deadline and greedy best-so-far return)
 
-### The design map (22 decisions, 1196 programs placed)
+### The design map (22 decisions, 1200 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
@@ -768,12 +769,12 @@ Decisions every hill shared (mapped at generation 208):
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 130 | 0.941115 | running at 12 | top H2 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 131 | 0.941115 | running at 12 | top H2 |
 | T10 | build | 90 | A10 -> Optimise plateau width | 1/1 | 48 | 0.872670 | paused at 48 | on H6 |
 | T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 58 | 0.865499 | finished at 48 | on H6 |
-| T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 47 | 0.862512 | running at 24 | founder H14 |
+| T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 48 | 0.862512 | finished at 48 | founder H14 |
 | T13 | build | 104 | A20 -> Add an L2 penalty on heights | 0/1 | 47 | 0.918145 | running at 24 | founder H15 |
-| T14 | build | 186 | A42 -> Separated support islands | 1/1 | 9 | 0.805243 | running at 6 | founder H16 |
+| T14 | build | 186 | A42 -> Separated support islands | 1/1 | 10 | 0.812995 | running at 6 | founder H16 |
 | T15 | build | 192 | A40 -> Return final iterate | 1/1 | 7 | 0.850655 | running at 6 | founder H17 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
