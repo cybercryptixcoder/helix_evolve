@@ -100,6 +100,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 197
+  },
+  "A51": {
+   "key": "audit",
+   "question": "Every program so far: Every program enforces non-negativity by clipping or box bounds on the heights, not by a smooth positive reparameterization.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 217
   }
  },
  "values": {
@@ -436,6 +443,24 @@
    "origin": "audit",
    "gen": 197,
    "note": "an alternative to what every program so far does (All optimize all N step heights jointly as continuous variables; no block-coordinate, envelope/comb split, or low-dimensional basis parameterization i): the invariant audit, generation 197; Parameterization changes the reachable shapes and conditioning."
+  },
+  "A51.v2": {
+   "name": "Parameterize h = exp(u) or softplus(u)",
+   "origin": "audit",
+   "gen": 217,
+   "note": "an alternative to what every program so far does (Every program enforces non-negativity by clipping or box bounds on the heights, not by a smooth positive reparameterization.): the invariant audit, generation 217; The parameterization changes boundary behavior and the effective search space."
+  },
+  "A51.v3": {
+   "name": "Parameterize h = u^2",
+   "origin": "audit",
+   "gen": 217,
+   "note": "an alternative to what every program so far does (Every program enforces non-negativity by clipping or box bounds on the heights, not by a smooth positive reparameterization.): the invariant audit, generation 217; The parameterization changes boundary behavior and the effective search space."
+  },
+  "A51.v4": {
+   "name": "Use an interior-point barrier instead of box bounds",
+   "origin": "audit",
+   "gen": 217,
+   "note": "an alternative to what every program so far does (Every program enforces non-negativity by clipping or box bounds on the heights, not by a smooth positive reparameterization.): the invariant audit, generation 217; The parameterization changes boundary behavior and the effective search space."
   }
  },
  "matched": {}

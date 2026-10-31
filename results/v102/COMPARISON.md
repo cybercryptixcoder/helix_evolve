@@ -108,4 +108,4 @@ Explorations built from nothing: 16 (16 around an option of the field, 0 new des
 | T18 | A57 -> Shift h by half a cell before convolution | 218 | 2 | 0.534510881 | running |  |
 | T17 | A61 -> Minimize -log R | 212 | 3 | - | paused |  |
 
-The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 72.
+The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 75.
