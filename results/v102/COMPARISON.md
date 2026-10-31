@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 190)
+## The climb, by generation (every run has finished 191)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -16,7 +16,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 80 | 0.946547672 | 0.904524431 |
 | 100 | 0.946550292 | 0.927286941 |
 | 150 | 0.946630536 | 0.940687589 |
-| 190 | 0.946768140 | 0.941110839 |
+| 191 | 0.946768140 | 0.941110839 |
 
 ## The climb, by CPU (35.0 CPU hours on programs so far)
 
@@ -32,7 +32,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 190 | 1180 | 40.4 | 3499 | 43,352,936 | 0.946768139668 (p1179) |
+| v102-helix | 191 | 1186 | 40.6 | 3516 | 43,567,540 | 0.946768139668 (p1183) |
 | v102-helix-s2 | 195 | 1263 | 35.0 | 3441 | 41,086,724 | 0.941110928183 (p1260) |
 
 ## Against the published LLM-driven systems
@@ -60,15 +60,15 @@ Explorations built from nothing: 14 (14 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 190 | 0.946767311 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 191 | 0.946767311 | running | yes |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
 | T13 | A5 -> Fourier perturbation | 105 | 43 | 0.871439005 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 48 | 0.866965580 | paused |  |
-| T16 | A4 -> Population evolutionary search | 145 | 23 | 0.853598863 | running |  |
+| T16 | A4 -> Population evolutionary search | 145 | 24 | 0.853598863 | running |  |
 | T15 | A12 -> Explicit support mask pruning | 122 | 33 | 0.851591475 | running |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
-| T11 | A4 -> Beam search over grids | 97 | 46 | 0.840362835 | running |  |
+| T11 | A4 -> Beam search over grids | 97 | 47 | 0.840384304 | running |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
 | T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 12 | 0.774368749 | paused |  |
