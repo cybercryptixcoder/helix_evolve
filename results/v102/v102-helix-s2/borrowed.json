@@ -212,6 +212,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 211
+  },
+  "A70": {
+   "key": "audit",
+   "question": "Every program so far: The search variable is the full asymmetric height vector; no even/reflection symmetry h[i]=h[N-1-i] is enforced.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 221
   }
  },
  "values": {
@@ -836,6 +843,24 @@
    "origin": "audit",
    "gen": 211,
    "note": "an alternative to what every program so far does (At any moment the shape lives on one uniform grid of N equal-width cells; resolution changes only by resampling the same shape to another N.): the invariant audit, generation 211; The resolution schedule controls which fine structure can emerge and which local optima are reachable."
+  },
+  "A70.v2": {
+   "name": "Optimise half the vector and mirror it",
+   "origin": "audit",
+   "gen": 221,
+   "note": "an alternative to what every program so far does (The search variable is the full asymmetric height vector; no even/reflection symmetry h[i]=h[N-1-i] is enforced.): the invariant audit, generation 221; Symmetry constraints change the feasible shape space and effective dimension."
+  },
+  "A70.v3": {
+   "name": "Enforce exact even symmetry as a hard constraint",
+   "origin": "audit",
+   "gen": 221,
+   "note": "an alternative to what every program so far does (The search variable is the full asymmetric height vector; no even/reflection symmetry h[i]=h[N-1-i] is enforced.): the invariant audit, generation 221; Symmetry constraints change the feasible shape space and effective dimension."
+  },
+  "A70.v4": {
+   "name": "Add a symmetry penalty to the objective",
+   "origin": "audit",
+   "gen": 221,
+   "note": "an alternative to what every program so far does (The search variable is the full asymmetric height vector; no even/reflection symmetry h[i]=h[N-1-i] is enforced.): the invariant audit, generation 221; Symmetry constraints change the feasible shape space and effective dimension."
   }
  },
  "matched": {}
