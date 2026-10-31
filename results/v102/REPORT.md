@@ -399,7 +399,7 @@ Decisions every hill shared (mapped at generation 251):
 - D7: Local move set granularity (all: Single-coordinate and adjacent/near-adjacent pair moves (plus occasional batched subspace L-BFGS on ranked pools))
 - D8: Time/budget allocation across phases (all: Hand-tuned fixed time shares per phase (ladder rungs, polish, incremental), decided a priori)
 
-### The design map (26 decisions, 1526 programs placed)
+### The design map (26 decisions, 1532 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
