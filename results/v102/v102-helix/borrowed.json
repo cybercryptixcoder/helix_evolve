@@ -65,6 +65,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 177
+  },
+  "A41": {
+   "key": "audit",
+   "question": "Every program so far: Compute the analytic gradient of the objective with respect to all heights by FFT correlation of knot-derivative weights with h.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 187
+  },
+  "A42": {
+   "key": "audit",
+   "question": "Every program so far: Keep the best candidate by exact R, not by the smoothed surrogate value.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 187
   }
  },
  "values": {
@@ -311,6 +325,42 @@
    "origin": "audit",
    "gen": 177,
    "note": "an alternative to what every program so far does (Heights are kept unbounded above; only the lower bound f>=0 is imposed, with no cap, simplex, or upper box.): the invariant audit, generation 177; An upper cap changes whether spike-dominated or flat-top shapes are reachable."
+  },
+  "A41.v2": {
+   "name": "Use finite differences on the heights.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Compute the analytic gradient of the objective with respect to all heights by FFT correlation of knot-derivative weights with h.): the invariant audit, generation 187; Gradient accuracy and cost strongly shape the local trajectory and attainable R."
+  },
+  "A41.v3": {
+   "name": "Use automatic differentiation through the convolution.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Compute the analytic gradient of the objective with respect to all heights by FFT correlation of knot-derivative weights with h.): the invariant audit, generation 187; Gradient accuracy and cost strongly shape the local trajectory and attainable R."
+  },
+  "A41.v4": {
+   "name": "Use a derivative-free local search.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Compute the analytic gradient of the objective with respect to all heights by FFT correlation of knot-derivative weights with h.): the invariant audit, generation 187; Gradient accuracy and cost strongly shape the local trajectory and attainable R."
+  },
+  "A42.v2": {
+   "name": "Select by the smoothed log-sum-exp objective.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Keep the best candidate by exact R, not by the smoothed surrogate value.): the invariant audit, generation 187; Surrogate bias can prefer shapes that are not actually better under the scored R."
+  },
+  "A42.v3": {
+   "name": "Select by the exact max but smoothed numerator.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Keep the best candidate by exact R, not by the smoothed surrogate value.): the invariant audit, generation 187; Surrogate bias can prefer shapes that are not actually better under the scored R."
+  },
+  "A42.v4": {
+   "name": "Select by a held-out exact-R check.",
+   "origin": "audit",
+   "gen": 187,
+   "note": "an alternative to what every program so far does (Keep the best candidate by exact R, not by the smoothed surrogate value.): the invariant audit, generation 187; Surrogate bias can prefer shapes that are not actually better under the scored R."
   }
  },
  "matched": {}
