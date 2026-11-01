@@ -601,3 +601,9 @@
 01:22:50 [v102-helix-s2] gen 306: tidied A66: 19 options -> 14
 01:22:50 [v102-helix-s2] gen 306: tidied A68: 18 options -> 12
 01:22:50 [v102-helix-s2] gen 306: tidied A36: 17 options -> 14
+01:41:09 [v102-helix-s2] gen 306: best 0.941136 (p1964, deep, track T9, hill H2); stall 25 (typical 4.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 0/3 gained; 22 hills; map 23 decisions (23 steering), 1756 programs placed; 14 reworded option(s) merged into the ones they repeat; T16 served instead of a new design (4 built explorations racing, the cap); new hill H22, found by T21 (build): 0.650786, distance 0.112 from the nearest known hill (H1); 1114 s
+01:54:03 [v102-helix-s2] gen 307: best 0.941136 (p1969, deep, track T9, hill H2); stall 26 (typical 4.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 22 hills; map 23 decisions (23 steering), 1762 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T18 gained (0.908959 -> 0.908974); 774 s
+01:05:02 [v102-helix-s2] gen 308: best 0.941136 (p1969, deep, track T9, hill H2); stall 27 (typical 4.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 22 hills; map 24 decisions (24 steering), 1766 programs placed; T21 served instead of a new design (4 built explorations racing, the cap); discovery: A100 (How is the search initialized / what structural prior or seed family is used to…); T20 gained (0.848531 -> 0.859933); T21 goes on to the next rung (6 experiments): still rising (best 0.650786 at 3 experiments); 658 s
+01:05:05 [v102-helix-s2] gen 309: tidied A72: 17 options -> 12
+01:05:05 [v102-helix-s2] gen 309: tidied A62: 16 options -> 12
+01:05:05 [v102-helix-s2] gen 309: tidied A61: 15 options -> 13
