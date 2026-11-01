@@ -191,6 +191,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 357
+  },
+  "A94": {
+   "key": "audit",
+   "question": "Every program so far: Every program normalizes the height vector to unit L1 (sum h = 1) inside every objective and evaluation, rather than fixing another scale.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 367
+  },
+  "A95": {
+   "key": "audit",
+   "question": "Every program so far: Every program keeps a single incumbent per stage and restarts from it after changing beta or resolution; no population of diverse candidates or recomb. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 367
+  },
+  "A96": {
+   "key": "audit",
+   "question": "Every program so far: Every program treats all N heights as simultaneously free continuous variables in one quasi-Newton stage; no block/coordinate or hierarchical variable. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 367
   }
  },
  "values": {
@@ -761,6 +782,60 @@
    "origin": "audit",
    "gen": 357,
    "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and refines it; no population, ensemble, or independent multistart is used.): the invariant audit, generation 357; Population/restarts can escape local optima that a single trajectory misses."
+  },
+  "A94.v2": {
+   "name": "Fix max height to 1",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program normalizes the height vector to unit L1 (sum h = 1) inside every objective and evaluation, rather than fixing another scale.): the invariant audit, generation 367; Different normalization changes conditioning and which zeros/edges the optimizer can reach."
+  },
+  "A94.v3": {
+   "name": "Fix L2 norm to 1",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program normalizes the height vector to unit L1 (sum h = 1) inside every objective and evaluation, rather than fixing another scale.): the invariant audit, generation 367; Different normalization changes conditioning and which zeros/edges the optimizer can reach."
+  },
+  "A94.v4": {
+   "name": "Leave unnormalized and rely on scale-invariant R",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program normalizes the height vector to unit L1 (sum h = 1) inside every objective and evaluation, rather than fixing another scale.): the invariant audit, generation 367; Different normalization changes conditioning and which zeros/edges the optimizer can reach."
+  },
+  "A95.v2": {
+   "name": "Maintain population of top-R seeds",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program keeps a single incumbent per stage and restarts from it after changing beta or resolution; no population of diverse candidates or recomb): the invariant audit, generation 367; Diversity versus exploitation changes escape from local optima."
+  },
+  "A95.v3": {
+   "name": "Alternate two incumbents with crossover",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program keeps a single incumbent per stage and restarts from it after changing beta or resolution; no population of diverse candidates or recomb): the invariant audit, generation 367; Diversity versus exploitation changes escape from local optima."
+  },
+  "A95.v4": {
+   "name": "Run independent restarts and keep best",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program keeps a single incumbent per stage and restarts from it after changing beta or resolution; no population of diverse candidates or recomb): the invariant audit, generation 367; Diversity versus exploitation changes escape from local optima."
+  },
+  "A96.v2": {
+   "name": "Block coordinate descent over contiguous segments",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program treats all N heights as simultaneously free continuous variables in one quasi-Newton stage; no block/coordinate or hierarchical variable): the invariant audit, generation 367; Variable coupling and local minima depend on the decomposition."
+  },
+  "A96.v3": {
+   "name": "Alternate even/odd or coarse/fine variable subsets",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program treats all N heights as simultaneously free continuous variables in one quasi-Newton stage; no block/coordinate or hierarchical variable): the invariant audit, generation 367; Variable coupling and local minima depend on the decomposition."
+  },
+  "A96.v4": {
+   "name": "Optimize envelope parameters then fine heights",
+   "origin": "audit",
+   "gen": 367,
+   "note": "an alternative to what every program so far does (Every program treats all N heights as simultaneously free continuous variables in one quasi-Newton stage; no block/coordinate or hierarchical variable): the invariant audit, generation 367; Variable coupling and local minima depend on the decomposition."
   }
  },
  "matched": {}
