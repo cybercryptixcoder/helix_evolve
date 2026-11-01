@@ -184,6 +184,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 347
+  },
+  "A90": {
+   "key": "audit",
+   "question": "Every program so far: Search keeps a single incumbent height vector and refines it; no population, ensemble, or independent multistart is used.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 357
   }
  },
  "values": {
@@ -736,6 +743,24 @@
    "origin": "audit",
    "gen": 347,
    "note": "an alternative to what every program so far does (The final answer is the best exact-R iterate seen; no post-hoc smoothing, thresholding, or ensemble is applied.): the invariant audit, generation 347; Post-processing or ensembling can improve exact R without changing the inner optimizer."
+  },
+  "A90.v2": {
+   "name": "Maintain a diverse population and recombine/mutate candidates",
+   "origin": "audit",
+   "gen": 357,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and refines it; no population, ensemble, or independent multistart is used.): the invariant audit, generation 357; Population/restarts can escape local optima that a single trajectory misses."
+  },
+  "A90.v3": {
+   "name": "Run many independent random restarts and keep the best",
+   "origin": "audit",
+   "gen": 357,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and refines it; no population, ensemble, or independent multistart is used.): the invariant audit, generation 357; Population/restarts can escape local optima that a single trajectory misses."
+  },
+  "A90.v4": {
+   "name": "Use basin-hopping or simulated annealing over height vectors",
+   "origin": "audit",
+   "gen": 357,
+   "note": "an alternative to what every program so far does (Search keeps a single incumbent height vector and refines it; no population, ensemble, or independent multistart is used.): the invariant audit, generation 357; Population/restarts can escape local optima that a single trajectory misses."
   }
  },
  "matched": {}
