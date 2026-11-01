@@ -177,6 +177,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 337
+  },
+  "A87": {
+   "key": "audit",
+   "question": "Every program so far: The final answer is the best exact-R iterate seen; no post-hoc smoothing, thresholding, or ensemble is applied.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 347
   }
  },
  "values": {
@@ -711,6 +718,24 @@
    "origin": "audit",
    "gen": 337,
    "note": "an alternative to what every program so far does (After the first construction, every local optimization starts from the current incumbent, resampled/normalized, rather than from a fresh analytic or r): the invariant audit, generation 337; Continuation from the incumbent biases the search toward its current basin and shape."
+  },
+  "A87.v2": {
+   "name": "Average top iterates then polish",
+   "origin": "audit",
+   "gen": 347,
+   "note": "an alternative to what every program so far does (The final answer is the best exact-R iterate seen; no post-hoc smoothing, thresholding, or ensemble is applied.): the invariant audit, generation 347; Post-processing or ensembling can improve exact R without changing the inner optimizer."
+  },
+  "A87.v3": {
+   "name": "Threshold small heights and renormalize",
+   "origin": "audit",
+   "gen": 347,
+   "note": "an alternative to what every program so far does (The final answer is the best exact-R iterate seen; no post-hoc smoothing, thresholding, or ensemble is applied.): the invariant audit, generation 347; Post-processing or ensembling can improve exact R without changing the inner optimizer."
+  },
+  "A87.v4": {
+   "name": "Return the last iterate instead of the best",
+   "origin": "audit",
+   "gen": 347,
+   "note": "an alternative to what every program so far does (The final answer is the best exact-R iterate seen; no post-hoc smoothing, thresholding, or ensemble is applied.): the invariant audit, generation 347; Post-processing or ensembling can improve exact R without changing the inner optimizer."
   }
  },
  "matched": {}
