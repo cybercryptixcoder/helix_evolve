@@ -303,6 +303,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 341
+  },
+  "A107": {
+   "key": "audit",
+   "question": "Every program so far: Each optimisation phase is a single local descent trajectory from one incumbent shape; there is no population, crossover, or simultaneous multi-candid. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 351
   }
  },
  "values": {
@@ -1161,6 +1168,24 @@
    "origin": "audit",
    "gen": 341,
    "note": "an alternative to what every program so far does (All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2, exp(v), softplus/abs) or simple box bounds, never by signed heights with project): the invariant audit, generation 341; The parameterization changes the optimization geometry and which zero or near-zero cells are reachable."
+  },
+  "A107.v2": {
+   "name": "maintain a population of K shapes and evolve them",
+   "origin": "audit",
+   "gen": 351,
+   "note": "an alternative to what every program so far does (Each optimisation phase is a single local descent trajectory from one incumbent shape; there is no population, crossover, or simultaneous multi-candid): the invariant audit, generation 351; A population or parallel starts can escape basins that a single L-BFGS-B trajectory cannot."
+  },
+  "A107.v3": {
+   "name": "run several local starts in parallel with shared budget",
+   "origin": "audit",
+   "gen": 351,
+   "note": "an alternative to what every program so far does (Each optimisation phase is a single local descent trajectory from one incumbent shape; there is no population, crossover, or simultaneous multi-candid): the invariant audit, generation 351; A population or parallel starts can escape basins that a single L-BFGS-B trajectory cannot."
+  },
+  "A107.v4": {
+   "name": "use basin-hopping with random structural kicks",
+   "origin": "audit",
+   "gen": 351,
+   "note": "an alternative to what every program so far does (Each optimisation phase is a single local descent trajectory from one incumbent shape; there is no population, crossover, or simultaneous multi-candid): the invariant audit, generation 351; A population or parallel starts can escape basins that a single L-BFGS-B trajectory cannot."
   }
  },
  "matched": {}
