@@ -585,3 +585,10 @@
 00:01:09 [v102-helix] gen 297: tidied A28: 18 options -> 12
 00:01:09 [v102-helix] gen 297: tidied A51: 18 options -> 12
 00:01:09 [v102-helix] gen 297: tidied A45: 17 options -> 12
+00:13:21 [v102-helix] gen 297: best 0.948046 (p1860, deep, track T2, hill H2); stall 27 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 18 hills; map 29 decisions (28 steering), 1757 programs placed; T21 landed 0/1 target decisions (missing: A28 -> alternate envelope and fine-comb blocks); 17 reworded option(s) merged into the ones they repeat; T20 served instead of a new design (4 built explorations racing, the cap); T20 gained (0.854841 -> 0.854909); T21 gained (0.805696 -> 0.807617); 760 s
+00:30:30 [v102-helix] gen 298: best 0.948046 (p1861, deep, track T2, hill H2); stall 28 (typical 1.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 18 hills; map 29 decisions (28 steering), 1762 programs placed; T23 landed 0/1 target decisions (missing: A45 -> Derivative-free local search); T23 served instead of a new design (4 built explorations racing, the cap); T19 gained (0.916958 -> 0.916997); T21 gained (0.807617 -> 0.807971); T23 gained (0.823787 -> 0.823791); 1028 s
+00:47:34 [v102-helix] gen 299: best 0.948046 (p1870, deep, track T2, hill H2); stall 29 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 18 hills; map 29 decisions (28 steering), 1769 programs placed; T21 landed 0/1 target decisions (missing: A28 -> alternate envelope and fine-comb blocks); T21 served instead of a new design (4 built explorations racing, the cap); T19 gained (0.916997 -> 0.917004); T21 gained (0.807971 -> 0.812856); 1023 s
+00:47:36 [v102-helix] gen 300: consolidated: 13 decisions merged, 16 left
+00:47:39 [v102-helix] gen 300: tidied A55: 26 options -> 15
+00:47:39 [v102-helix] gen 300: tidied A28: 25 options -> 13
+00:47:39 [v102-helix] gen 300: tidied A51: 24 options -> 12
