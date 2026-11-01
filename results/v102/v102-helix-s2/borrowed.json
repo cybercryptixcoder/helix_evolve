@@ -247,6 +247,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 271
+  },
+  "A88": {
+   "key": "audit",
+   "question": "Every program so far: All programs keep a single incumbent shape and never maintain a population/ensemble of candidates or recombine candidates.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 281
+  },
+  "A89": {
+   "key": "audit",
+   "question": "Every program so far: All programs accept a new iterate only if its exact R is higher; no non-greedy acceptance such as simulated annealing or tabu search.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 281
   }
  },
  "values": {
@@ -961,6 +975,42 @@
    "origin": "audit",
    "gen": 271,
    "note": "an alternative to what every program so far does (All spend the budget as one continuous local-descent/polish run (possibly with restarts) until the deadline, rather than allocating fixed time slices ): the invariant audit, generation 271; Time allocation changes how much polishing versus exploration each shape gets."
+  },
+  "A88.v2": {
+   "name": "Population of K shapes with crossover/mutation",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs keep a single incumbent shape and never maintain a population/ensemble of candidates or recombine candidates.): the invariant audit, generation 281; A population can explore several basins and combine features that one incumbent cannot."
+  },
+  "A88.v3": {
+   "name": "Beam search over local optima",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs keep a single incumbent shape and never maintain a population/ensemble of candidates or recombine candidates.): the invariant audit, generation 281; A population can explore several basins and combine features that one incumbent cannot."
+  },
+  "A88.v4": {
+   "name": "Parallel multi-start with shared incumbent",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs keep a single incumbent shape and never maintain a population/ensemble of candidates or recombine candidates.): the invariant audit, generation 281; A population can explore several basins and combine features that one incumbent cannot."
+  },
+  "A89.v2": {
+   "name": "Simulated-annealing acceptance of worse iterates",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs accept a new iterate only if its exact R is higher; no non-greedy acceptance such as simulated annealing or tabu search.): the invariant audit, generation 281; Non-greedy acceptance can cross barriers that pure best-R descent cannot."
+  },
+  "A89.v3": {
+   "name": "Tabu search with short-term memory",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs accept a new iterate only if its exact R is higher; no non-greedy acceptance such as simulated annealing or tabu search.): the invariant audit, generation 281; Non-greedy acceptance can cross barriers that pure best-R descent cannot."
+  },
+  "A89.v4": {
+   "name": "Threshold acceptance with decreasing tolerance",
+   "origin": "audit",
+   "gen": 281,
+   "note": "an alternative to what every program so far does (All programs accept a new iterate only if its exact R is higher; no non-greedy acceptance such as simulated annealing or tabu search.): the invariant audit, generation 281; Non-greedy acceptance can cross barriers that pure best-R descent cannot."
   }
  },
  "matched": {}
