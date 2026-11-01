@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 304)
+## The climb, by generation (every run has finished 307)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -19,24 +19,24 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 200 | 0.946769783 | 0.941115345 |
 | 250 | 0.947991608 | 0.941115363 |
 | 300 | 0.948046250 | 0.941136077 |
-| 304 | 0.948046250 | 0.941136077 |
+| 307 | 0.948046260 | 0.941136077 |
 
-## The climb, by CPU (59.2 CPU hours on programs so far)
+## The climb, by CPU (59.6 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 5.92 | 0.945870416 | 0.864678463 |
-| 14.81 | 0.946547097 | 0.904524431 |
-| 29.62 | 0.946624842 | 0.941061736 |
-| 44.42 | 0.946782690 | 0.941115363 |
-| 59.23 | 0.948045952 | 0.941136077 |
+| 5.96 | 0.945912358 | 0.864678463 |
+| 14.91 | 0.946547097 | 0.904524431 |
+| 29.81 | 0.946624842 | 0.941061736 |
+| 44.72 | 0.946786678 | 0.941115363 |
+| 59.63 | 0.948046216 | 0.941136077 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 304 | 1907 | 64.0 | 5593 | 69,912,165 | 0.948046250138 (p1903) |
-| v102-helix-s2 | 308 | 1978 | 59.2 | 5502 | 68,679,090 | 0.941136077208 (p1969) |
+| v102-helix | 307 | 1927 | 64.6 | 5649 | 70,657,682 | 0.948046259736 (p1916) |
+| v102-helix-s2 | 310 | 1991 | 59.6 | 5535 | 69,100,158 | 0.941136077208 (p1969) |
 
 ## Against the published LLM-driven systems
 
@@ -56,15 +56,15 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.948046250138 (p1903, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.948046259736 (p1916, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 22 (22 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 304 | 0.948045622 | running | yes |
-| T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 46 | 0.917006435 | running |  |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 307 | 0.948045622 | running | yes |
+| T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 48 | 0.917006435 | finished |  |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
 | T13 | A5 -> Fourier perturbation | 105 | 51 | 0.871745065 | finished |  |
@@ -74,8 +74,8 @@ Explorations built from nothing: 22 (22 around an option of the field, 0 new des
 | T16 | A4 -> Population evolutionary search | 145 | 48 | 0.853632976 | finished |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
 | T11 | A4 -> Beam search over grids | 97 | 51 | 0.840460626 | finished |  |
-| T23 | A45 -> Derivative-free local search | 255 | 25 | 0.823881981 | running |  |
-| T21 | A28 -> alternate envelope and fine-comb blocks | 223 | 39 | 0.816707938 | running |  |
+| T23 | A45 -> Derivative-free local search | 255 | 26 | 0.823898794 | running |  |
+| T21 | A28 -> alternate envelope and fine-comb blocks | 223 | 41 | 0.816879535 | running |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
 | T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 12 | 0.774368749 | paused |  |
@@ -84,9 +84,9 @@ Explorations built from nothing: 22 (22 around an option of the field, 0 new des
 | T17 | A8 -> Fixed repeat count then polish | 194 | 3 | - | paused |  |
 | T18 | A15 -> Contiguous blocks with irregular spacing found by… | 200 | 3 | - | paused |  |
 | T22 | A50 -> Solve a bilevel problem with an inner max-locatio… | 250 | 3 | - | paused |  |
-| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 1 | - | running |  |
+| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 2 | - | running |  |
 
-The field's options built at least once: 13 of 38; the invariant audit's alternatives: 0 of 48.
+The field's options built at least once: 13 of 38; the invariant audit's alternatives: 0 of 51.
 
 ## Where Helix's progress came from (v102-helix-s2)
 
@@ -97,9 +97,9 @@ Explorations built from nothing: 19 (19 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 229 | 0.941136074 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 231 | 0.941136074 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
-| T18 | A57 -> Shift h by half a cell before convolution | 218 | 44 | 0.908974304 | running |  |
+| T18 | A57 -> Shift h by half a cell before convolution | 218 | 45 | 0.908974304 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 50 | 0.879371090 | finished |  |
@@ -108,13 +108,13 @@ Explorations built from nothing: 19 (19 around an option of the field, 0 new des
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
-| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 4 | 0.859932795 | running |  |
+| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 5 | 0.859932795 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T15 | A40 -> Return final iterate | 192 | 48 | 0.850848262 | finished |  |
-| T19 | A68 -> Many independent random restarts | 280 | 14 | 0.830765897 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 15 | 0.831025096 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
-| T21 | A68 -> Simulated annealing temperature schedule | 303 | 3 | 0.650785522 | running |  |
+| T21 | A68 -> Simulated annealing temperature schedule | 303 | 4 | 0.650785522 | running |  |
 | T17 | A61 -> Minimize -log R | 212 | 3 | - | paused |  |
 
-The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 102.
+The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 105.

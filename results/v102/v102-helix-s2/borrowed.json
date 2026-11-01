@@ -282,6 +282,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 301
+  },
+  "A101": {
+   "key": "audit",
+   "question": "Every program so far: All programs optimize a single scalar ratio/surrogate and never introduce an explicit auxiliary variable for the L-infinity denominator (t with L_j <=. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 311
   }
  },
  "values": {
@@ -1086,6 +1093,24 @@
    "origin": "audit",
    "gen": 301,
    "note": "an alternative to what every program so far does (All evaluate the objective on the full autocorrelation vector every iteration; no stochastic lag subsampling or coarse-to-fine objective.): the invariant audit, generation 301; Evaluation granularity changes both cost per step and the local landscape being descended."
+  },
+  "A101.v2": {
+   "name": "Augmented Lagrangian on (h,t) with L_j <= t",
+   "origin": "audit",
+   "gen": 311,
+   "note": "an alternative to what every program so far does (All programs optimize a single scalar ratio/surrogate and never introduce an explicit auxiliary variable for the L-infinity denominator (t with L_j <=): the invariant audit, generation 311; An explicit t changes the landscape and can avoid max-induced nonsmoothness."
+  },
+  "A101.v3": {
+   "name": "Projected gradient on (h,t)",
+   "origin": "audit",
+   "gen": 311,
+   "note": "an alternative to what every program so far does (All programs optimize a single scalar ratio/surrogate and never introduce an explicit auxiliary variable for the L-infinity denominator (t with L_j <=): the invariant audit, generation 311; An explicit t changes the landscape and can avoid max-induced nonsmoothness."
+  },
+  "A101.v4": {
+   "name": "Bisection on t with feasibility subproblem",
+   "origin": "audit",
+   "gen": 311,
+   "note": "an alternative to what every program so far does (All programs optimize a single scalar ratio/surrogate and never introduce an explicit auxiliary variable for the L-infinity denominator (t with L_j <=): the invariant audit, generation 311; An explicit t changes the landscape and can avoid max-induced nonsmoothness."
   }
  },
  "matched": {}
