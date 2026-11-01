@@ -21,22 +21,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 300 | 0.948046250 | 0.941136077 |
 | 312 | 0.948046281 | 0.941136077 |
 
-## The climb, by CPU (60.7 CPU hours on programs so far)
+## The climb, by CPU (60.9 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 6.07 | 0.945912358 | 0.864726552 |
-| 15.17 | 0.946547357 | 0.904524431 |
-| 30.35 | 0.946625186 | 0.941062487 |
-| 45.52 | 0.946788712 | 0.941115363 |
-| 60.70 | 0.948046218 | 0.941136077 |
+| 6.09 | 0.945912358 | 0.864726552 |
+| 15.22 | 0.946547357 | 0.904524431 |
+| 30.43 | 0.946625762 | 0.941062487 |
+| 45.65 | 0.946788712 | 0.941115363 |
+| 60.86 | 0.948046219 | 0.941136077 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 312 | 1962 | 65.6 | 5746 | 71,808,006 | 0.948046280679 (p1962) |
-| v102-helix-s2 | 315 | 2024 | 60.7 | 5628 | 70,284,414 | 0.941136077208 (p2013) |
+| v102-helix-s2 | 316 | 2031 | 60.9 | 5646 | 70,513,712 | 0.941136077208 (p2013) |
 
 ## Against the published LLM-driven systems
 
@@ -94,11 +94,11 @@ The field's options built at least once: 13 of 38; the invariant audit's alterna
 Helix's record: 0.941136077208 (p2013, n = 50000), on track T9: a new design built from nothing around A20 -> Use no regularization.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52, T9 from generation 100.
 
-Explorations built from nothing: 20 (20 around an option of the field, 0 new designs from the map). Their climbs:
+Explorations built from nothing: 21 (21 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 236 | 0.941136074 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 237 | 0.941136074 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
 | T18 | A57 -> Shift h by half a cell before convolution | 218 | 48 | 0.908996665 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
@@ -106,14 +106,15 @@ Explorations built from nothing: 20 (20 around an option of the field, 0 new des
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 50 | 0.879371090 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T10 | A10 -> Level-transition lags | 90 | 48 | 0.872669841 | paused |  |
-| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 1 | 0.871029144 | running |  |
+| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 1 | 0.871035999 | running |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
 | T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 7 | 0.859942497 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T15 | A40 -> Return final iterate | 192 | 48 | 0.850848262 | finished |  |
-| T19 | A68 -> Many independent random restarts | 280 | 17 | 0.837537982 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 18 | 0.837537982 | running |  |
+| T23 | A4 -> Random search / simulated annealing | 316 | 1 | 0.828968537 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T21 | A68 -> Simulated annealing temperature schedule | 303 | 6 | 0.650785522 | paused |  |
