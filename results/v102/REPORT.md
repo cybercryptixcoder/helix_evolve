@@ -605,9 +605,9 @@ Interacting decisions in the last fit: ('A51', 'A76'), ('A45', 'A51')
 
 ## v102-helix-s2
 
-- Generations 1-366: best 0.666666667 -> 0.941244018 (p2344, track T9); the main track now: T9.
-- Exploration levels: level 0: 139 generations, level 1: 38 generations, level 2: 189 generations.
-- Planned experiments by slot: track 710, main 366, build 21, flip 1.
+- Generations 1-367: best 0.666666667 -> 0.941244018 (p2344, track T9); the main track now: T9.
+- Exploration levels: level 0: 139 generations, level 1: 38 generations, level 2: 190 generations.
+- Planned experiments by slot: track 712, main 367, build 21, flip 1.
 
 ### Records (104)
 
@@ -1091,6 +1091,7 @@ Interacting decisions in the last fit: ('A51', 'A76'), ('A45', 'A51')
 | 364 | 0.941244018 |  | 15 / 1 | 2 | main, track:T19, track:T22 | 0.882007 | T22 gained (0.881990 -> 0.882012) |
 | 365 | 0.941244018 |  | 16 / 1 | 2 | main, track:T20, track:T23 | 0.916978 | T19 gained (0.856039 -> 0.856216); T20 gained (0.916967 -> 0.916978) |
 | 366 | 0.941244018 |  | 17 / 1 | 2 | main, track:T19, track:T22 | 0.882013 | T20 gained (0.916978 -> 0.916979) |
+| 367 | 0.941244018 |  | 18 / 1 | 2 | main, track:T20, track:T23 | 0.916980 | T19 gained (0.856216 -> 0.856226); T20 gained (0.916979 -> 0.916980) |
 
 ### Hills (24: 2 on the map after its first generation, 22 found since)
 
@@ -1098,7 +1099,7 @@ Interacting decisions in the last fit: ('A51', 'A76'), ('A45', 'A51')
 |---|---|---|---|---|---|
 | H2 | 0.941244 (p2237) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
 | H15 | 0.918145 (p1253) | 107 | T13 (build) | 0 | This program keeps the grid fixed at N=8000 (or 16000) and optimises the full vector with L-BFGS-B on a squared-parameterisation, whereas the record refines only a compact nonzero support and grows resolution via exact R |
-| H21 | 0.916979 (p2349) | 305 | T20 (build) | 0 | This program abandons the record's vertex-polishing approach (exact coordinate ascent, pairwise/joint cell moves, Dinkelbach ladders on the argmax band) and instead parametrizes the height profile as a softplus of a low- |
+| H21 | 0.916980 (p2357) | 305 | T20 (build) | 0 | This program abandons the record's vertex-polishing approach (exact coordinate ascent, pairwise/joint cell moves, Dinkelbach ladders on the argmax band) and instead parametrizes the height profile as a softplus of a low- |
 | H9 | 0.909231 (p2160) | 52 | T6 (build) | 1 | This program abandons the spike/comb atom-position search entirely and instead seeds from a dense clipped-arcsine profile, then climbs it with Adam on a coarse (500→1000→2000→4000) multiresolution ladder with multiplicat |
 | H19 | 0.896754 (p1505) | 220 | T18 (build) | 0 | This program abandons the record's exact coordinate-ascent and stochastic velocity-escape machinery entirely, instead using a single L-BFGS-B optimizer on a squared-height parametrization with a log-sum-exp smoothed //f* |
 | H24 | 0.882012 (p2337) | 345 | T22 (build) | 0 | This program abandons the record's exact-Linf beta ladder and LSE/top-k surrogate annealing in favour of a single Dinkelbach-style ladder over a hard top-k mean of the autocorrelation, with k annealed geometrically down  |
@@ -1136,10 +1137,10 @@ Decisions every hill shared (mapped at generation 366):
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A37: Every program so far: The gradient of the exact ratio is derived analytically and passed t | Analytic gradient via convolution; Finite-difference gradients; Automatic differentiation; Derivative-free local search; Incremental autocorrelation update ... | 98% of 200 (kappa 0.90) | 11% |
-| A72: How is the max in the denominator (L-infinity of the autocorrelation) handled during optim | Exact max subgradient ascent; Plateau width mass shifting; Top-k mean annealed k; Hard plateau constraint multi-objective; Dinkelbach fractional programming ... | 88% of 200 (kappa 0.84) | 11% |
-| A66: Every program so far: At any moment the shape lives on one uniform grid of N equal-width c | Coarse-to-fine multigrid ladder; Adaptive nonuniform mesh refinement; Multiple resolutions as candidates; Single uniform grid resampled; Continuous off-grid atom placement ... | 96% of 200 (kappa 0.94) | 11% |
-| A2: How is the first solution built? | Return start or constant; Perturb or optimize start; Construct from scratch; Smooth analytic bump seed; Random multi-start vectors ... | 79% of 200 (kappa 0.69) | 7% |
+| A37: Every program so far: The gradient of the exact ratio is derived analytically and passed t | Analytic gradient via convolution; Finite-difference gradients; Automatic differentiation; Derivative-free local search; Incremental autocorrelation update ... | 98% of 200 (kappa 0.90) | 10% |
+| A66: Every program so far: At any moment the shape lives on one uniform grid of N equal-width c | Coarse-to-fine multigrid ladder; Adaptive nonuniform mesh refinement; Multiple resolutions as candidates; Single uniform grid resampled; Continuous off-grid atom placement ... | 96% of 200 (kappa 0.94) | 10% |
+| A72: How is the max in the denominator (L-infinity of the autocorrelation) handled during optim | Exact max subgradient ascent; Plateau width mass shifting; Top-k mean annealed k; Hard plateau constraint multi-objective; Dinkelbach fractional programming ... | 88% of 200 (kappa 0.84) | 10% |
+| A2: How is the first solution built? | Return start or constant; Perturb or optimize start; Construct from scratch; Smooth analytic bump seed; Random multi-start vectors ... | 79% of 200 (kappa 0.69) | 6% |
 | A42: Is the support (set of nonzero cells/intervals) treated as fixed/dense or explicitly optim | Multiple disjoint support blocks; Continuous translation of support; Symmetry constraints on support; Parametric analytic family; Dense fixed full support ... | 96% of 200 (kappa 0.94) | 6% |
 | A4: Which moves or update steps change a solution? | Structural run edits; Scattered single-cell mutations; Global parametric transforms; Smooth surrogate gradient descent; Random search / simulated annealing ... | 78% of 200 (kappa 0.59) | - |
 | A67: Does the program actually run an iterative search/optimisation loop, or does it just retur | Multi-phase L-BFGS-B with kicks; No search, initial guess only; Coordinate ascent sweeps; Single L-BFGS-B run; Anytime portfolio budgeted search ... | 90% of 200 (kappa 0.84) | - |
@@ -1172,7 +1173,7 @@ Interacting decisions in the last fit: ('A2', 'A114')
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 287 | 0.941244 | running at 12 | top H2 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 288 | 0.941244 | running at 12 | top H2 |
 | T10 | build | 90 | A10 -> Optimise plateau width | 1/1 | 48 | 0.872670 | paused at 48 | on H6 |
 | T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 58 | 0.865499 | finished at 48 | on H6 |
 | T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 48 | 0.862512 | finished at 48 | founder H14 |
@@ -1182,11 +1183,11 @@ Interacting decisions in the last fit: ('A2', 'A114')
 | T16 | build | 210 | A62 -> Search only centered supports  | 1/1 | 50 | 0.879371 | finished at 48 | founder H18 |
 | T17 | build | 212 | A61 -> Minimize -log R | - | 3 | - | paused at 3 | -  |
 | T18 | build | 218 | A57 -> Half-cell shift of h | 1/1 | 61 | 0.909231 | finished at 48 | top H9 |
-| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 42 | 0.856216 | running at 24 | on H6 |
-| T20 | build | 300 | A67 -> Second-order Newton/trust-regi | - | 29 | 0.916979 | running at 24 | founder H21 |
+| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 42 | 0.856226 | running at 24 | on H6 |
+| T20 | build | 300 | A67 -> Second-order Newton/trust-regi | - | 30 | 0.916980 | running at 24 | founder H21 |
 | T21 | build | 303 | A68 -> Simulated annealing schedule | 0/1 | 6 | 0.650786 | paused at 6 | founder H22 |
 | T22 | build | 315 | A36 -> L1 mass / scale / L-infinity v | 0/1 | 22 | 0.882012 | running at 12 | founder H24 |
-| T23 | build | 316 | A4 -> Random search / simulated anne | 1/1 | 21 | 0.867158 | running at 12 | founder H23 |
+| T23 | build | 316 | A4 -> Random search / simulated anne | 1/1 | 22 | 0.867158 | running at 12 | founder H23 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
