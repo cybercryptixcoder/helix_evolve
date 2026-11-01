@@ -21,22 +21,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 300 | 0.948046250 | 0.941136077 |
 | 332 | 0.948081074 | 0.941242720 |
 
-## The climb, by CPU (64.7 CPU hours on programs so far)
+## The climb, by CPU (64.9 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 6.47 | 0.946064548 | 0.864831942 |
-| 16.17 | 0.946547667 | 0.904524431 |
-| 32.34 | 0.946627699 | 0.941090510 |
-| 48.51 | 0.947988852 | 0.941115363 |
-| 64.68 | 0.948046260 | 0.941242734 |
+| 6.49 | 0.946064548 | 0.864865098 |
+| 16.22 | 0.946547667 | 0.904524431 |
+| 32.44 | 0.946627699 | 0.941090510 |
+| 48.67 | 0.947988852 | 0.941115363 |
+| 64.89 | 0.948046267 | 0.941242734 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 332 | 2088 | 69.6 | 6124 | 76,431,716 | 0.948081074139 (p2088) |
-| v102-helix-s2 | 335 | 2148 | 64.7 | 5979 | 74,803,785 | 0.941242733853 (p2145) |
+| v102-helix-s2 | 336 | 2155 | 64.9 | 6000 | 75,018,423 | 0.941242733853 (p2145) |
 
 ## Against the published LLM-driven systems
 
@@ -99,7 +99,7 @@ Explorations built from nothing: 21 (21 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 256 | 0.941242506 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 257 | 0.941242506 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
 | T18 | A57 -> Shift h by half a cell before convolution | 218 | 58 | 0.909220512 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
@@ -110,12 +110,12 @@ Explorations built from nothing: 21 (21 around an option of the field, 0 new des
 | T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 8 | 0.871224825 | running |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
-| T23 | A4 -> Random search / simulated annealing | 316 | 7 | 0.863698378 | running |  |
+| T23 | A4 -> Random search / simulated annealing | 316 | 8 | 0.863717424 | running |  |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
-| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 14 | 0.860869900 | running |  |
+| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 14 | 0.861592652 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T15 | A40 -> Return final iterate | 192 | 48 | 0.850848262 | finished |  |
-| T19 | A68 -> Many independent random restarts | 280 | 26 | 0.840727294 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 27 | 0.840727294 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T21 | A68 -> Simulated annealing temperature schedule | 303 | 6 | 0.650785522 | paused |  |

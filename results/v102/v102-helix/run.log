@@ -656,3 +656,9 @@
 07:42:13 [v102-helix] gen 330: tidied A55: 21 options -> 15
 07:42:13 [v102-helix] gen 330: tidied A45: 19 options -> 16
 07:42:13 [v102-helix] gen 330: tidied A3: 18 options -> 15
+07:57:35 [v102-helix] gen 330: best 0.948081 (p2075, deep, track T2, hill H2); stall 0 (typical 2), level 0; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 21 hills; map 19 decisions (18 steering), 1958 programs placed; 6 duplicate decision(s) merged (25 -> 19); 12 reworded option(s) merged into the ones they repeat; T23 served instead of a new design (4 built explorations racing, the cap); T23 gained (0.823899 -> 0.823902); T25 gained (0.796904 -> 0.799748); T26 gained (0.819208 -> 0.819209); T25 goes on to the next rung (24 experiments): still rising (best 0.799748 at 12 experiments); 943 s
+08:12:07 [v102-helix] gen 331: best 0.948081 (p2075, deep, track T2, hill H2); stall 1 (typical 2), level 0; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 21 hills; map 19 decisions (18 steering), 1965 programs placed; T26 served instead of a new design (4 built explorations racing, the cap); T24 gained (0.906515 -> 0.908412); T26 goes on to the next rung (12 experiments): still rising (best 0.819209 at 6 experiments); 871 s
+08:23:59 [v102-helix] gen 332: best 0.948081 (p2088, deep, track T2, hill H2); stall 2 (typical 2), level 0; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 21 hills; map 19 decisions (18 steering), 1971 programs placed; T25 served instead of a new design (4 built explorations racing, the cap); T23 gained (0.823902 -> 0.823905); 712 s
+08:24:39 [v102-helix] gen 333: tidied A62: 18 options -> 12
+08:24:39 [v102-helix] gen 333: tidied A72: 18 options -> 12
+08:24:39 [v102-helix] gen 333: tidied A76: 18 options -> 12
