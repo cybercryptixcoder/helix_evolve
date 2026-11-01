@@ -623,3 +623,10 @@
 03:34:57 [v102-helix] gen 315: tidied A62: 21 options -> 12
 03:34:57 [v102-helix] gen 315: tidied A3: 20 options -> 12
 03:34:57 [v102-helix] gen 315: tidied A64: 19 options -> 15
+03:51:07 [v102-helix] gen 315: best 0.948046 (p1977, wide, track T2, hill H2); stall 45 (typical 1.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 2/3 gained; 20 hills; map 22 decisions (21 steering), 1871 programs placed; 21 reworded option(s) merged into the ones they repeat; T25 served instead of a new design (4 built explorations racing, the cap); T24 gained (0.847072 -> 0.860220); T25 gained (0.756084 -> 0.767957); T24 goes on to the next rung (12 experiments): still rising (best 0.860220 at 6 experiments); 1018 s
+04:03:15 [v102-helix] gen 316: best 0.948046 (p1977, wide, track T2, hill H2); stall 46 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 2/3 gained; 20 hills; map 23 decisions (21 steering), 1879 programs placed; T21 landed 0/1 target decisions (missing: A28 -> alternate envelope and fine-comb blocks); T23 served instead of a new design (4 built explorations racing, the cap); discovery: A82 (At what working grid resolution is the main search performed before upsampling …); T24 gained (0.860220 -> 0.861165); T25 gained (0.767957 -> 0.783499); 711 s
+04:06:51 [v102-helix] gen 317: invariant audit: 7 shared choices named (3 design decisions), 0 confirmed on a second sample, 0 new decision(s) on the map
+04:23:35 [v102-helix] gen 317: best 0.948046 (p1995, deep, track T2, hill H2); stall 47 (typical 1.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 20 hills; map 23 decisions (21 steering), 1885 programs placed; T25 served instead of a new design (4 built explorations racing, the cap); T24 gained (0.861165 -> 0.882419); T25 gained (0.783499 -> 0.789216); 1004 s
+04:24:27 [v102-helix] gen 318: tidied A28: 18 options -> 12
+04:24:27 [v102-helix] gen 318: tidied A45: 18 options -> 13
+04:24:27 [v102-helix] gen 318: tidied A55: 18 options -> 12
