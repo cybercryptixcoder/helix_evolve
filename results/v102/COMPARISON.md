@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 334)
+## The climb, by generation (every run has finished 337)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -19,24 +19,24 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 200 | 0.946769783 | 0.941115345 |
 | 250 | 0.947991608 | 0.941115363 |
 | 300 | 0.948046250 | 0.941136077 |
-| 334 | 0.948081074 | 0.941242734 |
+| 337 | 0.948081075 | 0.941242734 |
 
-## The climb, by CPU (65.3 CPU hours on programs so far)
+## The climb, by CPU (65.9 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 6.53 | 0.946064548 | 0.864865098 |
-| 16.33 | 0.946547667 | 0.904524431 |
-| 32.66 | 0.946630536 | 0.941090510 |
-| 48.99 | 0.947989312 | 0.941115363 |
-| 65.32 | 0.948046276 | 0.941242734 |
+| 6.59 | 0.946064548 | 0.864865098 |
+| 16.49 | 0.946547667 | 0.904527016 |
+| 32.97 | 0.946630642 | 0.941090510 |
+| 49.46 | 0.947990005 | 0.941115363 |
+| 65.95 | 0.948046360 | 0.941242888 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 334 | 2102 | 70.0 | 6164 | 76,902,987 | 0.948081074484 (p2101) |
-| v102-helix-s2 | 338 | 2169 | 65.3 | 6036 | 75,438,381 | 0.941242733853 (p2145) |
+| v102-helix | 337 | 2125 | 70.6 | 6218 | 77,574,804 | 0.948081074933 (p2116) |
+| v102-helix-s2 | 341 | 2190 | 65.9 | 6086 | 76,092,307 | 0.941242888016 (p2186) |
 
 ## Against the published LLM-driven systems
 
@@ -56,17 +56,17 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.948081074690 (p2108, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.948081074933 (p2116, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 24 (24 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 332 | 0.948081034 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 335 | 0.948081034 | running | yes |
 | T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 48 | 0.917006435 | finished |  |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
-| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 17 | 0.908413808 | running |  |
+| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 19 | 0.908415824 | running |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
 | T13 | A5 -> Fourier perturbation | 105 | 51 | 0.871745065 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 48 | 0.866965580 | paused |  |
@@ -75,12 +75,12 @@ Explorations built from nothing: 24 (24 around an option of the field, 0 new des
 | T16 | A4 -> Population evolutionary search | 145 | 48 | 0.853632976 | finished |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
 | T11 | A4 -> Beam search over grids | 97 | 51 | 0.840460626 | finished |  |
-| T26 | A45 -> Finite differences on heights | 321 | 7 | 0.826809028 | running |  |
-| T23 | A45 -> Derivative-free local search | 255 | 38 | 0.823904519 | running |  |
+| T26 | A45 -> Finite differences on heights | 321 | 9 | 0.839377992 | running |  |
+| T23 | A45 -> Derivative-free local search | 255 | 39 | 0.823904519 | running |  |
 | T21 | A28 -> alternate envelope and fine-comb blocks | 223 | 49 | 0.817116003 | finished |  |
 | T4 | A9 -> Exact line search on R per block or run of f (no … | 2 | 6 | 0.803713477 | paused |  |
 | T5 | A10 -> A softmax- or p-norm-weighted set of the top lags | 3 | 6 | 0.801808313 | paused |  |
-| T25 | A72 -> Penalty or barrier on max | 308 | 14 | 0.799747686 | running |  |
+| T25 | A72 -> Penalty or barrier on max | 308 | 15 | 0.801717352 | running |  |
 | T9 | A12 -> f = w^2 exactly (a cell at zero stays at zero: th… | 18 | 12 | 0.774368749 | paused |  |
 | T12 | A14 -> One heavy comb block holding about 30% of the mas… | 98 | 3 | - | paused |  |
 | T14 | A15 -> Number-theoretic support (Sidon/B2 sets, differen… | 116 | 3 | - | paused |  |
@@ -88,37 +88,37 @@ Explorations built from nothing: 24 (24 around an option of the field, 0 new des
 | T18 | A15 -> Contiguous blocks with irregular spacing found by… | 200 | 3 | - | paused |  |
 | T22 | A50 -> Solve a bilevel problem with an inner max-locatio… | 250 | 3 | - | paused |  |
 
-The field's options built at least once: 13 of 38; the invariant audit's alternatives: 0 of 51.
+The field's options built at least once: 13 of 38; the invariant audit's alternatives: 0 of 57.
 
 ## Where Helix's progress came from (v102-helix-s2)
 
-Helix's record: 0.941242733853 (p2145, n = 50000), on track T9: a new design built from nothing around A20 -> Use no regularization.
+Helix's record: 0.941242888016 (p2186, n = 50000), on track T9: a new design built from nothing around A20 -> Use no regularization.
 The track holding the record, over the run: T1 from generation 1, T5 from generation 6, T6 from generation 35, T1 from generation 46, T6 from generation 52, T9 from generation 100.
 
 Explorations built from nothing: 21 (21 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 259 | 0.941242506 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 262 | 0.941242506 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
-| T18 | A57 -> Shift h by half a cell before convolution | 218 | 59 | 0.909230611 | finished |  |
+| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 16 | 0.916665091 | running |  |
+| T18 | A57 -> Shift h by half a cell before convolution | 218 | 60 | 0.909230611 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 50 | 0.879371090 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T10 | A10 -> Level-transition lags | 90 | 48 | 0.872669841 | paused |  |
-| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 9 | 0.871325908 | running |  |
+| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 10 | 0.871401399 | running |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
-| T23 | A4 -> Random search / simulated annealing | 316 | 8 | 0.863738382 | running |  |
+| T23 | A4 -> Random search / simulated annealing | 316 | 10 | 0.863755821 | running |  |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
-| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 15 | 0.861592652 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T15 | A40 -> Return final iterate | 192 | 48 | 0.850848262 | finished |  |
-| T19 | A68 -> Many independent random restarts | 280 | 28 | 0.840727294 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 29 | 0.840727294 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T21 | A68 -> Simulated annealing temperature schedule | 303 | 6 | 0.650785522 | paused |  |
 | T17 | A61 -> Minimize -log R | 212 | 3 | - | paused |  |
 
-The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 108.
+The field's options built at least once: 6 of 38; the invariant audit's alternatives: 0 of 111.

@@ -296,6 +296,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 331
+  },
+  "A105": {
+   "key": "audit",
+   "question": "Every program so far: All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2, exp(v), softplus/abs) or simple box bounds, never by signed heights with project. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 341
   }
  },
  "values": {
@@ -1136,6 +1143,24 @@
    "origin": "audit",
    "gen": 331,
    "note": "an alternative to what every program so far does (The search keeps a single incumbent shape and is elitist: only a strictly better exact R replaces the best.): the invariant audit, generation 331; Acceptance rule controls escape from local maxima and final selection."
+  },
+  "A105.v2": {
+   "name": "signed heights, clip/project after each step",
+   "origin": "audit",
+   "gen": 341,
+   "note": "an alternative to what every program so far does (All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2, exp(v), softplus/abs) or simple box bounds, never by signed heights with project): the invariant audit, generation 341; The parameterization changes the optimization geometry and which zero or near-zero cells are reachable."
+  },
+  "A105.v3": {
+   "name": "quadratic penalty on negative heights",
+   "origin": "audit",
+   "gen": 341,
+   "note": "an alternative to what every program so far does (All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2, exp(v), softplus/abs) or simple box bounds, never by signed heights with project): the invariant audit, generation 341; The parameterization changes the optimization geometry and which zero or near-zero cells are reachable."
+  },
+  "A105.v4": {
+   "name": "mirror/projected gradient descent",
+   "origin": "audit",
+   "gen": 341,
+   "note": "an alternative to what every program so far does (All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2, exp(v), softplus/abs) or simple box bounds, never by signed heights with project): the invariant audit, generation 341; The parameterization changes the optimization geometry and which zero or near-zero cells are reachable."
   }
  },
  "matched": {}
