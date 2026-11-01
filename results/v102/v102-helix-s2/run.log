@@ -580,3 +580,11 @@
 23:15:34 [v102-helix-s2] gen 297: tidied A72: 18 options -> 11
 23:15:34 [v102-helix-s2] gen 297: tidied A61: 16 options -> 12
 23:15:34 [v102-helix-s2] gen 297: tidied A66: 16 options -> 9
+23:27:55 [v102-helix-s2] gen 297: best 0.941136 (p1850, wide, track T9, hill H2); stall 16 (typical 4.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 20 hills; map 28 decisions (28 steering), 1703 programs placed; 18 reworded option(s) merged into the ones they repeat; T15 served instead of a new design (4 built explorations racing, the cap); T19 gained (0.829047 -> 0.829194); 744 s
+23:41:58 [v102-helix-s2] gen 298: best 0.941136 (p1850, wide, track T9, hill H2); stall 17 (typical 4.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 20 hills; map 28 decisions (28 steering), 1709 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.879351 -> 0.879360); T18 gained (0.908890 -> 0.908899); T19 gained (0.829194 -> 0.829205); 843 s
+23:57:20 [v102-helix-s2] gen 299: best 0.941136 (p1850, wide, track T9, hill H2); stall 18 (typical 4.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 20 hills; map 28 decisions (28 steering), 1715 programs placed; T15 served instead of a new design (4 built explorations racing, the cap); T18 gained (0.908899 -> 0.908907); T15 finished the race (48 experiments): still rising (best 0.850848 at 48 experiments); it is now an ordinary side track; 922 s
+23:57:22 [v102-helix-s2] gen 300: consolidated: 9 decisions merged, 19 left
+23:57:25 [v102-helix-s2] gen 300: tidied A66: 36 options -> 13
+23:57:25 [v102-helix-s2] gen 300: tidied A67: 29 options -> 12
+23:57:25 [v102-helix-s2] gen 300: tidied A68: 20 options -> 12
+23:57:25 [v102-helix-s2] gen 300: dropped 1 decisions that fewer than 3 programs make
