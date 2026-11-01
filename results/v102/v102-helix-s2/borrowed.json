@@ -310,6 +310,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 351
+  },
+  "A110": {
+   "key": "audit",
+   "question": "Every program so far: All use scipy.optimize.minimize with method L-BFGS-B as the sole local search engine.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 361
+  },
+  "A111": {
+   "key": "audit",
+   "question": "Every program so far: All keep a single incumbent shape and greedily return the best exact R seen; no population or recombination.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 361
+  },
+  "A112": {
+   "key": "audit",
+   "question": "Every program so far: All return the best exact-R iterate encountered, not the last iterate or an average of iterates.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 361
   }
  },
  "values": {
@@ -1186,6 +1207,60 @@
    "origin": "audit",
    "gen": 351,
    "note": "an alternative to what every program so far does (Each optimisation phase is a single local descent trajectory from one incumbent shape; there is no population, crossover, or simultaneous multi-candid): the invariant audit, generation 351; A population or parallel starts can escape basins that a single L-BFGS-B trajectory cannot."
+  },
+  "A110.v2": {
+   "name": "trust-constr with explicit L_inf constraint",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method L-BFGS-B as the sole local search engine.): the invariant audit, generation 361; Different curvature/constraint handling changes which local optimum is reached and how fast."
+  },
+  "A110.v3": {
+   "name": "SLSQP with box/constraint handling",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method L-BFGS-B as the sole local search engine.): the invariant audit, generation 361; Different curvature/constraint handling changes which local optimum is reached and how fast."
+  },
+  "A110.v4": {
+   "name": "CMA-ES or Adam-style stochastic local search",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All use scipy.optimize.minimize with method L-BFGS-B as the sole local search engine.): the invariant audit, generation 361; Different curvature/constraint handling changes which local optimum is reached and how fast."
+  },
+  "A111.v2": {
+   "name": "maintain a diverse population of shapes",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All keep a single incumbent shape and greedily return the best exact R seen; no population or recombination.): the invariant audit, generation 361; Recombination or diversity can escape basins that a single incumbent cannot."
+  },
+  "A111.v3": {
+   "name": "crossover/recombine top local optima",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All keep a single incumbent shape and greedily return the best exact R seen; no population or recombination.): the invariant audit, generation 361; Recombination or diversity can escape basins that a single incumbent cannot."
+  },
+  "A111.v4": {
+   "name": "average several nearby optima before polishing",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All keep a single incumbent shape and greedily return the best exact R seen; no population or recombination.): the invariant audit, generation 361; Recombination or diversity can escape basins that a single incumbent cannot."
+  },
+  "A112.v2": {
+   "name": "return the last iterate",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All return the best exact-R iterate encountered, not the last iterate or an average of iterates.): the invariant audit, generation 361; The exact-R best can differ from the surrogate best or last iterate."
+  },
+  "A112.v3": {
+   "name": "average the last k iterates",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All return the best exact-R iterate encountered, not the last iterate or an average of iterates.): the invariant audit, generation 361; The exact-R best can differ from the surrogate best or last iterate."
+  },
+  "A112.v4": {
+   "name": "return the best surrogate-objective iterate",
+   "origin": "audit",
+   "gen": 361,
+   "note": "an alternative to what every program so far does (All return the best exact-R iterate encountered, not the last iterate or an average of iterates.): the invariant audit, generation 361; The exact-R best can differ from the surrogate best or last iterate."
   }
  },
  "matched": {}
