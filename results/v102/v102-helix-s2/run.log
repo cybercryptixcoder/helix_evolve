@@ -665,3 +665,9 @@
 08:14:28 [v102-helix-s2] gen 336: tidied A66: 18 options -> 13
 08:14:28 [v102-helix-s2] gen 336: tidied A62: 17 options -> 15
 08:14:28 [v102-helix-s2] gen 336: tidied A42: 16 options -> 12
+08:30:03 [v102-helix-s2] gen 336: best 0.941243 (p2145, wide, track T9, hill H2); stall 5 (typical 1), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 23 hills; map 18 decisions (18 steering), 1923 programs placed; 11 reworded option(s) merged into the ones they repeat; T19 served instead of a new design (4 built explorations racing, the cap); discovery: A104 (What seed family and restart/time-allocation schedule does construct() use in i…); T20 gained (0.860870 -> 0.861593); T23 gained (0.863698 -> 0.863717); 940 s
+08:46:36 [v102-helix-s2] gen 337: best 0.941243 (p2145, wide, track T9, hill H2); stall 6 (typical 1), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 23 hills; map 18 decisions (18 steering), 1931 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T18 gained (0.909221 -> 0.909231); T22 gained (0.871225 -> 0.871310); 992 s
+09:00:30 [v102-helix-s2] gen 338: best 0.941243 (p2145, wide, track T9, hill H2); stall 7 (typical 1), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 23 hills; map 18 decisions (18 steering), 1936 programs placed; T22 landed 0/1 target decisions (missing: A36 -> L1 mass / scale / L-infinity variants); T19 served instead of a new design (4 built explorations racing, the cap); T22 gained (0.871310 -> 0.871326); T23 gained (0.863717 -> 0.863738); 834 s
+09:01:33 [v102-helix-s2] gen 339: tidied A61: 18 options -> 12
+09:01:33 [v102-helix-s2] gen 339: tidied A62: 17 options -> 15
+09:01:33 [v102-helix-s2] gen 339: tidied A67: 16 options -> 15
