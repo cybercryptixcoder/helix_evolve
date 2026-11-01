@@ -578,3 +578,10 @@
 23:12:57 [v102-helix] gen 294: tidied A1: 16 options -> 12
 23:12:57 [v102-helix] gen 294: tidied A2: 15 options -> 12
 23:12:57 [v102-helix] gen 294: tidied A3: 15 options -> 12
+23:30:33 [v102-helix] gen 294: best 0.948046 (p1840, wide, track T2, hill H2); stall 24 (typical 1.5), level 2; slots 1 main, 2 track; deep 2/3 gained, wide 2/3 gained; 18 hills; map 28 decisions (27 steering), 1738 programs placed; T23 landed 0/1 target decisions (missing: A45 -> Derivative-free local search); 10 reworded option(s) merged into the ones they repeat; T23 served instead of a new design (4 built explorations racing, the cap); T19 gained (0.916623 -> 0.916706); T20 gained (0.854840 -> 0.854841); T23 gained (0.823712 -> 0.823742); 1060 s
+23:44:32 [v102-helix] gen 295: best 0.948046 (p1847, deep, track T2, hill H2); stall 25 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 2/3 gained; 18 hills; map 28 decisions (27 steering), 1744 programs placed; T21 landed 0/1 target decisions (missing: A28 -> alternate envelope and fine-comb blocks); T21 served instead of a new design (4 built explorations racing, the cap); T21 gained (0.805164 -> 0.805696); T23 gained (0.823742 -> 0.823787); 838 s
+23:59:53 [v102-helix] gen 296: best 0.948046 (p1848, deep, track T2, hill H2); stall 26 (typical 1.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 18 hills; map 29 decisions (28 steering), 1751 programs placed; T23 landed 0/1 target decisions (missing: A45 -> Derivative-free local search); T23 served instead of a new design (4 built explorations racing, the cap); discovery: A75 (How does the search escape local optima / diversify its candidate pool (single …); T19 gained (0.916706 -> 0.916958); 921 s
+00:00:41 [v102-helix] gen 297: invariant audit: 6 shared choices named (1 design decisions), 0 confirmed on a second sample, 0 new decision(s) on the map
+00:01:09 [v102-helix] gen 297: tidied A28: 18 options -> 12
+00:01:09 [v102-helix] gen 297: tidied A51: 18 options -> 12
+00:01:09 [v102-helix] gen 297: tidied A45: 17 options -> 12
