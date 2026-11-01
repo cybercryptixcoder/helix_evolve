@@ -574,3 +574,9 @@
 22:36:51 [v102-helix-s2] gen 294: tidied A61: 16 options -> 13
 22:36:51 [v102-helix-s2] gen 294: tidied A84: 16 options -> 10
 22:36:51 [v102-helix-s2] gen 294: tidied A36: 15 options -> 12
+22:50:30 [v102-helix-s2] gen 294: best 0.941136 (p1850, wide, track T9, hill H2); stall 13 (typical 4.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 20 hills; map 27 decisions (27 steering), 1686 programs placed; 12 reworded option(s) merged into the ones they repeat; T18 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.879303 -> 0.879311); T19 gained (0.827935 -> 0.828402); 821 s
+23:02:41 [v102-helix-s2] gen 295: best 0.941136 (p1850, wide, track T9, hill H2); stall 14 (typical 4.5), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 2/3 gained; 20 hills; map 27 decisions (27 steering), 1692 programs placed; T15 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.879311 -> 0.879333); T19 gained (0.828402 -> 0.828748); 730 s
+23:15:30 [v102-helix-s2] gen 296: best 0.941136 (p1850, wide, track T9, hill H2); stall 15 (typical 4.5), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 2/3 gained; 20 hills; map 28 decisions (28 steering), 1698 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); discovery: A94 (How is the time budget allocated across the search phases (which phase gets how…); T16 gained (0.879333 -> 0.879351); T18 gained (0.908863 -> 0.908890); T19 gained (0.828748 -> 0.829047); 769 s
+23:15:34 [v102-helix-s2] gen 297: tidied A72: 18 options -> 11
+23:15:34 [v102-helix-s2] gen 297: tidied A61: 16 options -> 12
+23:15:34 [v102-helix-s2] gen 297: tidied A66: 16 options -> 9
