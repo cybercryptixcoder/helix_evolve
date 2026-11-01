@@ -676,3 +676,9 @@
 09:57:51 [v102-helix] gen 339: tidied A1: 20 options -> 12
 09:57:51 [v102-helix] gen 339: tidied A2: 19 options -> 12
 10:14:05 [v102-helix] gen 339: best 0.948081 (p2138, deep, track T2, hill H2); stall 9 (typical 2), level 2; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 21 hills; map 21 decisions (20 steering), 2023 programs placed; 19 reworded option(s) merged into the ones they repeat; T26 served instead of a new design (4 built explorations racing, the cap); T25 gained (0.803250 -> 0.805042); T26 gained (0.841276 -> 0.841332); 1049 s
+10:34:36 [v102-helix] gen 340: best 0.948081 (p2138, deep, track T2, hill H2); stall 10 (typical 2), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 1/3 gained; 21 hills; map 21 decisions (20 steering), 2031 programs placed; T25 served instead of a new design (4 built explorations racing, the cap); T24 gained (0.908417 -> 0.908436); T25 gained (0.805042 -> 0.807129); T26 gained (0.841332 -> 0.844103); 1226 s
+10:47:19 [v102-helix] gen 341: best 0.948081 (p2138, deep, track T2, hill H2); stall 11 (typical 2), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 21 hills; map 21 decisions (20 steering), 2039 programs placed; T26 served instead of a new design (4 built explorations racing, the cap); T24 gained (0.908436 -> 0.908459); T26 gained (0.844103 -> 0.848843); 763 s
+10:47:39 [v102-helix] gen 342: tidied A45: 19 options -> 14
+10:47:39 [v102-helix] gen 342: tidied A62: 18 options -> 14
+10:47:39 [v102-helix] gen 342: tidied A3: 17 options -> 12
+11:03:12 [v102-helix] gen 342: best 0.948081 (p2138, deep, track T2, hill H2); stall 12 (typical 2), level 2; slots 1 main, 2 track; deep 1/3 gained, wide 0/3 gained; 21 hills; map 21 decisions (20 steering), 2047 programs placed; 14 reworded option(s) merged into the ones they repeat; T23 served instead of a new design (4 built explorations racing, the cap); T25 gained (0.807129 -> 0.807522); 949 s
