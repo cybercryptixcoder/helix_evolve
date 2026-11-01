@@ -469,7 +469,7 @@ Decisions every hill shared (mapped at generation 319):
 - D7: The domain and boundary conditions (all: A finite 1-D interval with zero padding (linear convolution, no wrap-around), symmetric or free boundary)
 - D8: How plateaus and local maxima are escaped (all: Monotone exact-R acceptance with occasional smoothing/upsampling kicks or low-mode FFT perturbations; no move is accepted that lowers R)
 
-### The design map (24 decisions, 1907 programs placed)
+### The design map (24 decisions, 1912 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
