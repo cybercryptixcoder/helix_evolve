@@ -21,22 +21,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 300 | 0.948046250 | 0.941136077 |
 | 307 | 0.948046260 | 0.941136077 |
 
-## The climb, by CPU (59.6 CPU hours on programs so far)
+## The climb, by CPU (59.8 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 5.96 | 0.945912358 | 0.864678463 |
-| 14.91 | 0.946547097 | 0.904524431 |
-| 29.81 | 0.946624842 | 0.941061736 |
-| 44.72 | 0.946786678 | 0.941115363 |
-| 59.63 | 0.948046216 | 0.941136077 |
+| 5.98 | 0.945912358 | 0.864678463 |
+| 14.96 | 0.946547097 | 0.904524431 |
+| 29.92 | 0.946624842 | 0.941062180 |
+| 44.88 | 0.946787012 | 0.941115363 |
+| 59.84 | 0.948046216 | 0.941136077 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 307 | 1927 | 64.6 | 5649 | 70,657,682 | 0.948046259736 (p1916) |
-| v102-helix-s2 | 310 | 1991 | 59.6 | 5535 | 69,100,158 | 0.941136077208 (p1969) |
+| v102-helix-s2 | 311 | 1998 | 59.8 | 5556 | 69,386,224 | 0.941136077208 (p1969) |
 
 ## Against the published LLM-driven systems
 
@@ -97,9 +97,9 @@ Explorations built from nothing: 19 (19 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 231 | 0.941136074 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 232 | 0.941136074 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
-| T18 | A57 -> Shift h by half a cell before convolution | 218 | 45 | 0.908974304 | running |  |
+| T18 | A57 -> Shift h by half a cell before convolution | 218 | 46 | 0.908990072 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 50 | 0.879371090 | finished |  |
@@ -108,10 +108,10 @@ Explorations built from nothing: 19 (19 around an option of the field, 0 new des
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
-| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 5 | 0.859932795 | running |  |
+| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 5 | 0.859934371 | running |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
 | T15 | A40 -> Return final iterate | 192 | 48 | 0.850848262 | finished |  |
-| T19 | A68 -> Many independent random restarts | 280 | 15 | 0.831025096 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 16 | 0.831025096 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T21 | A68 -> Simulated annealing temperature schedule | 303 | 4 | 0.650785522 | running |  |

@@ -156,6 +156,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 287
+  },
+  "A78": {
+   "key": "audit",
+   "question": "Every program so far: Every objective normalizes the height vector to unit sum (or total mass) inside the function, so absolute height scale is a gauge and never a search v. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 307
   }
  },
  "values": {
@@ -636,6 +643,24 @@
    "origin": "audit",
    "gen": 287,
    "note": "an alternative to what every program so far does (All use a fixed or monotone a-priori sharpening schedule for the max surrogate (beta/c/eps or top-m size); none adapts sharpness online to the current): the invariant audit, generation 287; Controls bias/variance of the max surrogate and how flat the final plateau becomes."
+  },
+  "A78.v2": {
+   "name": "optimize unnormalized heights with an L1 penalty",
+   "origin": "audit",
+   "gen": 307,
+   "note": "an alternative to what every program so far does (Every objective normalizes the height vector to unit sum (or total mass) inside the function, so absolute height scale is a gauge and never a search v): the invariant audit, generation 307; Normalization choice changes conditioning, zero patterns, and gradient scale."
+  },
+  "A78.v3": {
+   "name": "fix the maximum height to one",
+   "origin": "audit",
+   "gen": 307,
+   "note": "an alternative to what every program so far does (Every objective normalizes the height vector to unit sum (or total mass) inside the function, so absolute height scale is a gauge and never a search v): the invariant audit, generation 307; Normalization choice changes conditioning, zero patterns, and gradient scale."
+  },
+  "A78.v4": {
+   "name": "optimize logits through a softmax normalization",
+   "origin": "audit",
+   "gen": 307,
+   "note": "an alternative to what every program so far does (Every objective normalizes the height vector to unit sum (or total mass) inside the function, so absolute height scale is a gauge and never a search v): the invariant audit, generation 307; Normalization choice changes conditioning, zero patterns, and gradient scale."
   }
  },
  "matched": {}
