@@ -20,22 +20,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 250 | 0.947991608 | 0.941115363 |
 | 286 | 0.948046216 | 0.941136077 |
 
-## The climb, by CPU (54.9 CPU hours on programs so far)
+## The climb, by CPU (55.1 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 5.49 | 0.944645586 | 0.863772390 |
-| 13.72 | 0.946545864 | 0.904524431 |
-| 27.45 | 0.946567566 | 0.940687589 |
-| 41.17 | 0.946768793 | 0.941115363 |
-| 54.90 | 0.948012718 | 0.941136077 |
+| 5.51 | 0.945662592 | 0.863772390 |
+| 13.78 | 0.946546050 | 0.904524431 |
+| 27.56 | 0.946582022 | 0.940725209 |
+| 41.33 | 0.946768914 | 0.941115363 |
+| 55.11 | 0.948012902 | 0.941136077 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 286 | 1790 | 60.0 | 5257 | 65,315,033 | 0.948046215735 (p1789) |
-| v102-helix-s2 | 287 | 1842 | 54.9 | 5100 | 63,576,519 | 0.941136076648 (p1833) |
+| v102-helix-s2 | 288 | 1849 | 55.1 | 5119 | 63,799,883 | 0.941136077036 (p1846) |
 
 ## Against the published LLM-driven systems
 
@@ -95,7 +95,7 @@ Explorations built from nothing: 17 (17 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 208 | 0.941136074 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 209 | 0.941136074 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
 | T18 | A57 -> Shift h by half a cell before convolution | 218 | 35 | 0.908862897 | running |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
@@ -107,8 +107,8 @@ Explorations built from nothing: 17 (17 around an option of the field, 0 new des
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
 | T4 | A13 -> Average-pool a finer construction down to n, then… | 2 | 48 | 0.859587920 | finished |  |
-| T15 | A40 -> Return final iterate | 192 | 42 | 0.850848262 | running |  |
-| T19 | A68 -> Many independent random restarts | 280 | 4 | 0.824294160 | running |  |
+| T15 | A40 -> Return final iterate | 192 | 43 | 0.850848262 | running |  |
+| T19 | A68 -> Many independent random restarts | 280 | 5 | 0.824666824 | running |  |
 | T14 | A42 -> Asymmetric separated support islands | 186 | 49 | 0.815359268 | finished |  |
 | T8 | A19 -> Force even symmetry h[i]=h[N-1-i] | 39 | 6 | 0.723887489 | paused |  |
 | T17 | A61 -> Minimize -log R | 212 | 3 | - | paused |  |

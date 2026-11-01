@@ -937,7 +937,7 @@ Decisions every hill shared (mapped at generation 286):
 - D7: Treatment of the autocorrelation peak band (all: Implicitly widen the near-max band through the surrogate gradient, with occasional heuristic band-polishing; the band width is never a direct optimisation targ…)
 - D8: Time/budget allocation across phases (all: A hand-tuned fixed schedule of phase time slices (fractions of the CPU budget) decided before the run, with deadline checks only to abort)
 
-### The design map (24 decisions, 1642 programs placed)
+### The design map (24 decisions, 1649 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
@@ -977,17 +977,17 @@ Decisions every hill shared (mapped at generation 286):
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 208 | 0.941136 | running at 12 | top H2 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 209 | 0.941136 | running at 12 | top H2 |
 | T10 | build | 90 | A10 -> Optimise plateau width | 1/1 | 48 | 0.872670 | paused at 48 | on H6 |
 | T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 58 | 0.865499 | finished at 48 | on H6 |
 | T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 48 | 0.862512 | finished at 48 | founder H14 |
 | T13 | build | 104 | A20 -> Add an L2 penalty on heights | 0/1 | 48 | 0.918145 | finished at 48 | founder H15 |
 | T14 | build | 186 | A42 -> Multiple disjoint support bloc | 1/1 | 49 | 0.815359 | finished at 48 | founder H16 |
-| T15 | build | 192 | A40 -> Return final iterate | 1/1 | 42 | 0.850848 | running at 24 | founder H17 |
+| T15 | build | 192 | A40 -> Return final iterate | 1/1 | 43 | 0.850848 | running at 24 | founder H17 |
 | T16 | build | 210 | A62 -> Search only centered supports  | 1/1 | 40 | 0.879212 | running at 24 | founder H18 |
 | T17 | build | 212 | A61 -> Minimize -log R | - | 3 | - | paused at 3 | -  |
 | T18 | build | 218 | A57 -> Half-cell shift of h | 1/1 | 35 | 0.908863 | running at 24 | top H9 |
-| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 4 | 0.824294 | running at 3 | founder H20 |
+| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 5 | 0.824667 | running at 3 | founder H20 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 

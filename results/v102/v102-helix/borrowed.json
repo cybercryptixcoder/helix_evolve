@@ -149,6 +149,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 277
+  },
+  "A72": {
+   "key": "audit",
+   "question": "Every program so far: All use a fixed or monotone a-priori sharpening schedule for the max surrogate (beta/c/eps or top-m size); none adapts sharpness online to the current. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 287
   }
  },
  "values": {
@@ -611,6 +618,24 @@
    "origin": "audit",
    "gen": 277,
    "note": "an alternative to what every program so far does (The search is a deterministic single-incumbent local-descent trajectory: each L-BFGS phase starts from the current best or its resample; no population): the invariant audit, generation 277; A different global exploration strategy could land in a better basin and improve exact R."
+  },
+  "A72.v2": {
+   "name": "fixed sharpness throughout",
+   "origin": "audit",
+   "gen": 287,
+   "note": "an alternative to what every program so far does (All use a fixed or monotone a-priori sharpening schedule for the max surrogate (beta/c/eps or top-m size); none adapts sharpness online to the current): the invariant audit, generation 287; Controls bias/variance of the max surrogate and how flat the final plateau becomes."
+  },
+  "A72.v3": {
+   "name": "monotone geometric sharpening schedule",
+   "origin": "audit",
+   "gen": 287,
+   "note": "an alternative to what every program so far does (All use a fixed or monotone a-priori sharpening schedule for the max surrogate (beta/c/eps or top-m size); none adapts sharpness online to the current): the invariant audit, generation 287; Controls bias/variance of the max surrogate and how flat the final plateau becomes."
+  },
+  "A72.v4": {
+   "name": "adaptive sharpness based on plateau width",
+   "origin": "audit",
+   "gen": 287,
+   "note": "an alternative to what every program so far does (All use a fixed or monotone a-priori sharpening schedule for the max surrogate (beta/c/eps or top-m size); none adapts sharpness online to the current): the invariant audit, generation 287; Controls bias/variance of the max surrogate and how flat the final plateau becomes."
   }
  },
  "matched": {}
