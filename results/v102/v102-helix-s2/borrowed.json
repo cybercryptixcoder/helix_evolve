@@ -261,6 +261,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 281
+  },
+  "A92": {
+   "key": "audit",
+   "question": "Every program so far: All programs take the cell-height vector h (or a pointwise reparametrisation w) as the primary search variable and obtain L by convolving h with itsel. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 291
   }
  },
  "values": {
@@ -1011,6 +1018,24 @@
    "origin": "audit",
    "gen": 281,
    "note": "an alternative to what every program so far does (All programs accept a new iterate only if its exact R is higher; no non-greedy acceptance such as simulated annealing or tabu search.): the invariant audit, generation 281; Non-greedy acceptance can cross barriers that pure best-R descent cannot."
+  },
+  "A92.v2": {
+   "name": "Optimise L with Toeplitz/PSD feasibility constraints",
+   "origin": "audit",
+   "gen": 291,
+   "note": "an alternative to what every program so far does (All programs take the cell-height vector h (or a pointwise reparametrisation w) as the primary search variable and obtain L by convolving h with itsel): the invariant audit, generation 291; A different feasible set can represent autocorrelations not reachable by local height perturbations."
+  },
+  "A92.v3": {
+   "name": "Optimise Fourier power spectrum with inverse constraints",
+   "origin": "audit",
+   "gen": 291,
+   "note": "an alternative to what every program so far does (All programs take the cell-height vector h (or a pointwise reparametrisation w) as the primary search variable and obtain L by convolving h with itsel): the invariant audit, generation 291; A different feasible set can represent autocorrelations not reachable by local height perturbations."
+  },
+  "A92.v4": {
+   "name": "Optimise cumulative integral of f*f directly",
+   "origin": "audit",
+   "gen": 291,
+   "note": "an alternative to what every program so far does (All programs take the cell-height vector h (or a pointwise reparametrisation w) as the primary search variable and obtain L by convolving h with itsel): the invariant audit, generation 291; A different feasible set can represent autocorrelations not reachable by local height perturbations."
   }
  },
  "matched": {}

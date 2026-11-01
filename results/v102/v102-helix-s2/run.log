@@ -561,3 +561,10 @@
 21:11:50 [v102-helix-s2] gen 288: tidied A72: 16 options -> 12
 21:11:50 [v102-helix-s2] gen 288: tidied A42: 15 options -> 13
 21:11:50 [v102-helix-s2] gen 288: tidied A62: 15 options -> 12
+21:26:14 [v102-helix-s2] gen 288: best 0.941136 (p1846, deep, track T9, hill H2); stall 7 (typical 4.5), level 1; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 20 hills; map 24 decisions (24 steering), 1649 programs placed; 9 reworded option(s) merged into the ones they repeat; T15 served instead of a new design (4 built explorations racing, the cap); T19 gained (0.824294 -> 0.824667); 866 s
+21:38:56 [v102-helix-s2] gen 289: best 0.941136 (p1850, wide, track T9, hill H2); stall 8 (typical 4.5), level 1; slots 1 main, 2 track; deep 2/3 gained, wide 1/3 gained; 20 hills; map 25 decisions (25 steering), 1655 programs placed; T16 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.879212 -> 0.879261); T19 gained (0.824667 -> 0.825769); T19 goes on to the next rung (12 experiments): still rising (best 0.825769 at 6 experiments); 761 s
+21:53:29 [v102-helix-s2] gen 290: best 0.941136 (p1850, wide, track T9, hill H2); stall 9 (typical 4.5), level 1; slots 1 main, 2 track; deep 0/3 gained, wide 1/3 gained; 20 hills; map 25 decisions (25 steering), 1662 programs placed; T18 served instead of a new design (4 built explorations racing, the cap); T16 gained (0.879261 -> 0.879297); 873 s
+21:54:15 [v102-helix-s2] gen 291: invariant audit: 6 shared choices named (1 design decisions), 1 confirmed on a second sample, 1 new decision(s) on the map; 'All programs take the cell-height vector h (or a pointwise reparametrisation w) ' (100% share it)
+21:54:26 [v102-helix-s2] gen 291: tidied A66: 18 options -> 13
+21:54:26 [v102-helix-s2] gen 291: tidied A36: 17 options -> 15
+21:54:26 [v102-helix-s2] gen 291: tidied A42: 16 options -> 12
