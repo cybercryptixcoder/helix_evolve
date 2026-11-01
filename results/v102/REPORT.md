@@ -2,11 +2,11 @@
 
 ## v102-helix
 
-- Generations 1-345: best 0.666666667 -> 0.948582161 (p2186, track T2); the main track now: T2.
-- Exploration levels: level 0: 153 generations, level 1: 57 generations, level 2: 135 generations.
-- Planned experiments by slot: track 665, main 345, build 24, flip 1.
+- Generations 1-347: best 0.666666667 -> 0.948584377 (p2201, track T2); the main track now: T2.
+- Exploration levels: level 0: 155 generations, level 1: 57 generations, level 2: 135 generations.
+- Planned experiments by slot: track 669, main 347, build 24, flip 1.
 
-### Records (96)
+### Records (97)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -106,6 +106,7 @@
 | 329 | 0.948081034 | p2067 | deep | main | T2 |
 | 344 | 0.948559779 | p2179 | deep | main | T2 |
 | 345 | 0.948582161 | p2186 | deep | main | T2 |
+| 346 | 0.948584284 | p2193 | deep | main | T2 |
 
 ### Side tracks opened (0)
 
@@ -459,24 +460,26 @@
 | 343 | 0.948081075 |  | 13 / 2 | 2 | main, track:T24, track:T26 | 0.848843 | T25 gained (0.807522 -> 0.807578); T26 gained (0.848843 -> 0.849574); T26 goes on to the next rung (24 experiments): still rising (best 0.849574 at 12 experiments) |
 | 344 | 0.948559779 | yes | 14 / 2 | 2 | main, track:T25, track:T23 | 0.823907 | T24 gained (0.908459 -> 0.908469) |
 | 345 | 0.948582161 | yes | 0 / 3 | 0 | main, track:T24, track:T26 | 0.908474 | T24 gained (0.908469 -> 0.908474); T26 gained (0.849574 -> 0.849585) |
+| 346 | 0.948584284 | yes | 0 / 2 | 0 | main, track:T24, track:T23 | 0.908475 | T23 gained (0.823907 -> 0.828123); T24 gained (0.908474 -> 0.908475); T24 goes on to the next rung (48 experiments): still rising (best 0.908475 at 24 experiments); T23 landed on H12 (distance 0.061); T23 climbed from H18 into H12 |
+| 347 | 0.948584377 |  | 0 / 1.5 | 0 | main, track:T26, track:T25 | 0.850318 | T26 gained (0.849585 -> 0.851234); T26 landed on H14 (distance 0.072); T26 climbed from H21 into H14 |
 
 ### Hills (21: 2 on the map after its first generation, 19 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.948582 (p2186) | 1 | T2 (build) | 0 | This program optimizes a smooth log-sum-exp surrogate of the sup-norm with an annealed sharpness parameter inside a Dinkelbach loop, rather than directly maximizing the exact ratio. It uses L-BFGS-B with analytic gradien |
+| H2 | 0.948584 (p2193) | 1 | T2 (build) | 0 | This program optimizes a smooth log-sum-exp surrogate of the sup-norm with an annealed sharpness parameter inside a Dinkelbach loop, rather than directly maximizing the exact ratio. It uses L-BFGS-B with analytic gradien |
 | H15 | 0.917006 (p1879) | 207 | T19 (build) | 0 | This program optimises a smooth log-sum-exp surrogate of the max (Dinkelbach with beta up to 1e9) via L-BFGS on the whole vector, rather than the record's exact-R block-coordinate ascent over small windows. It builds its |
 | H8 | 0.914144 (p0677) | 16 | T8 (build) | 0 | This program abandons the record's high-resolution climb entirely, instead starting from the given start and running a prune-refine-upsample loop that repeatedly zeroes the smallest fraction of cells and re-optimises ins |
-| H19 | 0.908474 (p2187) | 309 | T24 (build) | 0 | This program abandons the record's incremental exact-R coordinate/pair ascent and softmax-smoothed L-BFGS polish entirely, instead parameterising the solution as a periodic lattice (period, duty cycle, phase, and a low-o |
+| H19 | 0.908475 (p2194) | 309 | T24 (build) | 0 | This program abandons the record's incremental exact-R coordinate/pair ascent and softmax-smoothed L-BFGS polish entirely, instead parameterising the solution as a periodic lattice (period, duty cycle, phase, and a low-o |
 | H10 | 0.876149 (p0908) | 46 | T10 (build) | 0 | This program seeds from a periodic cosine-tooth envelope rather than from the record's start, and it optimises with a Dinkelbach loop over an LSE-smoothed max (beta up to 1e12) instead of exact-move golden-section/pair p |
 | H6 | 0.871745 (p1286) | 7 | T6 (build) | 1 | This program builds a hand-crafted spike-plus-decaying-comb seed at n=512 and then doubles resolution in four stages (512→1024→2048→4096), spending only 20% of budget on the first stage and re-annealing beta from 1e4 upw |
 | H13 | 0.857471 (p1449) | 124 | T15 (build) | 0 | This program searches over support masks rather than continuous heights: it proposes discrete mask moves (delete/add/swap/shift/split cells) and re-polishes only the active cells with L-BFGS-B under a smoothed log-sum-ex |
 | H16 | 0.854909 (p1859) | 208 | T20 (build) | 0 | This program abandons the record's exact single-coordinate and windowed block-ascent moves entirely, instead running a smooth high-beta log-sum-exp Dinkelbach polish (L-BFGS-B with analytic gradients via FFT) on the full |
-| H14 | 0.853633 (p1509) | 147 | T16 (build) | 0 | This program runs a genetic algorithm (population of 10, mutation/crossover, staged upsampling from 1024 to 16384) rather than the record's exact-coordinate/pair-sweep plus Dinkelbach polish pipeline. It relies on L-BFGS |
+| H14 | 0.853633 (p1509) | 147 | T16 (build) | 1 | This program runs a genetic algorithm (population of 10, mutation/crossover, staged upsampling from 1024 to 16384) rather than the record's exact-coordinate/pair-sweep plus Dinkelbach polish pipeline. It relies on L-BFGS |
 | H21 | 0.849585 (p2185) | 322 | T26 (build) | 0 | This program abandons the record's tooth-comb/phi-parameterisation and incremental exact-R coordinate ascent entirely, instead optimising a coarse nonnegative control vector (32→192 knots) that is interpolated onto the e |
 | H7 | 0.844130 (p0613) | 8 | T7 (build) | 0 | This program builds a hand-crafted seed of a 10-tooth raised-cosine comb plus a graded ramp of 30 bumps, then grows it by coordinate-wise golden-section tuning of per-run multiplicative factors and additive bumps (doubli |
 | H11 | 0.840461 (p1205) | 100 | T11 (build) | 0 | This program runs a coarse-to-fine multiresolution ladder (256→16384) with a beam of candidates, using Adam gradient descent on an analytic gradient of R plus golden-section coordinate polish, rather than the record's ex |
-| H12 | 0.829283 (p0688) | 107 | T13 (build) | 0 | This program abandons the record's exact-move polisher and instead optimizes a Dinkelbach-transformed LSE-smoothed max with L-BFGS-B gradients, using exact golden-section coordinate sweeps only as a secondary polish. It  |
+| H12 | 0.829283 (p0688) | 107 | T13 (build) | 1 | This program abandons the record's exact-move polisher and instead optimizes a Dinkelbach-transformed LSE-smoothed max with L-BFGS-B gradients, using exact golden-section coordinate sweeps only as a secondary polish. It  |
 | H18 | 0.823907 (p2131) | 257 | T23 (build) | 0 | This program abandons the record's tooth/comb-plus-ramp blueprint and its loss-decomposition-driven phases (S-descent, β-ladder, transition-width targeting, L-BFGS on gradient-ranked pools) in favor of a coarse multi-res |
 | H17 | 0.817116 (p2001) | 233 | T21 (build) | 0 | This program abandons the record's tooth/comb alignment strategy entirely and instead seeds from a flat-top plateau (box-like f with cosine ramps) to directly flatten the f*f top, then polishes via a β-ladder LSE surroga |
 | H20 | 0.807578 (p2167) | 313 | T25 (build) | 0 | This program abandons the record's incremental single/pair coordinate ascent and its F7 transition-targeted phases entirely, instead running a coarse-to-fine multigrid ladder (512→32768) of full-space L-BFGS on a smooth- |
@@ -497,37 +500,38 @@ Decisions every hill shared (mapped at generation 344):
 - D7: Time/budget allocation (all: A fixed phase schedule (seed, ladder, polish, subgradient) with hand-tuned time shares and process-time deadlines)
 - D8: Symmetry / structure exploitation (all: Treat f as a general vector; no explicit enforcement of symmetry of f or of the f*f plateau beyond what the optimiser finds)
 
-### The design map (21 decisions, 2067 programs placed)
+### The design map (22 decisions, 2080 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A3: What quantity does the search optimise while it runs? | Minimax dual active-set weights; Exact line search on R; Alternating projection to target; Bisection ratio feasibility; Smooth max surrogate ... | 85% of 189 (kappa 0.79) | 23% |
-| A51: Every program so far: Every program enforces non-negativity by clipping or box bounds on t | Box bounds or clipping; Smooth positive reparameterization; Interior-point barrier; General unconstrained shape; Symmetry enforced ... | 99% of 189 (kappa 0.99) | 22% |
-| A28: How is the grid resolution chosen and changed across stages (fixed single resolution vs. a | Fixed single resolution; Meshfree particle representation; Coarse-to-fine resolution ladder; Coarse basis analytic lift; Continuous adaptive mesh knots ... | 97% of 189 (kappa 0.96) | 18% |
-| A62: Is the time/budget allocation across phases fixed a priori or decided online (bandit/UCB/a | Fixed hand-tuned phase schedule; Online bandit/UCB budget allocation; Anytime priority-queue local moves; Reallocate to last-improving operator; Dinkelbach loop with time-based beta ... | 98% of 56 (kappa 0.96) | 13% |
-| A55: Is a move accepted only if exact R strictly improves (monotone with rollback), or are temp | Fixed output, no search; Population or beam search; Multi-start random restarts; Support-mask constructive search; Global nonlocal perturbations ... | 95% of 189 (kappa 0.90) | 6% |
-| A2: How is the first solution built? | Constant or supplied start; Pure random noise seed; Hand-designed bump or comb; Random Gaussian packet mixture; Structured analytic seed construction ... | 78% of 189 (kappa 0.64) | 5% |
-| A1: How is a candidate solution represented? | Dense grid direct values; Parametric analytic form; Sparse low-degree basis; Spline/Fourier basis coefficients; Softmax/log parameterization ... | 99% of 189 (kappa 0.66) | - |
-| A7: Which parts, if any, are solved exactly? | exact R evaluated after each stage; exact recomputation of max(L) and the qu; maintain the argmax set explicitly and d; accept moves by the surrogate value itse; Global smoothing that implicitly control ... | 65% of 23 (kappa 0.31) | - |
-| A14: What is the macro shape (the envelope) of f across its domain | One heavy comb block holding about 30% o; A tall spike plus a comb of smaller peak; A smooth arcsine-like density, 1/sqrt(1 ; A parametric series sum_j a_j (1 - 4x^2); Regular sparse packets under a smooth ra | 47% of 110 (kappa 0.30) | - |
-| A15: What is the fine structure of f (the comb of teeth or blocks) | A fine, coherent periodic lattice of tee; Contiguous blocks with irregular spacing; A coarser parent with each cell split in; Number-theoretic support (Sidon/B2 sets,; Regular [small, big, small] triplets | 64% of 123 (kappa 0.31) | - |
-| A45: Every program so far: All use scipy.optimize.minimize with method='L-BFGS-B' as the only c | L-BFGS-B analytic gradients; Projected gradient or Adam; Constrained SLSQP or trust-constr; Derivative-free global or random; Second-order Newton or trust-region ... | 97% of 88 (kappa 0.92) | - |
-| A64: Every program so far: No symmetry reduction is imposed; the full asymmetric height vector  | Enforce even symmetry; Independent halves then couple; Symmetry-breaking penalty or mirror-aver; Fixed-support periodic profiles; Compass search on log-envelope ... | 100% of 52 (kappa 1.00) | - |
-| A72: Every program so far: All use a fixed or monotone a-priori sharpening schedule for the max | Fixed or monotone sharpening schedule; Adaptive sharpness from plateau width; Top-m or p-norm max surrogate; Implicit smooth global functional; Transition-width auxiliary term ... | 79% of 61 (kappa 0.58) | - |
-| A73: How is the transition band (phi in [0.1,0.9]) treated: ignored, soft-penalized, hard-const | Either ignore it or add a soft penalty t; Explicitly shape the transition with a h; Optimise a separate objective that direc; push toward a two-level (flat-top) f*f b; deliberately build a single sharp spike  ... | 93% of 46 (kappa 0.86) | - |
-| A76: How does the search move between candidate solutions (local coordinate/line-search moves v | Global prune-and-repolish restructuring; Subspace Powell joint moves; Golden-search window compression; Coordinate/pair line-search sweeps; Whole-tooth joint moves ... | 96% of 51 (kappa 0.90) | - |
-| A77: How is the search's time budget split between an explicit comb/periodic-lattice constructi | Allocates a dedicated comb-parameterizat; Same code but the comb stage is effectiv | 100% of 25 (kappa 1.00) | - |
-| A78: Every program so far: Every objective normalizes the height vector to unit sum (or total m | as every program so far: Every objective; optimize unnormalized heights with an L1; fix the maximum height to one; optimize logits through a softmax normal; Renormalise f to sum 1 (or unit L1) afte ... | 84% of 25 (kappa 0.72) | - |
-| A83: What is the domain and boundary condition (finite interval with zero padding vs periodic/c | A finite 1-D interval with zero padding ; Periodic (circular) convolution on a tor; A 2-D or higher-dimensional grid, where  | 100% of 16 (kappa 1.00) | - |
-| A84: How is the autoconvolution computed (FFT with zero-padding vs direct/blocked convolution v | FFT-based autoconvolution with zero-padd; Direct O(n^2) or blocked/overlap-add con; Exploit symmetry: compute only half the  | 100% of 13 (kappa 1.00) | - |
-| A85: Every program so far: Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, | as every program so far: Outer alternati; Jointly optimize h and epigraph t with h; Subgradient or bundle method on exact no; Fixed-beta penalty with no outer scalar  | 100% of 1 (kappa 1.00) | - |
-| A86: Every program so far: After the first construction, every local optimization starts from t | as every program so far: After the first; Restart each stage from an analytic arcs; Restart from random convex combinations ; Perturb the incumbent with noise before  | 100% of 1 (kappa 1.00) | - |
+| A3: What quantity does the search optimise while it runs? | Minimax dual active-set weights; Exact line search on R; Alternating projection to target; Bisection ratio feasibility; Smooth max surrogate ... | 84% of 190 (kappa 0.79) | 23% |
+| A51: Every program so far: Every program enforces non-negativity by clipping or box bounds on t | Box bounds or clipping; Smooth positive reparameterization; Interior-point barrier; General unconstrained shape; Symmetry enforced ... | 99% of 190 (kappa 0.99) | 21% |
+| A28: How is the grid resolution chosen and changed across stages (fixed single resolution vs. a | Fixed single resolution; Meshfree particle representation; Coarse-to-fine resolution ladder; Coarse basis analytic lift; Continuous adaptive mesh knots ... | 97% of 190 (kappa 0.96) | 18% |
+| A62: Is the time/budget allocation across phases fixed a priori or decided online (bandit/UCB/a | Fixed hand-tuned phase schedule; Online bandit/UCB budget allocation; Anytime priority-queue local moves; Reallocate to last-improving operator; Dinkelbach loop with time-based beta ... | 98% of 57 (kappa 0.96) | 13% |
+| A55: Is a move accepted only if exact R strictly improves (monotone with rollback), or are temp | Fixed output, no search; Population or beam search; Multi-start random restarts; Support-mask constructive search; Global nonlocal perturbations ... | 95% of 190 (kappa 0.90) | 6% |
+| A2: How is the first solution built? | Constant or supplied start; Pure random noise seed; Hand-designed bump or comb; Random Gaussian packet mixture; Structured analytic seed construction ... | 78% of 190 (kappa 0.64) | 6% |
+| A1: How is a candidate solution represented? | Dense grid direct values; Parametric analytic form; Sparse low-degree basis; Spline/Fourier basis coefficients; Softmax/log parameterization ... | 99% of 190 (kappa 0.66) | - |
+| A7: Which parts, if any, are solved exactly? | exact R evaluated after each stage; exact recomputation of max(L) and the qu; maintain the argmax set explicitly and d; accept moves by the surrogate value itse; Global smoothing that implicitly control ... | 67% of 24 (kappa 0.32) | - |
+| A14: What is the macro shape (the envelope) of f across its domain | One heavy comb block holding about 30% o; A tall spike plus a comb of smaller peak; A smooth arcsine-like density, 1/sqrt(1 ; A parametric series sum_j a_j (1 - 4x^2); Regular sparse packets under a smooth ra | 47% of 111 (kappa 0.30) | - |
+| A15: What is the fine structure of f (the comb of teeth or blocks) | A fine, coherent periodic lattice of tee; Contiguous blocks with irregular spacing; A coarser parent with each cell split in; Number-theoretic support (Sidon/B2 sets,; Regular [small, big, small] triplets | 64% of 124 (kappa 0.30) | - |
+| A45: Every program so far: All use scipy.optimize.minimize with method='L-BFGS-B' as the only c | L-BFGS-B analytic gradients; Projected gradient or Adam; Constrained SLSQP or trust-constr; Derivative-free global or random; Second-order Newton or trust-region ... | 97% of 89 (kappa 0.92) | - |
+| A64: Every program so far: No symmetry reduction is imposed; the full asymmetric height vector  | Enforce even symmetry; Independent halves then couple; Symmetry-breaking penalty or mirror-aver; Fixed-support periodic profiles; Compass search on log-envelope ... | 100% of 53 (kappa 1.00) | - |
+| A72: Every program so far: All use a fixed or monotone a-priori sharpening schedule for the max | Fixed or monotone sharpening schedule; Adaptive sharpness from plateau width; Top-m or p-norm max surrogate; Implicit smooth global functional; Transition-width auxiliary term ... | 79% of 62 (kappa 0.60) | - |
+| A73: How is the transition band (phi in [0.1,0.9]) treated: ignored, soft-penalized, hard-const | Either ignore it or add a soft penalty t; Explicitly shape the transition with a h; Optimise a separate objective that direc; push toward a two-level (flat-top) f*f b; deliberately build a single sharp spike  ... | 94% of 47 (kappa 0.86) | - |
+| A76: How does the search move between candidate solutions (local coordinate/line-search moves v | Global prune-and-repolish restructuring; Subspace Powell joint moves; Golden-search window compression; Coordinate/pair line-search sweeps; Whole-tooth joint moves ... | 94% of 52 (kappa 0.86) | - |
+| A77: How is the search's time budget split between an explicit comb/periodic-lattice constructi | Allocates a dedicated comb-parameterizat; Same code but the comb stage is effectiv | 100% of 26 (kappa 1.00) | - |
+| A78: Every program so far: Every objective normalizes the height vector to unit sum (or total m | as every program so far: Every objective; optimize unnormalized heights with an L1; fix the maximum height to one; optimize logits through a softmax normal; Renormalise f to sum 1 (or unit L1) afte ... | 85% of 26 (kappa 0.72) | - |
+| A83: What is the domain and boundary condition (finite interval with zero padding vs periodic/c | A finite 1-D interval with zero padding ; Periodic (circular) convolution on a tor; A 2-D or higher-dimensional grid, where  | 100% of 17 (kappa 1.00) | - |
+| A84: How is the autoconvolution computed (FFT with zero-padding vs direct/blocked convolution v | FFT-based autoconvolution with zero-padd; Direct O(n^2) or blocked/overlap-add con; Exploit symmetry: compute only half the  | 100% of 14 (kappa 1.00) | - |
+| A85: Every program so far: Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, | as every program so far: Outer alternati; Jointly optimize h and epigraph t with h; Subgradient or bundle method on exact no; Fixed-beta penalty with no outer scalar  | 100% of 2 (kappa 1.00) | - |
+| A86: Every program so far: After the first construction, every local optimization starts from t | as every program so far: After the first; Restart each stage from an analytic arcs; Restart from random convex combinations ; Perturb the incumbent with noise before  | 100% of 2 (kappa 1.00) | - |
+| A87: Every program so far: The final answer is the best exact-R iterate seen; no post-hoc smoot | as every program so far: The final answe; Average top iterates then polish; Threshold small heights and renormalize; Return the last iterate instead of the b | 100% of 1 (kappa 1.00) | - |
 
 ### Explorations chosen from the map (25: 24 builds, 1 flips)
 
 | Track | Kind | Opened | Target | Built (read back) | Experiments | Best | Race | Hill |
 |---|---|---|---|---|---|---|---|---|
-| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 343 | 0.948582 | running | founder H2 |
+| T2 | build | 1 | A13 -> Coarse to fine, upsampling by  | 1/1 | 345 | 0.948584 | running | founder H2 |
 | T3 | flip | 1 | A18 -> a new option, unlike the liste | 1/1 | 6 | 0.804847 | paused at 6 | founder H3 |
 | T4 | build | 2 | A9 -> Exact line search on R per blo | 1/1 | 6 | 0.803713 | paused at 6 | founder H4 |
 | T5 | build | 3 | A10 -> A softmax- or p-norm-weighted  | 1/1 | 6 | 0.801808 | paused at 6 | founder H5 |
@@ -548,10 +552,10 @@ Decisions every hill shared (mapped at generation 344):
 | T20 | build | 205 | A4 -> Random restarts or basin-hoppi | 1/1 | 48 | 0.854909 | finished at 48 | founder H16 |
 | T21 | build | 223 | A28 -> alternate envelope and fine-co | 0/1 | 49 | 0.817116 | finished at 48 | founder H17 |
 | T22 | build | 250 | A50 -> Bilevel inner max-location upd | - | 3 | - | paused at 3 | -  |
-| T23 | build | 255 | A45 -> Derivative-free local search | 1/1 | 43 | 0.823907 | running at 24 | founder H18 |
-| T24 | build | 304 | A64 -> Continuous sub-cell shift opti | - | 23 | 0.908474 | running at 12 | founder H19 |
-| T25 | build | 308 | A72 -> Penalty or barrier on max | - | 19 | 0.807578 | running at 12 | founder H20 |
-| T26 | build | 321 | A45 -> Finite differences on heights | 1/1 | 13 | 0.849585 | running at 12 | founder H21 |
+| T23 | build | 255 | A45 -> Derivative-free local search | 1/1 | 44 | 0.828123 | running at 24 | on H12 |
+| T24 | build | 304 | A64 -> Continuous sub-cell shift opti | - | 24 | 0.908475 | running at 24 | founder H19 |
+| T25 | build | 308 | A72 -> Penalty or barrier on max | - | 20 | 0.807578 | running at 12 | founder H20 |
+| T26 | build | 321 | A45 -> Finite differences on heights | 1/1 | 14 | 0.851234 | running at 12 | on H14 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
@@ -579,11 +583,11 @@ Decisions every hill shared (mapped at generation 344):
 
 ## v102-helix-s2
 
-- Generations 1-347: best 0.666666667 -> 0.941242888 (p2186, track T9); the main track now: T9.
-- Exploration levels: level 0: 137 generations, level 1: 36 generations, level 2: 174 generations.
-- Planned experiments by slot: track 672, main 347, build 21, flip 1.
+- Generations 1-350: best 0.666666667 -> 0.941244000 (p2250, track T9); the main track now: T9.
+- Exploration levels: level 0: 139 generations, level 1: 36 generations, level 2: 175 generations.
+- Planned experiments by slot: track 678, main 350, build 21, flip 1.
 
-### Records (103)
+### Records (104)
 
 | Gen | Best | Program | Its role | Its slot | Track |
 |---|---|---|---|---|---|
@@ -690,6 +694,7 @@ Decisions every hill shared (mapped at generation 344):
 | 328 | 0.941237874 | p2099 | wide | mutation | T9 |
 | 329 | 0.941239538 | p2110 | deep | main | T9 |
 | 330 | 0.941242506 | p2115 | deep | main | T9 |
+| 348 | 0.941243714 | p2237 | deep | main | T9 |
 
 ### Side tracks opened (0)
 
@@ -1045,23 +1050,26 @@ Decisions every hill shared (mapped at generation 344):
 | 345 | 0.941242888 |  | 14 / 1 | 2 | main, track:T19, track:T22 | 0.872462 | T19 gained (0.845158 -> 0.848479); T22 gained (0.871453 -> 0.872462); T23 gained (0.867086 -> 0.867119); T22 goes on to the next rung (24 experiments): still rising (best 0.872462 at 12 experiments); new hill H24, found by T22 (build): 0.872462, distance 0.770 from the nearest known hill (H13) |
 | 346 | 0.941242888 |  | 15 / 1 | 2 | main, track:T23, track:T20 | 0.916665 | T23 gained (0.867119 -> 0.867147); T23 goes on to the next rung (24 experiments): still rising (best 0.867147 at 12 experiments) |
 | 347 | 0.941242888 |  | 16 / 1 | 2 | main, track:T19, track:T22 | 0.875033 | T19 gained (0.848479 -> 0.849793); T22 gained (0.872462 -> 0.875033); T23 gained (0.867147 -> 0.867154) |
+| 348 | 0.941243714 |  | 17 / 1 | 2 | main, track:T23, track:T20 | 0.916665 | T20 gained (0.916665 -> 0.916686); T22 gained (0.875033 -> 0.880739); T23 gained (0.867154 -> 0.867155) |
+| 349 | 0.941243714 |  | 0 / 1 | 0 | main, track:T19, track:T22 | 0.881968 | T19 gained (0.849793 -> 0.852877); T22 gained (0.880739 -> 0.881968) |
+| 350 | 0.941244000 |  | 1 / 1 | 0 | main, track:T20, track:T23 | 0.916686 | T22 gained (0.881968 -> 0.881990) |
 
 ### Hills (24: 2 on the map after its first generation, 22 found since)
 
 | Hill | Top | Found | By | Other tracks landed on it | Description |
 |---|---|---|---|---|---|
-| H2 | 0.941243 (p2115) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
+| H2 | 0.941244 (p2237) | 1 | T1 (seed) | 6 | The new program uses a multi-resolution approach: it starts from a resampled grid and applies block-multiplicative perturbations, edge-preserving smoothing, and global noise, rather than the record's single-resolution co |
 | H15 | 0.918145 (p1253) | 107 | T13 (build) | 0 | This program keeps the grid fixed at N=8000 (or 16000) and optimises the full vector with L-BFGS-B on a squared-parameterisation, whereas the record refines only a compact nonzero support and grows resolution via exact R |
-| H21 | 0.916665 (p2180) | 305 | T20 (build) | 0 | This program abandons the record's vertex-polishing approach (exact coordinate ascent, pairwise/joint cell moves, Dinkelbach ladders on the argmax band) and instead parametrizes the height profile as a softplus of a low- |
+| H21 | 0.916686 (p2232) | 305 | T20 (build) | 0 | This program abandons the record's vertex-polishing approach (exact coordinate ascent, pairwise/joint cell moves, Dinkelbach ladders on the argmax band) and instead parametrizes the height profile as a softplus of a low- |
 | H9 | 0.909231 (p2160) | 52 | T6 (build) | 1 | This program abandons the spike/comb atom-position search entirely and instead seeds from a dense clipped-arcsine profile, then climbs it with Adam on a coarse (500→1000→2000→4000) multiresolution ladder with multiplicat |
 | H19 | 0.896754 (p1505) | 220 | T18 (build) | 0 | This program abandons the record's exact coordinate-ascent and stochastic velocity-escape machinery entirely, instead using a single L-BFGS-B optimizer on a squared-height parametrization with a log-sum-exp smoothed //f* |
+| H24 | 0.881990 (p2247) | 345 | T22 (build) | 0 | This program abandons the record's exact-Linf beta ladder and LSE/top-k surrogate annealing in favour of a single Dinkelbach-style ladder over a hard top-k mean of the autocorrelation, with k annealed geometrically down  |
 | H6 | 0.879823 (p0642) | 9 | T7 (build) | 5 | This program optimises a smooth soft-max surrogate of the sup-norm (exponential penalty with β annealed 500→2000→8000) via Dinkelbach iterations on a squared-weight parametrisation, rather than perturbing along a transit |
 | H18 | 0.879371 (p1934) | 213 | T16 (build) | 1 | This program abandons the record's exact single-coordinate ascent and kink-escaping stochastic/Dinkelbach machinery entirely, instead running plain L-BFGS-B on w=sqrt(h) with an analytic gradient of R (including a fixed- |
-| H24 | 0.875033 (p2229) | 345 | T22 (build) | 0 | This program abandons the record's exact-Linf beta ladder and LSE/top-k surrogate annealing in favour of a single Dinkelbach-style ladder over a hard top-k mean of the autocorrelation, with k annealed geometrically down  |
 | H10 | 0.873788 (p0391) | 60 | T2 (build) | 0 | This program runs a fixed, time-boxed pipeline (two L-BFGS passes, three Fourier-perturbation rounds, a fixed 4000-step Adam phase, then a final L-BFGS polish) rather than the record's adaptive multi-resolution surgery w |
 | H12 | 0.869836 (p0644) | 100 | T10 (build) | 0 | This program abandons the record's smooth log-sum-exp surrogate and flat-top plateau objective, instead optimizing the exact inf-norm via an analytic FFT gradient with a single argmax lag. It searches by a multi-resoluti |
 | H7 | 0.867731 (p0290) | 30 | T6 (build) | 0 | This program runs its structural surgery at multiple low resolutions (1500 and 3000) rather than a single n_low=2500 round, and it polishes the surgery result with L-BFGS-B every 4 accepts instead of validating only at l |
-| H23 | 0.867154 (p2225) | 319 | T23 (build) | 0 | This program optimises a smoothed surrogate (p-norm approximation of //f*f//_inf) via numerical gradient ascent at coarse N, then runs a multi-resolution annealing ladder (400→2000→8000→20000→50000) with geometric temper |
+| H23 | 0.867155 (p2238) | 319 | T23 (build) | 0 | This program optimises a smoothed surrogate (p-norm approximation of //f*f//_inf) via numerical gradient ascent at coarse N, then runs a multi-resolution annealing ladder (400→2000→8000→20000→50000) with geometric temper |
 | H4 | 0.864890 (p0221) | 6 | T5 (build) | 0 | This program optimises the full autocorrelation ratio directly via Dinkelbach iterations on a square-root variable with a soft-max surrogate for the infinity norm, rather than isolating the level-transition loss and pert |
 | H14 | 0.862512 (p1221) | 105 | T12 (build) | 0 | This program optimises a fixed-length N=4000 vector directly with L-BFGS on an exact analytic gradient of R, whereas the record's line builds up through multi-scale upsampling (N=8000→16000→50000) and long Adam runs. It  |
 | H3 | 0.860616 (p0331) | 2 | T2 (build) | 3 | This program optimises a smooth soft-max surrogate of the sup-norm (log-sum-exp with increasing sharpness β) via L-BFGS on a squared-parameterisation w↦w², rather than hill-climbing heights directly. It adds Anderson ext |
@@ -1086,29 +1094,30 @@ Decisions every hill shared (mapped at generation 346):
 - D7: How exploration noise is injected (all: Multiplicative perturbations (block scaling, Fourier-mode multiplicative noise, or random multiplicative kicks) applied to the height vector, then re-polished)
 - D8: Time budgeting (all: A fixed CPU-time deadline (roughly 90-97% of budget) with phase time-slices and early exit when a phase completes, using process_time as the clock)
 
-### The design map (19 decisions, 1993 programs placed)
+### The design map (20 decisions, 2013 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
-| A37: Every program so far: The gradient of the exact ratio is derived analytically and passed t | Analytic gradient via convolution; Finite-difference gradients; Automatic differentiation; Derivative-free local search; Incremental autocorrelation update ... | 98% of 200 (kappa 0.88) | 6% |
-| A61: Which functional is optimised: the exact ratio R, a smoothed/regularised surrogate of R, o | Penalised related functional; Monotone transform of R; Exact ratio R; Smoothed surrogate of R; Dinkelbach fractional programming ... | 86% of 200 (kappa 0.80) | 5% |
-| A42: Is the support (set of nonzero cells/intervals) treated as fixed/dense or explicitly optim | Free binary/sign mask; Multiple disjoint support blocks; Continuous translation of support; Symmetry constraints on support; Parametric/moment representation ... | 98% of 200 (kappa 0.98) | 3% |
-| A67: Does the program actually run an iterative search/optimisation loop, or does it just retur | Multi-phase L-BFGS-B with kicks; No search, initial guess only; Coordinate ascent sweeps; Single L-BFGS-B run; Anytime/portfolio/multiscale budgeted se ... | 90% of 200 (kappa 0.85) | 3% |
-| A2: How is the first solution built? | Return start or constant; Perturb or optimize start; Construct from scratch; Smooth analytic bump seed; Random multi-start vectors ... | 78% of 200 (kappa 0.68) | 2% |
-| A4: Which moves or update steps change a solution? | Structural run edits; Scattered single-cell mutations; Global parametric transforms; Smooth surrogate gradient descent; Random search / simulated annealing ... | 78% of 200 (kappa 0.58) | - |
+| A37: Every program so far: The gradient of the exact ratio is derived analytically and passed t | Analytic gradient via convolution; Finite-difference gradients; Automatic differentiation; Derivative-free local search; Incremental autocorrelation update ... | 98% of 200 (kappa 0.88) | 7% |
+| A61: Which functional is optimised: the exact ratio R, a smoothed/regularised surrogate of R, o | Penalised related functional; Monotone transform of R; Exact ratio R; Smoothed surrogate of R; Dinkelbach fractional programming ... | 86% of 200 (kappa 0.80) | 6% |
+| A42: Is the support (set of nonzero cells/intervals) treated as fixed/dense or explicitly optim | Free binary/sign mask; Multiple disjoint support blocks; Continuous translation of support; Symmetry constraints on support; Parametric/moment representation ... | 100% of 200 (kappa 0.99) | 3% |
+| A2: How is the first solution built? | Return start or constant; Perturb or optimize start; Construct from scratch; Smooth analytic bump seed; Random multi-start vectors ... | 78% of 200 (kappa 0.68) | 3% |
+| A67: Does the program actually run an iterative search/optimisation loop, or does it just retur | Multi-phase L-BFGS-B with kicks; No search, initial guess only; Coordinate ascent sweeps; Single L-BFGS-B run; Anytime/portfolio/multiscale budgeted se ... | 90% of 200 (kappa 0.84) | 3% |
+| A4: Which moves or update steps change a solution? | Structural run edits; Scattered single-cell mutations; Global parametric transforms; Smooth surrogate gradient descent; Random search / simulated annealing ... | 78% of 200 (kappa 0.59) | - |
 | A59: Every program so far: All programs optimize continuous real-valued heights; no quantizatio | Continuous real-valued heights; Binary 0/1 support; Quantized few-level heights; Integer heights fixed scale; Signed real heights ... | 99% of 200 (kappa 0.98) | - |
-| A62: What is the representation of the search variable: dense height vector, parametric/analyti | Signed or complex heights; Even symmetry enforced; Parametric analytic family; Multi-modal with explicit gap; Continuous-support quadrature density ... | 94% of 102 (kappa 0.84) | - |
-| A66: Every program so far: At any moment the shape lives on one uniform grid of N equal-width c | Coarse-to-fine multigrid ladder; Adaptive nonuniform mesh refinement; Multiple resolutions as candidates; Single uniform grid resampled; Continuous support / off-grid atoms ... | 96% of 200 (kappa 0.94) | - |
-| A68: How does the search escape local optima (perturbation kicks vs. basin hopping vs. structur | Structurally different restarts; Perturb-repolish local ascent; Homotopy continuation on shape; Population evolutionary with crossover; Basin hopping / simulated annealing ... | 90% of 86 (kappa 0.82) | - |
-| A72: How is the max in the denominator (L-infinity of the autocorrelation) handled during optim | Exact max subgradient; Plateau width via mass shifting; Two-level top-knot gap penalty; Minimax LP/SOCP exact solve; p-norm surrogate annealed p ... | 89% of 65 (kappa 0.85) | - |
-| A78: Is the translation/centroid degree of freedom fixed or exploited, and is the symmetry of f | The autoconvolution is computed as a ful; Fix the centroid of f (or of f*f) to rem; Exploit the symmetry of f*f explicitly b; Treat all lags of f*f symmetrically and ; Explicitly target the near-max lag band  ... | 84% of 62 (kappa 0.74) | - |
-| A87: How is the initial solution constructed before local optimisation (which seed family / mul | Island/comb multi-start seeds; Other seed/restart schedule; Dinkelbach dense vector refine; Coarse parametric triplet-comb lift; Provided start plus perturb ... | 88% of 42 (kappa 0.85) | - |
-| A97: Every program so far: All evaluate the objective on the full autocorrelation vector every  | as every program so far: All evaluate th; Subsample lags for stochastic gradients; Use a coarse lag grid then refine; Use incremental convolution updates betw | 97% of 31 (kappa 0.78) | - |
-| A98: How is the time/effort budget allocated across optimisation phases (fixed hand-tuned sched | A fixed hand-tuned schedule of phase fra; Adaptive budget allocation driven by mea; Population-based training that reallocat; A fixed fraction-of-budget schedule (e.g; Adaptive budget allocation: measure marg ... | 74% of 31 (kappa 0.58) | - |
-| A102: Every program so far: The search keeps a single incumbent shape and is elitist: only a str | as every program so far: The search keep; Simulated annealing accepts worse shapes; Population/archive keeps many shapes; Return last iterate rather than best; single incumbent trajectory: one best it ... | 100% of 9 (kappa 1.00) | - |
-| A103: How is the nonsmooth max in the ratio handled during optimization? | Smooth softmax/convolution surrogate for; Exact max with subgradient (argmax indic; smooth max surrogate (log-sum-exp or top; direct exact-argmax subgradient ascent o; min-max / epigraph reformulation with an ... | 88% of 8 (kappa 0.75) | - |
-| A104: What seed family and restart/time-allocation schedule does construct() use in its (truncat | one seed/restart schedule (tail not show | 100% of 6 (kappa 1.00) | - |
-| A105: Every program so far: All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2 | as every program so far: All enforce h >; signed heights, clip/project after each ; quadratic penalty on negative heights; mirror/projected gradient descent; positive reparametrisation of heights (w ... | 100% of 4 (kappa 1.00) | - |
+| A62: What is the representation of the search variable: dense height vector, parametric/analyti | Signed or complex heights; Even symmetry enforced; Parametric analytic family; Multi-modal with explicit gap; Continuous-support quadrature density ... | 94% of 104 (kappa 0.86) | - |
+| A66: Every program so far: At any moment the shape lives on one uniform grid of N equal-width c | Coarse-to-fine multigrid ladder; Adaptive nonuniform mesh refinement; Multiple resolutions as candidates; Single uniform grid resampled; Continuous support / off-grid atoms ... | 96% of 200 (kappa 0.93) | - |
+| A68: How does the search escape local optima (perturbation kicks vs. basin hopping vs. structur | Structurally different restarts; Perturb-repolish local ascent; Homotopy continuation on shape; Population evolutionary with crossover; Basin hopping / simulated annealing ... | 89% of 88 (kappa 0.81) | - |
+| A72: How is the max in the denominator (L-infinity of the autocorrelation) handled during optim | Exact max subgradient; Plateau width via mass shifting; Two-level top-knot gap penalty; Minimax LP/SOCP exact solve; p-norm surrogate annealed p ... | 90% of 67 (kappa 0.85) | - |
+| A78: Is the translation/centroid degree of freedom fixed or exploited, and is the symmetry of f | The autoconvolution is computed as a ful; Fix the centroid of f (or of f*f) to rem; Exploit the symmetry of f*f explicitly b; Treat all lags of f*f symmetrically and ; Explicitly target the near-max lag band  ... | 84% of 64 (kappa 0.75) | - |
+| A87: How is the initial solution constructed before local optimisation (which seed family / mul | Island/comb multi-start seeds; Other seed/restart schedule; Dinkelbach dense vector refine; Coarse parametric triplet-comb lift; Provided start plus perturb ... | 89% of 44 (kappa 0.85) | - |
+| A97: Every program so far: All evaluate the objective on the full autocorrelation vector every  | as every program so far: All evaluate th; Subsample lags for stochastic gradients; Use a coarse lag grid then refine; Use incremental convolution updates betw | 97% of 33 (kappa 0.78) | - |
+| A98: How is the time/effort budget allocated across optimisation phases (fixed hand-tuned sched | Adaptive gain-driven budget reallocation; Population-based training time reallocat; Fixed hand-tuned phase-fraction schedule; Anytime restart from diverse seeds; Restart until convergence of best ... | 100% of 33 (kappa 1.00) | - |
+| A102: Every program so far: The search keeps a single incumbent shape and is elitist: only a str | as every program so far: The search keep; Simulated annealing accepts worse shapes; Population/archive keeps many shapes; Return last iterate rather than best; single incumbent trajectory: one best it ... | 100% of 11 (kappa 1.00) | - |
+| A103: How is the nonsmooth max in the ratio handled during optimization? | Smooth softmax/convolution surrogate for; Exact max with subgradient (argmax indic; smooth max surrogate (log-sum-exp or top; direct exact-argmax subgradient ascent o; min-max / epigraph reformulation with an ... | 90% of 10 (kappa 0.76) | - |
+| A104: What seed family and restart/time-allocation schedule does construct() use in its (truncat | one seed/restart schedule (tail not show | 100% of 8 (kappa 1.00) | - |
+| A105: Every program so far: All enforce h >= 0 by a monotone pointwise reparameterization (h=w^2 | as every program so far: All enforce h >; signed heights, clip/project after each ; quadratic penalty on negative heights; mirror/projected gradient descent; positive reparametrisation of heights (w ... | 100% of 6 (kappa 1.00) | - |
+| A106: How is the total time budget split between the soft/surrogate annealing ladder and the exa | spends most budget on exact-R polish wit; spends most budget on the soft/Dinkelbac | 100% of 2 (kappa 1.00) | - |
 
 Interacting decisions in the last fit: ('A61', 'A104')
 
@@ -1123,7 +1132,7 @@ Interacting decisions in the last fit: ('A61', 'A104')
 | T6 | build | 4 | A14 -> Spike plus smaller comb peaks | 1/1 | 77 | 0.904629 | paused at 48 | founder H9 |
 | T7 | build | 7 | A10 -> Fixed mild smooth max | 1/1 | 51 | 0.879823 | finished at 48 | founder H6 |
 | T8 | build | 39 | A19 -> Force even symmetry of h | 1/1 | 6 | 0.723887 | paused at 6 | founder H8 |
-| T9 | build | 53 | A20 -> Use no regularization | - | 268 | 0.941243 | running at 12 | top H2 |
+| T9 | build | 53 | A20 -> Use no regularization | - | 271 | 0.941244 | running at 12 | top H2 |
 | T10 | build | 90 | A10 -> Optimise plateau width | 1/1 | 48 | 0.872670 | paused at 48 | on H6 |
 | T11 | build | 101 | A33 -> Min-max plateau-gap surrogate | 1/1 | 58 | 0.865499 | finished at 48 | on H6 |
 | T12 | build | 102 | A14 -> Regular small-big-small triple | 0/1 | 48 | 0.862512 | finished at 48 | founder H14 |
@@ -1133,11 +1142,11 @@ Interacting decisions in the last fit: ('A61', 'A104')
 | T16 | build | 210 | A62 -> Search only centered supports  | 1/1 | 50 | 0.879371 | finished at 48 | founder H18 |
 | T17 | build | 212 | A61 -> Minimize -log R | - | 3 | - | paused at 3 | -  |
 | T18 | build | 218 | A57 -> Half-cell shift of h | 1/1 | 61 | 0.909231 | finished at 48 | top H9 |
-| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 32 | 0.849793 | running at 24 | on H6 |
-| T20 | build | 300 | A67 -> Second-order Newton/trust-regi | - | 19 | 0.916665 | running at 12 | founder H21 |
+| T19 | build | 280 | A68 -> Many independent random restar | 1/1 | 33 | 0.852877 | running at 24 | on H6 |
+| T20 | build | 300 | A67 -> Second-order Newton/trust-regi | - | 21 | 0.916686 | running at 12 | founder H21 |
 | T21 | build | 303 | A68 -> Simulated annealing schedule | 0/1 | 6 | 0.650786 | paused at 6 | founder H22 |
-| T22 | build | 315 | A36 -> L1 mass / scale / L-infinity v | 0/1 | 13 | 0.875033 | running at 12 | founder H24 |
-| T23 | build | 316 | A4 -> Random search / simulated anne | 1/1 | 12 | 0.867154 | running at 12 | founder H23 |
+| T22 | build | 315 | A36 -> L1 mass / scale / L-infinity v | 0/1 | 14 | 0.881990 | running at 12 | founder H24 |
+| T23 | build | 316 | A4 -> Random search / simulated anne | 1/1 | 14 | 0.867155 | running at 12 | founder H23 |
 
 ### Discoveries (programs at the same design that scored too differently: what differs?)
 
@@ -1172,3 +1181,4 @@ Interacting decisions in the last fit: ('A61', 'A104')
 - generation 308, p1000 vs p0781: How is the search initialized / what structural prior or seed family is used to start the optimisation? (A100, new)
 - generation 332, p1445 vs p1401: How is the nonsmooth max in the ratio handled during optimization? (A103, new)
 - generation 336, p1860 vs p1859: What seed family and restart/time-allocation schedule does construct() use in its (truncated) tail? (A104, new)
+- generation 348, p2236 vs p2235: How is the total time budget split between the soft/surrogate annealing ladder and the exact-R polish phase? (A106, new)
