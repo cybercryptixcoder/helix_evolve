@@ -289,6 +289,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 311
+  },
+  "A102": {
+   "key": "audit",
+   "question": "Every program so far: The search keeps a single incumbent shape and is elitist: only a strictly better exact R replaces the best.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 331
   }
  },
  "values": {
@@ -1111,6 +1118,24 @@
    "origin": "audit",
    "gen": 311,
    "note": "an alternative to what every program so far does (All programs optimize a single scalar ratio/surrogate and never introduce an explicit auxiliary variable for the L-infinity denominator (t with L_j <=): the invariant audit, generation 311; An explicit t changes the landscape and can avoid max-induced nonsmoothness."
+  },
+  "A102.v2": {
+   "name": "Simulated annealing accepts worse shapes",
+   "origin": "audit",
+   "gen": 331,
+   "note": "an alternative to what every program so far does (The search keeps a single incumbent shape and is elitist: only a strictly better exact R replaces the best.): the invariant audit, generation 331; Acceptance rule controls escape from local maxima and final selection."
+  },
+  "A102.v3": {
+   "name": "Population/archive keeps many shapes",
+   "origin": "audit",
+   "gen": 331,
+   "note": "an alternative to what every program so far does (The search keeps a single incumbent shape and is elitist: only a strictly better exact R replaces the best.): the invariant audit, generation 331; Acceptance rule controls escape from local maxima and final selection."
+  },
+  "A102.v4": {
+   "name": "Return last iterate rather than best",
+   "origin": "audit",
+   "gen": 331,
+   "note": "an alternative to what every program so far does (The search keeps a single incumbent shape and is elitist: only a strictly better exact R replaces the best.): the invariant audit, generation 331; Acceptance rule controls escape from local maxima and final selection."
   }
  },
  "matched": {}
