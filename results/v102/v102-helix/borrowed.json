@@ -163,6 +163,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 307
+  },
+  "A85": {
+   "key": "audit",
+   "question": "Every program so far: Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, top-k) from current L, then run an inner L-BFGS-B on h.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 337
+  },
+  "A86": {
+   "key": "audit",
+   "question": "Every program so far: After the first construction, every local optimization starts from the current incumbent, resampled/normalized, rather than from a fresh analytic or r. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 337
   }
  },
  "values": {
@@ -661,6 +675,42 @@
    "origin": "audit",
    "gen": 307,
    "note": "an alternative to what every program so far does (Every objective normalizes the height vector to unit sum (or total mass) inside the function, so absolute height scale is a gauge and never a search v): the invariant audit, generation 307; Normalization choice changes conditioning, zero patterns, and gradient scale."
+  },
+  "A85.v2": {
+   "name": "Jointly optimize h and epigraph t with hinge constraints",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, top-k) from current L, then run an inner L-BFGS-B on h.): the invariant audit, generation 337; The outer update schedule controls which near-max knots are emphasized and the final R."
+  },
+  "A85.v3": {
+   "name": "Subgradient or bundle method on exact nonsmooth R",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, top-k) from current L, then run an inner L-BFGS-B on h.): the invariant audit, generation 337; The outer update schedule controls which near-max knots are emphasized and the final R."
+  },
+  "A85.v4": {
+   "name": "Fixed-beta penalty with no outer scalar update",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (Outer alternation: recompute auxiliary scalar/mask (lambda, beta, t, top-k) from current L, then run an inner L-BFGS-B on h.): the invariant audit, generation 337; The outer update schedule controls which near-max knots are emphasized and the final R."
+  },
+  "A86.v2": {
+   "name": "Restart each stage from an analytic arcsine shape",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (After the first construction, every local optimization starts from the current incumbent, resampled/normalized, rather than from a fresh analytic or r): the invariant audit, generation 337; Continuation from the incumbent biases the search toward its current basin and shape."
+  },
+  "A86.v3": {
+   "name": "Restart from random convex combinations of incumbents",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (After the first construction, every local optimization starts from the current incumbent, resampled/normalized, rather than from a fresh analytic or r): the invariant audit, generation 337; Continuation from the incumbent biases the search toward its current basin and shape."
+  },
+  "A86.v4": {
+   "name": "Perturb the incumbent with noise before polishing",
+   "origin": "audit",
+   "gen": 337,
+   "note": "an alternative to what every program so far does (After the first construction, every local optimization starts from the current incumbent, resampled/normalized, rather than from a fresh analytic or r): the invariant audit, generation 337; Continuation from the incumbent biases the search toward its current basin and shape."
   }
  },
  "matched": {}
