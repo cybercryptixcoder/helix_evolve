@@ -331,6 +331,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 361
+  },
+  "A121": {
+   "key": "audit",
+   "question": "Every program so far: All leave the height profile h free of any imposed mirror symmetry; no program optimizes only half the profile or symmetrizes h before scoring.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 381
+  },
+  "A122": {
+   "key": "audit",
+   "question": "Every program so far: All treat h as a free-form nonparametric vector; no program imposes monotonicity, unimodality, or a small fixed number of breakpoints.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 381
   }
  },
  "values": {
@@ -1261,6 +1275,42 @@
    "origin": "audit",
    "gen": 361,
    "note": "an alternative to what every program so far does (All return the best exact-R iterate encountered, not the last iterate or an average of iterates.): the invariant audit, generation 361; The exact-R best can differ from the surrogate best or last iterate."
+  },
+  "A121.v2": {
+   "name": "Enforce h[i]=h[N-1-i] and optimize half the profile",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All leave the height profile h free of any imposed mirror symmetry; no program optimizes only half the profile or symmetrizes h before scoring.): the invariant audit, generation 381; Symmetry halves variables and may improve conditioning, but it restricts the attainable shapes and could miss better asymmetric profiles."
+  },
+  "A121.v3": {
+   "name": "Optimize full h then symmetrize before exact-R scoring",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All leave the height profile h free of any imposed mirror symmetry; no program optimizes only half the profile or symmetrizes h before scoring.): the invariant audit, generation 381; Symmetry halves variables and may improve conditioning, but it restricts the attainable shapes and could miss better asymmetric profiles."
+  },
+  "A121.v4": {
+   "name": "Constrain centroid to center and mirror the profile",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All leave the height profile h free of any imposed mirror symmetry; no program optimizes only half the profile or symmetrizes h before scoring.): the invariant audit, generation 381; Symmetry halves variables and may improve conditioning, but it restricts the attainable shapes and could miss better asymmetric profiles."
+  },
+  "A122.v2": {
+   "name": "Enforce a unimodal profile with one peak",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All treat h as a free-form nonparametric vector; no program imposes monotonicity, unimodality, or a small fixed number of breakpoints.): the invariant audit, generation 381; Shape constraints reduce the search space and may stabilize optimization, but can exclude the true optimum."
+  },
+  "A122.v3": {
+   "name": "Use a spline or few-breakpoint piecewise-constant basis",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All treat h as a free-form nonparametric vector; no program imposes monotonicity, unimodality, or a small fixed number of breakpoints.): the invariant audit, generation 381; Shape constraints reduce the search space and may stabilize optimization, but can exclude the true optimum."
+  },
+  "A122.v4": {
+   "name": "Impose monotone decay away from the centroid",
+   "origin": "audit",
+   "gen": 381,
+   "note": "an alternative to what every program so far does (All treat h as a free-form nonparametric vector; no program imposes monotonicity, unimodality, or a small fixed number of breakpoints.): the invariant audit, generation 381; Shape constraints reduce the search space and may stabilize optimization, but can exclude the true optimum."
   }
  },
  "matched": {}
