@@ -5,4 +5,5 @@ Every best construction re-scored independently (`tools/verify_ac2.py`): Helix's
 | Construction | Steps | Helix | DeepMind's code | Arena's code | Exact | All agree | Against AlphaEvolve V2 |
 |---|---|---|---|---|---|---|---|
 | AlphaEvolve, May 2025 (DeepMind's published 50-step construction) | 50 | 0.896279944155 | 0.896279944155 | 0.896279944155 | 0.896279944155 | True | -6.474e-02 |
+| v102-helix | 50000 | 0.948610408760 | 0.948610408760 | 0.948610408760 | 0.948610407407 | True | -1.241e-02 |
 | v102-helix-s2 | 49998 | 0.941244146241 | 0.941244146241 | 0.941244146241 | 0.941244144332 | True | -1.978e-02 |
