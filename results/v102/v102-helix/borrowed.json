@@ -212,6 +212,20 @@
    "attached": false,
    "origin": "audit",
    "gen": 367
+  },
+  "A100": {
+   "key": "audit",
+   "question": "Every program so far: Every L-BFGS-B call is capped at a fixed maxiter (roughly 40-400) and outer loops provide more iterations; no convergence-based inner stopping.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 377
+  },
+  "A101": {
+   "key": "audit",
+   "question": "Every program so far: The max is never an explicit variable t optimized jointly with h; it is recomputed from L or fixed from current L inside the objective.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 377
   }
  },
  "values": {
@@ -836,6 +850,42 @@
    "origin": "audit",
    "gen": 367,
    "note": "an alternative to what every program so far does (Every program treats all N heights as simultaneously free continuous variables in one quasi-Newton stage; no block/coordinate or hierarchical variable): the invariant audit, generation 367; Variable coupling and local minima depend on the decomposition."
+  },
+  "A100.v2": {
+   "name": "run each L-BFGS-B call to convergence",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (Every L-BFGS-B call is capped at a fixed maxiter (roughly 40-400) and outer loops provide more iterations; no convergence-based inner stopping.): the invariant audit, generation 377; Polish depth per stage changes how far each local basin is explored."
+  },
+  "A100.v3": {
+   "name": "adaptive maxiter from remaining time",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (Every L-BFGS-B call is capped at a fixed maxiter (roughly 40-400) and outer loops provide more iterations; no convergence-based inner stopping.): the invariant audit, generation 377; Polish depth per stage changes how far each local basin is explored."
+  },
+  "A100.v4": {
+   "name": "early stop on exact-R plateau",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (Every L-BFGS-B call is capped at a fixed maxiter (roughly 40-400) and outer loops provide more iterations; no convergence-based inner stopping.): the invariant audit, generation 377; Polish depth per stage changes how far each local basin is explored."
+  },
+  "A101.v2": {
+   "name": "jointly optimize (h,t) with L<=t",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (The max is never an explicit variable t optimized jointly with h; it is recomputed from L or fixed from current L inside the objective.): the invariant audit, generation 377; A joint epigraph variable can represent the exact max and avoid softmax bias."
+  },
+  "A101.v3": {
+   "name": "barrier on max(L-t)",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (The max is never an explicit variable t optimized jointly with h; it is recomputed from L or fixed from current L inside the objective.): the invariant audit, generation 377; A joint epigraph variable can represent the exact max and avoid softmax bias."
+  },
+  "A101.v4": {
+   "name": "alternating t=max L and h",
+   "origin": "audit",
+   "gen": 377,
+   "note": "an alternative to what every program so far does (The max is never an explicit variable t optimized jointly with h; it is recomputed from L or fixed from current L inside the objective.): the invariant audit, generation 377; A joint epigraph variable can represent the exact max and avoid softmax bias."
   }
  },
  "matched": {}
