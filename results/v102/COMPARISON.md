@@ -2,7 +2,7 @@
 
 From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decisions (the deep research, helix10/sota.py) as axes, at most 50,000 steps, the same CPU seconds per program, 3 planned experiments and 3 mutations a generation. Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 (docs/VERSIONS.md). For scale: the field's optimisers from nothing reach about 0.90-0.93; the best construction known with n <= 50,000 is AlphaEvolve V2's 0.961021, with n <= 100,000 0.962273842955 (JSAgent), the arena's record 0.963588110582 (n = 1,999,999).
 
-## The climb, by generation (every run has finished 396)
+## The climb, by generation (every run has finished 400)
 
 | Generation | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
@@ -19,7 +19,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 200 | 0.946769783 | 0.941115345 |
 | 250 | 0.947991608 | 0.941115363 |
 | 300 | 0.948046250 | 0.941136077 |
-| 396 | 0.948607367 | 0.941244137 |
+| 400 | 0.948610409 | 0.941244146 |
 
 ## The climb, by CPU (77.9 CPU hours on programs so far)
 
@@ -35,7 +35,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 396 | 2534 | 81.4 | 7300 | 91,866,854 | 0.948607366908 (p2531) |
+| v102-helix | 400 | 2564 | 82.3 | 7376 | 92,902,998 | 0.948610408760 (p2563) |
 | v102-helix-s2 | 400 | 2563 | 77.9 | 7177 | 89,927,718 | 0.941244146241 (p2563) |
 
 ## Against the published LLM-driven systems
@@ -56,26 +56,26 @@ Helix's knowledge differs from theirs: its axes are the field's ideas as of Octo
 
 ## Where Helix's progress came from (v102-helix)
 
-Helix's record: 0.948607368066 (p2539, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
+Helix's record: 0.948610408760 (p2563, n = 50000), on track T2: a new design built from nothing around A13 -> Coarse to fine, upsampling by interpolation betwe….
 The track holding the record, over the run: T2 from generation 1.
 
 Explorations built from nothing: 26 (26 around an option of the field, 0 new designs from the map). Their climbs:
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 394 | 0.948607068 | running | yes |
+| T2 | A13 -> Coarse to fine, upsampling by interpolation betwe… | 1 | 398 | 0.948610407 | running | yes |
 | T19 | A14 -> Regular sparse packets under a smooth raised-cosi… | 204 | 48 | 0.917006435 | finished |  |
 | T8 | A11 -> Adam with gradient noise and elitist respawn of t… | 14 | 48 | 0.914143782 | finished |  |
-| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 45 | 0.908477308 | running |  |
-| T28 | A76 -> Gradient/subspace/transport joint moves | 363 | 16 | 0.892504953 | running |  |
-| T26 | A45 -> Finite differences on heights | 321 | 38 | 0.888514427 | running |  |
+| T28 | A76 -> Gradient/subspace/transport joint moves | 363 | 18 | 0.913507220 | running |  |
+| T24 | A64 -> Optimize a continuous sub-cell shift parameter | 304 | 47 | 0.908477308 | running |  |
+| T26 | A45 -> Finite differences on heights | 321 | 40 | 0.888635387 | running |  |
 | T10 | A15 -> A fine, coherent periodic lattice of teeth (perio… | 44 | 51 | 0.876148866 | finished |  |
 | T13 | A5 -> Fourier perturbation | 105 | 51 | 0.871745065 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 48 | 0.866965580 | paused |  |
 | T15 | A12 -> Explicit support mask pruning | 122 | 55 | 0.857470732 | finished |  |
 | T20 | A4 -> Independent random restarts | 205 | 48 | 0.854908817 | finished |  |
 | T16 | A4 -> Population evolutionary search | 145 | 48 | 0.853632976 | finished |  |
-| T25 | A72 -> Penalty or barrier on max | 308 | 43 | 0.844197583 | running |  |
+| T25 | A72 -> Penalty or barrier on max | 308 | 45 | 0.844326448 | running |  |
 | T7 | A17 -> Small-mass runs of f first | 5 | 51 | 0.844129727 | finished |  |
 | T23 | A45 -> Derivative-free local search | 255 | 55 | 0.842796015 | finished |  |
 | T11 | A4 -> Beam search over grids | 97 | 51 | 0.840460626 | finished |  |
