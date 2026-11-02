@@ -1164,7 +1164,7 @@ Decisions every hill shared (mapped at generation 376):
 - D7: Time budget allocation: deterministic phase schedule (all: A fixed sequence of phases (polish, cascade, kick, final polish) with hard CPU-time deadlines and fixed iteration caps per phase)
 - D8: Perturbation / escape mechanism (all: Multiplicative Gaussian noise kicks on h plus momentum, with amplitude annealed by accept/reject)
 
-### The design map (25 decisions, 2187 programs placed)
+### The design map (25 decisions, 2193 programs placed)
 
 | Decision | Options | Read twice: agreement | Importance (last fit) |
 |---|---|---|---|
