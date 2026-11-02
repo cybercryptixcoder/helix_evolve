@@ -345,6 +345,27 @@
    "attached": false,
    "origin": "audit",
    "gen": 381
+  },
+  "A123": {
+   "key": "audit",
+   "question": "Every program so far: Every program uses SciPy's L-BFGS-B as the only local optimiser; no other descent method is tried.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 391
+  },
+  "A124": {
+   "key": "audit",
+   "question": "Every program so far: Every program gives each of roughly 48,000-50,000 equal cells an independent free height, with no tying or low-dimensional parameterisation.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 391
+  },
+  "A125": {
+   "key": "audit",
+   "question": "Every program so far: Every program holds the step count N fixed within a local optimisation; resolution changes only by resampling between phases, if at all.. Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 391
   }
  },
  "values": {
@@ -1311,6 +1332,60 @@
    "origin": "audit",
    "gen": 381,
    "note": "an alternative to what every program so far does (All treat h as a free-form nonparametric vector; no program imposes monotonicity, unimodality, or a small fixed number of breakpoints.): the invariant audit, generation 381; Shape constraints reduce the search space and may stabilize optimization, but can exclude the true optimum."
+  },
+  "A123.v2": {
+   "name": "projected gradient or Adam with manual projection",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program uses SciPy's L-BFGS-B as the only local optimiser; no other descent method is tried.): the invariant audit, generation 391; Different optimisers handle the nonsmooth max plateau and nonnegativity differently, reaching different local shapes."
+  },
+  "A123.v3": {
+   "name": "SLSQP or trust-constr with explicit constraints",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program uses SciPy's L-BFGS-B as the only local optimiser; no other descent method is tried.): the invariant audit, generation 391; Different optimisers handle the nonsmooth max plateau and nonnegativity differently, reaching different local shapes."
+  },
+  "A123.v4": {
+   "name": "derivative-free CMA-ES or Nelder-Mead",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program uses SciPy's L-BFGS-B as the only local optimiser; no other descent method is tried.): the invariant audit, generation 391; Different optimisers handle the nonsmooth max plateau and nonnegativity differently, reaching different local shapes."
+  },
+  "A124.v2": {
+   "name": "coarse-to-fine adaptive grid with local refinement",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program gives each of roughly 48,000-50,000 equal cells an independent free height, with no tying or low-dimensional parameterisation.): the invariant audit, generation 391; Degrees of freedom and resolution control which fine structure can appear and how badly the search overfits."
+  },
+  "A124.v3": {
+   "name": "spline/Chebyshev coefficients as the optimised variables",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program gives each of roughly 48,000-50,000 equal cells an independent free height, with no tying or low-dimensional parameterisation.): the invariant audit, generation 391; Degrees of freedom and resolution control which fine structure can appear and how badly the search overfits."
+  },
+  "A124.v4": {
+   "name": "sparse atom/spike representation with many exact-zero cells",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program gives each of roughly 48,000-50,000 equal cells an independent free height, with no tying or low-dimensional parameterisation.): the invariant audit, generation 391; Degrees of freedom and resolution control which fine structure can appear and how badly the search overfits."
+  },
+  "A125.v2": {
+   "name": "treat N as a jointly optimised integer variable",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program holds the step count N fixed within a local optimisation; resolution changes only by resampling between phases, if at all.): the invariant audit, generation 391; Whether N is searched or fixed changes discretisation error and the difficulty of the local problem."
+  },
+  "A125.v3": {
+   "name": "nested multigrid refinement with truncation at each level",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program holds the step count N fixed within a local optimisation; resolution changes only by resampling between phases, if at all.): the invariant audit, generation 391; Whether N is searched or fixed changes discretisation error and the difficulty of the local problem."
+  },
+  "A125.v4": {
+   "name": "continue on a variable nonuniform mesh until final sampling",
+   "origin": "audit",
+   "gen": 391,
+   "note": "an alternative to what every program so far does (Every program holds the step count N fixed within a local optimisation; resolution changes only by resampling between phases, if at all.): the invariant audit, generation 391; Whether N is searched or fixed changes discretisation error and the difficulty of the local problem."
   }
  },
  "matched": {}
