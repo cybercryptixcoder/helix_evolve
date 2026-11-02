@@ -226,6 +226,13 @@
    "attached": false,
    "origin": "audit",
    "gen": 377
+  },
+  "A105": {
+   "key": "audit",
+   "question": "Every program so far: Deterministic objective: every L-BFGS-B step sees the full knot vector and full convolution; no stochastic sampling of knots, heights, or convolution . Is that the right choice?",
+   "attached": false,
+   "origin": "audit",
+   "gen": 387
   }
  },
  "values": {
@@ -886,6 +893,24 @@
    "origin": "audit",
    "gen": 377,
    "note": "an alternative to what every program so far does (The max is never an explicit variable t optimized jointly with h; it is recomputed from L or fixed from current L inside the objective.): the invariant audit, generation 377; A joint epigraph variable can represent the exact max and avoid softmax bias."
+  },
+  "A105.v2": {
+   "name": "Use random mini-batches of convolution knots per gradient step",
+   "origin": "audit",
+   "gen": 387,
+   "note": "an alternative to what every program so far does (Deterministic objective: every L-BFGS-B step sees the full knot vector and full convolution; no stochastic sampling of knots, heights, or convolution ): the invariant audit, generation 387; Stochasticity can cross narrow barriers that full deterministic gradients cannot."
+  },
+  "A105.v3": {
+   "name": "Use randomized smoothing of the max denominator",
+   "origin": "audit",
+   "gen": 387,
+   "note": "an alternative to what every program so far does (Deterministic objective: every L-BFGS-B step sees the full knot vector and full convolution; no stochastic sampling of knots, heights, or convolution ): the invariant audit, generation 387; Stochasticity can cross narrow barriers that full deterministic gradients cannot."
+  },
+  "A105.v4": {
+   "name": "Use block-coordinate subsampling of heights",
+   "origin": "audit",
+   "gen": 387,
+   "note": "an alternative to what every program so far does (Deterministic objective: every L-BFGS-B step sees the full knot vector and full convolution; no stochastic sampling of knots, heights, or convolution ): the invariant audit, generation 387; Stochasticity can cross narrow barriers that full deterministic gradients cannot."
   }
  },
  "matched": {}

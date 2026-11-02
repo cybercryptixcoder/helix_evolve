@@ -35,7 +35,7 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
-| v102-helix | 388 | 2481 | 79.9 | 7140 | 89,849,235 | 0.948607360511 (p2481) |
+| v102-helix | 388 | 2481 | 79.9 | 7141 | 89,855,554 | 0.948607360511 (p2481) |
 | v102-helix-s2 | 391 | 2509 | 76.2 | 7013 | 87,776,189 | 0.941244122830 (p2497) |
 
 ## Against the published LLM-driven systems
