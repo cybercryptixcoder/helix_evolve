@@ -21,22 +21,22 @@ From Code Zero (R = 2/3), with the field's 15 findings and 38 options on 9 decis
 | 300 | 0.948046250 | 0.941136077 |
 | 393 | 0.948607365 | 0.941244133 |
 
-## The climb, by CPU (77.2 CPU hours on programs so far)
+## The climb, by CPU (77.3 CPU hours on programs so far)
 
 | CPU hours | Helix v10.2 | Helix v10.2, seed 2 |
 |---|---|---|
-| 7.72 | 0.946437408 | 0.866112124 |
-| 19.29 | 0.946550142 | 0.939924742 |
-| 38.59 | 0.946767524 | 0.941115362 |
-| 57.88 | 0.948045808 | 0.941136077 |
-| 77.17 | 0.948584385 | 0.941244137 |
+| 7.73 | 0.946437408 | 0.866112124 |
+| 19.32 | 0.946550142 | 0.939924742 |
+| 38.65 | 0.946767524 | 0.941115362 |
+| 57.97 | 0.948045808 | 0.941136077 |
+| 77.30 | 0.948584385 | 0.941244137 |
 
 ## Cost
 
 | Run | Generations | Programs | CPU hours | Model calls | Tokens | Best |
 |---|---|---|---|---|---|---|
 | v102-helix | 393 | 2516 | 80.9 | 7241 | 91,066,567 | 0.948607364635 (p2513) |
-| v102-helix-s2 | 396 | 2539 | 77.2 | 7109 | 88,957,564 | 0.941244137175 (p2522) |
+| v102-helix-s2 | 397 | 2545 | 77.3 | 7124 | 89,194,210 | 0.941244137175 (p2522) |
 
 ## Against the published LLM-driven systems
 
@@ -100,19 +100,19 @@ Explorations built from nothing: 23 (23 around an option of the field, 0 new des
 
 | Track | Built around | Opened | Experiments | Best | Race | Held the record |
 |---|---|---|---|---|---|---|
-| T9 | A20 -> Use no regularization | 53 | 317 | 0.941243714 | running | yes |
+| T9 | A20 -> Use no regularization | 53 | 318 | 0.941243714 | running | yes |
 | T13 | A20 -> Add an L2 penalty on heights | 104 | 48 | 0.918145126 | finished |  |
-| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 42 | 0.916994128 | running |  |
+| T20 | A67 -> Second-order Newton/trust-region/SLSQP | 300 | 43 | 0.916994128 | running |  |
 | T18 | A57 -> Shift h by half a cell before convolution | 218 | 61 | 0.909230611 | finished |  |
 | T6 | A14 -> A tall spike plus a comb of smaller peaks | 4 | 77 | 0.904628851 | paused | yes |
-| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 33 | 0.882034828 | running |  |
+| T22 | A36 -> L1 mass / scale / L-infinity variants | 315 | 34 | 0.882034828 | running |  |
 | T7 | A10 -> A fixed mild smooth max (beta about 100-500 relat… | 7 | 51 | 0.879822914 | finished |  |
 | T16 | A62 -> Search only centered supports with fixed symmetry | 210 | 50 | 0.879371090 | finished |  |
 | T2 | A11 -> L-BFGS with Anderson acceleration of the Dinkelba… | 1 | 49 | 0.876174678 | finished |  |
 | T10 | A10 -> Level-transition lags | 90 | 48 | 0.872669841 | paused |  |
 | T19 | A68 -> Many independent random restarts | 280 | 58 | 0.870680994 | finished |  |
-| T25 | A67 -> Derivative-free local (Nelder-Mead/Powell) | 384 | 5 | 0.868414296 | running |  |
-| T23 | A4 -> Random search / simulated annealing | 316 | 33 | 0.867316389 | running |  |
+| T25 | A67 -> Derivative-free local (Nelder-Mead/Powell) | 384 | 5 | 0.868420556 | running |  |
+| T23 | A4 -> Random search / simulated annealing | 316 | 33 | 0.867341715 | running |  |
 | T11 | A33 -> Min-max plateau-gap surrogate | 101 | 58 | 0.865498772 | finished |  |
 | T5 | A16 -> Perturb along the gradient of the transition loss… | 3 | 32 | 0.864890445 | paused | yes |
 | T12 | A14 -> Regular small-big-small triplets | 102 | 48 | 0.862511888 | finished |  |
