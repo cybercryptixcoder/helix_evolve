@@ -147,4 +147,7 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
   each axis as a quantity you can do more or less of; what was built is a question with named, unordered answers.)
 - **doing** (2026-10-29 17:12): keep this discussion short and back-and-forth; first understand where things are
   before proposing what to do.
-
+- **doing** (2026-11-03 00:01): pause Helix; offload everything on the VM to GitHub losslessly (every version, exact
+  resume); README with the results in plain terms. (00:06) every claim with complete evidence (runs, traces, settings,
+  machine, model), verified, nothing misrepresented. Done so far: docs/OFFLOAD.md, docs/RECORDS.md, README.md;
+  the offload job runs next on the VM, then Claude checks the report, then Shreyas decides on deleting.

@@ -4,6 +4,30 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## November 3, 2026: paused; the VM offloaded to GitHub; the results written up with their evidence
+
+- **Asked:** pause Helix and clear the VM's disk. Before that, everything on the VM goes to GitHub losslessly, so any
+  run can later be continued exactly, from every version, not only v10.2. And a README that shows what Helix achieved,
+  in terms a reader outside the project understands, with full evidence for every claim (runs, traces, settings,
+  machine, model), re-checked, with nothing misquoted.
+- **Found:** v10.2's job script never uploaded its constructions (only `best.npy` reached GitHub); no run folder was
+  on GitHub as such (`results/` is the published records, not the folder a job resumes from); the private routing
+  runs were never on GitHub, rightly.
+- **Built:** `tools/offload.py` and `scripts/offload_vm.sh` (docs/OFFLOAD.md): one release `archive-<unit>` per run
+  folder, a byte-for-byte deterministic tar in parts with every file's SHA-256, scanned for keys and forbidden strings
+  first; private units only to a private repo; the report and inventory to the release `archive-index`. Tested with
+  GitHub replaced by a folder (`tests/test_offload.py`); the VM's preflight proves the real upload path.
+- **Written:** README.md (new; the old one is docs/README_2026-10.md) and docs/RECORDS.md: every result with the
+  outside value's source, the run, round and program, limits, machine, model, links, what it doesn't control for.
+- **Checked:** every construction re-scored by `tools/verify_ac2.py` (exact arithmetic included) and by a separate
+  scorer written from the definition; every "passed at" recomputed from `programs.jsonl`; every outside value checked
+  against its paper or repository, and Jaech & Joseph's, AlphaEvolve's and the leaderboard's constructions re-scored.
+  **Corrected on the way:** the v4-v8 line is not one run but two stages (v4.7 restarted from v4's best program with an
+  empty memory); the human best is 0.941362 (Jaech & Joseph's own construction), and TTT-Discover's table lists
+  0.9015 (Boyer & Li) as "best human" instead: both are stated.
+
+---
+
 ## October 29, 2026 (night): v10.2, from Code Zero against the published systems
 
 - **Asked (01:56):** "1 + 3": an empty start, and ideas built rather than patched, each judged on its own climb.

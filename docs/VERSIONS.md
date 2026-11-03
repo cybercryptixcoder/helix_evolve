@@ -17,6 +17,11 @@ constant function (R = 0.667).
 | AlphaEvolve's later result | 0.9610 |
 | Best known (2026, warm-started from earlier records) | 0.9626 |
 
+> **November 3, 2026: paused.** The results, with their evidence: [RECORDS.md](RECORDS.md). Everything on the VM,
+> archived to GitHub releases: [OFFLOAD.md](OFFLOAD.md). The best values since this table was written: 0.941441744
+> (v8-s1, from scratch, nothing from outside) and 0.948610 (v10.2, from scratch with the published methods as axes,
+> at most 50,000 steps).
+
 Helix's best is **0.9412521** (v7, continuing v4.7's warm run, generation 290). Before that it was 0.9408 (v4
 atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 

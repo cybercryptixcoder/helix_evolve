@@ -1,5 +1,8 @@
 # Notes for agents working in this repo
 
+- **Paused (November 3, 2026).** The results and their evidence: `docs/RECORDS.md` (README's table). The VM's
+  offload to GitHub releases: `docs/OFFLOAD.md` (`scripts/offload_vm.sh`, `tools/offload.py`). Any claim added to the
+  README must be added to RECORDS.md with its source, run, round, program and a re-check.
 - **Latest (October 29, night): v10.2** (`docs/V102_DESIGN.md`; `docs/V10_JOB.md`, top; `scripts/run_v102.sh`): Helix
   from Code Zero with the deep research's axes, explorations built from nothing and judged on their own climb, at the
   published LLM systems' constraint (n <= 50,000), measured against their values and budgets (`helix10/compare.py`).

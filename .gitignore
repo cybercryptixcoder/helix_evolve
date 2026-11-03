@@ -14,3 +14,7 @@ __pycache__/
 
 v5_jobs*.log
 v4cont.log
+
+# the offload (docs/OFFLOAD.md): strings that must never leave the VM
+.offload_forbid
+offload.log
