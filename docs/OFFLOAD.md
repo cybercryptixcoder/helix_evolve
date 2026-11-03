@@ -110,4 +110,11 @@ state at an earlier generation can be rebuilt from the archive, but that needs a
 - The inventory showed Helix folders outside the checkout (older checkouts with their own runs, tools, notes, and
   untracked `results/v47`). A fourth pass archives them to the private repo with `EXTRA_PRIVATE` (`.git` folders
   kept, `.env` files never).
+- The fourth pass (03:10-03:30) archived them: every unit verified, 33 in all.
+
+## Clearing the VM
+
+`scripts/clear_vm.sh`, by Shreyas's order: deletes each Helix folder or file only if every archive holding it is
+verified on GitHub at that moment, and the checkout only if it has no unpushed commits or stash; keeps and reports
+anything else. Left in place on purpose: the Helix Exploit notes, the Luminal notes, and everything that isn't Helix.
 
