@@ -25,7 +25,7 @@
 # Estimated: about 10-20 minutes per 10 GB (compression on one core, then upload). Disk: one part at a time (up to
 # PART_MB, default 1900 MB) in runs/.offload_tmp. Memory: under 200 MB.
 #
-# Settings: PRIVATE_REPO [cybercryptixcoder/helix_private]  HOME_DIR [/home/ubuntu]  PART_MB [1900]  VAULT_V102 [1]
+# Settings: PRIVATE_REPO [cybercryptixcoder/helix_evolve_private]  HOME_DIR [/home/ubuntu]  PART_MB [1900]  VAULT_V102 [1]
 #   EXTRA_PUBLIC [""] (more folders to archive publicly, space-separated)  FAKE [0]
 #
 #   FAKE=1 bash scripts/offload_vm.sh     # a test: GitHub replaced by runs/.offload_fake
@@ -38,7 +38,7 @@ fi
 PY="${PYTHON:-$(command -v python3 || command -v python)}"
 CHECKOUT="$(pwd)"
 HOME_DIR="${HOME_DIR:-/home/ubuntu}"
-PRIVATE_REPO="${PRIVATE_REPO:-cybercryptixcoder/helix_private}"
+PRIVATE_REPO="${PRIVATE_REPO:-cybercryptixcoder/helix_evolve_private}"
 PART_MB="${PART_MB:-1900}"
 VAULT_V102="${VAULT_V102:-1}"
 EXTRA_PUBLIC="${EXTRA_PUBLIC:-}"

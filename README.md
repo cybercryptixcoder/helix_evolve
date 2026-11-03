@@ -18,24 +18,58 @@ step function f that makes R(f) = ‖f∗f‖₂² / (‖f∗f‖₁ · ‖f∗f
 bound on an unknown constant. A result can't be faked (anyone can compute it from the function), and AlphaEvolve and
 later AI systems report their results on it, so it has a public scale.
 
-Every Helix run starts from a constant function (R = 2/3). It runs on **one 2-core ARM cloud machine with no GPU**,
-with **one inexpensive model (DeepSeek V4.1 Flash)** and no training.
+Every Helix run starts from a constant function (R = 2/3), and every number below is re-checked by exact rational
+arithmetic. The evidence for each row, with its sources and what each comparison doesn't control for, is in
+**[docs/RECORDS.md](docs/RECORDS.md)**.
 
-| What Helix beat | Its value | Best of that Helix run | Which Helix, and how it started | When it passed it |
-|---|---|---|---|---|
-| AlphaEvolve's first published result (Google DeepMind, May 2025) | 0.8962 | 0.939016 (20 rounds) | v4, from scratch, nothing from outside; 30 s per program | round 10, 57th program |
-| The best result found by human researchers (Jaech & Joseph, Aug 2025) | 0.941362 | **0.941441** | v4 → v8, from scratch, nothing from outside, ever; 30-60 s per program | round 352, about 2,220th program |
-| OpenEvolve (as reported by TTT-Discover; 25,600 programs of up to 10 min) | 0.9449 | 0.948610 | v10.2, from scratch, given a written summary of published methods; ≤ 50,000 steps, 150 s per program | round 27, 164th program |
-| ThetaEvolve with reinforcement learning at test time (33,280 programs) | 0.9469 | **0.948610** | the same run | round 227, 1,419th program |
+### The runs
 
-Not beaten: TTT-Discover (0.9591) and AlphaEvolve V2 (0.9610) at the same size limit, and the best known value,
-0.963588 (at 2 million steps, polished on GPUs). Starting from other people's best constructions, Helix made no
-meaningful gain. The v10.2 figures come from one of its two runs; the other ended at 0.941244.
+All on **one Oracle Cloud VM** (Ampere A1, ARM, **2 cores, 12 GB RAM, no GPU**, shared with other jobs), with **one
+model for every agent, DeepSeek V4.1 Flash** (through Luminal's API), no training, and 6 programs a round (3 planned
+experiments, 3 mutations). Each program runs single-threaded under a hard CPU-time limit; at most 2 run at once.
 
-**[docs/RECORDS.md](docs/RECORDS.md) has the evidence for every row:** where each outside value comes from (paper and
-table), the exact run, round and program, the limits, the machine and model, links to every program and every model
-call (full prompt and reply) of the run, what each comparison does not control for, and how each number was
-re-checked. Each result is certified by exact rational arithmetic.
+| Run | Helix version | Starts from | Outside input to the agents | Rounds | Programs | CPU limit per program | Step limit | Best R | Certified bound (exact) | Records |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A. `atlas-s1` | v4 | constant function | none | 0-150 | 901 | 30 s | 200,000 | 0.940794544359 | 0.940794543119 | [v4](results/v4/atlas-s1/) (rounds 1-20), [v4 continued](results/v4cont/atlas-s1/) (0-150) |
+| B. `v47-s2` → `v7-s1` → `v8-s1` | v4.7, then v7, then v8 | run A's best program, with an empty memory | none | 150-700 | 3,625 | 60 s | 1,000,000 | **0.941441743993** | 0.941441740905 | [v4.7](results/v47warm/v47-s2/), [v7](results/v7warm/v7-s1/), [v8](results/v8warm/v8-s1/) |
+| C. `v102-helix` | v10.2 | constant function | a written summary of published methods ([list](helix10/sota.py)); no constructions or code | 0-400 | 2,564 | 150 s | 50,000 | **0.948610408760** | 0.948610407407 | [v10.2 seed 1](results/v102/v102-helix/) |
+| D. `v102-helix-s2` | v10.2 | constant function | the same | 0-400 | 2,563 | 150 s | 50,000 | 0.941244146241 | 0.941244144332 | [v10.2 seed 2](results/v102/v102-helix-s2/) |
+
+Runs A and B are one line of work: B continued from A's best program, so nothing from outside entered at any point.
+Each run's folder has every program with its code and score, every model call with its full prompt and reply, every
+round, the settings and the best construction (`best.npy`). The job scripts: [v4](scripts/run_v4_jobs.sh),
+[v4.7](scripts/run_v47_warm.sh), [v7](scripts/run_v7_warm.sh), [v8](scripts/run_v8_warm.sh),
+[v10.2](scripts/run_v102.sh).
+
+### What they beat
+
+| Published result | Value | Source | Beaten by run | Round | The program that did it | Its R |
+|---|---|---|---|---|---|---|
+| AlphaEvolve, first result (Google DeepMind, May 2025) | 0.8962 | [DeepMind](https://github.com/google-deepmind/alphaevolve_results) | A | 10 | [`p0057`](results/records/v4_atlas-s1_p0057.py) | 0.907611 |
+| Best result by human researchers (Jaech & Joseph, Aug 2025) | 0.941362 | [arXiv:2508.02803](https://arxiv.org/abs/2508.02803) | B | 352 | [`p1324`](results/records/v8warm_v8-s1_p1324.py) | 0.941364 |
+| AlphaEvolve, first result | 0.8962 | as above | C | 4 | [`p0021`](results/records/v102_v102-helix_p0021.py) | 0.897662 |
+| Best of 25,600 samples (gpt-oss-120b, 10 min each) | 0.9344 | [TTT-Discover](https://arxiv.org/abs/2601.16175), Table 2 | C | 24 | [`p0146`](results/records/v102_v102-helix_p0146.py) | 0.937953 |
+| Jaech & Joseph | 0.941362 | as above | C | 26 | [`p0161`](results/records/v102_v102-helix_p0161.py) | 0.944645 |
+| ThetaEvolve without RL (8B model, 51,200 programs) | 0.9434 | [ThetaEvolve](https://arxiv.org/abs/2511.23473), Table 2 | C | 26 | [`p0161`](results/records/v102_v102-helix_p0161.py) | 0.944645 |
+| OpenEvolve (gpt-oss-120b, 25,600 programs of up to 10 min) | 0.9449 | [TTT-Discover](https://arxiv.org/abs/2601.16175), Table 2 | C | 27 | [`p0164`](results/records/v102_v102-helix_p0164.py) | 0.945662 |
+| ThetaEvolve with RL at test time (8B model, 33,280 programs) | 0.9469 | [ThetaEvolve](https://arxiv.org/abs/2511.23473), Table 2 | C | 227 | [`p1419`](results/records/v102_v102-helix_p1419.py) | 0.947592 |
+
+The best programs themselves: run B's [`p3596`](results/records/v8warm_v8-s1_p3596.py) and run C's
+[`p2563`](results/records/v102_v102-helix_p2563.py). Each linked file is the program's code exactly as the run
+recorded it, with its run, round, parent, score and the file holding that round's model calls.
+
+Run D, the second seed of C, passed AlphaEvolve (round 52) and best-of-25,600 (round 101), but none of the others.
+
+### What they didn't beat
+
+| Result | Value | Steps | Helix's best at that size |
+|---|---|---|---|
+| TTT-Discover (gpt-oss-120b trained during the run, Jan 2026) | 0.9591 | 50,000 | 0.948610 (run C) |
+| AlphaEvolve V2 (Nov 2025) | 0.9610 | 50,000 | 0.948610 (run C) |
+| Best known: EinsteinArena's leaderboard #1 (Jul 2026, polished on GPUs) | 0.963588 | 1,999,999 | — |
+
+Two runs started from other people's best constructions (v10 and v10.1) made no meaningful gain: +3.8e-8 on the
+leaderboard's #1 (it takes +1e-5 to count) and +2.6e-13 on the best construction with at most 100,000 steps.
 
 Check them yourself (a few minutes on a laptop):
 

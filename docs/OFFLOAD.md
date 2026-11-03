@@ -33,7 +33,7 @@ renames the big files, so it is not a copy of the run folder a job resumes from.
    - `checkout-extras`: the checkout's untracked files outside `runs/` and the loose files in `runs/` (logs, job
      snapshots), never `.env`;
    - anything of the private routing problem (`helix_vrp`, `vrp_work`, `vrp*` files and run folders) goes **only** to
-     the private repo (`PRIVATE_REPO`, default `cybercryptixcoder/helix_private`), and only if GitHub says it is
+     the private repo (`PRIVATE_REPO`, default `cybercryptixcoder/helix_evolve_private`), and only if GitHub says it is
      private; otherwise it is reported as not archived.
 
    Each unit is a byte-for-byte tar (sorted, deterministic), gzipped, split into parts under GitHub's 2 GiB limit,
@@ -55,7 +55,7 @@ created from the cloud session, so the real upload path is proven by the preflig
 
 ## The steps
 
-1. **Shreyas:** create an empty **private** repo `cybercryptixcoder/helix_private` on GitHub.
+1. **Shreyas:** create an empty **private** repo `cybercryptixcoder/helix_evolve_private` on GitHub.
 2. **Aether** (the prompt below): writes `.offload_forbid`, starts the offload, checks the start once.
 3. **Shreyas** checks in until the log's last line is `== offload complete: every unit verified`.
 4. **Claude** reads the report from the release `archive-index`, checks the inventory against the archives (every
@@ -75,7 +75,7 @@ created from the cloud session, so the real upload path is proven by the preflig
 > 4. Don't change any setting.
 > 5. Wait about 15 minutes, then read the last 30 lines of /home/ubuntu/helix_v5_run/offload.log once. A good start
 >    shows, in order: "== Helix offload job", "GitHub: can write releases of cybercryptixcoder/helix_evolve",
->    "private repo cybercryptixcoder/helix_private: exists and is private", "preflight passed", "== inventory:",
+>    "private repo cybercryptixcoder/helix_evolve_private: exists and is private", "preflight passed", "== inventory:",
 >    then lines for "constructions-v102-helix" and units such as "== runs-v4:" with "progress:" lines. A line
 >    starting with "preflight:" or a Traceback means the job stopped: report those lines exactly, and don't edit
 >    anything to fix it.
@@ -91,7 +91,7 @@ Status later: "read the last 15 lines of /home/ubuntu/helix_v5_run/offload.log a
 
 ```bash
 python3 tools/offload.py restore --unit runs-v102 --out runs/          # -> runs/v102/..., every file's SHA-256 checked
-python3 tools/offload.py restore --unit private-vrp_work --repo cybercryptixcoder/helix_private --out /home/ubuntu/
+python3 tools/offload.py restore --unit private-vrp_work --repo cybercryptixcoder/helix_evolve_private --out /home/ubuntu/
 ```
 
 A restored run folder is exactly the folder the job left, so its job script resumes it from its last finished
