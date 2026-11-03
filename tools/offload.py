@@ -106,8 +106,20 @@ class GitHub:
     def release(self, tag, create=False, note=""):
         rel = self._req("GET", f"repos/{self.slug}/releases/tags/{urllib.parse.quote(tag)}")
         if rel is None and create:
-            rel = self._req("POST", f"repos/{self.slug}/releases",
-                            {"tag_name": tag, "name": tag, "body": note, "prerelease": True})
+            body = {"tag_name": tag, "name": tag, "body": note, "prerelease": True}
+            try:
+                rel = self._req("POST", f"repos/{self.slug}/releases", body)
+            except RuntimeError as e:
+                if "Repository is empty" not in str(e):
+                    raise
+                # GitHub can't hold a release in a repo with no commit: give it one (a README), then retry
+                import base64
+                text = (f"# {self.slug.split('/')[-1]}\n\nArchives only: each release `archive-<unit>` is a byte-for-byte "
+                        "copy of a folder, restored with `python3 tools/offload.py restore` (helix_evolve, "
+                        "docs/OFFLOAD.md).\n")
+                self._req("PUT", f"repos/{self.slug}/contents/README.md",
+                          {"message": "Archives only (see README)", "content": base64.b64encode(text.encode()).decode()})
+                rel = self._req("POST", f"repos/{self.slug}/releases", body)
         return rel
 
     def assets(self, rel):
@@ -674,8 +686,10 @@ def main(argv=None):
         rel = gh.release("archive-index", create=True, note="The offload's report: what was on the VM, every archive "
                          "release and its verification (tools/offload.py, docs/OFFLOAD.md).")
         have = gh.assets(rel)
+        for name in [n for n in have if "private" in n]:   # the private units' file lists and logs stay off the public repo
+            gh.delete(have.pop(name))
         for f in sorted(Path(x.dir).iterdir()):
-            if f.is_file():
+            if f.is_file() and not f.name.startswith(".") and "private" not in f.name:
                 put(gh, rel, have, f, f.name, hashlib.sha256(f.read_bytes()).hexdigest(), f.stat().st_size)
         say(f"== the report is on GitHub: release archive-index ({len(list(Path(x.dir).iterdir()))} files)")
         return 0

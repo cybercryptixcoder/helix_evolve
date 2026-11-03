@@ -190,10 +190,10 @@ L += ["", "Restore any unit: `python3 tools/offload.py restore --unit <unit> --o
       "The inventory of the machine: INVENTORY.md and inventory.json (same release)."]
 open(f"{out}/OFFLOAD_REPORT.md", "w").write("\n".join(L) + "\n")
 print("\n".join(L[4:]))
-open(f"{out}/.status", "w").write("ok" if not bad else "; ".join(f"{r['unit']}: {r['status']}" for r in bad))
+open(f"{out}/STATUS.txt", "w").write("ok" if not bad else "; ".join(f"{r['unit']}: {r['status']}" for r in bad))
 EOF
 rm -f "$OUT/units.log.tmp"
 "$PY" "$T" publish-index --dir "$OUT" --repo "$SLUG" 2>&1 | tail -1
-status="$(cat "$OUT/.status")"
+status="$(cat "$OUT/STATUS.txt")"
 if [ "$status" = "ok" ]; then echo "== offload complete: every unit verified"
 else echo "== offload NOT complete: $status; run this script again"; fi
