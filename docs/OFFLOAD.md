@@ -118,3 +118,4 @@ state at an earlier generation can be rebuilt from the archive, but that needs a
 verified on GitHub at that moment, and the checkout only if it has no unpushed commits or stash; keeps and reports
 anything else. Left in place on purpose: the Helix Exploit notes, the Luminal notes, and everything that isn't Helix.
 
+- Run on November 3 (03:44 EST): 26 deleted, 0 kept; the disk went from 4.5 GB free (91% used) to 22 GB free (55%).
