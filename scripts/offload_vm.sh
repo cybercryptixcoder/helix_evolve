@@ -26,7 +26,9 @@
 # PART_MB, default 1900 MB) in runs/.offload_tmp. Memory: under 200 MB.
 #
 # Settings: PRIVATE_REPO [cybercryptixcoder/helix_evolve_private]  HOME_DIR [/home/ubuntu]  PART_MB [1900]  VAULT_V102 [1]
-#   EXTRA_PUBLIC [""] (more folders to archive publicly, space-separated)  FAKE [0]
+#   EXTRA_PUBLIC [""] (more folders to archive publicly, space-separated)
+#   EXTRA_PRIVATE [""] (more folders or files, space-separated, to archive to PRIVATE_REPO only, .git folders included:
+#     each folder is a unit private-extra-<name>, the files together one unit private-extra-files)  FAKE [0]
 #
 #   FAKE=1 bash scripts/offload_vm.sh     # a test: GitHub replaced by runs/.offload_fake
 set -uo pipefail
@@ -42,6 +44,7 @@ PRIVATE_REPO="${PRIVATE_REPO:-cybercryptixcoder/helix_evolve_private}"
 PART_MB="${PART_MB:-1900}"
 VAULT_V102="${VAULT_V102:-1}"
 EXTRA_PUBLIC="${EXTRA_PUBLIC:-}"
+EXTRA_PRIVATE="${EXTRA_PRIVATE:-}"
 FAKE="${FAKE:-0}"
 OUT="runs/.offload_report"
 T="$CHECKOUT/tools/offload.py"
@@ -159,6 +162,16 @@ git ls-files -o -z | tr '\0' '\n' \
   | grep -v -i 'vrp' > "$OUT/extras.txt" || true
 run_unit "checkout-extras" "$SLUG" --files-from "$OUT/extras.txt"
 for x in $EXTRA_PUBLIC; do run_unit "extra-$(basename "$x")" "$SLUG" --src "$x"; done
+# more private folders and files (only to the private repo; .git folders kept, .env files never)
+: > "$OUT/private_extra_files.txt"
+for x in $EXTRA_PRIVATE; do
+  if [ "$PRIVATE_OK" != "1" ]; then
+    echo "{\"unit\": \"private-extra-$(basename "$x")\", \"status\": \"not archived: no private repo\"}" >> "$OUT/results.jsonl"
+  elif [ -d "$x" ]; then OFFLOAD_KEEP_GIT=1 run_unit "private-extra-$(basename "$x")" "$PRIVATE_REPO" --src "$x"
+  elif [ -e "$x" ]; then echo "$x" >> "$OUT/private_extra_files.txt"
+  else echo "{\"unit\": \"private-extra-$(basename "$x")\", \"status\": \"missing: $x\"}" >> "$OUT/results.jsonl"; fi
+done
+[ -s "$OUT/private_extra_files.txt" ] && run_unit "private-extra-files" "$PRIVATE_REPO" --files-from "$OUT/private_extra_files.txt"
 # the private routing problem: its package, its work folder and its files in the home folder
 ls -d "$HOME_DIR"/*vrp* "$HOME_DIR"/*VRP* 2>/dev/null | grep -v -E '/(helix_vrp|vrp_work)$' > "$OUT/private_files.txt" || true
 git ls-files -o | grep -v -E '^runs/[^/]+/|^runs/\.offload|(^|/)\.env' | grep -i vrp | sed "s|^|$CHECKOUT/|" >> "$OUT/private_files.txt" || true

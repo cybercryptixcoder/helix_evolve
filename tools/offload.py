@@ -41,7 +41,12 @@ from pathlib import Path
 PART_BYTES = int(float(os.environ.get("OFFLOAD_PART_MB", "1900")) * 1024 * 1024)
 LEVEL = int(os.environ.get("OFFLOAD_GZIP_LEVEL", "3"))
 TMP = Path(os.environ.get("OFFLOAD_TMP", "runs/.offload_tmp"))
-SKIP_NAMES = {"__pycache__", ".git", ".offload_tmp"}
+SKIP_NAMES = {"__pycache__", ".offload_tmp"} | (set() if os.environ.get("OFFLOAD_KEEP_GIT") == "1" else {".git"})
+
+
+def secret_file(name):
+    """Key files never go into an archive (.env and .env.*, except an example file)."""
+    return (name == ".env" or name.startswith(".env.") or name.endswith(".env")) and "example" not in name
 SKIP_SUFFIX = (".pyc",)
 
 
@@ -218,7 +223,7 @@ def walk(srcs, excludes=()):
             out.append((str(r.relative_to(base)), r))
             for f in sorted(files) + sorted(links):
                 p = r / f
-                if f.endswith(SKIP_SUFFIX) or str(p) in excl:
+                if f.endswith(SKIP_SUFFIX) or secret_file(f) or str(p) in excl:
                     continue
                 out.append((str(p.relative_to(base)), p))
     return sorted(set(out), key=lambda x: x[0])
@@ -377,7 +382,7 @@ def archive(unit, srcs, slug, excludes=(), note="", checkout=".", files_from=Non
     if files_from:
         for line in Path(files_from).read_text().splitlines():
             p = Path(line.strip())
-            if line.strip() and (p.is_file() or p.is_symlink()) and not p.name.endswith(SKIP_SUFFIX):
+            if line.strip() and (p.is_file() or p.is_symlink()) and not p.name.endswith(SKIP_SUFFIX) and not secret_file(p.name):
                 loose.append((line.strip().lstrip("/"), Path(os.path.abspath(p))))
     if not srcs and not loose:
         say(f"== {unit}: nothing to archive (no such folder)")

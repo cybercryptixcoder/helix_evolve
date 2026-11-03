@@ -98,3 +98,16 @@ A restored run folder is exactly the folder the job left, so its job script resu
 generation (for v10.2: `ARM=helix SEED=1 GENS=600 bash scripts/run_v102.sh`), as if it had never stopped. Resuming
 from an earlier generation than the last isn't built: every log is append-only and tagged by generation, so the
 state at an earlier generation can be rebuilt from the archive, but that needs a small tool written first.
+
+## The run of November 3
+
+- Three runs (00:43-02:24 EST). The first two hit setup problems (the private repo was public, then empty), both
+  fixed; the third ended `== offload complete: every unit verified`: 17 units, 17.6 GB in 4.9 GB compressed, and the
+  v10.2 constructions as releases (2,408 and 2,310, each re-scored).
+- Checked from the cloud session: the report and the inventory; the archives `runs-v5` and `runs-v102` downloaded from
+  GitHub and restored, every file matching its SHA-256; the restored v10.2 best construction is identical to
+  `results/v102/v102-helix/best.npy`, and the restored `state.json` files to those in `results/`.
+- The inventory showed Helix folders outside the checkout (older checkouts with their own runs, tools, notes, and
+  untracked `results/v47`). A fourth pass archives them to the private repo with `EXTRA_PRIVATE` (`.git` folders
+  kept, `.env` files never).
+
