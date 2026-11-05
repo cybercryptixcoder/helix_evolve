@@ -155,4 +155,10 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
   problems for the showcase, compared fairly with published systems (planned: research/SHOWCASE_PLAN.md); (3) first,
   the routing heuristic measured fairly against the published method (private; done for the held-out set, the rest
   running on the VM, the long-budget evolution run next).
+- **doing** (2026-11-05 18:20, 18:50): a lean Helix at the centre of the repo, problem first. Rebuild from v4 (cleaned
+  of bugs, conceptual issues and bloat), then add components one at a time, each solving a named problem and kept only
+  if a test shows it helps; the old versions stay in the repo, off centre stage; then experiments on several problems
+  against published results, for a public portfolio project ("lean is clean"). Problems named: continuity between
+  rounds, limited context (no architecture imposed), the wide loop possibly redundant (to test), the deep loop
+  overgrown, exploring genuinely untried territory and forcing it with settings. Plan: `docs/LEAN_PLAN.md`.
 
