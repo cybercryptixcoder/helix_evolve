@@ -151,3 +151,8 @@ Last reviewed: 2026-10-17, from the full message history Shreyas pasted in.
   resume); README with the results in plain terms. (00:06) every claim with complete evidence (runs, traces, settings,
   machine, model), verified, nothing misrepresented. Done so far: docs/OFFLOAD.md, docs/RECORDS.md, README.md;
   the offload job runs next on the VM, then Claude checks the report, then Shreyas decides on deleting.
+- **doing** (2026-11-04 22:08): (1) clean up and organise the repo (done: docs folders, index, code map); (2) more
+  problems for the showcase, compared fairly with published systems (planned: research/SHOWCASE_PLAN.md); (3) first,
+  the routing heuristic measured fairly against the published method (private; done for the held-out set, the rest
+  running on the VM, the long-budget evolution run next).
+

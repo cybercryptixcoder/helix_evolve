@@ -4,6 +4,19 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## November 4-5, 2026: the docs organised; the private routing work re-measured fairly
+
+- **Asked:** a clean, well-organised repo; more results for the showcase (planned in
+  [research/SHOWCASE_PLAN.md](research/SHOWCASE_PLAN.md), not started); and, first, an unambiguous, fair measure of
+  the evolved routing heuristic against the published method for the people who own it.
+- **Done (this repo):** the docs moved into `design/`, `jobs/`, `analysis/`, `research/`, `history/` and `figures/`
+  with an index ([README.md](README.md)); every link and path mention rewritten and checked; a code map in the README.
+- **Done (private, outside this repo):** the routing comparisons were re-run with the published method allowed to
+  finish (earlier comparisons had stopped it at the same 4-12 s limit as the evolved program, which overstated the
+  gap). The evidence and the jobs live in the private repository.
+
+---
+
 ## November 3, 2026: paused; the VM offloaded to GitHub; the results written up with their evidence
 
 - **Asked:** pause Helix and clear the VM's disk. Before that, everything on the VM goes to GitHub losslessly, so any
