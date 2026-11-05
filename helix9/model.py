@@ -1,4 +1,4 @@
-"""A model of the landscape over design coordinates (docs/V9_DESIGN.md, docs/SEARCH_SPACE_MODEL.md section 4).
+"""A model of the landscape over design coordinates (docs/design/V9_DESIGN.md, docs/research/SEARCH_SPACE_MODEL.md section 4).
 
     height(x, effort) = mu + sum_i g_i(x_i) + sum_(i,j selected) g_ij(x_i, x_j) + beta * log(1 + effort) + noise
 
@@ -13,7 +13,7 @@
   exp(-effort / s) for s in EFFORT_SCALES, shared by all designs. Rankings of designs don't depend on it.
 - An axis seen with fewer than two values (a decision nobody has varied: a frozen axis) has no data on how much its
   values matter, so its prior variance is the pooled one of the axes that have been varied, not shrunk to zero: the
-  decisions every program shares are where the most is unknown (docs/SEARCH_SPACE.md), and the model must say so.
+  decisions every program shares are where the most is unknown (docs/research/SEARCH_SPACE.md), and the model must say so.
   Varied axes are pulled gently towards the pooled variance too (a hyperprior worth `pool_weight` levels).
 - Values never observed keep the prior: mean zero, the axis's variance. Sampling a model from the posterior (Thompson
   sampling) therefore sometimes rates an untried value high: exploration of new values and new axes comes from the

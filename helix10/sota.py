@@ -1,6 +1,6 @@
-"""What the field knows about the second autocorrelation inequality, as of October 28, 2026 (docs/AC2_SOTA.md).
+"""What the field knows about the second autocorrelation inequality, as of October 28, 2026 (docs/analysis/AC2_SOTA.md).
 
-Three parts, each used by v10 (docs/V10_DESIGN.md):
+Three parts, each used by v10 (docs/design/V10_DESIGN.md):
 - AXES: the field's design decisions and their options (borrowed axes). They are added to the design map's codebook,
   on an existing decision when the map has one for it (the option is new), else as a new decision. Both run modes get
   them. Exploration is biased towards them: every option is tried as a target before the map's own choices take over.
@@ -181,7 +181,7 @@ FINDINGS = [
     ("The record (0.963588 at 2M) is a kinked vertex: its max is unique to 1e-10; about 4,000 lags lie within 1e-8 "
      "of it and 322,000 within 1e-7. Every smooth direction lowers R; exact single-coordinate moves still gain about "
      "1e-10 each. The Dinkelbach polish on one CPU core gains +3.4e-8 in 133 s, +3.8e-8 in 18 minutes, then nothing.",
-     thread(255) + "; measured here, October 28 (docs/AC2_SOTA.md)"),
+     thread(255) + "; measured here, October 28 (docs/analysis/AC2_SOTA.md)"),
     ("Polishing at the size cap: zero-padding to 2M then polishing gained about 7e-6 per cycle against 6e-7 at 1M, "
      "and the construction grew new structure into the padding; velocity cycles (noise 1e-8 x max f, momentum 0.3, "
      "full cascade to beta 1e14) kept gaining for 100+ cycles. This took 0.96290 to 0.96359 on GPUs.", CE12),

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v4.7 job (docs/V47_DESIGN.md): the second autocorrelation inequality, v4.7 (v4 with the false ceiling
+# The Helix v4.7 job (docs/design/V47_DESIGN.md): the second autocorrelation inequality, v4.7 (v4 with the false ceiling
 # removed) and plain v4 (Atlas) as the same-night baseline, x three seeds, 30 generations each, side by side.
 #
 #   nohup bash scripts/run_v47_jobs.sh > v47_jobs.log 2>&1 &
@@ -91,7 +91,7 @@ git_push() {   # message
     git add -f "$RESULTS" 2>/dev/null
     git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" -c commit.gpgsign=false commit -q -m "$1" || exit 0
     for i in 1 2 3 4; do git pull -q --rebase origin HEAD && git push -q origin HEAD && exit 0; sleep $((10 * i)); done
-    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/V47_JOB.md)" >&2
+    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/jobs/V47_JOB.md)" >&2
   ) 9> "$ROOT_RUNS/.git.lock"
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The v4.7 warm-start job (docs/V47_WARM.md): two v4.7 runs on the second autocorrelation inequality, both starting
+# The v4.7 warm-start job (docs/jobs/V47_WARM.md): two v4.7 runs on the second autocorrelation inequality, both starting
 # from the best construction of the 150-generation v4 run (0.940795), for 40 more generations at 60 s per program:
 #   v47-s1  continues that run as generation 151 under v4.7: every program, construction and finding kept;
 #   v47-s2  starts from the best program and its construction alone, with a fresh Atlas.

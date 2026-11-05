@@ -1,4 +1,4 @@
-"""Start a v10 run from an earlier run (v9): the warm start, in one of two modes (docs/V10_JOB.md).
+"""Start a v10 run from an earlier run (v9): the warm start, in one of two modes (docs/jobs/V10_JOB.md).
 
     python -m helix10.warm --src results/v9warm/v9-s1 --out runs/v10/v10-axes --mode axes --pack results/v9warm/v9-s1/pack
     python -m helix10.warm --src results/v9warm/v9-s1 --out runs/v10/v10-warm --mode warm --pack ... --field runs/field
@@ -7,7 +7,7 @@ then `python -m helix10.job --out runs/v10/v10-axes --gens 920` runs it.
 
 Both modes continue the source run as it stands (every program, construction, finding, track, hill and its design
 map: codebook, coordinates, readings), with generations continuing its numbering, and add the field's knowledge
-(helix10/sota.py, docs/AC2_SOTA.md):
+(helix10/sota.py, docs/analysis/AC2_SOTA.md):
 - **axes**: the field's design decisions and options on the map (borrowed axes; an option is new, a decision is new
   only when the map has nothing for it), recorded in borrowed.json so exploration can favour them, and the field's
   findings in the Atlas (kind "field", with sources). No construction and no program of the field.

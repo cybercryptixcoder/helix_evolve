@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v10.2 jobs (docs/V102_DESIGN.md, docs/V10_JOB.md "v10.2"): Helix from Code Zero on the second
+# The Helix v10.2 jobs (docs/design/V102_DESIGN.md, docs/jobs/V10_JOB.md "v10.2"): Helix from Code Zero on the second
 # autocorrelation inequality, with the field's ideas (the deep research, helix10/sota.py) as axes of its search space.
 # Two seeds side by side, sharing the machine's 2 evaluation slots:
 #   ARM=helix SEED=1 / SEED=2   v102-helix / v102-helix-s2: the field's 9 decisions and 38 options on the design map and
@@ -9,7 +9,7 @@
 #   ARM=field     (optional) a reference: the world's best program (ClaudeExplorer's iterated Dinkelbach and velocity
 #                 cycles) from nothing, chained, at the same limit, using at most half of seed 1's CPU (compared at
 #                 equal CPU).
-# The constraint (docs/V102_DESIGN.md): as the published systems it is compared with: at most CAP = 50,000 steps
+# The constraint (docs/design/V102_DESIGN.md): as the published systems it is compared with: at most CAP = 50,000 steps
 # (AlphaEvolve V2's construction), BUDGET = 150 CPU seconds per program (TTT-Discover and OpenEvolve: 10 minutes;
 # ThetaEvolve: 350 s), from scratch (Code Zero), 3 + 3 programs a generation (about 1,000 programs in all; theirs:
 # 25,600 to 51,200). The report: results/v102/COMPARISON.md (helix10/compare.py: the climb, the cost, where each record came
@@ -29,7 +29,7 @@
 #      (240 h) is only a backstop; progress every 10 minutes, a push every 40;
 #   3. the end: the comparison, the verification of every best construction, a push.
 #
-# Robust by design (docs/AETHER.md, sections 4 and 4b): one copy per NAME (a lock); runs from a snapshot of itself;
+# Robust by design (docs/jobs/AETHER.md, sections 4 and 4b): one copy per NAME (a lock); runs from a snapshot of itself;
 # started again after any stop it resumes from the last finished generation; a stop signal finishes the generation in
 # progress and pushes; retries on errors; installs no cron job or timer; waits while disk or model are down.
 #

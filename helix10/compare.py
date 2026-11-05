@@ -1,4 +1,4 @@
-"""v10.2's report (docs/V102_DESIGN.md): Helix from Code Zero with the field's ideas as axes, one or more seeds, set
+"""v10.2's report (docs/design/V102_DESIGN.md): Helix from Code Zero with the field's ideas as axes, one or more seeds, set
 against what is known from nothing: the field's own optimisers, the world's best program run here at the same CPU (if
 the reference job runs), and Helix's earlier versions from Code Zero without the field's axes.
 
@@ -19,7 +19,7 @@ from helix10 import sota
 
 ARMS = (("v102-helix", "Helix v10.2"),)
 EARLIER = ("Helix v4 (Atlas) from Code Zero without the field's axes: 0.9390 at generation 20, 0.9408 by about "
-           "generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/V4_CEILING.md); the long line of Helix "
+           "generation 50, flat to generation 150 (results/v4cont/atlas-s1, docs/analysis/V4_CEILING.md); the long line of Helix "
            "runs continuing each other from Code Zero (v4.7, v7, v8, v9: about 800 generations) ended at 0.941442 "
            "(docs/VERSIONS.md).")
 PUBLISHED = (   # LLM-driven discovery systems on this problem, with the budgets they report (TTT-Discover, Table 2,
@@ -32,7 +32,7 @@ PUBLISHED = (   # LLM-driven discovery systems on this problem, with the budgets
     ("TTT-Discover", 0.9591, "gpt-oss-120b (trained at test time)", 25600, "10 min"),
     ("AlphaEvolve V2 (Nov 2025; 50,000 steps)", 0.9610, "Gemini 2.0 Pro + Flash", None, "not stated"),
 )
-FIELD_SCRATCH = (0.90, 0.93)          # what the field's own optimisers reach from nothing (docs/AC2_SOTA.md)
+FIELD_SCRATCH = (0.90, 0.93)          # what the field's own optimisers reach from nothing (docs/analysis/AC2_SOTA.md)
 
 
 def jl(path):

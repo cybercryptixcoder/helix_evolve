@@ -37,10 +37,10 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - It is measured against their reported values: AlphaEvolve 0.8962, OpenEvolve 0.9449, ThetaEvolve 0.9469,
     TTT-Discover 0.9591, AlphaEvolve V2 0.9610.
 - **Why.** v10.1 patched every idea onto converged records, so nothing could separate: 41 of 48 programs moved their
-  start by less than 1e-6 (`docs/V101_ANALYSIS.md`). A home-built "industry" loop was considered and dropped
+  start by less than 1e-6 (`docs/analysis/V101_ANALYSIS.md`). A home-built "industry" loop was considered and dropped
   (Shreyas: a basic rebuild can't stand in for the industry); published results under matched constraints replace it.
 - **Fixed:** helix47's ProblemView never went below 200,000 steps, so v10.1's 100,000 class ran with 200,000.
-- **Docs:** `docs/V102_DESIGN.md`, `docs/V10_JOB.md` (v10.2). **Code:** `helix10/run.py` (build, wide_own,
+- **Docs:** `docs/design/V102_DESIGN.md`, `docs/jobs/V10_JOB.md` (v10.2). **Code:** `helix10/run.py` (build, wide_own,
   ExactView, the cold seed), `helix10/compare.py`, `scripts/run_v102.sh`.
 
 ## The two streams
@@ -61,25 +61,25 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **Why.** v10's odds were low for a compute reason: at 2M steps our CPU can't climb a new idea to its height, so it
   loses to a record polished on GPUs. The fair test of the claim is at n <= 100,000 (our CPU matches the field's
   compute there), against the field's own best program run under exactly our constraint.
-- **What changes** (docs/V10_DESIGN.md, "v10.1"): the size class (100,000 steps; zero ends trimmed), 300 s per
+- **What changes** (docs/design/V10_DESIGN.md, "v10.1"): the size class (100,000 steps; zero ends trimmed), 300 s per
   program, JSAgent's public 100k seed (0.962273842955, the class's best) as the warm run's start, the bar
   (`helix10/baseline.py`: the field's program chained from the same starts, matched in CPU), and the invariant audit
   (`helix10/audit.py`). The v10 jobs are paused gracefully and continued.
-- **The job** (docs/V10_JOB.md, `scripts/run_v101.sh`): three jobs, axes, warm and field; the comparison in
+- **The job** (docs/jobs/V10_JOB.md, `scripts/run_v101.sh`): three jobs, axes, warm and field; the comparison in
   `results/v101/COMPARISON.md`.
 
 ## v10: v9 plus the field's knowledge, in two runs (October 28, 2026), job ready
 
-- **Why.** v9's job (docs/V9_RESULTS.md) moved the record by 2.5e-13: 8 distinct hills top out within 3e-7 of
+- **Why.** v9's job (docs/analysis/V9_RESULTS.md) moved the record by 2.5e-13: 8 distinct hills top out within 3e-7 of
   0.94144, and every Helix hill shares assumptions that are not axes on its map. The October 28 discussion proposed
   borrowing the axes from the field once per problem (an idea as an axis: the third level of borrowing), and Shreyas
   asked for two runs: the field's concepts only, and the field's best constructions and programs plus the concepts.
-- **The research** (docs/AC2_SOTA.md): the record is **0.963588110582** (EinsteinArena #1, July 2026, n = 1,999,999;
+- **The research** (docs/analysis/AC2_SOTA.md): the record is **0.963588110582** (EinsteinArena #1, July 2026, n = 1,999,999;
   a new arena #1 needs 0.963598). 14 constructions downloaded and verified (data/field_ac2), one per family and
   approach; the methods from 30 arena threads, ClaudeExplorer's repo and notes, JSAgent's wiki and the papers.
   **Measured:** the field's own polish, rewritten for one CPU core, gains +3.8e-8 on the record and stops (the arena
   needs 1e-5); on our 0.94144 it gains 7e-9.
-- **What it adds** (docs/V10_DESIGN.md, `helix10/`): 9 decisions and 38 options from the field on the design map
+- **What it adds** (docs/design/V10_DESIGN.md, `helix10/`): 9 decisions and 38 options from the field on the design map
   (5 on decisions the map had), every option tried once as a flip of the record, then half the new explorations on
   them; 14 findings of kind "field" in the Atlas, with sources; the warm mode's 14 imported constructions (own tracks
   and hills) and 3 field methods as programs; constructions up to 2,000,000 steps, kept by reference when unchanged
@@ -87,7 +87,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **v9's failures, fixed:** copies of known hills stop racing after their first rung (any kind); first rung at 3
   experiments, and a young track is never queued; at most one wide base a generation on the record's hill; at least
   two of three planned experiments explore; upkeep every third generation.
-- **The job** (docs/V10_JOB.md, `scripts/run_v10.sh`): v10-axes and v10-warm side by side, continuing v9-s1 from
+- **The job** (docs/jobs/V10_JOB.md, `scripts/run_v10.sh`): v10-axes and v10-warm side by side, continuing v9-s1 from
   generation 800 for 120 generations at 150 s per program. Odds of the arena record, honestly: about 3% for v10-warm,
   under 0.5% for v10-axes; v10-axes is the cleaner test of the research question.
 
@@ -95,10 +95,10 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 
 - **Why.** The October 27 discussion asked for a map of the design space with literal coordinates, jumps to chosen
   points on it, and axes discovered while searching; and for a proof of concept that can be trusted before scaling.
-  Measurements on v4-v8 (`docs/SEARCH_SPACE_MODEL.md`, section 2): the Cartographer's decision names fall ~98% into 9
+  Measurements on v4-v8 (`docs/research/SEARCH_SPACE_MODEL.md`, section 2): the Cartographer's decision names fall ~98% into 9
   recurring axes, but v8 re-derived them every scan, so no program ever had a coordinate; a run's best after 20
   programs has no rank correlation with its final best, yet v8 paused restarts after a median of 3 experiments.
-- **What it adds** (`docs/V9_DESIGN.md`, `helix9/`): a codebook of decisions with permanent ids; an annotator that
+- **What it adds** (`docs/design/V9_DESIGN.md`, `helix9/`): a codebook of decisions with permanent ids; an annotator that
   gives every program a coordinate (from its diff, or in full, a sample read twice to measure reliability); a
   Bayesian model of the landscape (main effects, screened interactions, effort; undecided decisions kept uncertain);
   drops, flips and ablations chosen from it by Thompson sampling, built from a blueprint and read back; a fair race
@@ -107,7 +107,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   residuals.
 - **Continuing from GitHub:** a continuation pack (verified constructions and every signature), publishing in fixed
   gzipped chunks, a warm start that reads either; on the VM, missing constructions come from the local folder.
-- **The simulator** (`docs/V9_SIM.md`): the first draft was **not** better than v8 (worse on 40 seeds per world,
+- **The simulator** (`docs/analysis/V9_SIM.md`): the first draft was **not** better than v8 (worse on 40 seeds per world,
   p = 0.047): its race had throttled breadth (11 explorations in 120 generations against v8's 57). Fixed. v9 as
   shipped, on 280 fresh worlds: the taller hill 43.9% vs 36.4%, better on 88 seeds and worse on 46 (p < 0.001); much
   better where new hills show their height quickly, never worse beyond noise. Ablations: breadth is essential (without
@@ -115,14 +115,14 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   from where v9 jumps, not yet from the model. Every Helix version beats a simple baseline (14% vs 33%).
 - **The viewer** (`viz/mapview.html`): any version's run, or a simulator run, live from GitHub: the map, the
   landscape as contours or terrain, the record's climb, the race, the design map.
-- **The job** (`docs/V9_JOB.md`, `scripts/run_v9_warm.sh`): v8-s1 continued from generation 700 (record 0.9414417)
+- **The job** (`docs/jobs/V9_JOB.md`, `scripts/run_v9_warm.sh`): v8-s1 continued from generation 700 (record 0.9414417)
   for 100 generations, after a replay on v8's archive (stage 0: is the map real?). Tested end to end with a fake
   model on the real archive, through every interruption.
 - **Tested live** with the real model (October 27, evening): the replay on v8's archive (12 of 13 decisions read
   reliably after the map's upkeep, which live testing showed was needed: without it the map grew to 874 decisions; the
   model ranks later changes weakly, +0.06 to +0.16), the job end to end with a stop and resume, a cold run, and the
   planted problem (the real coder built 8 of 9 target decisions; the run reached the planted taller hill).
-- **The job's result** (`docs/V9_RESULTS.md`): 100 generations, the record moved by 2.5e-13. The map ran as designed, but
+- **The job's result** (`docs/analysis/V9_RESULTS.md`): 100 generations, the record moved by 2.5e-13. The map ran as designed, but
   exploration was starved: flips and ablations that landed back on the record's hill tied it and held the race's slots
   (117 of 199 exploration experiments), so 49 new explorations got one experiment each; drops near the record landed at
   0.58-0.85 and were never climbed; 42% of asked-for decision values landed. Eight distinct hills top out within 3e-7
@@ -132,14 +132,14 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 ## v8: v7 plus a register of hills (October 24, 2026), job ready
 
 - **Why.** v7 explored in most generations but couldn't reliably find a new hill, or tell one from a hill it had
-  already found (`docs/V7_RESULTS.md`, `docs/SEARCH_SPACE.md`):
+  already found (`docs/analysis/V7_RESULTS.md`, `docs/research/SEARCH_SPACE.md`):
   - restarts from scratch all fell into one well;
   - revive tracks were judged against unchanged copies of the record;
   - the one real change of hill was found by chance.
 
   Shreyas asked for a surgical version, at least as good as v4 and v7, that discovers new hills one after another,
   tests reliably that each is new, and doesn't redo work.
-- **What it adds** (`docs/V8_DESIGN.md`).
+- **What it adds** (`docs/design/V8_DESIGN.md`).
   - **A hill is defined by what a program produces, measured by code:** the shape of the construction, or on the VRP
     the trips its solutions are made of. The radii were calibrated on earlier runs.
   - **A register of hills.** Each track's best is placed on the nearest known hill, or founds a new one after its
@@ -159,24 +159,24 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - A VRP v8 continuation of the real v7 run was tested with a fake model. Its map starts with 3 hills: T40's (the
     record), the hill before it, on which 10 of v7's explorations had ended (9 of them at distance 0.000 or 0.001),
     and Code Zero's.
-  - The jobs (`docs/V8_JOB.md`) continue both v7 runs for 100 generations, side by side.
+  - The jobs (`docs/jobs/V8_JOB.md`) continue both v7 runs for 100 generations, side by side.
   - **The autocorrelation run (v8-s1) ran on to generation 700** (`results/v8warm/`): best 0.9412521 → 0.9414417.
     The last gain above the floor came at generation 384. 73 hills were registered; flips mostly landed on
     record-height hills with different shapes, and restarts paused after a median of 3 experiments at a median
-    0.82. Analysis: `docs/SEARCH_SPACE_MODEL.md`, section 2.
+    0.82. Analysis: `docs/research/SEARCH_SPACE_MODEL.md`, section 2.
 
 ## v7: exploration that follows progress (October 23–24, 2026), finished: it did what it was built to do
 
 - **Why.** The v4.7 warm run broke the record from a line opened on an alternative construction (generations
   177–181). Rule 1 then closed that line at generation 182, while it was still climbing. Shreyas asked for the
-  following (`docs/BRIEF_2026-10-23.md`, task F and the request of 11:28):
+  following (`docs/history/BRIEF_2026-10-23.md`, task F and the request of 11:28):
   - no closing rules;
   - the main path continues even when flat;
   - exploration rises as progress stalls, and includes reviving earlier approaches on today's state and going back
     to earlier states;
   - whatever picks up gets depth;
   - a broad start.
-- **What it does** (`docs/V7_DESIGN.md`).
+- **What it does** (`docs/design/V7_DESIGN.md`).
   - v4's two loops and Atlas, with the tree of attempts restored, plus v4.7's measurement fixes. Every program is on
     a track; nothing is ever closed.
   - From the stall (generations since the last record) and the run's own typical gap between records, 0, 1 or 2 of
@@ -186,7 +186,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
     record becomes the main track.
   - The wide loop samples more broadly when stalled.
   - On the VRP, the noise floor is measured at the start.
-- **Status: both runs finished** (`docs/V7_RESULTS.md`).
+- **Status: both runs finished** (`docs/analysis/V7_RESULTS.md`).
   - **Autocorrelation:** 0.9412297 → **0.9412521** in 100 generations, verified three ways. The last record came from a
     side track that had stepped back one generation.
   - **VRP:** 1.6443 → 1.6505 on the training worlds, and 1.6960 → **1.7060** held out (21.6% better quality than the
@@ -196,13 +196,13 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
     restarts from scratch all fell into the model's default basin (19 of 19 at or below 0.8825 on the autocorrelation
     problem). Revive contributed almost nothing.
   - **Next:** a map of the design space, probes that measure hills, regions, directed restarts
-    (`docs/SEARCH_SPACE.md`, not built yet).
-- **Code:** `helix7/`. **Risks to watch** are listed at the end of `docs/V7_DESIGN.md`.
+    (`docs/research/SEARCH_SPACE.md`, not built yet).
+- **Code:** `helix7/`. **Risks to watch** are listed at the end of `docs/design/V7_DESIGN.md`.
 
 ## v4.7: the false ceiling removed (October 23, 2026), finished
 
 - **Why.** The 150-generation v4 run climbed for about 40 generations, then polished one construction for 110. The
-  analysis (`docs/V4_CEILING.md`) found the ceiling was built by the machinery, not by a lack of ideas:
+  analysis (`docs/analysis/V4_CEILING.md`) found the ceiling was built by the machinery, not by a lack of ideas:
   - every planned experiment went to the champion and was judged against it after 30 s;
   - 72% of late children handed back their start unchanged, so new ideas were invisible;
   - at generation 140, all 45 findings on the planner's map were failures, many "confirmed saturated";
@@ -226,8 +226,8 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
     - Rule 1 closed lines too early (after 4 generations at under 0.2%), including the record's line.
     - Both runs were also slower in generations 1–5, before any line closed.
     - Fixed with rule 2 (patience 8; the record's line keeps a slot while a new line opens beside it). See
-      `docs/V47_DESIGN.md`, last section.
-  - **The warm-start job** (`docs/V47_WARM.md`, results in `results/v47warm/`). Two v4.7 runs started from the
+      `docs/design/V47_DESIGN.md`, last section.
+  - **The warm-start job** (`docs/jobs/V47_WARM.md`, results in `results/v47warm/`). Two v4.7 runs started from the
     0.940795 construction, 40 generations at 60 s per program. Both ran under rule 1: the `git pull` with rule 2
     came after they started.
     - **v47-s2** (the best program alone, a fresh Atlas) set the record, **0.9412296**. The record came from line L7,
@@ -235,11 +235,11 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
       closed L7 at generation 182.
     - **v47-s1** (the whole old Atlas) didn't move from 0.940795.
   - **VRP from Code Zero:** v4.7's best scored 1.6420 on the held-out worlds, against v4's 1.6961.
-    Whether that gap is noise is an open question (task B of `docs/BRIEF_2026-10-23.md`).
-  - v4.7 against v4 from scratch (`docs/V47_JOB.md`) has not been run; v7 came first.
-- **Docs:** `docs/V47_DESIGN.md`, `docs/V4_CEILING.md`, `docs/BRIEF_2026-10-22_V47.md`. **Code:** `helix47/`.
+    Whether that gap is noise is an open question (task B of `docs/history/BRIEF_2026-10-23.md`).
+  - v4.7 against v4 from scratch (`docs/jobs/V47_JOB.md`) has not been run; v7 came first.
+- **Docs:** `docs/design/V47_DESIGN.md`, `docs/analysis/V4_CEILING.md`, `docs/history/BRIEF_2026-10-22_V47.md`. **Code:** `helix47/`.
 - **Risk to watch.** Closing a line after 4 generations without a real gain might end a line just before a late
-  breakthrough (see `docs/RESEARCH_PLATEAUS.md`).
+  breakthrough (see `docs/research/RESEARCH_PLATEAUS.md`).
 
 ## v4.6 and v6 (October 22, 2026), stopped: worse than v4.5 and v5
 
@@ -249,14 +249,14 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - the wide loop is a "halo" around the record;
   - time-outs are INCONCLUSIVE, not failures.
 - **v6:** an agent with actions and a budget, threads, a theory.
-- **What happened** (`docs/V6_POSTMORTEM.md`): no breakouts in 8–12 generations.
+- **What happened** (`docs/analysis/V6_POSTMORTEM.md`): no breakouts in 8–12 generations.
   - The fixes concentrated effort on the record and removed the scatter that every earlier breakout had come from.
   - The state (N) grew without bound.
   - Stages accreted.
   - Ideas were judged on converged states.
 - **Lesson carried into v4.7:** keep several lines alive by construction, each with its own record and time to
   mature, and measure lines by their own rate of return.
-- **Docs:** `docs/V6_DESIGN.md`, `docs/V6_JOB.md`, `docs/V6_POSTMORTEM.md`, `docs/BRIEF_2026-10-22.md`.
+- **Docs:** `docs/design/V6_DESIGN.md`, `docs/jobs/V6_JOB.md`, `docs/analysis/V6_POSTMORTEM.md`, `docs/history/BRIEF_2026-10-22.md`.
   **Code:** `helix6/`.
 
 ## v4.5 and v5 (October 21, 2026), finished: within chance of v4, structurally different
@@ -264,14 +264,14 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
 - **v4.5:** v4's Atlas with a portfolio of slot roles (deepen, branch, explore from scratch), and real gains counted
   from 1e-5.
 - **v5:** one continuing researcher with a theory, an agenda and a notebook.
-- **What happened** (`docs/V5_RESULTS.md`), 3 seeds × 20 generations:
+- **What happened** (`docs/analysis/V5_RESULTS.md`), 3 seeds × 20 generations:
   - the medians were within chance of v4's;
   - no new run fell into the 0.8825 trap;
   - fresh lines took over late in 5 of 6 runs;
   - four of six runs were still climbing at generation 20.
 
   Breadth cost early depth. The max-as-constraint idea was rediscovered with no hint.
-- **Docs:** `docs/V5_DESIGN.md`, `docs/V5_JOB.md`, `docs/V5_RESULTS.md`, `docs/BRIEF_2026-10-21.md`.
+- **Docs:** `docs/design/V5_DESIGN.md`, `docs/jobs/V5_JOB.md`, `docs/analysis/V5_RESULTS.md`, `docs/history/BRIEF_2026-10-21.md`.
   **Code:** `helix5/`.
 
 ## v4 (October 20, 2026), the baseline: program evolution with memory
@@ -282,12 +282,12 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - journal: appended context, compacted;
   - Atlas: an immutable log, a tree of attempts, and a findings graph whose statuses are computed from measured
     results.
-- **What happened** (`docs/V4_ANALYSIS.md`, `docs/MILESTONES.md`):
+- **What happened** (`docs/analysis/V4_ANALYSIS.md`, `docs/history/MILESTONES.md`):
   - Atlas seed 1 reached 0.9390 in 20 generations, above AlphaEvolve's May 2025 result, verified three ways;
   - four of nine runs passed 0.8963, and four ended in the 0.8825 trap.
 - **Continued:** generations 20 → 55 → 150 (`results/v4cont/atlas-s1`) climbed to 0.9408 by about generation 50, then
-  stopped moving (`docs/V4_CEILING.md`).
-- **Docs:** `docs/V4_DESIGN.md`, `docs/V4_JOB.md`, `docs/BRIEF_2026-10-20.md`, `docs/TRACE_STUDY.md`.
+  stopped moving (`docs/analysis/V4_CEILING.md`).
+- **Docs:** `docs/design/V4_DESIGN.md`, `docs/jobs/V4_JOB.md`, `docs/history/BRIEF_2026-10-20.md`, `docs/analysis/TRACE_STUDY.md`.
   **Code:** `helix4/`.
 
 ## v3 (October 17–18, 2026): features, a ledger, the open suite
@@ -299,7 +299,7 @@ atlas-s1 by generation 50, which moved only in the 8th decimal place over genera
   - It reached records on several problems, then plateaued.
   - The plateau prompted the continuity hypothesis that v4 tested.
   - A meta-loop (Helix evolving its own strategy) was built and then scrapped as too expensive.
-- **Docs:** `docs/V3_DESIGN.md`, `docs/OPEN_SUITE.md`, `docs/META_V3.md`.
+- **Docs:** `docs/design/V3_DESIGN.md`, `docs/design/OPEN_SUITE.md`, `docs/design/META_V3.md`.
 
 ## v1 and v2 (October 11–14, 2026): the hackathon engines
 
@@ -321,17 +321,17 @@ plug-in nor any data is in this repo; the runs use synthetic data in the real fo
 - **Under a fixed time limit, speed is quality.** The biggest gains came from making the search cheaper per move.
 - **Status.** v4 ran for 49 generations, beating the current method by about 20% on held-out worlds (atlas-s1/p0292:
   1.6961, against 1.3865 for the best current method). v4.7 from Code Zero reached 1.6420. The v7 job starts from
-  p0292 for 100 generations (`docs/V7_JOB.md`).
+  p0292 for 100 generations (`docs/jobs/V7_JOB.md`).
 
 ---
 
 ## Open research questions
 
 - **Do LLM-driven searches grok?** Long plateaus followed by sudden climbs: luck, or hidden progress? Planned
-  experiment: `docs/RESEARCH_PLATEAUS.md`. Checked against the literature on October 23: replay experiments for
+  experiment: `docs/research/RESEARCH_PLATEAUS.md`. Checked against the literature on October 23: replay experiments for
   potentiation exist for classical genetic programming, but no study was found for LLM-guided search or LLM memory.
 - **How much do seeds matter?** The seed only drives parent sampling, and the model isn't seeded, so the spread
   between runs (0.882–0.939 at generation 20) is the model's own randomness. Results need several runs
-  (`docs/V4_CEILING.md`, "Seeds").
+  (`docs/analysis/V4_CEILING.md`, "Seeds").
 - **How much does the system prompt matter?** The evidence so far says the structure and the context matter more than
-  the wording. A proposed ablation is in `docs/V4_CEILING.md`.
+  the wording. A proposed ablation is in `docs/analysis/V4_CEILING.md`.

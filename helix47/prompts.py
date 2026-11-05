@@ -1,4 +1,4 @@
-"""v4.7's prompt texts: helix4's (helix4/prompts.py), rewritten for a deep loop organised in lines (docs/V47_DESIGN.md).
+"""v4.7's prompt texts: helix4's (helix4/prompts.py), rewritten for a deep loop organised in lines (docs/design/V47_DESIGN.md).
 
 Every change is about how the search is organised and how results are framed; none says anything about the problem
 or about what worked.

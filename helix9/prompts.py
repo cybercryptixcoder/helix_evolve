@@ -1,4 +1,4 @@
-"""v9's prompt texts (docs/V9_DESIGN.md). The rest comes from helix8/prompts.py and earlier.
+"""v9's prompt texts (docs/design/V9_DESIGN.md). The rest comes from helix8/prompts.py and earlier.
 
 Every text here is about how the search is organised; none says anything about the problem or about what worked. The
 design map's axes and values shown to the models come from the run's own programs (its annotator and Cartographer),

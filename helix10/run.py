@@ -1,4 +1,4 @@
-"""Helix v10: v9 plus the field's knowledge, and the fixes v9's job called for (docs/V10_DESIGN.md).
+"""Helix v10: v9 plus the field's knowledge, and the fixes v9's job called for (docs/design/V10_DESIGN.md).
 
 What v10 adds to v9 (everything of v9 stays):
 - **The field's decisions on the design map** (helix10/sota.py, AXES): added by the warm start (helix10/warm.py), on a
@@ -91,7 +91,7 @@ class Config(Config9):
     audit_every: int = 10             # the invariant audit (helix10/audit.py): every this many generations ...
     audit_stop: int = 2               # ... resting after this many empty rounds in a row, until the record moves
     audit_min_share: float = 0.75     # an invariant counts if this share of a second sample shares it
-    # ---- v10.2 (docs/V102_DESIGN.md): explorations build from nothing and are judged on their own climb
+    # ---- v10.2 (docs/design/V102_DESIGN.md): explorations build from nothing and are judged on their own climb
     build: bool = False               # a new exploration (a borrowed option, a drop) is built from Code Zero, not
                                       # patched onto the record, on its own track
     build_cap: int = 4                # at most this many of those race at once; past it, the slot serves a racing one
@@ -205,7 +205,7 @@ class Run(Run9):
     def __init__(self, out, cfg: Config | None = None, llm=None, gens=None, log=print, problem=None):
         super().__init__(out, cfg, llm=llm, gens=gens, log=log, problem=problem)
         if self.cfg.condition in ("v10.1", "v10.2"):
-            self.VERSION = self.cfg.condition              # the size-class comparisons (docs/V10_JOB.md)
+            self.VERSION = self.cfg.condition              # the size-class comparisons (docs/jobs/V10_JOB.md)
         if problem is None and getattr(self.problem, "max_n", None) != self.cfg.max_n:
             self.problem = ExactView(self.problem._mod, self.cfg.max_n)   # the limit exactly (helix47 can't lower it)
             self.problem_text = self.problem.DESCRIPTION

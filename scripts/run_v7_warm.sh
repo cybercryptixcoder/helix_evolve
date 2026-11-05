@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v7 job on the second autocorrelation inequality (docs/V7_JOB.md): one v7 run that continues the v4.7
+# The Helix v7 job on the second autocorrelation inequality (docs/jobs/V7_JOB.md): one v7 run that continues the v4.7
 # warm run v47-s2 (record 0.9412296, generation 190) for 100 more generations at 60 s per program. Every program,
 # construction and finding of v47-s2 is kept; its lines become paused side tracks, the record's line is the main track.
 #

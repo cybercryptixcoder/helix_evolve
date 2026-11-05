@@ -1,5 +1,5 @@
-"""Stage 1 of the proof of concept: a planted landscape with a known best (docs/V9_DESIGN.md, section 7 of
-docs/SEARCH_SPACE_MODEL.md).
+"""Stage 1 of the proof of concept: a planted landscape with a known best (docs/design/V9_DESIGN.md, section 7 of
+docs/research/SEARCH_SPACE_MODEL.md).
 
     python -m helix9.sim --family broad --policy v9 --seed 3                # one run, printed
     python -m helix9.sim --batch --seeds 24 --out results/v9sim             # every family x policy
@@ -263,7 +263,7 @@ class Policy:
 
 def policy(name):
     """v9 is v9 as shipped (helix9/run.py's defaults); v9-draft is the first draft, before the simulator showed that
-    capping how many tracks race also capped breadth (docs/V9_SIM.md). The ablations each change one part of v9."""
+    capping how many tracks race also capped breadth (docs/analysis/V9_SIM.md). The ablations each change one part of v9."""
     draft = dict(kinds=("drop", "flip", "backtrack"), model=True, readback=True, race="rising", discovery=True)
     v9 = {**draft, "breadth": "half", "serve": "gain"}
     table = {
@@ -281,7 +281,7 @@ def policy(name):
         "v9-turn": {**v9, "serve": "turn"},              # racing tracks served in turn only
         "v9-v8flip": {**v9, "flip": "shared"},
         "v9-restart": {**v9, "kinds": ("restart", "flip", "backtrack")},
-        # the first draft's variants (docs/V9_SIM.md, batches 2 to 5)
+        # the first draft's variants (docs/analysis/V9_SIM.md, batches 2 to 5)
         "v9-gain": {**draft, "serve": "gain"},
         "v9-cap6": {**draft, "cap": 6},
         "v9-nocap": {**draft, "cap": 99},

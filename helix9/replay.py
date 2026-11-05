@@ -1,5 +1,5 @@
-"""Stage 0 of the proof of concept: the offline replay on an earlier run's archive (docs/V9_DESIGN.md; section 7 of
-docs/SEARCH_SPACE_MODEL.md). No programs are run: only model calls, a few hundred.
+"""Stage 0 of the proof of concept: the offline replay on an earlier run's archive (docs/design/V9_DESIGN.md; section 7 of
+docs/research/SEARCH_SPACE_MODEL.md). No programs are run: only model calls, a few hundred.
 
     python -m helix9.replay --run results/v8warm/v8-s1 --out results/v9warm/replay            # real model
     python -m helix9.replay --run results/v8warm/v8-s1 --out /tmp/replay --fake --sample 30   # a test
@@ -348,7 +348,7 @@ def write_report(path, run, cb, coords, rows, ag, test, m, progs, decisions):
           f"{test['rho_level']:+.3f} (permutation p = {test['p_level']:.3f}); their parents' scores alone: "
           f"{test['rho_parent']:+.3f}")
     lines = [f"# The replay: is the design map real? ({Path(run).name})", "",
-             f"Stage 0 of the proof of concept (`helix9/replay.py`, `docs/V9_DESIGN.md`). No programs were run.", "",
+             f"Stage 0 of the proof of concept (`helix9/replay.py`, `docs/design/V9_DESIGN.md`). No programs were run.", "",
              "## Verdicts", "", f"- {v1}", f"- {v2}"] + ([f"- {v3}"] if v3 else []) + [
              f"- The codebook: {len(axes)} decisions from {len(decisions)} distinct names the Cartographer gave; "
              f"{len(coords)} programs read, {len(rows)} of them twice.", "",

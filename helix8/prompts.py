@@ -1,4 +1,4 @@
-"""v8's prompt texts (docs/V8_DESIGN.md). The rest comes from helix7/prompts.py, helix47 and helix4.
+"""v8's prompt texts (docs/design/V8_DESIGN.md). The rest comes from helix7/prompts.py, helix47 and helix4.
 
 Every text here is about how the search is organised; none says anything about the problem or about what worked.
 """

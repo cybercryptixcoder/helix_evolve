@@ -23,7 +23,7 @@ python -m suite.check --all
 
 ## Open suite
 
-No reference, no floor, no ceiling (`docs/OPEN_SUITE.md`): `open_ceiling = True`, gap = 100 x cost / Code Zero's cost on the instance (Code Zero = 100 exactly), candidates reshuffled at every decision with the instance's seed.
+No reference, no floor, no ceiling (`docs/design/OPEN_SUITE.md`): `open_ceiling = True`, gap = 100 x cost / Code Zero's cost on the instance (Code Zero = 100 exactly), candidates reshuffled at every decision with the instance's seed.
 
 | Problem | Decision | Candidates | Cost |
 |---|---|---|---|

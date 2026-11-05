@@ -1,4 +1,4 @@
-"""Start a v8 run from an earlier run (v7, v4.7 or v4): the warm start (docs/V8_JOB.md).
+"""Start a v8 run from an earlier run (v7, v4.7 or v4): the warm start (docs/jobs/V8_JOB.md).
 
     python -m helix8.warm --src runs/v7warm/v7-s1 --out runs/v8warm/v8-s1 --mode continue --seed 1 --budget 60
 

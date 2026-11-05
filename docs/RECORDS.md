@@ -43,7 +43,7 @@ The runs below differ in one way that matters:
 |---|---|
 | Computer | One Oracle Cloud virtual machine: Ampere A1, ARM (Neoverse-N1), **2 CPU cores**, 12 GB RAM, **no GPU**. Shared with other jobs |
 | Each program | Run single-threaded, under a hard **CPU-time limit** (30 s in v4, 60 s in v4.7-v8, 150 s in v10.2) and a memory cap (1.5 GB; 2 GB in v10.2). At most 2 programs ran at once on the whole machine |
-| Model | **DeepSeek V4.1 Flash** (`deepseek-ai/DeepSeek-V4.1-Flash`), one model for every agent, through Luminal's API. The planning agent (and, in later versions, a few reviewing calls) uses the model's reasoning mode at "low" effort; the coding, mutating and bookkeeping agents run without it ([docs/MODEL_SETTINGS.md](MODEL_SETTINGS.md); every call's settings are in the run's trace) |
+| Model | **DeepSeek V4.1 Flash** (`deepseek-ai/DeepSeek-V4.1-Flash`), one model for every agent, through Luminal's API. The planning agent (and, in later versions, a few reviewing calls) uses the model's reasoning mode at "low" effort; the coding, mutating and bookkeeping agents run without it ([docs/jobs/MODEL_SETTINGS.md](jobs/MODEL_SETTINGS.md); every call's settings are in the run's trace) |
 | Programs per round | 6: 3 planned experiments (the reasoning loop) and 3 mutations (the exploring loop) |
 | Training | None. No model is fine-tuned or trained |
 
@@ -61,7 +61,7 @@ v10.2's own record of the machine, written when each run started ([results/v102/
 | Beaten by | Helix v4, run `atlas-s1`, from scratch, given nothing from outside |
 | When | Round 10, program `p0057` (the 57th program), R = 0.907611556938 |
 | Limits | 30 CPU seconds per program |
-| Evidence | [results/v4/atlas-s1/](../results/v4/atlas-s1/): every program with its code and score (`programs.jsonl`), every model call with its full prompt and reply (`trace.jsonl.gz`), the per-round log (`history.jsonl`, `run.log`), the settings (`summary.json`). Code: [`helix4/`](../helix4/), job: [`scripts/run_v4_jobs.sh`](../scripts/run_v4_jobs.sh), [docs/V4_JOB.md](V4_JOB.md) |
+| Evidence | [results/v4/atlas-s1/](../results/v4/atlas-s1/): every program with its code and score (`programs.jsonl`), every model call with its full prompt and reply (`trace.jsonl.gz`), the per-round log (`history.jsonl`, `run.log`), the settings (`summary.json`). Code: [`helix4/`](../helix4/), job: [`scripts/run_v4_jobs.sh`](../scripts/run_v4_jobs.sh), [docs/jobs/V4_JOB.md](jobs/V4_JOB.md) |
 
 The same program is also above **0.901564** (Boyer & Li, NC State, 2025, 575 steps, found by simulated annealing and
 gradient methods; [arXiv:2506.16750](https://arxiv.org/abs/2506.16750)). TTT-Discover's Table 2 lists this value as
@@ -76,7 +76,7 @@ the "best human" result.
 | When | Round 352, program `p1324` of the second stage, R = 0.941364540. About 2,220 programs from the very start (901 in the first stage, 1,322 new ones in the second) |
 | Where it ended | **0.941441743993** (found in round 696, program `p3596`; 104,992 steps; the run ended at round 700, and v9 continued it to round 800 without improving it beyond 1e-12). Exact rational arithmetic, with the heights rounded to integers (itself a valid construction), certifies **C₂ ≥ 0.941441740905** |
 | Limits | 30 CPU seconds per program for rounds 1-150, 60 s after that. About 23 CPU hours of program time up to round 352 (6.2 in the first stage, 17.0 in the second) |
-| Evidence | Second stage, rounds 150-700: [results/v8warm/v8-s1/](../results/v8warm/v8-s1/), whose `programs.jsonl` holds every program of the stage, so the lineage of `p1324` can be traced back to `p0002`; `history.jsonl` has every round; `trace.jsonl.gz` has the v8 rounds' model calls, and [results/v47warm/v47-s2/](../results/v47warm/v47-s2/) and [results/v7warm/v7-s1/](../results/v7warm/v7-s1/) the earlier ones. First stage, rounds 0-150: [results/v4/atlas-s1/](../results/v4/atlas-s1/) (rounds 1-20) and [results/v4cont/atlas-s1/](../results/v4cont/atlas-s1/) (all 150, with every program; its best, `p0885`, is the second stage's `p0002`). Best construction: [`best.npy`](../results/v8warm/v8-s1/best.npy). Code: [`helix4/`](../helix4/), [`helix47/`](../helix47/), [`helix7/`](../helix7/), [`helix8/`](../helix8/); jobs: [`scripts/run_v47_warm.sh`](../scripts/run_v47_warm.sh), [`scripts/run_v7_warm.sh`](../scripts/run_v7_warm.sh), [`scripts/run_v8_warm.sh`](../scripts/run_v8_warm.sh), [docs/V8_JOB.md](V8_JOB.md); verification: [results/v8warm/VERIFICATION.md](../results/v8warm/VERIFICATION.md) |
+| Evidence | Second stage, rounds 150-700: [results/v8warm/v8-s1/](../results/v8warm/v8-s1/), whose `programs.jsonl` holds every program of the stage, so the lineage of `p1324` can be traced back to `p0002`; `history.jsonl` has every round; `trace.jsonl.gz` has the v8 rounds' model calls, and [results/v47warm/v47-s2/](../results/v47warm/v47-s2/) and [results/v7warm/v7-s1/](../results/v7warm/v7-s1/) the earlier ones. First stage, rounds 0-150: [results/v4/atlas-s1/](../results/v4/atlas-s1/) (rounds 1-20) and [results/v4cont/atlas-s1/](../results/v4cont/atlas-s1/) (all 150, with every program; its best, `p0885`, is the second stage's `p0002`). Best construction: [`best.npy`](../results/v8warm/v8-s1/best.npy). Code: [`helix4/`](../helix4/), [`helix47/`](../helix47/), [`helix7/`](../helix7/), [`helix8/`](../helix8/); jobs: [`scripts/run_v47_warm.sh`](../scripts/run_v47_warm.sh), [`scripts/run_v7_warm.sh`](../scripts/run_v7_warm.sh), [`scripts/run_v8_warm.sh`](../scripts/run_v8_warm.sh), [docs/jobs/V8_JOB.md](jobs/V8_JOB.md); verification: [results/v8warm/VERIFICATION.md](../results/v8warm/VERIFICATION.md) |
 
 **Read it as:** a higher value than any human-designed search has published, from a trivial start, on one 2-core
 machine with an inexpensive model. **Not:** a world record. AI systems have gone higher since (0.961 and above; see
@@ -126,8 +126,8 @@ model call, in gzipped parts of 10 rounds with an `index.json`; `history.jsonl`;
 `best.npy`), [results/v102/COMPARISON.md](../results/v102/COMPARISON.md) (written by the run itself),
 [results/v102/VERIFICATION.md](../results/v102/VERIFICATION.md), the second seed in
 [results/v102/v102-helix-s2/](../results/v102/v102-helix-s2/). Code: [`helix10/`](../helix10/), job:
-[`scripts/run_v102.sh`](../scripts/run_v102.sh), design: [docs/V102_DESIGN.md](V102_DESIGN.md),
-[docs/V10_JOB.md](V10_JOB.md).
+[`scripts/run_v102.sh`](../scripts/run_v102.sh), design: [docs/design/V102_DESIGN.md](design/V102_DESIGN.md),
+[docs/jobs/V10_JOB.md](jobs/V10_JOB.md).
 
 ## What Helix did not beat
 

@@ -3,7 +3,7 @@
 A program's `construct(budget_seconds, start)` returns the heights, as in v4, or a dict
 {"best": heights, "alternative": heights}. "best" is scored exactly as in v4. "alternative" is a different
 construction the program found (typically a new idea that hasn't beaten the start yet). It is checked and scored
-too, so the run can keep it instead of losing it (fix 1 in docs/V47_DESIGN.md).
+too, so the run can keep it instead of losing it (fix 1 in docs/design/V47_DESIGN.md).
 
 Runs in its own process with the same limits as v4 (helix4/sandbox.py): one thread, low priority, CPU, memory and
 wall-clock caps. Evaluations go through helix4's machine-wide slots.

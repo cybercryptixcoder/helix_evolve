@@ -4,7 +4,7 @@ The game ("spore"): two players grow territories on a small graph of cells worth
 player claims an empty cell next to its territory; opponent cells next to the claimed cell that are now outnumbered
 flip to the claimer. The game ends when the board is full; each player scores the points of the cells it owns.
 
-Open ceiling (docs/OPEN_SUITE.md): an instance is 24 seeded games (6 against each opponent, half of them moving
+Open ceiling (docs/design/OPEN_SUITE.md): an instance is 24 seeded games (6 against each opponent, half of them moving
 first); cost = 100 x the opponents' share of all points scored; gap = 100 * cost / Code Zero's cost on the same
 instance. Code Zero's costs are cached in suite/data/duel_cz.json (rebuild: `python -m suite.duel --cz`); an
 instance missing from the cache is computed on the spot.

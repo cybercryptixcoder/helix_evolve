@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v10.1 jobs (docs/V10_JOB.md, "v10.1"): Helix against the world's best program at the same constraint, on
+# The Helix v10.1 jobs (docs/jobs/V10_JOB.md, "v10.1"): Helix against the world's best program at the same constraint, on
 # the second autocorrelation inequality. Three jobs, side by side, sharing the machine's 2 evaluation slots:
 #   MODE=axes   v101-axes: continues the v10-axes run (pausing it first) with the field's ideas as axes only;
 #   MODE=warm   v101-warm: continues the v10-warm run (pausing it first), starting from the best construction the
@@ -29,7 +29,7 @@
 # MODE=field skips 2-6: it waits for the runs to start, then runs its three streams until each has converged (no gain
 # in 10 rounds) or the deadline, pushing results/v101/field and COMPARISON.md as it goes.
 #
-# Robust by design (docs/AETHER.md, sections 4 and 4b): one copy per NAME (a lock); runs from a snapshot of itself;
+# Robust by design (docs/jobs/AETHER.md, sections 4 and 4b): one copy per NAME (a lock); runs from a snapshot of itself;
 # started again after any stop it resumes from the last finished generation (or round); a stop signal finishes the
 # generation (or round) in progress and pushes; retries on errors; never stops anything else except the pause above
 # (its own v10 predecessor, once, gracefully); installs no cron job or timer; waits while disk or model are down.
@@ -235,7 +235,7 @@ IFS=',' read -ra dirs <<< "$LOCAL_SEARCH"
 for d in "${dirs[@]}"; do [ -n "$d" ] && [ -d "$d" ] && LOCAL_HAVE="$LOCAL_HAVE${LOCAL_HAVE:+,}$(cd "$d" && pwd)"; done
 # every construction on GitHub, as release files (helix9/vault.py). v9-s1's: the releases constructions-v8-s1 and
 # constructions-v9-s1-g800 hold 3,848 of them; the 298 they lack exist only on this machine and go up once, as
-# constructions-v9-s1 built on those two (docs/V9_RESULTS.md). On a machine without the local folders they come down
+# constructions-v9-s1 built on those two (docs/analysis/V9_RESULTS.md). On a machine without the local folders they come down
 # from GitHub instead, so a continuation is lossless from GitHub alone. One job at a time does this (a lock).
 SRC_TAG="${SRC_TAG:-constructions-v9-s1}"
 SRC_BASES="${SRC_BASES:-constructions-v8-s1,constructions-v9-s1-g800}"

@@ -1,4 +1,4 @@
-"""Behaviour of a set of Helix runs, from their files (the numbers in docs/V4_ANALYSIS.md).
+"""Behaviour of a set of Helix runs, from their files (the numbers in docs/analysis/V4_ANALYSIS.md).
 
     python tools/analyse_runs.py results/v4            # trajectories, records, failure points, planner effort
     python tools/analyse_runs.py results/v4 atlas-s1   # one run, generation by generation (plans and children)

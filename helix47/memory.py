@@ -1,4 +1,4 @@
-"""v4.7's Atlas: helix4's Atlas (helix4/memory.py), with the planner's view organised by line (docs/V47_DESIGN.md).
+"""v4.7's Atlas: helix4's Atlas (helix4/memory.py), with the planner's view organised by line (docs/design/V47_DESIGN.md).
 
 What the planner sees each generation, instead of v4's view (the best program, the tree from Code Zero, the newest
 45 findings):

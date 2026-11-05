@@ -1,4 +1,4 @@
-"""One Helix v9 run: v8, plus a design map with coordinates (docs/V9_DESIGN.md, docs/SEARCH_SPACE_MODEL.md).
+"""One Helix v9 run: v8, plus a design map with coordinates (docs/design/V9_DESIGN.md, docs/research/SEARCH_SPACE_MODEL.md).
 
     python -m helix9.run --seed 1 --gens 30 --out runs/v9/v9-s1
     python -m helix9.run --out runs/v9/v9-s1                     # resumes (state.json is there)

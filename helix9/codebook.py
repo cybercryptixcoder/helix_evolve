@@ -1,5 +1,5 @@
 """The design map's codebook: the axes (design questions every program answers) and their values (the options),
-each with a permanent id (docs/V9_DESIGN.md).
+each with a permanent id (docs/design/V9_DESIGN.md).
 
 - An axis id (A1, A2, ...) and a value id (A1.v1, A1.v2, ...) are given once, at birth, and never reused or
   renumbered, like NEAT's historical markings: a coordinate written at generation 300 still means the same thing at

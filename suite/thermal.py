@@ -7,7 +7,7 @@ rack slows every job in it (an invented nonlinear slowdown). Each decision place
 nowhere waits in a queue and is placed (another decision) as soon as it fits. Cost = total completion time above
 each job's ideal duration (heat slowdown + waiting), summed over jobs, in minutes.
 
-Open ceiling (docs/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
+Open ceiling (docs/design/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
 on the same instance (computed once per process and cached by instance id), so Code Zero scores exactly 100.
 """
 from __future__ import annotations

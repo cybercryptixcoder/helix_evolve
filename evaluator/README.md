@@ -1,6 +1,6 @@
 # Evaluator: online 2D vector bin packing
 
-The evaluator is the part of Helix that holds the problem and scores programs. You give it a candidate program; it runs that program on a fixed set of packing instances and returns one score, plus a per-family breakdown for the Researcher to reason from. It follows [`CONTRACT.md`](../CONTRACT.md) version 1.
+The evaluator is the part of Helix that holds the problem and scores programs. You give it a candidate program; it runs that program on a fixed set of packing instances and returns one score, plus a per-family breakdown for the Researcher to reason from. It follows [`CONTRACT.md`](../docs/history/CONTRACT.md) version 1.
 
 ## Who built what
 

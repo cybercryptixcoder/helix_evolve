@@ -5,7 +5,7 @@ highest score wins (ties: the first candidate). The policy is a weighted sum of 
 an agent as `feature(*args)` returning one number per candidate. Code Zero is the policy that scores every
 candidate 0, so it always takes the first candidate.
 
-A problem subclass provides (see docs/V3_DESIGN.md §4 and suite/README.md):
+A problem subclass provides (see docs/design/V3_DESIGN.md §4 and suite/README.md):
 
     name, title, families, description, signature, signature_doc
     instances(split)              -> list of dicts with at least "id" and "family"   (deterministic)
@@ -36,7 +36,7 @@ class Problem:
     # a hidden textbook rule [(feature code, weight)], used only by the meta-evaluator to measure progress beyond
     # the obvious; never shown to any agent
     baseline: list = []
-    # open-ceiling problems (docs/OPEN_SUITE.md): no reference and no floor; gap = 100 * cost / Code Zero's cost
+    # open-ceiling problems (docs/design/OPEN_SUITE.md): no reference and no floor; gap = 100 * cost / Code Zero's cost
     open_ceiling = False
     # how many instances of each split the engine uses (problems may override)
     fit_split = "train"
@@ -120,7 +120,7 @@ REGISTRY = {
     "setcover": "suite.setcover:SetCover",
     "jobshop": "suite.jobshop:JobShop",
     "cvrp": "suite.cvrp:CVRP",
-    # the open suite (docs/OPEN_SUITE.md): open_ceiling, gap = 100 * cost / Code Zero's cost
+    # the open suite (docs/design/OPEN_SUITE.md): open_ceiling, gap = 100 * cost / Code Zero's cost
     "forage": "suite.forage:Forage",
     "thermal": "suite.thermal:Thermal",
     "fairshare": "suite.fairshare:FairShare",

@@ -1,4 +1,4 @@
-"""Start a v7 run from an earlier run (v4 or v4.7): the warm start (docs/V7_JOB.md).
+"""Start a v7 run from an earlier run (v4 or v4.7): the warm start (docs/jobs/V7_JOB.md).
 
     python -m helix7.warm --src runs/v47warm/v47-s2 --out runs/v7warm/v7-s1 --mode continue --seed 1 --budget 60
     python -m helix7.warm --src <run folder> --out runs/v7warm/v7-s2 --mode best --seed 2 --budget 60

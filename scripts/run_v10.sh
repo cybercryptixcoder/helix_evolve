@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# The Helix v10 job on the second autocorrelation inequality (docs/V10_JOB.md): one v10 run, continuing the v9 run
-# v9-s1 (record 0.9414417, generation 800) with the field's knowledge (docs/AC2_SOTA.md, helix10/sota.py), in one of
+# The Helix v10 job on the second autocorrelation inequality (docs/jobs/V10_JOB.md): one v10 run, continuing the v9 run
+# v9-s1 (record 0.9414417, generation 800) with the field's knowledge (docs/analysis/AC2_SOTA.md, helix10/sota.py), in one of
 # two modes:
 #   MODE=axes  the field's design decisions on the map (exploration biased towards them) and its findings in the Atlas;
 #              no construction and no program of the field;
@@ -23,7 +23,7 @@
 #   6. at the end: the report, the verification of the record, the run's own continuation pack, pushed, and the run's
 #      constructions as a GitHub release built on the source's.
 #
-# Robust by design (docs/AETHER.md, sections 4 and 4b):
+# Robust by design (docs/jobs/AETHER.md, sections 4 and 4b):
 # - One copy per NAME at a time (a lock); a second start of the same NAME prints "already running" and exits 0.
 # - Runs from a snapshot of itself, so a `git pull` mid-run can't change the running job.
 # - Started again after any stop (a crash, a reboot, a stop signal, the deadline), it pushes what it has, then resumes
@@ -36,7 +36,7 @@
 # - It waits (never stops anything) while a Helix run of an earlier version (v4-v9) is running. The two v10 runs
 #   don't wait for each other: they share the machine-wide evaluation slots (EVAL_SLOTS, 2).
 #
-# Estimated (measured live, see docs/V10_JOB.md): 15-25 minutes a generation for each run while both run, so 120
+# Estimated (measured live, see docs/jobs/V10_JOB.md): 15-25 minutes a generation for each run while both run, so 120
 # generations take about 2 days (deadline 60 h). Peak memory about 5 GB for the two (each program up to MEM_MB, two at
 # a time machine-wide, plus each run's own process, about 1 GB). Disk: about 1.5 GB per run at most (large
 # constructions handed back unchanged are kept as references; those nothing needs are removed after 3 generations);
@@ -197,7 +197,7 @@ IFS=',' read -ra dirs <<< "$LOCAL_SEARCH"
 for d in "${dirs[@]}"; do [ -n "$d" ] && [ -d "$d" ] && LOCAL_HAVE="$LOCAL_HAVE${LOCAL_HAVE:+,}$(cd "$d" && pwd)"; done
 # every construction on GitHub, as release files (helix9/vault.py). v9-s1's: the releases constructions-v8-s1 and
 # constructions-v9-s1-g800 hold 3,848 of them; the 298 they lack exist only on this machine and go up once, as
-# constructions-v9-s1 built on those two (docs/V9_RESULTS.md). On a machine without the local folders they come down
+# constructions-v9-s1 built on those two (docs/analysis/V9_RESULTS.md). On a machine without the local folders they come down
 # from GitHub instead, so a continuation is lossless from GitHub alone. One job at a time does this (a lock).
 SRC_TAG="${SRC_TAG:-constructions-$(basename "$SRC")}"
 SRC_BASES="${SRC_BASES:-constructions-v8-s1,constructions-v9-s1-g800}"

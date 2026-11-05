@@ -1,6 +1,6 @@
 """Atlas, reorganised around ideas (v4.6; v6 uses it too). Builds on v4.5's Atlas+ (helix5/v45.py).
 
-What changes, and why (docs/TRACE_STUDY.md):
+What changes, and why (docs/analysis/TRACE_STUDY.md):
 - A table of the kinds of change tried (each planned experiment names its kind; code counts how often each kind was
   tried, its real gains, its best gain, its inconclusive runs, when it was last tried). v4's map listed only the
   newest ~45 findings, and by generation 30 those were knob tweaks; the idea-level findings had dropped out of view.

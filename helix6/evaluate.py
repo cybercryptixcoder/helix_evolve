@@ -1,4 +1,4 @@
-"""The v4.6/v6 evaluator: v4.5's (helix5/evaluate.py), with three additions from the trace study (docs/TRACE_STUDY.md).
+"""The v4.6/v6 evaluator: v4.5's (helix5/evaluate.py), with three additions from the trace study (docs/analysis/TRACE_STUDY.md).
 
 1. Inconclusive results. In v4 atlas-s1, generations 21-40, 31 of 54 planned experiments returned their start
    unchanged, 20 of them after using the whole budget. One of them (an exact augmented Lagrangian) had run 2 of its 6

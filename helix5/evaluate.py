@@ -5,7 +5,7 @@
 - Unused budget is stated plainly, since programs that stop early were a recurring waste in v4.
 - Gains are labelled by size, so that +0.000001 of polishing isn't reported the same way as +0.03.
 - Fresh starts: a program can be run with no start (start=None) to build a construction from scratch.
-- From the finished v4 job (docs/V4_ANALYSIS.md): a program stopped at the CPU limit is scored on the construction it
+- From the finished v4 job (docs/analysis/V4_ANALYSIS.md): a program stopped at the CPU limit is scored on the construction it
   last kept (keep_best, see helix5/sandbox.py) instead of nothing, and its "stage" lines (where the budget went, what
   each stage gained) come back first, whatever else it printed.
 """

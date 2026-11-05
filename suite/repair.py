@@ -13,7 +13,7 @@ no passing test breaks and either fewer tests fail or the total numeric error at
 After a kept patch the program has changed, so every patch of the new state is a candidate again.
 
 Cost: patches tried until every test passes, or B + 20 x failing tests + total numeric error (< 1 per failing test)
-when the budget of B tries (or the candidates) runs out. Open ceiling (docs/OPEN_SUITE.md): gap = 100 x cost / Code
+when the budget of B tries (or the candidates) runs out. Open ceiling (docs/design/OPEN_SUITE.md): gap = 100 x cost / Code
 Zero's cost on the same instance. Bug sets on which Code Zero repairs everything within the budget are redrawn (so its
 cost is always a budget-exhausted cost, a stable denominator). The instances and Code Zero's costs are cached in
 suite/data/repair_cz.json (rebuild: `python -m suite.repair --cz`, ~5 s); a missing or stale entry is regenerated

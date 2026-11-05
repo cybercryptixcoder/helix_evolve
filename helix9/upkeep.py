@@ -1,4 +1,4 @@
-"""Keeping the design map small and readable (docs/V9_DESIGN.md, "Keeping the map tidy").
+"""Keeping the design map small and readable (docs/design/V9_DESIGN.md, "Keeping the map tidy").
 
 The first live replay on v8's archive showed what happens without it: the model names the same decision and the same
 option in new words every time, and word matching can't tell paraphrases apart, so 386 readings grew the codebook to

@@ -1,4 +1,4 @@
-"""One Helix v4.7 run: v4 (helix4/run.py, Atlas memory) with the deep loop organised in lines (docs/V47_DESIGN.md).
+"""One Helix v4.7 run: v4 (helix4/run.py, Atlas memory) with the deep loop organised in lines (docs/design/V47_DESIGN.md).
 
     python -m helix47.run --seed 1 --gens 30 --out runs/v47/v47-s1
     python -m helix47.run --out runs/v47/v47-s1                 # resumes (state.json is there)

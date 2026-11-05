@@ -1,6 +1,6 @@
 """The problem's own exact scorer, importable by every candidate program as `helix_problem`.
 
-v4.5-s3 found 0.919 while optimising a mis-coded score ((A+B)/3 instead of (2A+B)/3; docs/TRACE_STUDY.md section 7):
+v4.5-s3 found 0.919 while optimising a mis-coded score ((A+B)/3 instead of (2A+B)/3; docs/analysis/TRACE_STUDY.md section 7):
 every program wrote its own scorer, and a wrong one silently steers the search. The toolkit is the evaluator's own
 formula and nothing else (no records, no hints): `from helix_problem import score` gives the exact score of any array.
 """

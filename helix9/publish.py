@@ -1,4 +1,4 @@
-"""Copies a run's results into the folder pushed to GitHub, the way docs/AETHER.md section 5 asks (docs/V9_JOB.md).
+"""Copies a run's results into the folder pushed to GitHub, the way docs/jobs/AETHER.md section 5 asks (docs/jobs/V9_JOB.md).
 
     python -m helix9.publish --run runs/v9warm/v9-s1 --out results/v9warm/v9-s1 --log runs/v9warm/v9-s1.log
     python -m helix9.publish --join results/v9warm/v9-s1 --out /tmp/v9-s1      # plain files again, for any tool

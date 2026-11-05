@@ -1,4 +1,4 @@
-"""Start a v9 run from an earlier run (v8, v7, v4.7 or v4): the warm start (docs/V9_JOB.md).
+"""Start a v9 run from an earlier run (v8, v7, v4.7 or v4): the warm start (docs/jobs/V9_JOB.md).
 
     python -m helix9.warm --src results/v8warm/v8-s1 --out runs/v9warm/v9-s1 \\
         --pack results/v8warm/v8-s1/pack --replay results/v9warm/replay --seed 1 --budget 60

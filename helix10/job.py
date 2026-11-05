@@ -22,7 +22,7 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--budget", type=float, default=150.0, help="CPU seconds per program (a new run only)")
     ap.add_argument("--cold", action="store_true", help="v10.2: a new run from Code Zero with the field's decisions "
-                    "and findings, explorations built from nothing (docs/V102_DESIGN.md)")
+                    "and findings, explorations built from nothing (docs/design/V102_DESIGN.md)")
     ap.add_argument("--cap", type=int, default=None, help="the step limit (a new run only; --cold: 100000)")
     ap.add_argument("--fake", action="store_true", help="no model calls (a fake model)")
     a = ap.parse_args(argv)

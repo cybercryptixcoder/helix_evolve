@@ -1,6 +1,6 @@
 # Helix v3
 
-An LLM-driven evolutionary search for decision policies, with two loops (a Researcher that goes deep, a Mutator that goes wide) steered by a Navigator over a map of approaches. Why it is built this way, and what was wrong with v2: [docs/V3_DESIGN.md](../docs/V3_DESIGN.md).
+An LLM-driven evolutionary search for decision policies, with two loops (a Researcher that goes deep, a Mutator that goes wide) steered by a Navigator over a map of approaches. Why it is built this way, and what was wrong with v2: [docs/design/V3_DESIGN.md](../docs/design/V3_DESIGN.md).
 
 ## Run it
 
@@ -80,4 +80,4 @@ each keep the same instances; feature inputs are read-only views; the fit lane o
 
 ## The meta loop
 
-`meta/` evolves the strategy folder with the same kind of loop. See [docs/META_V3.md](../docs/META_V3.md).
+`meta/` evolves the strategy folder with the same kind of loop. See [docs/design/META_V3.md](../docs/design/META_V3.md).

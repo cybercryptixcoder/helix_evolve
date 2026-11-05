@@ -1,4 +1,4 @@
-"""A v9 run made airtight for a job on the VM (docs/AETHER.md, section 4b; docs/V9_JOB.md).
+"""A v9 run made airtight for a job on the VM (docs/jobs/AETHER.md, section 4b; docs/jobs/V9_JOB.md).
 
     python -m helix9.job --out runs/v9warm/v9-s1 --gens 800            # resumes; exits 0 (done or deadline),
                                                                         # 75 (stopped by a signal), 4 (an error)

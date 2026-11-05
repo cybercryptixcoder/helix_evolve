@@ -86,7 +86,7 @@ during the search, with no change to the system between problems ([table](docs/R
 
 ## How it works
 
-![Two loops around one judge: the exploring loop (Mutator) and the reasoning loop (Researcher, Coder) both send programs to one exact evaluator](docs/helix_two_loops.png)
+![Two loops around one judge: the exploring loop (Mutator) and the reasoning loop (Researcher, Coder) both send programs to one exact evaluator](docs/figures/helix_two_loops.png)
 
 Each round:
 1. **The exploring loop** picks parent programs from everything found so far and asks the model for variants. It sees
@@ -109,7 +109,7 @@ their own climb (v10.2). Every version, what it tried, and what happened: [docs/
 The record runs used the job scripts in [`scripts/`](scripts/) (for example
 [`scripts/run_v102.sh`](scripts/run_v102.sh); its header lists every setting) on the machine described above, with
 the settings recorded in each run's `summary.json`. A run needs an API key for DeepSeek V4.1 Flash on Luminal, in a
-`.env` file ([LUMINAL.md](LUMINAL.md)). A new run is a new sample: the model's replies aren't seeded, so the numbers
+`.env` file ([LUMINAL.md](docs/jobs/LUMINAL.md)). A new run is a new sample: the model's replies aren't seeded, so the numbers
 differ from run to run, as the two v10.2 seeds did.
 
 To continue one of these runs exactly where it stopped, restore its folder (next section) into `runs/` and start its
@@ -123,9 +123,26 @@ job script again with more rounds (`GENS=...`): every job resumes from its saved
 | Every construction of the later runs (thousands per run) | GitHub releases `constructions-*` ([helix9/vault.py](helix9/vault.py)) |
 | A byte-for-byte copy of every run folder as it was on the machine, with every file's SHA-256 | GitHub releases `archive-*`; restore with `python3 tools/offload.py restore --unit <unit> --out <dir>` ([docs/OFFLOAD.md](docs/OFFLOAD.md)) |
 | The published constructions used for comparison | [`data/field_ac2/`](data/field_ac2/) |
-| Design documents, job instructions, analyses of every run | [`docs/`](docs/) |
-| The research question this work became | [docs/RESEARCH_CASE.md](docs/RESEARCH_CASE.md) |
-| The first README (hackathon to October 2026), with the bin-packing runs | [docs/README_2026-10.md](docs/README_2026-10.md) |
+| Design documents, job instructions, analyses of every run, the working history | [`docs/`](docs/) (index: [docs/README.md](docs/README.md)) |
+| The research question this work became | [docs/research/RESEARCH_CASE.md](docs/research/RESEARCH_CASE.md) |
+| The first README (hackathon to October 2026), with the bin-packing runs | [docs/history/README_2026-10.md](docs/history/README_2026-10.md) |
+
+## The code
+
+Each version of Helix is its own package, kept side by side so every past run can be reproduced exactly:
+
+| Folder | What |
+|---|---|
+| [`helix/`](helix/) | v1-v2, the hackathon loop (bin packing), with a dashboard ([`ui/`](ui/)) |
+| [`helix3/`](helix3/) | v3: the multi-problem version, run on the nine problems in [`suite/`](suite/) |
+| [`helix4/`](helix4/) | v4: two loops with a memory of findings, and the autocorrelation problem |
+| [`helix47/`](helix47/), [`helix5/`](helix5/), [`helix6/`](helix6/) | v4.7, v4.5/v5, v4.6/v6 |
+| [`helix7/`](helix7/), [`helix8/`](helix8/), [`helix9/`](helix9/), [`helix10/`](helix10/) | v7-v10.2, each building on the last |
+| [`evaluator/`](evaluator/), [`programs/`](programs/), [`problems/`](problems/) | the first version's evaluator, starting programs and problems |
+| [`scripts/`](scripts/) | the job script behind every run (`run_v*.sh`) and the offload |
+| [`tools/`](tools/) | the independent verifier (`verify_ac2.py`), run analysis, the archive tool |
+| [`viz/`](viz/), [`demo/`](demo/) | run viewers |
+| [`tests/`](tests/) | the test suites, one per version |
 
 ## Running it
 
@@ -136,4 +153,4 @@ python -m helix.ui                                # its dashboard at http://127.
 ```
 
 The autocorrelation versions run from their job scripts (`scripts/run_v*.sh`, each with a `FAKE=1` test mode);
-[docs/AETHER.md](docs/AETHER.md) describes how long jobs are run on the cloud machine.
+[docs/jobs/AETHER.md](docs/jobs/AETHER.md) describes how long jobs are run on the cloud machine.

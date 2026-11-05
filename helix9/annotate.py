@@ -1,4 +1,4 @@
-"""The annotator: gives every program a coordinate on the design map (docs/V9_DESIGN.md).
+"""The annotator: gives every program a coordinate on the design map (docs/design/V9_DESIGN.md).
 
 Two readings, both one cheap model call:
 - **from the diff** (the usual case): the base program's coordinate is known; the annotator reads the change (the

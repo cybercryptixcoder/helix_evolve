@@ -1,4 +1,4 @@
-"""The invariant audit (docs/IDEAS.md, section 3.4; Shreyas, October 28): "What does every programme do in the same
+"""The invariant audit (docs/research/IDEAS.md, section 3.4; Shreyas, October 28): "What does every programme do in the same
 way?", asked over and over until nothing uniformly common is left.
 
 A design decision every program makes the same way is invisible to the rest of the map: nothing varies, so nothing

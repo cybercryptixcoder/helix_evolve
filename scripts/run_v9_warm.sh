@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v9 job on the second autocorrelation inequality (docs/V9_JOB.md): one v9 run that continues the v8 run
+# The Helix v9 job on the second autocorrelation inequality (docs/jobs/V9_JOB.md): one v9 run that continues the v8 run
 # v8-s1 (record 0.9414417, generation 700) for 100 more generations at 60 s per program. Every program, construction
 # that matters, finding (the Atlas), track and hill of v8-s1 is kept; the v9 design map is added on top.
 #
@@ -21,7 +21,7 @@
 #      (everything, in gzipped chunks: each push adds only what is new; mapview.json for viz/mapview.html);
 #   7. at the end: the report, the verification of the record, and the run's own continuation pack, pushed.
 #
-# Robust by design (docs/AETHER.md, sections 4 and 4b):
+# Robust by design (docs/jobs/AETHER.md, sections 4 and 4b):
 # - One copy at a time (a lock); a second start prints "already running" and exits 0, changing nothing.
 # - Runs from a snapshot of itself, so a `git pull` mid-run can't change the running job.
 # - Started again after any stop (a crash, a reboot, a stop signal, the deadline), it pushes what it has, then resumes

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The open-suite job list (docs/OPEN_SUITE.md): invented problems with no reference and no ceiling, plus a
+# The open-suite job list (docs/design/OPEN_SUITE.md): invented problems with no reference and no ceiling, plus a
 # thinking-mode ablation. Meant for an unattended cloud machine. Safe to re-run at any time: finished jobs are
 # skipped, unfinished ones resume from their last generation. Each finished job is copied to results/open/<job>/
 # and pushed (commits as Shreyas Naik).

@@ -1,5 +1,5 @@
 """One Helix v8 run: v7, plus a register of hills, so that new hills are found, told apart from known ones, and
-climbed (docs/V8_DESIGN.md).
+climbed (docs/design/V8_DESIGN.md).
 
     python -m helix8.run --seed 1 --gens 30 --out runs/v8/v8-s1
     python -m helix8.run --out runs/v8/v8-s1                     # resumes (state.json is there)

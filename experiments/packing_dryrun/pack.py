@@ -1,4 +1,4 @@
-"""The dry run (docs/BRIEF_2026-10-29.md): circle packing as a search over dials, by hand, no language model.
+"""The dry run (docs/history/BRIEF_2026-10-29.md): circle packing as a search over dials, by hand, no language model.
 
 n equal coins in the unit square, as large as possible. Equivalent: n points in the unit square with the smallest
 pairwise distance d as large as possible; the coins' radius is r = d / (2 (1 + d)).

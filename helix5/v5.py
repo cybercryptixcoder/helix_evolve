@@ -1,6 +1,6 @@
 """v5: the researcher. One continuing researcher with a theory, an agenda and a notebook, all versioned.
 
-The design (docs/IDEAS.md, "The next build"; docs/V5_DESIGN.md):
+The design (docs/research/IDEAS.md, "The next build"; docs/design/V5_DESIGN.md):
 
 - **Theory** (beliefs.jsonl): beliefs about what governs the score, each citing the programs that are its evidence.
   Code shows the measured outcome of every cited program and computes each belief's status; the model's claim alone

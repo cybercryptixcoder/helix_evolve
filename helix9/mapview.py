@@ -1,5 +1,5 @@
 """The map viewer's data (viz/mapview.html): one format for a simulator run and for any Helix run (v4 to v9), live
-or finished (docs/V9_DESIGN.md, "Seeing it").
+or finished (docs/design/V9_DESIGN.md, "Seeing it").
 
     python -m helix9.mapview run runs/v9warm/v9-s1 --out results/v9warm/v9-s1/mapview.json     # a real run, any version
     python -m helix9.mapview sim --family easy --policy v9 --seed 3 --out viz/data/sim-easy-v9.json

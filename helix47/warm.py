@@ -1,4 +1,4 @@
-"""Start v4.7 runs from an earlier run's best: the warm-start experiment (docs/V47_WARM.md).
+"""Start v4.7 runs from an earlier run's best: the warm-start experiment (docs/jobs/V47_WARM.md).
 
     python -m helix47.warm --src <v4 run folder> --out runs/v47warm/v47-s1 --mode continue --seed 1 --budget 60
     python -m helix47.warm --src <v4 run folder> --out runs/v47warm/v47-s2 --mode best --seed 2 --budget 60

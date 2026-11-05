@@ -17,7 +17,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   folder, a byte-for-byte deterministic tar in parts with every file's SHA-256, scanned for keys and forbidden strings
   first; private units only to a private repo; the report and inventory to the release `archive-index`. Tested with
   GitHub replaced by a folder (`tests/test_offload.py`); the VM's preflight proves the real upload path.
-- **Written:** README.md (new; the old one is docs/README_2026-10.md) and docs/RECORDS.md: every result with the
+- **Written:** README.md (new; the old one is docs/history/README_2026-10.md) and docs/RECORDS.md: every result with the
   outside value's source, the run, round and program, limits, machine, model, links, what it doesn't control for.
 - **Checked:** every construction re-scored by `tools/verify_ac2.py` (exact arithmetic included) and by a separate
   scorer written from the definition; every "passed at" recomputed from `programs.jsonl`; every outside value checked
@@ -46,7 +46,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   - the report against the published systems (`helix10/compare.py`: programs needed to pass each value);
   - the job, two seeds, which pause the v10.1 jobs (`scripts/run_v102.sh`).
 - **Dropped:** the AlphaEvolve-style industry arm, built and then removed at Shreyas's request.
-- **Tests:** 18 v10 tests (4 new); the earlier suites pass. Live test: `docs/V10_JOB.md`.
+- **Tests:** 18 v10 tests (4 new); the earlier suites pass. Live test: `docs/jobs/V10_JOB.md`.
 
 ## October 28, 2026 (late evening): v10.1, the fair comparison, the invariant audit
 
@@ -66,7 +66,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ## October 28, 2026 (evening): v10, the field's axes, two runs
 
-- **Research** (docs/AC2_SOTA.md): the record is 0.963588110582 (arena #1; a new arena #1 needs 0.963598), not
+- **Research** (docs/analysis/AC2_SOTA.md): the record is 0.963588110582 (arena #1; a new arena #1 needs 0.963598), not
   0.97. Read all 30 arena threads (120 replies), the arena's top 30 solutions, ClaudeExplorer's repo and the notes
   behind the July record, JSAgent's wiki, Together AI's repo, Jaech & Joseph's construction and the papers. Families:
   Hyra's fine coherent lattice (the record and its predecessors are polishes of it), the older comb family,
@@ -74,30 +74,30 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 - **Measured:** the field's iterated Dinkelbach polish (rewritten for one CPU core) on the record: +3.40e-8, +3.3e-9,
   +4.2e-10, +3.9e-11, then about 1.4e-11 a round (+3.79e-8 after eight 133 s rounds; the arena's gate is 1e-5). On our 0.94144:
   +7e-9, then nothing. At 2M one evaluation with its gradient takes 0.5 s on one core.
-- **Built v10** (docs/V10_DESIGN.md, helix10/): borrowed axes with exploration bias, field findings in the Atlas,
+- **Built v10** (docs/design/V10_DESIGN.md, helix10/): borrowed axes with exploration bias, field findings in the Atlas,
   the warm mode (imports and the field's methods as programs), v9's race and budget failures fixed, 2M constructions
   with references and clean-up. Tests: tests/test_helix10.py (9).
-- **The job** (docs/V10_JOB.md, scripts/run_v10.sh): MODE=axes and MODE=warm side by side; the first to reach the
+- **The job** (docs/jobs/V10_JOB.md, scripts/run_v10.sh): MODE=axes and MODE=warm side by side; the first to reach the
   vault also uploads v9-s1's 298 missing constructions (v9's pending task). Tested live end to end (see V10_JOB.md).
 
 ---
 
 ## October 28, 2026 (early morning): the axes, warm starts, discovery and model intelligence
 
-- **Discussed** (verbatim record: `docs/CONVERSATION_2026-10-28.md`): finding all the axes (not provable for an open
+- **Discussed** (verbatim record: `docs/history/CONVERSATION_2026-10-28.md`): finding all the axes (not provable for an open
   space; completeness at the top level, from the mathematics, from outside solutions, by saturation, with residual
   and invariant alarms; the repeated invariant audit with a sorting and stopping rule); warm starts (the field: allowed
   and labelled for discovery claims, from scratch for method claims; leaning to borrowing only ideas, as axes); whether
   Helix is a discovery system; whether discovery is agnostic to model intelligence above an implementation threshold
   (a falsifiable claim and an experiment across models); the model as a compiler over borrowed axes (closest
   ancestors: component-based algorithm design).
-- **Every idea and open decision:** `docs/IDEAS.md`, new top section.
+- **Every idea and open decision:** `docs/research/IDEAS.md`, new top section.
 
 ---
 
 ## October 28, 2026: the v9 job analysed; constructions on GitHub made complete
 
-- **The v9 job** (`docs/V9_RESULTS.md`): record +2.5e-13 over generations 701-800. 70% of experiments worked on the
+- **The v9 job** (`docs/analysis/V9_RESULTS.md`): record +2.5e-13 over generations 701-800. 70% of experiments worked on the
   record's hill (4.7 of 6 programs a generation handed back their start). The race was captured by flips and
   ablations that tied the record on its own hill; 49 new explorations got one experiment each; drops landed at
   0.58-0.85 and never climbed; 42% of asked-for decision values landed; 8 hills top out within 3e-7 of 0.94144.
@@ -105,7 +105,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   default 200,000-step limit instead of the run's 1,000,000 (also the cause of v8's 206 "failed verification").
   Fixed in `helix9/pack.py` and `helix9/vault.py`; releases now name their base releases and a download restores the
   chain; the job's end-of-run upload builds on its source's release. Tests pass; the chain reading checked live on
-  the real releases. One upload remains, on the VM (prompt in `docs/V9_RESULTS.md`).
+  the real releases. One upload remains, on the VM (prompt in `docs/analysis/V9_RESULTS.md`).
 - **Shreyas's v10 ideas** (to discuss, not built): drop many far-apart points, climb each quickly, keep the best hills,
   drop again away from explored regions; reject hills quickly.
 
@@ -115,7 +115,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 - **The request** (22:59): survey further as the research agent, conceptually and constructively, and make the case
   for a paper worth reading (the research question as the crux, Helix as the method, records as results).
-- **The question** (`docs/RESEARCH_CASE.md`): can a discovery system map the space it searches, steer to where its
+- **The question** (`docs/research/RESEARCH_CASE.md`): can a discovery system map the space it searches, steer to where its
   model would not go, and change that space when it runs dry? Principle: make the design space explicit, move in it on
   purpose, change it when it is exhausted. Three ways past a model's prior: re-weight (selection), retrain (weights),
   re-represent (the prompt, conditioned on a map); Helix is the third, without training.
@@ -138,11 +138,11 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 - **The request** (22:29): the advisor asked what a publication in this area looks like (one problem, or a method
   across many?) and what similar work exists, to position the project. Wanted: an unbiased brief for a survey agent,
   and my own research and a direction.
-- **The brief**: `docs/SURVEY_BRIEF.md`. It never shows the agent our system and forbids novelty verdicts: Part 1 is
+- **The brief**: `docs/research/SURVEY_BRIEF.md`. It never shows the agent our system and forbids novelty verdicts: Part 1 is
   the bar (inventory, one problem or many, public reviews, evaluation norms, venues, record histories), Part 2 maps
   nine mechanism families (Helix's, described generically) in this field and neighbouring ones, Part 3 synthesises
   without recommending.
-- **The first survey**: `docs/RESEARCH_DIRECTION.md`. Findings: ML main tracks took methods on 4-9 problems; the one
+- **The first survey**: `docs/research/RESEARCH_DIRECTION.md`. Findings: ML main tracks took methods on 4-9 problems; the one
   two-problem method (ImprovEvolve) was a workshop poster; single-problem AC2 papers are mathematics. Our 0.94144 is
   below seven AI results (0.9449 to 0.96258) and above only the best result without an LLM (0.94136), by 0.00008.
   The field now expects simple baselines at matched budgets (Simple Baselines: the search space matters more than
@@ -204,17 +204,17 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   - **the race throttled breadth:** in the simulator the first draft opened 11 explorations in 120 generations
     against v8's 57, and was worse than v8 (p = 0.047). Now half the exploration slots open new directions, at most
     3 race, gaining tracks are served first. On 280 fresh worlds v9 beats v8: 88 seeds better, 46 worse (p < 0.001)
-    (`docs/V9_SIM.md`).
+    (`docs/analysis/V9_SIM.md`).
 - **The job** was run end to end with a fake model on the real 3,625-program archive, and through a stop signal, the
   grace running out, `kill -9` with a torn line, a second copy, and restarts.
 
 ## October 27, 2026: a model of the search space (v9 proposed, not built)
 
-- **The request** (`docs/BRIEF_2026-10-27.md`): a transcript of a discussion about the map (features as axes, points
+- **The request** (`docs/history/BRIEF_2026-10-27.md`): a transcript of a discussion about the map (features as axes, points
   as coordinates, hills, jumping to random points), notes on trust before scale, persistence, RL, an evolutionary
   agent, problem-specific versus general axes, and discovering dimensions while searching. Research widely; thoughts
   first.
-- **New measurements** (`docs/SEARCH_SPACE_MODEL.md`, section 2):
+- **New measurements** (`docs/research/SEARCH_SPACE_MODEL.md`, section 2):
   - the Cartographer's 82 scans: 460 wordings, ~98% in 9 recurring axes; 59 different decisions labelled D1;
   - 15 from-scratch runs: best after 20 programs vs final best, Spearman -0.09 (0.50 after 40); the eventual best run
     was 4th lowest of 15 at 20 programs; three of the top four at 20 ended in the 0.8825 trap;
@@ -230,7 +230,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ## October 26, 2026 (evening): Aether's guide
 
-- **docs/AETHER.md** (new, general): Aether (the VM agent, formerly called Hermes), the VM's measured specs and budget
+- **docs/jobs/AETHER.md** (new, general): Aether (the VM agent, formerly called Hermes), the VM's measured specs and budget
   ("disk" = the 48 GB storage, the binding limit), the anatomy of an airtight job, interruptions handled gracefully
   (section 4b: atomic state, a graceful stop that finishes the generation, repair after hard kills, catch-up pushes,
   bounded retries of the job's own run, waiting out a dead model or a full disk), tracing everything, GitHub as the
@@ -238,7 +238,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ## October 24, 2026 (03:45-05:00): v8, a register of hills
 
-- **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):
+- **The request** (verbatim in `docs/history/BRIEF_2026-10-24.md`):
   - surgical additions, at least as good as v4 and v7, not a new architecture;
   - reliably discover new hills one after another, and test that each is new;
   - no repeated work.
@@ -247,7 +247,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
     VRP's solutions.
   - Design decisions are where new hills come from.
   - Regions are the hills.
-- **Calibration** before choosing the radii (`docs/V8_DESIGN.md`):
+- **Calibration** before choosing the radii (`docs/design/V8_DESIGN.md`):
   - On the bests of 19 earlier autocorrelation runs: the textbook constructions are within 0.04 of each other,
     v4.7→v7 polishing moved 0.06, and different families are 0.09–0.6 apart.
   - On 12 programs of the v7 VRP run evaluated again on the fake worlds: noise 0.02, climbing steps 0.03–0.08, the
@@ -274,7 +274,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ## October 24, 2026 (03:12-04:30): the v7 results, and how to explore the search space
 
-- **The request** (verbatim in `docs/BRIEF_2026-10-24.md`):
+- **The request** (verbatim in `docs/history/BRIEF_2026-10-24.md`):
   - analyse both v7 runs;
   - reason, concept first, about how to discover new hills rather than climb the current one (what the search space
     is; what machine learning does about local optima; Shreyas's ideas of probing approaches as axes and replaying
@@ -282,7 +282,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   - then say how it would become add-ons to v7. Not built yet.
 - **The data:** the autocorrelation run was pushed by its job (`results/v7warm/`). The VRP run came as an archive; the
   first copy was a partial download, and the second was complete.
-- **Findings** (`docs/V7_RESULTS.md`):
+- **Findings** (`docs/analysis/V7_RESULTS.md`):
   - v7 did what it was built to do.
   - Its backtracks were short steps back, not restarts.
   - Restarts from scratch all fell into the model's default basin: on the autocorrelation problem, 19 of 19 at or
@@ -292,7 +292,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
   - The one real change of hill (VRP, T40) came from replacing a component every program shared; it started worse
     and climbed after a mutation woke it.
   - VRP programs grew to 132,000 characters.
-- **Reasoning** (`docs/SEARCH_SPACE.md`):
+- **Reasoning** (`docs/research/SEARCH_SPACE.md`):
   - The search space to reason in is the space of design decisions.
   - Some axes are frozen, and a maximum along the varied axes can be a slope along a frozen one.
   - New options must be judged after a short climb.
@@ -322,10 +322,10 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ## October 23, 2026 (11:30-12:30): v7, and its two jobs
 
-- **The request** (11:28) is in `docs/BRIEF_2026-10-23.md`: one new version; no closing rules; exploration that rises
+- **The request** (11:28) is in `docs/history/BRIEF_2026-10-23.md`: one new version; no closing rules; exploration that rises
   as progress stalls, including reviving earlier approaches on today's state and backtracking; the main path never
   stops; a broad start. Then both problems warm-started, side by side, for many generations.
-- **v7** (`helix7/`, `docs/V7_DESIGN.md`):
+- **v7** (`helix7/`, `docs/design/V7_DESIGN.md`):
   - v4's loops and Atlas, with the tree view back, plus v4.7's measurement fixes;
   - tracks instead of lines, and nothing is closed;
   - the level of exploration (0, 1 or 2 of the 3 planned experiments) comes from the stall against the run's own
@@ -350,7 +350,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
     level 1 and level 2; revive, backtrack and bold tracks open and pause. The planner's prompt is about 58,000
     characters.
   - Both job scripts ran end to end with a fake model.
-- **The jobs** (`docs/V7_JOB.md`):
+- **The jobs** (`docs/jobs/V7_JOB.md`):
   - the autocorrelation run continues v47-s2 from generation 190, for 100 generations;
   - the VRP run starts from atlas-s1/p0292, for 100 generations;
   - they run side by side, sharing the 2 evaluation slots.
@@ -387,7 +387,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 - **What it answers.** Whether the old Atlas helps or hurts.
 - **Checks.** A test was added; the job ran end to end with a fake model. On the continued run, the planner's prompt
   is 54,000–63,000 characters, against v4's 311,000. `helix47/compare.py` now counts generations from a warm start.
-- **Docs:** `docs/V47_WARM.md`, with the Hermes prompt. The queued from-scratch job is stopped first, so the two don't
+- **Docs:** `docs/jobs/V47_WARM.md`, with the Hermes prompt. The queued from-scratch job is stopped first, so the two don't
   start together.
 
 ---
@@ -397,7 +397,7 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 - **`docs/VERSIONS.md`** is the project's map: every version from v1 to v4.7, what each tried, what worked, what
   failed, and links to its documents. It also covers the applied routing track (no private details) and the open
   research questions.
-- **`docs/RESEARCH_PLATEAUS.md`** answers Shreyas's question: do LLM-driven searches grok?
+- **`docs/research/RESEARCH_PLATEAUS.md`** answers Shreyas's question: do LLM-driven searches grok?
   - It sets out where hidden progress could live: potentiating code changes (the Lenski parallel), the Atlas, and the
     population.
   - It says what "generalisation" would mean here.
@@ -432,10 +432,10 @@ The step slot and the challenger were removed.
 ## October 22, 2026 (22:36-00:30): the false ceiling; v4.7 built, tested and packaged
 
 ### What was asked
-`docs/BRIEF_2026-10-22_V47.md` (verbatim). Is v4 building a false ceiling for itself (the 150-generation atlas-s1
+`docs/history/BRIEF_2026-10-22_V47.md` (verbatim). Is v4 building a false ceiling for itself (the 150-generation atlas-s1
 run)? Then build v4.7, a variant of v4 with every fix, meant to be a strict improvement.
 
-### What was found (`docs/V4_CEILING.md`)
+### What was found (`docs/analysis/V4_CEILING.md`)
 - **Programs fall back to their start.** In generations 81-150, 72% of children handed back their start unchanged,
   so a new idea that hadn't beaten the start yet was invisible: it looked like a failure.
 - **Every idea is judged against the champion after 30 s.** 16 of 210 late experiments tried a fresh start; the 2
@@ -450,7 +450,7 @@ run)? Then build v4.7, a variant of v4 with every fix, meant to be a strict impr
 - **Seeds** only drive the wide loop's parent sampling. The model isn't seeded, so a "good seed" isn't reproducible.
 
 ### What was built
-`helix47/` (`docs/V47_DESIGN.md`):
+`helix47/` (`docs/design/V47_DESIGN.md`):
 - **Always on:**
   - alternative constructions are kept;
   - a 1e-6 noise floor;
@@ -462,14 +462,14 @@ run)? Then build v4.7, a variant of v4 with every fix, meant to be a strict impr
   itself and doesn't see the record.
 
 Tests: `tests/test_helix47.py`. The job: `scripts/run_v47_jobs.sh`, with v4.7 and v4 × 3 seeds × 30 generations.
-The Hermes prompt is in `docs/V47_JOB.md`.
+The Hermes prompt is in `docs/jobs/V47_JOB.md`.
 
 ---
 
 ## October 22, 2026 (00:06-01:30): the traces read in depth; v4.6 and v6 built, tested and packaged
 
 ### What was asked
-`docs/BRIEF_2026-10-22.md` (verbatim). Read every trace in depth: v4 atlas-s1 to generation 55, and v4.5 and v5 to
+`docs/history/BRIEF_2026-10-22.md` (verbatim). Read every trace in depth: v4 atlas-s1 to generation 55, and v4.5 and v5 to
 generation 20. Make the wide loop a halo around the deep loop again. Build two versions:
 - a conservative v4 successor that improves it strictly and substantially (v4.6);
 - an ambitious agentic one (v6).
@@ -478,7 +478,7 @@ Say what is being built before building it, test everything including real end-t
 overnight job for Hermes with no kill or cron instructions.
 
 ### What was found
-`docs/TRACE_STUDY.md`, sections 1-11:
+`docs/analysis/TRACE_STUDY.md`, sections 1-11:
 - **The loops were decoupled.** The parent-sampling rule decoupled them: 25 of 60 wide parents in generations 1-20
   were more than 0.01 below the record.
 - **Failures were often time-outs.** Many "failures" were experiments that ran out of time (20 of 54 in
@@ -493,7 +493,7 @@ overnight job for Hermes with no kill or cron instructions.
 - **v5's thread stop rule never fired** in a slow polishing tail.
 
 ### What was built
-`helix6/`, with the design in `docs/V6_DESIGN.md`:
+`helix6/`, with the design in `docs/design/V6_DESIGN.md`:
 - **The shared engine:**
   - method × state: a program's code runs on any program's construction, or from scratch;
   - the problem's exact scorer as an importable toolkit;
@@ -515,7 +515,7 @@ overnight job for Hermes with no kill or cron instructions.
   last 3 actions, over 2 rounds or more, raised the record by less than 3e-4; it is parked after 2 rounds due.
 - **The report:** `helix6/report.py`, every version on one page.
 - **The job:** `scripts/run_v6_jobs.sh` (v4.6 × 3 and v6 × 3, 30 generations, 8 h deadline, one copy at a time,
-  waits for any earlier Helix job, never stops anything). The Hermes prompt is in `docs/V6_JOB.md`.
+  waits for any earlier Helix job, never stops anything). The Hermes prompt is in `docs/jobs/V6_JOB.md`.
 
 ### Checked
 - **Unit tests:** `tests/test_helix6.py`, 15 tests; every older suite still passes (76 in all).
@@ -542,7 +542,7 @@ overnight job for Hermes with no kill or cron instructions.
 
 ## October 21, 2026 (11:30): v4.5 and v5 results; atlas-s1 to generation 40
 
-`docs/V5_RESULTS.md`.
+`docs/analysis/V5_RESULTS.md`.
 - **Final scores:** v4.5 0.875 / 0.897 / 0.926; v5 0.872 / 0.872 / 0.934. That is within the v4 spread: no
   difference in score is shown.
 - **Behaviour:** no run fell into the 0.8825 attractor. They started slower, and fresh lines took over late (5 of
@@ -575,7 +575,7 @@ to v4's. The job started at 02:51 was stopped, and the job was restarted from no
 ## October 21, 2026 (02:00-03:00): the finished v4 job analysed from its traces; the lessons built into v4.5 and v5
 
 ### What was asked
-(02:12, verbatim in `docs/BRIEF_2026-10-21.md`) The v4 job is done: analyse it in depth, from the traces and runs and
+(02:12, verbatim in `docs/history/BRIEF_2026-10-21.md`) The v4 job is done: analyse it in depth, from the traces and runs and
 not just the scores. Cover how each run progressed, atlas-s1's steady climb, the model's behaviour, failure points
 and stalls. Then carry the lessons into v4.5 and v5, and finish the other deliverables.
 
@@ -585,9 +585,9 @@ All nine final constructions were re-scored three ways (`tools/verify_ac2.py`).
 - journal-s1 0.9341847, journal-s2 0.9241822 (exact on the floats themselves), control-s2 0.9135816, atlas-s2
   0.8922728.
 - The other four runs are at 0.88244-0.88254.
-- Four of nine runs passed AlphaEvolve May 2025 (0.8963). `docs/MILESTONES.md` is updated.
+- Four of nine runs passed AlphaEvolve May 2025 (0.8963). `docs/history/MILESTONES.md` is updated.
 
-### Found (`docs/V4_ANALYSIS.md`, tables from `tools/analyse_runs.py`)
+### Found (`docs/analysis/V4_ANALYSIS.md`, tables from `tools/analyse_runs.py`)
 - **atlas-s1 climbed in three phases:**
   1. free-form search (0.845);
   2. a smoothed max (0.878), then four flat generations;
@@ -616,7 +616,7 @@ All nine final constructions were re-scored three ways (`tools/verify_ac2.py`).
 - two deepen slots while the line keeps paying (the record rose ≥ 0.001 last generation, or ≥ 0.0001 in each of the
   last two), and they must differ in mechanism.
 
-Four new tests (21 in all). `docs/V5_DESIGN.md` was rewritten: the behavioural problems, their causes, and the
+Four new tests (21 in all). `docs/design/V5_DESIGN.md` was rewritten: the behavioural problems, their causes, and the
 structure that answers each.
 
 ### Checked
@@ -641,11 +641,11 @@ structure that answers each.
 ## October 21, 2026 (night): the AlphaEvolve claim checked; Helix v4.5 and v5 built
 
 ### What was asked
-`docs/BRIEF_2026-10-21.md` (verbatim). Check the claim "we beat AlphaEvolve's May 2025 result" rigorously; explain
+`docs/history/BRIEF_2026-10-21.md` (verbatim). Check the claim "we beat AlphaEvolve's May 2025 result" rigorously; explain
 seeds; document model settings and the milestone; build v4.5 (v4 fixed from its traces) and v5 (the researcher);
 test; package one overnight job for both.
 
-### The claim (`docs/MILESTONES.md`)
+### The claim (`docs/history/MILESTONES.md`)
 - AlphaEvolve's May 2025 result for this problem is 0.8962 (exactly 0.896279944155), a 50-step function, published in
   DeepMind's `alphaevolve_results` notebook (B.2) with their verification code. Their problem statement and scoring are
   the same as ours: our evaluator reproduces their code on their construction to 12 digits, and exact rational
@@ -659,7 +659,7 @@ test; package one overnight job for both.
 ### Seeds
 Only the wide loop's parent-sampling seed; every run starts from the same constant function. Replicates.
 
-### What the v4 run showed (`docs/V5_DESIGN.md` section 1)
+### What the v4 run showed (`docs/design/V5_DESIGN.md` section 1)
 The planner put all 3 experiments on the current best in most generations; stalled runs polished the 1/√x shape
 (≈ 0.8825) for many generations; breakouts needed genuinely different methods; programs wasted budget and once
 returned a worse construction than they had found; program logs carried a key clue.
@@ -694,13 +694,13 @@ returned a worse construction than they had found; program logs carried a key cl
 ## October 20, 2026 (evening): Helix v4, program evolution with memory, and the overnight job
 
 ### What was asked
-The full brief is `docs/BRIEF_2026-10-20.md` (verbatim). In short: evaluate the hypothesis that the plateau comes
+The full brief is `docs/history/BRIEF_2026-10-20.md` (verbatim). In short: evaluate the hypothesis that the plateau comes
 from missing continuity between generations; compare (A) appended, managed context with (B) an Avy-inspired
 structured memory; evolve programs, not weights; a population, not a champion; a richer evaluator; one good
 open-ceiling problem (a benchmark if one fits); test small first; an overnight job of at most 8 hours on the 2-core
 OCI VM for the Hermes agent; results for a presentation on October 21.
 
-### Decisions and reasoning (details in `docs/V4_DESIGN.md`)
+### Decisions and reasoning (details in `docs/design/V4_DESIGN.md`)
 - **The hypothesis.** Literally inaccurate: the v3 Researcher had a ~15k-character ledger. In spirit right: no
   agent kept its own reasoning, the Coder and Mutator saw no history, the evaluator returned aggregates. The main
   cause of the v3 plateau is the representation (a linear sum of one-step features): on runner, the champion clears
@@ -744,7 +744,7 @@ OCI VM for the Hermes agent; results for a presentation on October 21.
   then bets on carrying an older, flatter-topped branch (p0008) to higher resolution. Control, the same generation
   in another run, proposes smoothing the max as a fresh idea: it cannot know what has already failed.
 - **Overnight settings**: 20 generations, 30 s per program, 3 seeds, 2 evaluation slots: about 3.5-4.5 hours,
-  with a 7.5-hour deadline as a backstop (`docs/V4_JOB.md`).
+  with a 7.5-hour deadline as a backstop (`docs/jobs/V4_JOB.md`).
 
 ---
 
@@ -752,7 +752,7 @@ OCI VM for the Hermes agent; results for a presentation on October 21.
 
 ### What was asked
 
-Shreyas suspects leakage: every problem jumps in generation 1 and then flattens, as if the system already knew the answer. The aim of Helix is to make real discoveries, so the tests should show a system still climbing at generation 10. Asked: a non-linear flowchart of the current system ([helix_v3_flow.png](helix_v3_flow.png)); why it flatlines and how to push through; what problems would test for discovery; research on other evolutionary setups. Nothing to be built yet.
+Shreyas suspects leakage: every problem jumps in generation 1 and then flattens, as if the system already knew the answer. The aim of Helix is to make real discoveries, so the tests should show a system still climbing at generation 10. Asked: a non-linear flowchart of the current system ([helix_v3_flow.png](figures/helix_v3_flow.png)); why it flatlines and how to push through; what problems would test for discovery; research on other evolutionary setups. Nothing to be built yet.
 
 ### Findings
 
@@ -770,11 +770,11 @@ Evolve whole policy programs inside a skeleton that can call the simulator (so t
 
 ### Decision: the meta loop is scrapped
 
-Shreyas decided to drop meta-evolution entirely: too expensive, too slow and not worth it on the compute available (the one real meta run took 6.8 hours for a single outer generation, overloaded a 2-core VM, and its +10.6 gain was within reach of a 7.6-point repeat noise). `meta/`, `docs/META_V3.md`, `docs/META_LOOP.md` and `scripts/run_meta.sh` stay in the repo as history; nothing builds on them. `scripts/run_open_jobs.sh` still calls `run_meta.sh` for its preflight only (dependency and key checks).
+Shreyas decided to drop meta-evolution entirely: too expensive, too slow and not worth it on the compute available (the one real meta run took 6.8 hours for a single outer generation, overloaded a 2-core VM, and its +10.6 gain was within reach of a 7.6-point repeat noise). `meta/`, `docs/design/META_V3.md`, `docs/design/META_LOOP.md` and `scripts/run_meta.sh` stay in the repo as history; nothing builds on them. `scripts/run_open_jobs.sh` still calls `run_meta.sh` for its preflight only (dependency and key checks).
 
 ### What the job was
 
-`scripts/run_open_jobs.sh` on the cloud VM, October 18 14:15 → October 19 17:01, one run at a time, one fitting worker. It answers two questions from [OPEN_SUITE.md](OPEN_SUITE.md):
+`scripts/run_open_jobs.sh` on the cloud VM, October 18 14:15 → October 19 17:01, one run at a time, one fitting worker. It answers two questions from [OPEN_SUITE.md](design/OPEN_SUITE.md):
 
 1. **How far does Helix v3 climb when nothing caps it and nothing tells it what good looks like?** Nine invented problems with no reference, no textbook rule and no known optimum, each run once for 12 generations with the default strategy (Researcher thinks at low, a high-effort breakthrough every 5th generation).
 2. **Does hidden thinking help?** The same 12 generations on `forage` and `duel` with three more settings: no thinking anywhere (`none`), low without breakthroughs (`low`), Researcher and Navigator always at high (`high`).
@@ -829,7 +829,7 @@ Make the system do what it was meant to do, tracing each gap to its cause (promp
 
 ### Decisions
 
-- **A new package, `helix3/`, next to `helix/`** (v2 stays runnable for comparisons). Same two loops; everything around them rebuilt. Why each piece exists: [V3_DESIGN.md](V3_DESIGN.md), section 1 traces each v2 gap to its cause.
+- **A new package, `helix3/`, next to `helix/`** (v2 stays runnable for comparisons). Same two loops; everything around them rebuilt. Why each piece exists: [V3_DESIGN.md](design/V3_DESIGN.md), section 1 traces each v2 gap to its cause.
 - **The approach tree sits above both loops** (the open question in the concept doc): the Navigator decides where they search; the deep loop is how a branch gets explored; the Mutator stays blind to hypotheses but gets parents chosen across the tree.
 - **"Exaggerate one aspect" returns as probes that never compete**: mechanical sensitivity probes on every kept feature, and Researcher experiments of kind `probe`, judged by whether their prediction held.
 - **Only a checked certificate prunes** (inert, duplicate, span). The Prover agent may propose one; the engine verifies it.
@@ -840,7 +840,7 @@ Make the system do what it was meant to do, tracing each gap to its cause (promp
 
 ### Round 1 (v3r1, 2D bin packing, 5 generations): 22.0% train, 22.4% test
 
-One jump in generation 2, then flat; behind v2's run 8 (27.5%). A subagent reviewed the trace against [TRACE_REVIEW.md](TRACE_REVIEW.md). What it found, and what was done:
+One jump in generation 2, then flat; behind v2's run 8 (27.5%). A subagent reviewed the trace against [TRACE_REVIEW.md](analysis/TRACE_REVIEW.md). What it found, and what was done:
 
 | Finding | Cause | Fix |
 |---|---|---|
@@ -859,9 +859,9 @@ Also from round 1, independently: the best two near-misses per generation now ge
 
 - `helix3/`: engine, ledger and certificates, fitter, client, roles, strategy, digest, CLI; `tests/test_helix3.py`.
 - `suite/`: the interface docs, `check.py`, `binpack2d.py`; seven more problems in progress.
-- `meta/`: `evaluate.py` (meta-evaluator), `outer.py` (the outer loop), `strategies.py`, `space/` (outer-level addenda). Docs: [META_V3.md](META_V3.md).
+- `meta/`: `evaluate.py` (meta-evaluator), `outer.py` (the outer loop), `strategies.py`, `space/` (outer-level addenda). Docs: [META_V3.md](design/META_V3.md).
 - `ui/`: the new dashboard (`python -m ui`).
-- [TRACE_REVIEW.md](TRACE_REVIEW.md): the checklist each run is reviewed against.
+- [TRACE_REVIEW.md](analysis/TRACE_REVIEW.md): the checklist each run is reviewed against.
 
 ---
 
@@ -873,7 +873,7 @@ The viewer does too much: everything sits behind a click and it's hard to follow
 
 ### What was done
 
-- [RUN8_WALKTHROUGH.md](RUN8_WALKTHROUGH.md): who each station is (only the Researcher, Coder and Mutator are LLMs), one full cycle from Code Zero through generation 1, each generation in turn, and a table of intent against actual behaviour.
+- [RUN8_WALKTHROUGH.md](analysis/RUN8_WALKTHROUGH.md): who each station is (only the Researcher, Coder and Mutator are LLMs), one full cycle from Code Zero through generation 1, each generation in turn, and a table of intent against actual behaviour.
 - Two facts confirmed in the code while writing it: the Researcher's `target` (its prediction) is saved and never checked (`evolve.py`, `record_hypotheses`); and an idea rejected by the probe is logged as "refuted" with no number (`evolve.py`, `verdict`).
 
 ### Open
@@ -895,7 +895,7 @@ Shreyas wants to turn the solution space (all possible heuristics) into a search
 
 ### What was done
 
-1. **Luminal rate limits measured** (about 2,500 tiny requests). Two limiters: about 13 requests at the same instant, and a bucket of about 60 requests refilling at about 1 a second. Concurrency and prompt size aren't limited. All thinking levels answer again, `ultra` included. Details: [LUMINAL.md, Rate limits](../LUMINAL.md#rate-limits-measured-october-17-2026).
+1. **Luminal rate limits measured** (about 2,500 tiny requests). Two limiters: about 13 requests at the same instant, and a bucket of about 60 requests refilling at about 1 a second. Concurrency and prompt size aren't limited. All thinking levels answer again, `ultra` included. Details: [LUMINAL.md, Rate limits](jobs/LUMINAL.md#rate-limits-measured-october-17-2026).
 2. **Run 8**: `results/20261017-014858-full`, the default feature engine, 5 generations from Code Zero, every default setting. About 4 minutes, 46 agent calls; −9.181 → −6.774, 27.5% of the way to optimal on train, 26.2% on the held-out test. Run with `HELIX_TIMING=1` so the probe and trial details are in its console log.
 3. **Run viewer** ([viz/](../viz/README.md)): `python -m viz.export <run>` turns any feature-engine run folder into one self-contained HTML page. It replays the run on a factory floor laid out like the two-loop flowchart, with clickable messages, feature cards, per-machine panels, a parts grid, champion diffs and written notes. It also opens run 7 (25 generations). The page for run 8 is `results/20261017-014858-full/viewer.html`.
 4. **A written read of run 8**: `results/20261017-014858-full/notes.json`, shown inside the viewer (Notes tab, and next to every call and feature).
@@ -983,7 +983,7 @@ streams): generation 1 reached 22.6% (valid 20.7%) in 105 s.
 run path; `run_meta.sh` has a preflight (dependencies, keys, a one-generation crash test), `DRY=1`, `RESUME=`, and
 keeps a Mac awake; the meta loop reuses finished inner runs, resumes unfinished ones, keeps a generation's
 candidates across a resume, counts only time spent, and fails fast if the starting strategy's runs all crash;
-`scripts/install_keeper.sh` starts the keeper at login. See docs/META_V3.md.
+`scripts/install_keeper.sh` starts the keeper at login. See docs/design/META_V3.md.
 
 **Also:** round-3 review fixes part 2 (see the commit), perturbation generations, the dashboard showing dead runs as
 live (fixed), aborted generations of resumed runs hidden, docs/REQUESTS.md (every request, with status).
@@ -1077,7 +1077,7 @@ overloaded (Shreyas had to reboot it). Four strategies evaluated (4 problems x 2
 not proven. Verdict: not worth more compute on this hardware; paused. The winning idea can be checked directly as an
 A/B of two Helix configurations later.
 
-**Open suite round 2** (docs/OPEN_SUITE.md): stacker (puzzle game), runner (arcade game as a speedrun), repair
+**Open suite round 2** (docs/design/OPEN_SUITE.md): stacker (puzzle game), runner (arcade game as a speedrun), repair
 (evolving a debugger: which patch to try next on a buggy program), progression (a set avoiding an invented equation,
 as large as possible). `scripts/run_open_jobs.sh` runs all 9 open problems and then a thinking-mode ablation, gently
 by default (one run at a time, one fitting worker, nice/ionice, a small cache, a memory guard).

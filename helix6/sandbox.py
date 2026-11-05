@@ -1,7 +1,7 @@
 """The v4.6/v6 sandbox: v4.5's (helix5/sandbox.py: anytime results with keep_best, stage lines), plus the problem's
 exact scorer written next to the candidate as `helix_problem.py`, so programs can `from helix_problem import score`
 (helix6/toolkits.py). The runner and its limits are unchanged; each program's budget is passed per call, so the
-researcher can give one experiment 60 or 90 s instead of 30 (docs/V6_DESIGN.md)."""
+researcher can give one experiment 60 or 90 s instead of 30 (docs/design/V6_DESIGN.md)."""
 from __future__ import annotations
 
 import json

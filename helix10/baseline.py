@@ -1,4 +1,4 @@
-"""v10.1's bar: the world's best program under our constraint (docs/V10_JOB.md, v10.1).
+"""v10.1's bar: the world's best program under our constraint (docs/jobs/V10_JOB.md, v10.1).
 
 The question v10.1 asks: given the same constraint (n <= 100,000 steps, the same CPU seconds per program and in
 total, the same start), does Helix searching the field's ideas as axes beat the field's own best program? This job

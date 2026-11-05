@@ -12,7 +12,7 @@ where a volunteer's dissatisfaction is (non-preferred shifts worked) + |shifts w
 of dissatisfaction over volunteers, and `unfairness` is the sum over volunteers of |dissatisfaction - its mean|.
 The three components are reported separately (run() and diagnose()).
 
-Open ceiling (docs/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
+Open ceiling (docs/design/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
 on the same instance (computed once per process and cached by instance id), so Code Zero scores exactly 100.
 """
 from __future__ import annotations

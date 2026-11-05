@@ -1,4 +1,4 @@
-"""Helix v3: the generation loop. See docs/V3_DESIGN.md.
+"""Helix v3: the generation loop. See docs/design/V3_DESIGN.md.
 
 One generation:
   1. sample decision states from the champion's own solutions (for fingerprints)

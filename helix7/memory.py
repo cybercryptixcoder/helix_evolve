@@ -1,5 +1,5 @@
 """v7's Atlas: helix4's Atlas with v4.7's measurement fixes, v4's tree view kept, and the planner's brief built from
-slots (docs/V7_DESIGN.md).
+slots (docs/design/V7_DESIGN.md).
 
 - Gains count only above the run's floor (Run.floor: a small relative floor, raised to the evaluator's measured
   noise on a noisy problem); statuses use it.

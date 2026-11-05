@@ -1,4 +1,4 @@
-"""The continuation pack: what a run needs to continue on any machine, from GitHub alone (docs/V9_JOB.md).
+"""The continuation pack: what a run needs to continue on any machine, from GitHub alone (docs/jobs/V9_JOB.md).
 
 A run folder pushed to GitHub has every program's code, score and history, but not the constructions (a few hundred
 KB each, thousands of them) nor, for the autocorrelation problem, the signatures (computed from the constructions).

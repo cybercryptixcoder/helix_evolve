@@ -1,4 +1,4 @@
-"""One Helix v4.6 or v6 run (docs/V6_DESIGN.md).
+"""One Helix v4.6 or v6 run (docs/design/V6_DESIGN.md).
 
     python -m helix6.run --condition v46 --seed 1 --gens 30 --out runs/v6/v46-s1
     python -m helix6.run --condition v6  --seed 1 --gens 30 --out runs/v6/v6-s1
@@ -6,7 +6,7 @@
     python -m helix6.run --condition v46 --gens 2 --fake --out /tmp/x     # no model calls
 
 The engine both versions share, built on v4.5's (helix5/run.py), with the structural fixes from the trace study
-(docs/TRACE_STUDY.md):
+(docs/analysis/TRACE_STUDY.md):
 
 METHOD x STATE. Every program has a method (the code it runs, changed from its base program, which is its parent in
 the tree) and a state (the construction it starts from). In v4 the two always travelled together: a child started

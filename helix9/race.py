@@ -1,4 +1,4 @@
-"""The fair race between new hills (docs/V9_DESIGN.md; docs/SEARCH_SPACE_MODEL.md sections 2.2, 4.5).
+"""The fair race between new hills (docs/design/V9_DESIGN.md; docs/research/SEARCH_SPACE_MODEL.md sections 2.2, 4.5).
 
 A new design's height is not visible from its foot: across 15 from-scratch runs, a run's best after 20 programs had
 no rank correlation with its final best, and v8 paused new hills after a median of 3 experiments. So exploration

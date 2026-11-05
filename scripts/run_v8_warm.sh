@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v8 job on the second autocorrelation inequality (docs/V8_JOB.md): one v8 run that continues the v7 run
+# The Helix v8 job on the second autocorrelation inequality (docs/jobs/V8_JOB.md): one v8 run that continues the v7 run
 # v7-s1 (record 0.9412521, generation 290) for 100 more generations at 60 s per program. Every program, construction,
 # finding and track of v7-s1 is kept; the first generation puts every earlier track's best on the map of hills.
 #

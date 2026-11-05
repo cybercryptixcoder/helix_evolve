@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v4.5 + v5 overnight job (docs/V5_DESIGN.md): the second autocorrelation inequality, v5 (the researcher)
+# The Helix v4.5 + v5 overnight job (docs/design/V5_DESIGN.md): the second autocorrelation inequality, v5 (the researcher)
 # and v4.5 (Atlas+) x three seeds, 20 generations each, all side by side. Tonight's v4 runs are the baselines.
 #
 #   nohup bash scripts/run_v5_jobs.sh > v5_jobs.log 2>&1 &
@@ -84,7 +84,7 @@ git_push() {   # message
     git add -f "$RESULTS" "$V4_RESULTS" 2>/dev/null
     git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" -c commit.gpgsign=false commit -q -m "$1" || exit 0
     for i in 1 2 3 4; do git pull -q --rebase origin HEAD && git push -q origin HEAD && exit 0; sleep $((10 * i)); done
-    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/V5_JOB.md)" >&2
+    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/jobs/V5_JOB.md)" >&2
   ) 9> "$ROOT_RUNS/.git.lock"
 }
 

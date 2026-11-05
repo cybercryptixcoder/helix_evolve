@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Helix v4 overnight job (docs/V4_DESIGN.md): one problem (the second autocorrelation inequality), three memory
+# The Helix v4 overnight job (docs/design/V4_DESIGN.md): one problem (the second autocorrelation inequality), three memory
 # conditions (atlas, journal, control) x three seeds, 20 generations each, all side by side.
 #
 #   nohup bash scripts/run_v4_jobs.sh > v4_jobs.log 2>&1 &
@@ -71,7 +71,7 @@ git_push() {   # message
   ( command -v flock >/dev/null && flock 9
     git add -f "$RESULTS" && git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" -c commit.gpgsign=false commit -q -m "$1" || exit 0
     for i in 1 2 3 4; do git pull -q --rebase origin HEAD && git push -q origin HEAD && exit 0; sleep $((10 * i)); done
-    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/V4_JOB.md)" >&2
+    echo "   (push failed: results stay in $RESULTS and $ROOT_RUNS; see the tarball step in docs/jobs/V4_JOB.md)" >&2
   ) 9> "$ROOT_RUNS/.git.lock"
 }
 

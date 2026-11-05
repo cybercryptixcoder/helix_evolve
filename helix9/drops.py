@@ -1,4 +1,4 @@
-"""Choosing where to jump on the design map: drops (2-4 axes at once) and flips (one axis) (docs/V9_DESIGN.md).
+"""Choosing where to jump on the design map: drops (2-4 axes at once) and flips (one axis) (docs/design/V9_DESIGN.md).
 
 A drop is a coordinate the coder is asked to build: start from a base's coordinate (the record's, or another hill's
 top), change k of its axes (kick size k between `kmin` and `kmax`), keep the rest. The coordinate is chosen by Thompson

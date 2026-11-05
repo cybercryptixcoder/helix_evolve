@@ -1,5 +1,5 @@
 """One Helix v7 run: v4's search, with exploration that rises when the record stalls and falls when it climbs, and
-nothing ever closed (docs/V7_DESIGN.md).
+nothing ever closed (docs/design/V7_DESIGN.md).
 
     python -m helix7.run --seed 1 --gens 30 --out runs/v7/v7-s1
     python -m helix7.run --out runs/v7/v7-s1                     # resumes (state.json is there)

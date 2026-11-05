@@ -1,4 +1,4 @@
-"""Hills: telling apart what programs produce (docs/V8_DESIGN.md).
+"""Hills: telling apart what programs produce (docs/design/V8_DESIGN.md).
 
 A hill is a family of programs whose outputs are nearly the same: climbing moves a program along its hill, and a
 new hill is an output far from every known one. The distance is measured by code, never by the model.

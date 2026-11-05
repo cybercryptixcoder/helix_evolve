@@ -6,7 +6,7 @@ contains no solution with x, y, z pairwise distinct (for these equations two equ
 "distinct" only excludes x = y = z). The set is built one number at a time: the candidates are the numbers whose
 addition keeps the set valid; the build ends when none remain. Score = the final set's size (bigger is better).
 
-Open ceiling, maximisation (docs/OPEN_SUITE.md, round 2): gap = 100 x Code Zero's size / size, so Code Zero (the
+Open ceiling, maximisation (docs/design/OPEN_SUITE.md, round 2): gap = 100 x Code Zero's size / size, so Code Zero (the
 first candidate of a shuffled list, i.e. a random maximal set) scores exactly 100 and a set twice as large scores 50.
 Code Zero's sizes are computed once per process (fast) and cached by instance id.
 

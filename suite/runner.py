@@ -7,7 +7,7 @@ only the legal ones). Dying (a pit, a spike, a saw) respawns the runner at its l
 ticks. A level's cost is the ticks it took to reach the goal; a level not finished within the cap costs the cap,
 plus a penalty, plus a charge per tile of distance never reached.
 
-Open ceiling (docs/OPEN_SUITE.md): an instance is two levels of one style; cost = the sum of their costs;
+Open ceiling (docs/design/OPEN_SUITE.md): an instance is two levels of one style; cost = the sum of their costs;
 gap = 100 * cost / Code Zero's cost (Code Zero = 100 exactly). Code Zero's costs are cached in
 suite/data/runner_cz.json (rebuild: `python -m suite.runner --cz`); a missing or stale entry is computed on the spot.
 """

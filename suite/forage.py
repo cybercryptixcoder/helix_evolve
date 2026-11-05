@@ -7,7 +7,7 @@ are visible now, plus the charger (candidates shuffled per decision with the ins
 candidate carries no heuristic and Code Zero is a random policy). Cost = value lost (every spawned item's full
 value minus the values actually collected) + a fixed penalty each time the battery runs out.
 
-Open ceiling (docs/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
+Open ceiling (docs/design/OPEN_SUITE.md): no reference, no floor, no textbook rule. gap = 100 * cost / Code Zero's cost
 on the same instance (computed once per process and cached by instance id), so Code Zero scores exactly 100.
 """
 from __future__ import annotations

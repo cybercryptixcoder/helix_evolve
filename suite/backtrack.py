@@ -5,7 +5,7 @@ basin totals (irregular groups of 4-6 pools) and a census (how many pools have e
 generated around a hidden planted solution, so it always has one. The solver checks constraints one step ahead
 (forward checking) and tries depths in increasing order; the policy only picks the branching order.
 
-Open ceiling (docs/OPEN_SUITE.md): cost = search nodes until the first solution, summed over a ladder of three
+Open ceiling (docs/design/OPEN_SUITE.md): cost = search nodes until the first solution, summed over a ladder of three
 puzzles of increasing size (each capped); gap = 100 * cost / Code Zero's cost on the same instance. Code Zero's
 costs are cached in suite/data/backtrack_cz.json (rebuild: `python -m suite.backtrack --cz`); an instance missing
 from the cache is computed on the spot.

@@ -6,7 +6,7 @@ their column (gaps under overhangs stay gaps), which can set off further rounds.
 round x n^2 / 4; every piece placed scores 1. Some families push a garbage row up from the bottom every few pieces.
 The game ends after a fixed number of pieces, or when a piece has nowhere to fit, or when garbage pushes a cell out.
 
-Open ceiling (docs/OPEN_SUITE.md), maximised: an instance is a few seeded games; score = total points;
+Open ceiling (docs/design/OPEN_SUITE.md), maximised: an instance is a few seeded games; score = total points;
 gap = 100 * Code Zero's score / score (Code Zero = 100 exactly, a score twice Code Zero's is 50). Code Zero's scores
 are cached in suite/data/stacker_cz.json (rebuild: `python -m suite.stacker --cz`); an instance missing from the
 cache (or whose fingerprint changed) is computed on the spot.
