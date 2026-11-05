@@ -13,7 +13,7 @@ Start with the [README](../README.md), then [RECORDS.md](RECORDS.md) for the res
 | [design/](design/) | One design document per version (`V3_DESIGN.md` to `V102_DESIGN.md`), plus the meta loop and the open suite |
 | [jobs/](jobs/) | How runs were set up and handed to the cloud machine: one job document per version, the agent guide ([AETHER.md](jobs/AETHER.md)), the model settings and the model API notes |
 | [analysis/](analysis/) | What each run showed: results, post-mortems, trace studies, the survey of published results on the test problem ([AC2_SOTA.md](analysis/AC2_SOTA.md)) |
-| [research/](research/) | The research question and its framing, the search-space reasoning, open ideas |
+| [research/](research/) | The research question and its framing, the search-space reasoning, open ideas, and the plan for more problems ([SHOWCASE_PLAN.md](research/SHOWCASE_PLAN.md)) |
 | [history/](history/) | The working record: each day's brief and to-do list, conversations, hand-offs, the first README and the first version's contract |
 | [figures/](figures/) | Diagrams and slides |
 | [COMMIT_MAP.txt](COMMIT_MAP.txt) | Old to new commit ids after the November 3 history rewrite, for the ids recorded inside run records |
