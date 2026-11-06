@@ -33,6 +33,15 @@
    "population",
    "--no-notes"
   ],
+  "plan": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
   "plan+notes": [
    "--planned",
    "3",
@@ -52,7 +61,8 @@
   "floor": "the model sees the best program and writes a better one, 6 times a round",
   "population": "mutations from parents sampled by rank, with another strong program for ideas",
   "plan+notes": "a planner with notes, plus mutations",
-  "planned-only": "the planner with notes, no mutations"
+  "planned-only": "the planner with notes, no mutations",
+  "plan": "a planner without notes, plus mutations (the best setup on 32 circles)"
  },
  "references": [
   [
