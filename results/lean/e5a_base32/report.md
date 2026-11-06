@@ -12,28 +12,31 @@ Problem `circles` {'n': 32}; 15 rounds; 10 s of CPU per program; seeds [1, 2, 3,
 
 | Arm | 30 | 60 | 90 |
 |---|---|---|---|
-| floor | 2.9228190 [2.9183878, 2.9272501] | (1 of 2 seeds so far) | (1 of 2 seeds so far) |
-| population | 2.9033762 [2.9324576, 2.8742948] | (1 of 2 seeds so far) | (1 of 2 seeds so far) |
-| plan | (1 of 2 seeds so far) | (1 of 2 seeds so far) | (1 of 2 seeds so far) |
+| floor | 2.9268681 [2.9183878, 2.9272501, 2.9349663] | 2.9285276 [2.9233665, 2.9272501, 2.9349663] | (2 of 3 seeds so far) |
+| population | 2.9098824 [2.9324576, 2.8742948, 2.9228948] | 2.9292091 [2.9334497, 2.9217198, 2.9324579] | (2 of 3 seeds so far) |
+| plan | 2.9343063 [2.9391002, 2.9395728, 2.9242461] | (2 of 3 seeds so far) | (2 of 3 seeds so far) |
 
 ## Per run
 
 | Run | Programs | Best | Failed | Tokens | Records by role | Share of gain by role |
 |---|---|---|---|---|---|---|
 | floor-s1 | 91 | 2.931108889 | 0 | 515,701 | mutation 19 | mutation 100% |
-| floor-s2 (running) | 49 | 2.927250146 | 3 | 313,607 | mutation 11 | mutation 100% |
+| floor-s2 | 91 | 2.927250146 | 3 | 612,451 | mutation 12 | mutation 100% |
+| floor-s3 (running) | 85 | 2.934966263 | 1 | 448,538 | mutation 18 | mutation 100% |
 | population-s1 | 91 | 2.933449712 | 4 | 624,911 | mutation 16 | mutation 100% |
-| population-s2 (running) | 38 | 2.917225422 | 1 | 243,786 | mutation 13 | mutation 100% |
+| population-s2 | 91 | 2.922808763 | 2 | 656,823 | mutation 23 | mutation 100% |
+| population-s3 (running) | 78 | 2.934493727 | 0 | 508,354 | mutation 14 | mutation 100% |
 | plan-s1 | 91 | 2.939572768 | 8 | 928,631 | mutation 5, planned 10 | mutation 49%, planned 51% |
-| plan-s2 (running) | 14 | 2.939572768 | 1 | 69,256 | mutation 3, planned 1 | mutation 100%, planned 0% |
+| plan-s2 | 91 | 2.939572768 | 4 | 669,349 | mutation 3, planned 3 | mutation 100%, planned 0% |
+| plan-s3 (running) | 33 | 2.924246102 | 5 | 243,623 | planned 2, mutation 4 | planned 99%, mutation 1% |
 
 ## Programs each run needed to pass each published value (- : not passed)
 
 | Arm | AlphaEvolve (2.93794) | within 1e-9 of the best known (2.939572771205, Packomania) (2.939572770205) |
 |---|---|---|
-| floor | -, - | -, - |
-| population | -, - | -, - |
-| plan | 20, 10 | -, - |
+| floor | -, -, - | -, -, - |
+| population | -, -, - | -, -, - |
+| plan | 20, 10, - | -, -, - |
 
 ## Published values (for scale)
 
