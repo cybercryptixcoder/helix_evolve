@@ -1,0 +1,7 @@
+{"round": 0, "best": 0.64, "best_id": "p0001"}
+{"round": 1, "best": 2.855532878265696, "best_id": "p0006", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": null, "mutation_best": 2.855532878265696, "calls": 6, "seconds": 75.2}
+{"round": 2, "best": 2.859962025782764, "best_id": "p0013", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": null, "mutation_best": 2.859962025782764, "calls": 6, "seconds": 70.8}
+{"round": 3, "best": 2.859962025782764, "best_id": "p0013", "record": false, "record_role": null, "programs": 6, "failed": 1, "planned_best": null, "mutation_best": 2.859961993782764, "calls": 6, "seconds": 80.3}
+{"round": 4, "best": 2.8689334242588242, "best_id": "p0025", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": null, "mutation_best": 2.8689334242588242, "calls": 6, "seconds": 91.9}
+{"round": 5, "best": 2.8748981293618803, "best_id": "p0031", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": null, "mutation_best": 2.8748981293618803, "calls": 6, "seconds": 88.3}
+{"round": 6, "best": 2.9046353754055514, "best_id": "p0032", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": null, "mutation_best": 2.9046353754055514, "calls": 6, "seconds": 83.7}
