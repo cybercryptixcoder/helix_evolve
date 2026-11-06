@@ -126,3 +126,9 @@ Each step gets:
   - a planner;
   - a planner with notes;
   - a planner with no mutation loop.
+- **Nov 6:** experiments 2-4 (32 circles, AC2, AC1). No setup wins everywhere; the planner without mutations is
+  never first (`docs/analysis/WIDE_LOOP.md`: the wide loop isn't redundant). Showcase problems added: Erdős's minimum
+  overlap and AC3 (signed). Design notes for memory and exploration (`docs/design/LEAN_MEMORY.md`,
+  `LEAN_EXPLORATION.md`), awaiting Shreyas. Built behind switches, live-tested: restarts (`--restart K`) and the
+  best program's path (`--path`). Experiment 5 (the base setup, 8 seeds, VM + here) running; experiment 6 (restarts)
+  ready.
