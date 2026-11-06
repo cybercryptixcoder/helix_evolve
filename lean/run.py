@@ -59,12 +59,14 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--restart", type=int, default=0, help="start a new line from Code Zero after K rounds without a "
                                                             "gain (0: never)")
+    ap.add_argument("--restart-gain", type=float, default=1e-5, help="the smallest gain (relative) that counts for "
+                                                                       "--restart")
     ap.add_argument("--fake", action="store_true")
     a = ap.parse_args(argv)
     params = {k: int(v) if v.lstrip("-").isdigit() else v for k, v in (p.split("=", 1) for p in a.param)}
     cfg = Config(problem=a.problem, params=params, rounds=a.rounds, planned=a.planned, mutations=a.mutations,
                  parents=a.parents, inspiration=not a.no_inspiration, notes=not a.no_notes, budget=a.budget,
-                 seed=a.seed, restart=a.restart)
+                 seed=a.seed, restart=a.restart, restart_gain=a.restart_gain)
     llm = None
     if a.fake:
         from lean.llm import FakeLLM

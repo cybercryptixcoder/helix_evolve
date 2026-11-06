@@ -5,7 +5,8 @@
 
 An experiment file:
     {"name": "e1_core", "problem": "circles", "params": {"n": 26}, "rounds": 40, "budget": 10, "seeds": [1, 2, 3],
-     "parallel": 3, "arms": {"floor": ["--planned", "0", "--mutations", "6", "--parents", "best", ...], ...}}
+     "parallel": 3, "arms": {"floor": ["--planned", "0", "--mutations", "6", "--parents", "best", ...], ...},
+     "reuse": {"plan-s1": "e3_core_ac2/plan-s1"}}       # optional: finished runs copied in from another experiment
 
 Runs go to runs/lean/<name>/<arm>-s<seed>; the report (report.md, curves.csv, curves.png) to the experiment's folder.
 """
@@ -13,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import statistics as st
 import subprocess
 import sys
@@ -194,6 +196,13 @@ def main(argv=None):
     spec = json.loads(spec_path.read_text())
     log = lambda m: print(time.strftime("%H:%M:%S"), m, flush=True)  # noqa: E731
     if not a.report:
+        for run, src in (spec.get("reuse") or {}).items():        # finished runs of an earlier experiment, reused
+            dst, src = ROOT / "runs" / "lean" / spec["name"] / run, ROOT / "runs" / "lean" / src
+            if not dst.exists():
+                if not (src / "summary.json").exists():
+                    raise SystemExit(f"{src} is not a finished run: it can't be reused")
+                shutil.copytree(src, dst)
+                log(f"{run}: reused from {src.relative_to(ROOT)}")
         jobs = [(arm, s) for s in spec["seeds"] for arm in spec["arms"]]
         with ThreadPoolExecutor(max_workers=spec.get("parallel", 3)) as ex:
             list(ex.map(lambda j: run_one(spec, j[0], j[1], log), jobs))

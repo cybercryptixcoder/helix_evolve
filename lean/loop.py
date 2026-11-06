@@ -49,7 +49,7 @@ class Config:
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
     restart: int = 0              # start a new line from Code Zero after this many rounds without a gain (0: never)
-    restart_gain: float = 1e-6    # a gain smaller than this (relative to the line's best) doesn't count as one
+    restart_gain: float = 1e-5    # a gain smaller than this (relative to the line's best) doesn't count as one
 
 
 class Run:
