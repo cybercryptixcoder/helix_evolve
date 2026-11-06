@@ -25,6 +25,29 @@ constant function (R = 0.667).
 Helix's best is **0.9412521** (v7, continuing v4.7's warm run, generation 290). Before that it was 0.9408 (v4
 atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 
+## Lean (November 5-6, 2026): v4's core, cleaned; each part tested
+
+- **What it is.** `lean/` (about 1,000 lines): v4's core, rebuilt with every part behind a switch, so each one is
+  tested on its own (`docs/LEAN_PLAN.md`, `lean/README.md`).
+  - Mutations from the best program or a population.
+  - A planner whose experiments a coder writes.
+  - Plain notes, written by code, in place of the Atlas.
+  - Problems as one file each, checked exactly.
+- **Experiments** (`docs/LEAN_RESULTS.md`, `results/lean/`): five setups, 3 seeds each, on 26 circles, 32 circles and AC1;
+  AC2 is on the VM.
+- **What worked.**
+  - The planner plus mutations from a population, without notes: all 3 seeds reach the best known 32-circle packing
+    within 43 programs.
+  - It has the best median on AC1 and the best run there: C = 1.509419, below the best human construction (1.50973),
+    after 113 programs.
+  - On 26 circles every setup reaches the best known packing in some seeds: 2.635983084918, exact.
+- **What failed.**
+  - The notes never helped and were worst on AC1.
+  - The planner without mutations was weak.
+  - A float circle check let hair-width overlaps through (86 results); the check is now exact and the runs were
+    re-checked.
+- **Next:** Phase 2, one component at a time, starting with memory (`docs/LEAN_PLAN.md`).
+
 ## v10.2 (October 29, 2026): from Code Zero, the field's ideas as axes, against the published systems
 
 - **What it is.** Helix from Code Zero, with the deep research's ideas as axes: 9 decisions and 38 options on the

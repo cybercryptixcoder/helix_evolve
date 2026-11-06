@@ -1,6 +1,6 @@
 # Plan: one lean Helix, problem first (November 5, 2026)
 
-Status: **Phase 1 built (`lean/`, Nov 5); experiment 1 running.** The request (Shreyas, Nov 5, 18:20 and 18:50) is in `REQUESTS.md`.
+Status: **Phase 1 done; the core tested on 26 and 32 circles and AC1 (`docs/LEAN_RESULTS.md`); AC2 on the VM.** The request (Shreyas, Nov 5, 18:20 and 18:50) is in `REQUESTS.md`.
 
 ## The aim
 

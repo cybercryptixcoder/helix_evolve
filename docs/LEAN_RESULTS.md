@@ -89,3 +89,54 @@ Programs each run needed (- : not within 90 programs):
 
 **As a result:** 13 of 15 runs beat AlphaEvolve's 2.93794, and 9 came within 1e-9 of the best known packing, each in
 at most 90 programs of 10 s with DeepSeek V4.1 Flash.
+
+## Experiment 4: the same setups on AC1 (Nov 6, 2026)
+
+Setup: `experiments/lean/e4_core_ac1.json`.
+- **Problem:** the first autocorrelation inequality, as TTT-Discover's verifier states it: minimise
+  C = 2N·max(h∗h)/(Σh)² over non-negative step functions h with at most 30,000 steps. Lower is better.
+- **Budget:** 30 rounds (181 programs per run), 20 s of CPU per program (TTT-Discover allowed 10 minutes), 3 seeds.
+
+Best C after 180 programs, each seed (lower is better):
+
+| Setup | Seeds 1, 2, 3 | Median |
+|---|---|---|
+| floor | 1.51320, 1.51675, 1.52172 | 1.51675 |
+| population | 1.51040, 1.52043, 1.51529 | 1.51529 |
+| plan | 1.58878, **1.50942**, 1.51370 | **1.51370** |
+| plan+notes | 1.52254, 1.52376, 1.51591 | 1.52254 |
+| planned-only | 1.51896, 1.53893, 1.51264 | 1.51896 |
+
+**Best result:** C = 1.509418863 from plan, seed 2, program `p0178` (round 30). That is below the best human construction
+(1.50973), passed after 113 programs. It is above every published LLM system's value: OpenEvolve 1.50719,
+ThetaEvolve 1.50681, AlphaEvolve 1.5053, AlphaEvolve V2 1.50317, TTT-Discover 1.50287. Re-checked independently from
+`best.npy` (320 steps, all non-negative): C = 1.50941886320579.
+
+**What it says:**
+- The ranking repeats experiment 2 at the top:
+  - **plan** has the best median and the best run;
+  - **population** comes next;
+  - the plainest loop (**floor**) is behind both.
+- plan's seed 1 got stuck at 1.589 for all 180 programs, which is the widest spread of any setup.
+- **The notes hurt again:** plan+notes has the worst median, as it was behind plan on 32 circles.
+- **The planner alone**, without mutations, is behind plan in 2 of 3 seeds.
+- **Where the gains came from:** with planner and mutations together, the mutations set 75-98% of the total gain. The
+  planner's programs set about half the records, but these were small ones.
+- **At this budget no setup gets near the published LLM systems.** They used 25,600 to 51,200 samples and up to 10
+  minutes per program; these runs used 181 programs of 20 s each.
+
+## So far (experiments 1, 2 and 4)
+
+| Setup | 26 circles | 32 circles | AC1 |
+|---|---|---|---|
+| floor | reaches the ceiling (1 of 3 seeds) | 1 of 3 seeds at best known | 3rd |
+| population | 0 of 3 within 1e-9 | 3 of 3 | 2nd |
+| plan | 2 of 3 | **3 of 3, fastest** | **1st (median, best run)** |
+| plan+notes | 2 of 3 | 2 of 3 | last |
+| planned-only | 2 of 3 | 1 of 3 | 4th |
+
+- **The working core: planner plus mutations from a population, with no notes.**
+- The notes, the Atlas's lean replacement, never helped. That doesn't settle the memory question (P1): a one-line
+  note per program may be the wrong memory, not memory itself. It's the first component test of Phase 2.
+- **Three seeds per setup:** the spreads are wide, so these are leads, not proofs.
+- Experiment 3 (AC2, on the VM) is the fourth problem.

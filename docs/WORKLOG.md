@@ -4,6 +4,27 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## November 5-6, 2026: lean Helix built and its core tested
+
+- **Asked (Shreyas, Nov 5):** one lean main variant, rebuilt from v4.
+  - Problem first: every part tested, nothing kept untested.
+  - Old versions kept, off centre stage.
+  - Then a set of experiments on several problems against published values.
+- **Built:**
+  - `lean/` (the loop, sandbox, archive, model client and problems: circles, AC1, AC2);
+  - `lean/bench.py` (setups x seeds, then a report);
+  - `lean/recheck.py` and `lean/publish.py`;
+  - `scripts/run_lean.sh` (the VM job);
+  - `tests/test_lean.py`.
+- **Ran:** experiments 1 (26 circles), 2 (32 circles) and 4 (AC1) here, and experiment 3 (AC2) on the VM.
+- **Found** ([LEAN_RESULTS.md](LEAN_RESULTS.md)):
+  - planner plus population mutations, with no notes, is the strongest setup on 32 circles and AC1;
+  - the notes never helped;
+  - the planner alone is weak;
+  - the float circle check was too loose, so it is now exact, with every run re-checked.
+
+---
+
 ## November 4-5, 2026: the docs organised; the private routing work re-measured fairly
 
 - **Asked:** a clean, well-organised repo; more results for the showcase (planned in

@@ -1,0 +1,57 @@
+{
+ "best": -1.50941886320579,
+ "best_id": "p0178",
+ "rounds": 30,
+ "programs": 181,
+ "valid": 166,
+ "calls": 210,
+ "tokens_in": 737863,
+ "tokens_out": 551422,
+ "config": {
+  "problem": "ac1",
+  "params": {
+   "max_n": 30000
+  },
+  "rounds": 30,
+  "mutations": 3,
+  "planned": 3,
+  "parents": "population",
+  "inspiration": true,
+  "notes": false,
+  "notes_chars": 20000,
+  "budget": 20.0,
+  "seed": 2,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "references": [
+  [
+   "Best human (TTT-Discover, Table 2)",
+   1.50973
+  ],
+  [
+   "AlphaEvolve (May 2025)",
+   1.5053
+  ],
+  [
+   "OpenEvolve",
+   1.50719
+  ],
+  [
+   "ThetaEvolve",
+   1.50681
+  ],
+  [
+   "Best of 25,600",
+   1.51004
+  ],
+  [
+   "AlphaEvolve V2",
+   1.50317
+  ],
+  [
+   "TTT-Discover (gpt-oss-120b)",
+   1.50287
+  ]
+ ]
+}
