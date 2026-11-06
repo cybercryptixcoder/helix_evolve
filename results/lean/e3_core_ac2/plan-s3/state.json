@@ -1,5 +1,5 @@
 {
- "round_done": 27,
+ "round_done": 30,
  "config": {
   "problem": "ac2",
   "params": {
@@ -17,5 +17,5 @@
   "effort": "low",
   "mem_mb": 1500
  },
- "t": 1793979244.1101773
+ "t": 1793980279.9901347
 }
