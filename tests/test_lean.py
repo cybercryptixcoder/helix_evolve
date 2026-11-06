@@ -82,3 +82,15 @@ def test_restart_lines(tmp_path):
             assert progs[p["parent"]]["lineage"] == p["lineage"]
     rows = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
     assert [r.get("line") for r in rows[1:]] == [0, 0, 1, 1, 1, 2]
+
+
+def test_path_in_planner_prompt(tmp_path):
+    seen = []
+
+    def answer(role, system, user):
+        if role == "planner":
+            seen.append(user)
+        return fake_answer(role, system, user)
+    Run(tmp_path / "p", Config(rounds=2, budget=2, path=True, notes=False), llm=FakeLLM(answer), log=lambda m: None).go()
+    assert len(seen) == 2 and all("How the best program got here" in u and "p0001 (seed" in u for u in seen)
+    assert "## Notes" not in seen[0]

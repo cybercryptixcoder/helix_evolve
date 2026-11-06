@@ -44,6 +44,7 @@ class Config:
     inspiration: bool = True      # show each mutation another strong program for ideas
     notes: bool = True            # keep notes of what was tried and what it gave, for the planner
     notes_chars: int = 20000      # past this, older rounds keep only their gains
+    path: bool = False            # show the planner how the best program got here: each step of its ancestry
     budget: float = 30.0          # CPU seconds per program
     seed: int = 1
     effort: str = "low"           # the planner's thinking effort
@@ -138,6 +139,19 @@ class Run:
         return "## The strongest programs (any of them can be a base)\n" + "\n".join(
             f"- {p.line()}: {short(p.idea, 110)}" for p in self.archive.ranked(self.lineage)[:k])
 
+    def path_view(self, p, k=25):
+        """The best program's ancestry, Code Zero first: what each step set out to do and what it gained. Written by
+        code from the archive; the most recent k steps (older ones are summarised by count)."""
+        chain = []
+        while p is not None:
+            chain.append(p)
+            p = self.archive.programs.get(p.parent) if p.parent else None
+        chain.reverse()
+        lines = [f"- {q.id} ({q.role}, round {q.round}): {short(q.idea, 160)} -> {q.score:.9f}"
+                 + (f" ({q.delta:+.9f} on its start)" if q.delta is not None else "") for q in chain]
+        hidden = len(lines) - k
+        return ((f"({hidden} earlier steps not shown)\n" if hidden > 0 else "") + "\n".join(lines[-k:]))
+
     def notes_view(self):
         """Every round's lines; past `notes_chars`, the oldest rounds keep only their gains."""
         def text(n, full):
@@ -193,6 +207,9 @@ class Run:
         user = (f"{self.problem.description}\n\n# Round {self.round_now} of {self.cfg.rounds}\nEach program gets "
                 f"{self.cfg.budget:.0f} s of CPU and starts from its base's result.\n\n"
                 f"{self.block(best, 'The best program so far')}\n\n{self.scoreboard()}")
+        if self.cfg.path:
+            user += (f"\n\n## How the best program got here: each step from Code Zero, what it tried and what it "
+                     f"gained\n{self.path_view(best)}")
         if self.cfg.notes:
             user += f"\n\n## Notes: every experiment so far and what it gave, oldest first\n{self.notes_view()}"
         return user + "\n\n" + P.PLAN_FORMAT.format(k=k)

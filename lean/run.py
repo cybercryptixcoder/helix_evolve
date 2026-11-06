@@ -55,6 +55,7 @@ def main(argv=None):
     ap.add_argument("--parents", choices=("best", "population"), default="population")
     ap.add_argument("--no-inspiration", action="store_true")
     ap.add_argument("--no-notes", action="store_true")
+    ap.add_argument("--path", action="store_true", help="show the planner the best program's ancestry")
     ap.add_argument("--budget", type=float, default=30.0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--restart", type=int, default=0, help="start a new line from Code Zero after K rounds without a "
@@ -66,7 +67,8 @@ def main(argv=None):
     params = {k: int(v) if v.lstrip("-").isdigit() else v for k, v in (p.split("=", 1) for p in a.param)}
     cfg = Config(problem=a.problem, params=params, rounds=a.rounds, planned=a.planned, mutations=a.mutations,
                  parents=a.parents, inspiration=not a.no_inspiration, notes=not a.no_notes, budget=a.budget,
-                 seed=a.seed, restart=a.restart, restart_gain=a.restart_gain)
+                 seed=a.seed, restart=a.restart, restart_gain=a.restart_gain,
+                 path=a.path)
     llm = None
     if a.fake:
         from lean.llm import FakeLLM
