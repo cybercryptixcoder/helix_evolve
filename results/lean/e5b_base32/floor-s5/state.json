@@ -1,0 +1,21 @@
+{
+ "round_done": 15,
+ "config": {
+  "problem": "circles",
+  "params": {
+   "n": 32
+  },
+  "rounds": 15,
+  "mutations": 6,
+  "planned": 0,
+  "parents": "best",
+  "inspiration": false,
+  "notes": false,
+  "notes_chars": 20000,
+  "budget": 10.0,
+  "seed": 5,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "t": 1793991915.9649587
+}
