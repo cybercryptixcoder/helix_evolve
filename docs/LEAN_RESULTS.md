@@ -1,0 +1,45 @@
+# Lean Helix: experiment results
+
+Every number here comes from the runs in `results/lean/<experiment>/` (programs, model calls, reports). Model:
+DeepSeek V4.1 Flash for every role. Machine: a 2-core cloud container (experiments 1-2) or the 2-core VM.
+
+## Experiment 1: which parts of v4's core help? (26 circles; Nov 5, 2026)
+
+Setup: `experiments/lean/e1_core.json`.
+- **Problem:** 26 circles in the unit square, maximise the sum of radii, checked with zero tolerance.
+- **Budget:** 10 s of CPU per program; 25 rounds of 6 programs (150 programs per run); 3 seeds per setup.
+
+The five setups:
+
+| Setup | What it is |
+|---|---|
+| floor | the model rewrites the best program, 6 times a round |
+| population | parents sampled by rank, plus another strong program for ideas |
+| plan | v4's planner (3 a round) plus mutations (3), no memory |
+| plan+notes | the same, with notes of every experiment for the planner |
+| planned-only | the planner with notes, no mutations |
+
+Runs that passed each published value, out of 3, with the programs each needed:
+
+| Setup | AlphaEvolve's 2.63586276 | ShinkaEvolve's 2.63597771 (its exact re-check) |
+|---|---|---|
+| floor | 2 of 3 (38, 26) | 2 of 3 (38, 26) |
+| population | 2 of 3 (60, 71) | 2 of 3 (60, 71) |
+| plan | 2 of 3 (19, 55) | 2 of 3 (19, 55) |
+| plan+notes | 2 of 3 (38, 66) | 2 of 3 (47, 71) |
+| planned-only | 3 of 3 (122, 88, 46) | 3 of 3 (122, 92, 74) |
+
+**Best result:** 2.635983084917539, 1.5e-12 below the best known packing (Packomania: 2.635983084919, given to 12
+decimals). It came from the floor setup, seed 2, program `p0049` (round 8). Every run that passed ShinkaEvolve's
+value reached at least 2.6359830. Every best construction was re-checked in exact rational arithmetic with zero
+tolerance (`tools/verify_circles.py`).
+
+**What it says:**
+- No setup is clearly better here. Every setup reaches the best known packing in most seeds within about 20-120
+  programs, and the failures are seeds stuck in another local optimum (2.6309, 2.6343).
+- This problem has a ceiling, and the plainest loop reaches it. It can't rank the components; harder problems must
+  (experiments 2 and 3).
+- **As a result in its own right:** with a small model, 10 s per program and at most 150 programs, the lean loop
+  matches the best known packing. That is a higher score than AlphaEvolve's (zero tolerance) and than the exact
+  re-check of ShinkaEvolve's 150-sample result. The models differ (ShinkaEvolve used several frontier models,
+  AlphaEvolve Gemini 2.0).

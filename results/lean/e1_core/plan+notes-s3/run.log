@@ -1,0 +1,26 @@
+22:00:07 round 1: best 2.608132115 (p0004, mutation) RECORD; 2/6 failed; 61 s
+22:01:33 round 2: best 2.613506501 (p0013, planned) RECORD; 0/6 failed; 87 s
+22:03:03 round 3: best 2.613614352 (p0018, planned) RECORD; 0/6 failed; 90 s
+22:04:16 round 4: best 2.613614352 (p0025, planned) RECORD; 0/6 failed; 73 s
+22:06:00 round 5: best 2.615608925 (p0027, mutation) RECORD; 0/6 failed; 104 s
+22:07:41 round 6: best 2.615760754 (p0036, planned) RECORD; 0/6 failed; 100 s
+22:09:04 round 7: best 2.619192258 (p0041, mutation) RECORD; 0/6 failed; 83 s
+22:10:33 round 8: best 2.619961655 (p0046, mutation) RECORD; 0/6 failed; 89 s
+22:13:43 round 9: best 2.631285870 (p0053, planned) RECORD; 0/6 failed; 190 s
+22:15:27 round 10: best 2.631285870 (p0053, planned); 0/6 failed; 104 s
+22:17:29 round 11: best 2.635977131 (p0066, planned) RECORD; 0/6 failed; 122 s
+22:18:41 round 12: best 2.635982821 (p0071, planned) RECORD; 1/6 failed; 72 s
+22:20:21 round 13: best 2.635982821 (p0078, planned) RECORD; 0/6 failed; 100 s
+22:22:32 round 14: best 2.635982821 (p0078, planned); 0/6 failed; 131 s
+22:25:04 round 15: best 2.635983085 (p0090, planned) RECORD; 0/6 failed; 152 s
+22:27:24 round 16: best 2.635983085 (p0090, planned); 0/6 failed; 140 s
+22:29:57 round 17: best 2.635983085 (p0101, planned) RECORD; 0/6 failed; 153 s
+22:32:23 round 18: best 2.635983085 (p0107, planned) RECORD; 0/6 failed; 146 s
+22:35:12 round 19: best 2.635983085 (p0113, planned) RECORD; 0/6 failed; 169 s
+22:38:05 round 20: best 2.635983085 (p0116, mutation) RECORD; 0/6 failed; 173 s
+22:39:43 round 21: best 2.635983085 (p0116, mutation); 0/6 failed; 97 s
+22:41:34 round 22: best 2.635983085 (p0116, mutation); 0/6 failed; 111 s
+22:43:29 round 23: best 2.635983085 (p0116, mutation); 0/6 failed; 115 s
+22:45:12 round 24: best 2.635983085 (p0142, mutation) RECORD; 0/6 failed; 103 s
+22:47:10 round 25: best 2.635983085 (p0151, planned) RECORD; 0/6 failed; 118 s
+22:47:10 done: best 2.635983085 (p0151) after 25 rounds, 151 programs

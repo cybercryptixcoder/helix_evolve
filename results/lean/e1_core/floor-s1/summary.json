@@ -1,0 +1,45 @@
+{
+ "best": 2.6359830671176048,
+ "best_id": "p0070",
+ "rounds": 25,
+ "programs": 151,
+ "valid": 144,
+ "calls": 0,
+ "tokens_in": 0,
+ "tokens_out": 0,
+ "config": {
+  "problem": "circles",
+  "params": {
+   "n": 26
+  },
+  "rounds": 25,
+  "mutations": 6,
+  "planned": 0,
+  "parents": "best",
+  "inspiration": false,
+  "notes": false,
+  "notes_chars": 20000,
+  "budget": 10.0,
+  "seed": 1,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "references": [
+  [
+   "AlphaEvolve (May 2025; zero tolerance)",
+   2.63586276
+  ],
+  [
+   "ShinkaEvolve (Sep 2025; exact re-check of its 1e-6-slack result)",
+   2.63597770931127
+  ],
+  [
+   "ThetaEvolve (Nov 2025; 1e-6 slack)",
+   2.63598308
+  ],
+  [
+   "best known (Packomania)",
+   2.635983084919
+  ]
+ ]
+}

@@ -1,0 +1,28 @@
+19:26:28 round 1: best 2.590139680 (p0003, planned) RECORD; 3/6 failed; 91 s
+19:27:58 round 2: best 2.603187317 (p0009, mutation) RECORD; 2/6 failed; 90 s
+19:29:28 round 3: best 2.603189888 (p0015, mutation) RECORD; 1/6 failed; 90 s
+19:31:39 round 4: best 2.629868024 (p0024, planned) RECORD; 0/6 failed; 131 s
+19:33:42 round 5: best 2.629868024 (p0030, planned) RECORD; 1/6 failed; 122 s
+19:35:05 round 6: best 2.629868024 (p0037, planned) RECORD; 0/6 failed; 84 s
+19:36:34 round 7: best 2.629868024 (p0041, planned) RECORD; 0/6 failed; 89 s
+19:38:10 round 8: best 2.629868026 (p0047, planned) RECORD; 0/6 failed; 96 s
+19:40:14 round 9: best 2.629868050 (p0050, mutation) RECORD; 0/6 failed; 123 s
+19:41:39 round 10: best 2.629868050 (p0061, planned) RECORD; 1/6 failed; 85 s
+19:43:24 round 11: best 2.629868050 (p0065, planned) RECORD; 0/6 failed; 105 s
+19:44:58 round 12: best 2.629868050 (p0065, planned); 0/6 failed; 95 s
+19:47:05 round 13: best 2.629868050 (p0075, mutation) RECORD; 0/6 failed; 127 s
+19:48:36 round 14: best 2.629868050 (p0075, mutation); 0/6 failed; 91 s
+19:50:02 round 15: best 2.629868050 (p0075, mutation); 0/6 failed; 86 s
+19:51:38 round 16: best 2.629868050 (p0092, mutation) RECORD; 0/6 failed; 96 s
+19:52:59 round 17: best 2.630729705 (p0099, mutation) RECORD; 0/6 failed; 81 s
+19:54:09 resuming after round 17
+19:54:39 resuming after round 17
+19:56:36 round 18: best 2.630729705 (p0099, mutation); 0/6 failed; 117 s
+19:57:58 round 19: best 2.630729705 (p0099, mutation); 0/6 failed; 83 s
+19:59:25 round 20: best 2.630729705 (p0119, planned) RECORD; 0/6 failed; 87 s
+20:00:55 round 21: best 2.630729705 (p0123, mutation) RECORD; 0/6 failed; 89 s
+20:02:12 round 22: best 2.630729705 (p0131, planned) RECORD; 0/6 failed; 78 s
+20:03:26 round 23: best 2.630729705 (p0131, planned); 1/6 failed; 74 s
+20:04:51 round 24: best 2.630729705 (p0141, mutation) RECORD; 0/6 failed; 85 s
+20:06:44 round 25: best 2.630729705 (p0146, mutation) RECORD; 0/6 failed; 113 s
+20:06:44 done: best 2.630729705 (p0146) after 25 rounds, 151 programs

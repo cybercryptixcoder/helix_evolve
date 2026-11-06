@@ -1,0 +1,28 @@
+19:26:18 round 1: best 2.479567813 (p0004, mutation) RECORD; 1/6 failed; 81 s
+19:27:49 round 2: best 2.565663531 (p0010, mutation) RECORD; 0/6 failed; 91 s
+19:28:54 round 3: best 2.573250193 (p0014, mutation) RECORD; 0/6 failed; 65 s
+19:30:27 round 4: best 2.575236829 (p0020, mutation) RECORD; 0/6 failed; 93 s
+19:31:29 round 5: best 2.575330719 (p0028, mutation) RECORD; 0/6 failed; 62 s
+19:32:47 round 6: best 2.577730552 (p0032, mutation) RECORD; 0/6 failed; 78 s
+19:33:50 round 7: best 2.602383136 (p0041, mutation) RECORD; 0/6 failed; 63 s
+19:34:58 round 8: best 2.603198973 (p0046, mutation) RECORD; 0/6 failed; 68 s
+19:37:00 round 9: best 2.603198973 (p0054, mutation) RECORD; 0/6 failed; 122 s
+19:38:28 round 10: best 2.607759463 (p0057, mutation) RECORD; 0/6 failed; 88 s
+19:40:06 round 11: best 2.607759488 (p0066, mutation) RECORD; 0/6 failed; 98 s
+19:41:28 round 12: best 2.607759488 (p0072, mutation) RECORD; 0/6 failed; 82 s
+19:42:54 round 13: best 2.607759488 (p0077, mutation) RECORD; 0/6 failed; 86 s
+19:44:31 round 14: best 2.607759489 (p0084, mutation) RECORD; 0/6 failed; 97 s
+19:45:44 round 15: best 2.607759489 (p0084, mutation); 0/6 failed; 73 s
+19:47:14 round 16: best 2.607759489 (p0084, mutation); 0/6 failed; 90 s
+19:48:26 round 17: best 2.613048705 (p0100, mutation) RECORD; 1/6 failed; 71 s
+19:50:11 round 18: best 2.613048705 (p0100, mutation); 0/6 failed; 105 s
+19:51:34 round 19: best 2.613815552 (p0113, mutation) RECORD; 0/6 failed; 83 s
+19:52:57 round 20: best 2.613815553 (p0117, mutation) RECORD; 0/6 failed; 83 s
+19:54:09 resuming after round 20
+19:54:39 resuming after round 20
+19:55:49 round 21: best 2.629242877 (p0125, mutation) RECORD; 0/6 failed; 70 s
+19:56:44 round 22: best 2.629242877 (p0132, mutation) RECORD; 0/6 failed; 56 s
+19:57:32 round 23: best 2.629242877 (p0132, mutation); 1/6 failed; 47 s
+19:58:26 round 24: best 2.629242877 (p0142, mutation) RECORD; 0/6 failed; 54 s
+19:59:42 round 25: best 2.629242877 (p0142, mutation); 0/6 failed; 77 s
+19:59:42 done: best 2.629242877 (p0142) after 25 rounds, 151 programs
