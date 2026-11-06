@@ -7,3 +7,10 @@
 09:01:25 round 7: best 0.896153110 (p0038, mutation) RECORD; 0/6 failed; 164 s
 09:04:57 round 8: best 0.897646832 (p0045, mutation) RECORD; 0/6 failed; 212 s
 09:08:28 round 9: best 0.898028283 (p0055, planned) RECORD; 0/6 failed; 211 s
+09:11:43 round 10: best 0.898120437 (p0057, mutation) RECORD; 1/6 failed; 195 s
+09:16:00 round 11: best 0.898309330 (p0066, planned) RECORD; 0/6 failed; 257 s
+09:19:52 round 12: best 0.898382811 (p0070, planned) RECORD; 0/6 failed; 232 s
+09:25:05 round 13: best 0.898436670 (p0077, planned) RECORD; 0/6 failed; 313 s
+09:28:12 round 14: best 0.898481405 (p0084, planned) RECORD; 0/6 failed; 188 s
+09:33:32 round 15: best 0.898522949 (p0087, mutation) RECORD; 0/6 failed; 319 s
+09:37:21 round 16: best 0.898522949 (p0096, planned) RECORD; 0/6 failed; 230 s
