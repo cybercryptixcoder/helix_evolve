@@ -70,8 +70,8 @@
    2.93794
   ],
   [
-   "best known (Packomania, FICO Xpress 2026)",
-   2.939572771205
+   "within 1e-9 of the best known (2.939572771205, Packomania)",
+   2.939572770205
   ]
  ],
  "plot_min": 2.8

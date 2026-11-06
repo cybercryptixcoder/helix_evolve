@@ -99,57 +99,6 @@ def _fps_centers(n, grid=40):
     return chosen[:n]
 
 
-def _fps_select(points, n):
-    if len(points) <= n:
-        pts = list(points)
-        while len(pts) < n:
-            pts.append(pts[len(pts) % max(len(points), 1)])
-        return np.array(pts[:n])
-    pts = np.array(points, dtype=float)
-    chosen = [0]
-    d = np.hypot(pts[:, 0] - pts[0, 0], pts[:, 1] - pts[0, 1])
-    for _ in range(n - 1):
-        idx = int(np.argmax(d))
-        chosen.append(idx)
-        nd = np.hypot(pts[:, 0] - pts[idx, 0], pts[:, 1] - pts[idx, 1])
-        d = np.minimum(d, nd)
-    return pts[chosen]
-
-
-def _lattice_seeds(n):
-    seeds = []
-    for s in np.linspace(0.16, 0.28, 25):
-        pts = []
-        h = s * np.sqrt(3.0) / 2.0
-        jmax = int(np.ceil(1.0 / h)) + 2
-        imax = int(np.ceil(1.0 / s)) + 2
-        for j in range(-1, jmax):
-            y = j * h
-            xoff = (s / 2.0) if (j % 2) else 0.0
-            for i in range(-1, imax):
-                x = i * s + xoff
-                if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0:
-                    pts.append((x, y))
-        if len(pts) >= n:
-            seeds.append(_fps_select(pts, n))
-    rng = np.random.default_rng(777)
-    for s in np.linspace(0.16, 0.28, 10):
-        pts = []
-        imax = int(np.ceil(1.0 / s)) + 2
-        for j in range(-1, imax):
-            for i in range(-1, imax):
-                x = i * s
-                y = j * s
-                if 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0:
-                    pts.append((x, y))
-        if len(pts) >= n:
-            base = _fps_select(pts, n)
-            jitter = base + rng.normal(0.0, s * 0.15, size=base.shape)
-            jitter = np.clip(jitter, 0.0, 1.0)
-            seeds.append(jitter)
-    return seeds
-
-
 def _build_cons(n):
     cons = []
     for i in range(n):
@@ -168,35 +117,6 @@ def _build_cons(n):
     for i in range(n):
         for j in range(i + 1, n):
             cons.append({'type': 'ineq',
-                         'fun': (lambda v, i=i, j=j: _pair(v, i, j)),
-                         'jac': (lambda v, i=i, j=j: _pair_jac(v, i, j))})
-    return cons
-
-
-def _build_cons_active(n, arr, tol=1e-7):
-    v = arr.reshape(-1)
-    cons = []
-    for i in range(n):
-        slack = v[3 * i] - v[3 * i + 2]
-        cons.append({'type': 'eq' if slack < tol else 'ineq',
-                     'fun': (lambda v, i=i: v[3 * i] - v[3 * i + 2]),
-                     'jac': (lambda v, i=i: _jac_wall_x(v, i))})
-        slack = 1.0 - v[3 * i] - v[3 * i + 2]
-        cons.append({'type': 'eq' if slack < tol else 'ineq',
-                     'fun': (lambda v, i=i: 1.0 - v[3 * i] - v[3 * i + 2]),
-                     'jac': (lambda v, i=i: _jac_wall_x2(v, i))})
-        slack = v[3 * i + 1] - v[3 * i + 2]
-        cons.append({'type': 'eq' if slack < tol else 'ineq',
-                     'fun': (lambda v, i=i: v[3 * i + 1] - v[3 * i + 2]),
-                     'jac': (lambda v, i=i: _jac_wall_y(v, i))})
-        slack = 1.0 - v[3 * i + 1] - v[3 * i + 2]
-        cons.append({'type': 'eq' if slack < tol else 'ineq',
-                     'fun': (lambda v, i=i: 1.0 - v[3 * i + 1] - v[3 * i + 2]),
-                     'jac': (lambda v, i=i: _jac_wall_y2(v, i))})
-    for i in range(n):
-        for j in range(i + 1, n):
-            slack = _pair(v, i, j)
-            cons.append({'type': 'eq' if slack < tol else 'ineq',
                          'fun': (lambda v, i=i, j=j: _pair(v, i, j)),
                          'jac': (lambda v, i=i, j=j: _pair_jac(v, i, j))})
     return cons
@@ -234,10 +154,72 @@ def _slsqp(arr, cons, maxiter, ftol=1e-12):
     return arr.copy()
 
 
-def _polish(centers, r):
-    n = centers.shape[0]
-    r = r.copy()
-    for _ in range(200):
+def construct(budget_seconds, start):
+    t0 = time.process_time()
+    n = 26
+    cons = _build_cons(n)
+
+    # Candidate A: from start (or initial)
+    if start is not None:
+        arrA = np.asarray(start, dtype=float).copy()
+        if arrA.shape != (n, 3):
+            arrA = _initial()
+    else:
+        arrA = _initial()
+    arrA = _feasible(arrA)
+    bestA = _slsqp(arrA, cons, 1000)
+    if _obj(bestA.reshape(-1)) > _obj(arrA.reshape(-1)):
+        bestA = arrA
+    if time.process_time() - t0 < budget_seconds * 0.5:
+        cand = _slsqp(bestA, cons, 500, 1e-13)
+        if _obj(cand.reshape(-1)) < _obj(bestA.reshape(-1)):
+            bestA = cand
+
+    # Candidate B: farthest-point sampling + LP radii
+    bestB = None
+    if time.process_time() - t0 < budget_seconds * 0.85:
+        centers = _fps_centers(n)
+        radii = _lp_radii(centers)
+        arrB = np.column_stack([centers, radii])
+        arrB = _feasible(arrB)
+        candB = _slsqp(arrB, cons, 2000)
+        if _obj(candB.reshape(-1)) < _obj(arrB.reshape(-1)):
+            bestB = candB
+        else:
+            bestB = arrB
+
+    # Choose best
+    best = bestA
+    if bestB is not None and np.sum(bestB[:, 2]) > np.sum(bestA[:, 2]):
+        best = bestB
+
+    # Perturbation + re-optimization loop
+    rng = np.random.default_rng(12345)
+    it = 0
+    while time.process_time() - t0 < 0.90 * budget_seconds:
+        arr = best.copy()
+        arr[:, 0:2] += rng.normal(0.0, 0.010, size=(n, 2))
+        arr[:, 2] += rng.normal(0.0, 0.005, size=n)
+        arr[:, 2] = np.clip(arr[:, 2], 1e-6, 0.5)
+        arr = _feasible(arr)
+        arr = _slsqp(arr, cons, 400, 1e-12)
+
+        centers = arr[:, :2].copy()
+        r = _lp_radii(centers)
+        arr2 = np.column_stack([centers, r])
+        arr2 = _feasible(arr2)
+        arr2 = _slsqp(arr2, cons, 300, 1e-12)
+
+        if np.sum(arr2[:, 2]) > np.sum(best[:, 2]):
+            best = arr2
+        it += 1
+        if it >= 20 and time.process_time() - t0 >= 0.90 * budget_seconds:
+            break
+
+    # Exact per-constraint float-level polish
+    centers = best[:, :2].copy()
+    r = _lp_radii(centers)
+    for _ in range(100):
         violated = False
         for i in range(n):
             x, y = centers[i, 0], centers[i, 1]
@@ -258,78 +240,6 @@ def _polish(centers, r):
                     violated = True
         if not violated:
             break
-    return r
-
-
-def _basin_hop(best, cons, t0, budget, rng):
-    """Perturb best, re-converge with SLSQP, keep if improved."""
-    n = best.shape[0]
-    it = 0
-    while time.process_time() - t0 < 0.9 * budget:
-        it += 1
-        sigma_c = 0.04 if (it % 5 == 0) else 0.015
-        cand = best.copy()
-        cand[:, 0] += rng.normal(0.0, sigma_c, size=n)
-        cand[:, 1] += rng.normal(0.0, sigma_c, size=n)
-        cand[:, 2] += rng.normal(0.0, 0.004, size=n)
-        cand[:, 2] = np.maximum(cand[:, 2], 1e-6)
-        for i in range(n):
-            r = cand[i, 2]
-            cand[i, 0] = min(max(cand[i, 0], r), 1.0 - r)
-            cand[i, 1] = min(max(cand[i, 1], r), 1.0 - r)
-        cand = _feasible(cand)
-        res = _slsqp(cand, cons, 400)
-        if np.sum(res[:, 2]) > np.sum(best[:, 2]) + 1e-12:
-            best = res
-    return best
-
-
-def construct(budget_seconds, start):
-    t0 = time.process_time()
-    n = 26
-    cons = _build_cons(n)
-
-    if start is not None:
-        arrA = np.asarray(start, dtype=float).copy()
-        if arrA.shape != (n, 3):
-            arrA = _initial()
-    else:
-        arrA = _initial()
-    arrA = _feasible(arrA)
-    bestA = _slsqp(arrA, cons, 1000)
-    if _obj(bestA.reshape(-1)) > _obj(arrA.reshape(-1)):
-        bestA = arrA
-
-    if time.process_time() - t0 < 0.35 * budget_seconds:
-        cons_act = _build_cons_active(n, bestA, tol=1e-7)
-        cand = _slsqp(bestA, cons_act, 2000, 1e-14)
-        if _obj(cand.reshape(-1)) < _obj(bestA.reshape(-1)):
-            bestA = cand
-
-    best = bestA
-
-    # Lattice-derived seeds (short budget share)
-    if time.process_time() - t0 < 0.45 * budget_seconds:
-        seeds = _lattice_seeds(n)
-        for centers in seeds:
-            if time.process_time() - t0 >= 0.55 * budget_seconds:
-                break
-            radii = _lp_radii(centers)
-            arr = np.column_stack([centers, radii])
-            arr = _feasible(arr)
-            cand = _slsqp(arr, cons, 1500)
-            if _obj(cand.reshape(-1)) < _obj(arr.reshape(-1)):
-                cand = arr
-            if np.sum(cand[:, 2]) > np.sum(best[:, 2]):
-                best = cand
-
-    # Basin hopping until 0.9*budget
-    rng = np.random.default_rng(2024)
-    best = _basin_hop(best, cons, t0, budget_seconds, rng)
-
-    centers = best[:, :2].copy()
-    r = _lp_radii(centers)
-    r = _polish(centers, r)
     r = np.maximum(r, 1e-9)
     return np.column_stack([centers, r])
 

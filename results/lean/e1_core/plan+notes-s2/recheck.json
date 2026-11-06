@@ -1,0 +1,23 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0054": "circle 10 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0057": "circle 9 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0065": "circle 10 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0076": "circles 4 and 5 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0082": "circles 4 and 5 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0086": "circle 17 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0087": "circle 17 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0094": "circle 14 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0100": "circles 4 and 12 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0124": "circle 17 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0125": "circle 17 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0129": "circle 9 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0134": "circle 8 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0138": "circles 4 and 13 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0140": "circles 0 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0142": "circle 17 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0145": "circles 2 and 5 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0147": "circles 0 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}

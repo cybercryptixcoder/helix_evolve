@@ -1,0 +1,25 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0066": "circles 12 and 19 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0072": "circles 22 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0078": "circles 10 and 22 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0084": "circles 22 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0085": "circles 22 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0089": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0091": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0095": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0096": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0101": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0107": "circles 22 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0108": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0120": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0121": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0126": "circles 22 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0127": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0130": "circles 10 and 22 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0134": "circles 10 and 22 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0145": "circles 9 and 25 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0150": "circles 12 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}

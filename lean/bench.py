@@ -45,11 +45,17 @@ def run_one(spec, arm, seed, log):
     log(f"{arm}-s{seed}: done (exit {rc})")
 
 
+def rechecked(d):
+    """Ids that a later, stricter check found invalid (lean/recheck.py), if any."""
+    f = Path(d) / "recheck.json"
+    return set(json.loads(f.read_text())["invalid"]) if f.exists() else set()
+
+
 def curve(d):
     """Best score after each program, in the order programs were recorded."""
-    best, out = None, []
+    best, out, bad = None, [], rechecked(d)
     for p in jl(Path(d) / "programs.jsonl"):
-        if p["valid"] and (best is None or p["score"] > best):
+        if p["valid"] and p["id"] not in bad and (best is None or p["score"] > best):
             best = p["score"]
         out.append(best)
     return out
@@ -57,9 +63,9 @@ def curve(d):
 
 def attribution(d):
     """Share of total gain, and number of records, by the role of the program that set each record."""
-    best, gain, recs = None, {}, {}
+    best, gain, recs, bad = None, {}, {}, rechecked(d)
     for p in jl(Path(d) / "programs.jsonl"):
-        if not p["valid"]:
+        if not p["valid"] or p["id"] in bad:
             continue
         if best is None:
             best = p["score"]

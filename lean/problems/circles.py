@@ -1,10 +1,13 @@
 """Circle packing: n circles in the unit square, no overlaps, maximise the sum of their radii (n = 26 by default).
 
 The benchmark of AlphaEvolve, OpenEvolve, ShinkaEvolve and ThetaEvolve. Checked with zero tolerance (as AlphaEvolve's
-verifier): every circle inside the square, every pair at least the sum of their radii apart, in floating point.
+verifier), in exact rational arithmetic: every coordinate is taken as the exact value of its float, so no rounding
+in the check itself can let a hair's overlap through (a float check did, in experiments 1 and 2: docs/LEAN_RESULTS.md).
 OpenEvolve and ThetaEvolve allow 1e-6 of overlap and ShinkaEvolve 1e-7, which is worth about 1e-5 of score.
 """
 from __future__ import annotations
+
+from fractions import Fraction
 
 import numpy as np
 
@@ -19,6 +22,21 @@ def construct(budget_seconds, start):
     pts = [((i + 0.5) / k, (j + 0.5) / k) for j in range(k) for i in range(k)][:{n}]
     return np.array([[x, y, 0.02] for x, y in pts])
 '''
+
+
+def exact_violation(a):
+    """The first violation in exact rational arithmetic, or "" (squared distances: no square roots)."""
+    q = [[Fraction(v) for v in row] for row in np.asarray(a, dtype=float).tolist()]
+    for i, (x, y, r) in enumerate(q):
+        if not (r > 0 and x - r >= 0 and x + r <= 1 and y - r >= 0 and y + r <= 1):
+            return f"circle {i} is not inside the square"
+    for i in range(len(q)):
+        xi, yi, ri = q[i]
+        for j in range(i + 1, len(q)):
+            xj, yj, rj = q[j]
+            if (xi - xj) ** 2 + (yi - yj) ** 2 < (ri + rj) ** 2:
+                return f"circles {i} and {j} overlap"
+    return ""
 
 
 class Problem:
@@ -76,6 +94,9 @@ A Python module defining
         if gap.min() < 0:
             i, j = np.unravel_index(np.argmin(gap), gap.shape)
             return None, f"{int((gap < 0).sum()) // 2} overlapping pairs (worst: circles {i} and {j}, by {-gap.min():.3g})"
+        bad = exact_violation(a)
+        if bad:
+            return None, f"{bad} (in exact arithmetic; floating point hides it: shrink radii a little)"
         return a, ""
 
     def score(self, a):

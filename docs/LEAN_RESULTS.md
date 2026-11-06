@@ -29,6 +29,11 @@ Runs that passed each published value, out of 3, with the programs each needed:
 | plan+notes | 2 of 3 (38, 66) | 2 of 3 (47, 71) |
 | planned-only | 3 of 3 (122, 88, 46) | 3 of 3 (122, 92, 74) |
 
+**Corrected (Nov 6):** the checker used during the runs compared distances in floating point. Re-checked in exact
+rational arithmetic (`lean/recheck.py`, now the checker itself), 86 results across 5 runs overlap by a hair and are
+counted as invalid. Most came from planner setups, whose programs learned to sit exactly on the float boundary.
+The tables use the exact check.
+
 **Best result:** 2.635983084917539, 1.5e-12 below the best known packing (Packomania: 2.635983084919, given to 12
 decimals). It came from the floor setup, seed 2, program `p0049` (round 8). Every run that passed ShinkaEvolve's
 value reached at least 2.6359830. Every best construction was re-checked in exact rational arithmetic with zero
@@ -43,3 +48,44 @@ tolerance (`tools/verify_circles.py`).
   matches the best known packing. That is a higher score than AlphaEvolve's (zero tolerance) and than the exact
   re-check of ShinkaEvolve's 150-sample result. The models differ (ShinkaEvolve used several frontier models,
   AlphaEvolve Gemini 2.0).
+
+### Programs needed to come within 1e-9 of the best known packing (exact check; - : not within 150 programs)
+
+| Setup | Seeds 1, 2, 3 |
+|---|---|
+| floor | -, 49, - |
+| population | -, -, - |
+| plan | -, 54, 130 |
+| plan+notes | -, 51, 90 |
+| planned-only | -, 92, 119 |
+
+## Experiment 2: the same on 32 circles (Nov 6, 2026)
+
+Setup: `experiments/lean/e2_core32.json`.
+- **Problem:** 32 circles, exact check. AlphaEvolve reported 2.937944; the best known is 2.939572771205 (Packomania;
+  FICO Xpress, 2026).
+- **Budget:** 15 rounds (90 programs per run), 10 s per program, 3 seeds.
+
+Programs each run needed (- : not within 90 programs):
+
+| Setup | Above AlphaEvolve's 2.93794 | Within 1e-9 of the best known |
+|---|---|---|
+| floor | -, 26, - | -, 87, - |
+| population | 28, 71, 44 | 39, 89, 64 |
+| plan | 29, 16, 16 | **43, 20, 34** |
+| plan+notes | 29, 9, - | 66, 24, - |
+| planned-only | 74, -, 66 | -, -, 66 |
+
+**What it says:**
+- On 32 circles the setups separate.
+- **plan** (planner plus mutations, no notes) reaches the best known packing in every seed, after 20-43
+  programs.
+- **population** also does it in every seed, but later.
+- **floor** gets there in 1 of 3 seeds.
+- The notes don't help here: plan+notes is behind plan.
+- The planner alone, without mutations, is the weakest.
+- Three seeds and one problem are not proof; experiments 3 (AC2) and 4 (AC1) test the same setups on harder,
+  continuous problems.
+
+**As a result:** 13 of 15 runs beat AlphaEvolve's 2.93794, and 9 came within 1e-9 of the best known packing, each in
+at most 90 programs of 10 s with DeepSeek V4.1 Flash.

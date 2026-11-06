@@ -1,0 +1,6 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0128": "circles 24 and 25 overlap (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}

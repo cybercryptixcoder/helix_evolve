@@ -31,27 +31,27 @@ Problem `circles` {'n': 26}; 25 rounds; 10 s of CPU per program; seeds [1, 2, 3]
 | population-s2 | 151 | 2.635983082 | 4 | 1,654,234 | mutation 20 | mutation 100% |
 | population-s3 | 151 | 2.635982821 | 2 | 1,325,508 | mutation 12 | mutation 100% |
 | plan-s1 | 151 | 2.630729705 | 9 | 1,476,200 | mutation 13, planned 11 | mutation 82%, planned 18% |
-| plan-s2 | 151 | 2.635983085 | 44 | 1,579,441 | mutation 2, planned 11 | mutation 87%, planned 13% |
+| plan-s2 | 151 | 2.635983085 | 44 | 1,579,441 | mutation 2, planned 7 | mutation 87%, planned 13% |
 | plan-s3 | 151 | 2.635983085 | 1 | 1,646,445 | mutation 12, planned 10 | mutation 88%, planned 12% |
-| plan+notes-s1 | 151 | 2.634292402 | 9 | 1,733,680 | mutation 8, planned 8 | mutation 96%, planned 4% |
-| plan+notes-s2 | 151 | 2.635983085 | 5 | 1,630,348 | mutation 9, planned 6 | mutation 99%, planned 1% |
-| plan+notes-s3 | 151 | 2.635983085 | 3 | 1,845,190 | mutation 14, planned 15 | mutation 99%, planned 1% |
+| plan+notes-s1 | 151 | 2.634292402 | 9 | 1,733,680 | mutation 9, planned 7 | mutation 96%, planned 4% |
+| plan+notes-s2 | 151 | 2.635983085 | 5 | 1,630,348 | mutation 10, planned 5 | mutation 99%, planned 1% |
+| plan+notes-s3 | 151 | 2.635983085 | 3 | 1,845,190 | mutation 12, planned 13 | mutation 99%, planned 1% |
 | planned-only-s1 | 151 | 2.635983059 | 10 | 1,504,692 | planned 16 | planned 100% |
 | planned-only-s2 | 151 | 2.635983085 | 5 | 1,270,656 | planned 19 | planned 100% |
 | planned-only-s3 | 151 | 2.635983085 | 6 | 1,580,771 | planned 21 | planned 100% |
 
 ## Programs each run needed to pass each published value (- : not passed)
 
-| Arm | AlphaEvolve (zero tolerance) (2.63586276) | ShinkaEvolve (exact re-check) (2.63597770931127) | best known (Packomania) (2.635983084919) |
+| Arm | AlphaEvolve (zero tolerance) (2.63586276) | ShinkaEvolve (exact re-check) (2.63597770931127) | within 1e-9 of the best known (2.635983084919, Packomania) (2.635983083919) |
 |---|---|---|---|
-| floor | 38, 26, - | 38, 26, - | -, -, - |
+| floor | 38, 26, - | 38, 26, - | -, 49, - |
 | population | -, 60, 71 | -, 60, 71 | -, -, - |
-| plan | -, 19, 55 | -, 19, 55 | -, -, - |
-| plan+notes | -, 38, 66 | -, 47, 71 | -, -, - |
-| planned-only | 122, 88, 46 | 122, 92, 74 | -, -, - |
+| plan | -, 19, 55 | -, 19, 55 | -, 54, 130 |
+| plan+notes | -, 38, 66 | -, 47, 71 | -, 51, 90 |
+| planned-only | 122, 88, 46 | 122, 92, 74 | -, 92, 119 |
 
 ## Published values (for scale)
 
 - AlphaEvolve (zero tolerance): 2.63586276
 - ShinkaEvolve (exact re-check): 2.63597770931127
-- best known (Packomania): 2.635983084919
+- within 1e-9 of the best known (2.635983084919, Packomania): 2.635983083919

@@ -1,0 +1,23 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0062": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0070": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0071": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0072": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0073": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0078": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0079": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0080": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0081": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0082": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0084": "circles 11 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0085": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0086": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0087": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0088": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0089": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0090": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0091": "circles 22 and 28 overlap (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}

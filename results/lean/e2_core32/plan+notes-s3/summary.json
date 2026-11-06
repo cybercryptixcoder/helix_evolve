@@ -1,0 +1,37 @@
+{
+ "best": 2.909496554014512,
+ "best_id": "p0091",
+ "rounds": 15,
+ "programs": 91,
+ "valid": 80,
+ "calls": 105,
+ "tokens_in": 604306,
+ "tokens_out": 406956,
+ "config": {
+  "problem": "circles",
+  "params": {
+   "n": 32
+  },
+  "rounds": 15,
+  "mutations": 3,
+  "planned": 3,
+  "parents": "population",
+  "inspiration": true,
+  "notes": true,
+  "notes_chars": 20000,
+  "budget": 10.0,
+  "seed": 3,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "references": [
+  [
+   "AlphaEvolve (May 2025)",
+   2.93794
+  ],
+  [
+   "best known (Packomania; FICO Xpress, 2026)",
+   2.939572771205
+  ]
+ ]
+}

@@ -16,9 +16,9 @@ import shutil
 import sys
 from pathlib import Path
 
-from lean.bench import ROOT, jl, report
+from lean.bench import ROOT, jl, rechecked, report
 
-FILES = ("programs.jsonl", "rounds.jsonl", "notes.jsonl", "state.json", "summary.json", "best.py", "best.npy",
+FILES = ("recheck.json", "programs.jsonl", "rounds.jsonl", "notes.jsonl", "state.json", "summary.json", "best.py", "best.npy",
          "run.log")
 
 
@@ -35,13 +35,16 @@ def publish(spec_path):
         if (run / "calls.jsonl").exists():
             with (run / "calls.jsonl").open("rb") as fi, gzip.open(out / "calls.jsonl.gz", "wb", compresslevel=6) as fo:
                 shutil.copyfileobj(fi, fo)
-        best = None
+        best, bad, top = None, rechecked(run), None
         for p in jl(run / "programs.jsonl"):
-            if p["valid"] and (best is None or p["score"] > best):
-                best = p["score"]
+            if p["valid"] and p["id"] not in bad and (best is None or p["score"] > best):
+                best, top = p["score"], p
                 c = run / "constructions" / f"{p['id']}.npy"
                 if c.exists():
                     shutil.copy2(c, out / "records" / c.name)
+        if bad and top is not None:            # the best that passes the stricter check, not the run's own best.npy
+            shutil.copy2(run / "constructions" / f"{top['id']}.npy", out / "best.npy")
+            (out / "best.py").write_text(top["code"])
     report(spec, dst)
     return dst
 

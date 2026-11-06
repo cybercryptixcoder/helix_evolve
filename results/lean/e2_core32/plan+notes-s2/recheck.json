@@ -1,0 +1,23 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0047": "circles 5 and 11 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0055": "circles 24 and 30 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0056": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0060": "circles 12 and 18 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0067": "circles 24 and 30 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0070": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0071": "circles 24 and 30 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0073": "circles 12 and 18 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0074": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0076": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0077": "circles 12 and 18 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0081": "circles 10 and 17 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0083": "circles 5 and 11 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0086": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0087": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0088": "circles 18 and 24 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0090": "circles 12 and 18 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0091": "circles 12 and 18 overlap (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}

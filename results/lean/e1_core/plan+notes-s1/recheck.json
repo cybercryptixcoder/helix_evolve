@@ -1,0 +1,21 @@
+{
+ "checker": "exact",
+ "invalid": {
+  "p0071": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0076": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0081": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0083": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0085": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0087": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0089": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0090": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0099": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0104": "circles 14 and 19 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0106": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0110": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0112": "circles 4 and 10 overlap (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0116": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0122": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)",
+  "p0128": "circle 20 is not inside the square (in exact arithmetic; floating point hides it: shrink radii a little)"
+ }
+}
