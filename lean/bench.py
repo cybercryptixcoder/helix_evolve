@@ -88,7 +88,7 @@ def report(spec, out_dir):
                          "tokens": sum(x.get("tokens_in", 0) + x.get("tokens_out", 0) for x in calls),
                          "failed": sum(1 for p in progs if not p["valid"]), "gain": g, "records": r,
                          "finished": bool(summ)})
-    marks = [m for m in (30, 60, 120, 180, 240, 300, 480, 600) if any(len(c) >= m for c in curves.values())]
+    marks = [m for m in (30, 60, 90, 120, 150, 180, 240, 300, 480, 600) if any(len(c) >= m for c in curves.values())]
     lines = [f"# {spec['name']}", "", spec.get("question", ""), "",
              f"Problem `{spec['problem']}` {spec.get('params') or ''}; {spec['rounds']} rounds; {spec['budget']} s of "
              f"CPU per program; seeds {spec['seeds']}. Arms:", ""]
@@ -100,8 +100,12 @@ def report(spec, out_dir):
     for arm in spec["arms"]:
         cells = []
         for m in marks:
-            vals = [c[m - 1] for (a, s), c in curves.items() if a == arm and len(c) >= m and c[m - 1] is not None]
-            cells.append(f"{st.mean(vals):.6f} [{', '.join(f'{v:.4f}' for v in vals)}]" if vals else "-")
+            runs = [c for (a, s), c in curves.items() if a == arm]
+            vals = [c[m - 1] for c in runs if len(c) >= m and c[m - 1] is not None]
+            if not vals or len(vals) < len(runs):              # a mean over fewer seeds than the arm has misleads
+                cells.append("-" if not vals else f"({len(vals)} of {len(runs)} seeds so far)")
+            else:
+                cells.append(f"{st.mean(vals):.7f} [{', '.join(f'{v:.7f}' for v in vals)}]")
         lines.append(f"| {arm} | " + " | ".join(cells) + " |")
     lines += ["", "## Per run", "", "| Run | Programs | Best | Failed | Tokens | Records by role | Share of gain by role |",
               "|---|---|---|---|---|---|---|"]
@@ -113,6 +117,18 @@ def report(spec, out_dir):
                      + ", ".join(f"{k} {v / tot:.0%}" for k, v in r["gain"].items()) + " |")
     refs = spec.get("references") or []
     if refs:
+        lines += ["", "## Programs each run needed to pass each published value (- : not passed)", "",
+                  "| Arm | " + " | ".join(f"{n} ({v})" for n, v in refs) + " |", "|---|" + "---|" * len(refs)]
+        for arm in spec["arms"]:
+            cells = []
+            for _, v in refs:
+                hits = []
+                for (a, s), c in sorted(curves.items()):
+                    if a == arm:
+                        i = next((k for k, x in enumerate(c) if x is not None and x > v), None)
+                        hits.append("-" if i is None else str(i + 1))
+                cells.append(", ".join(hits))
+            lines.append(f"| {arm} | " + " | ".join(cells) + " |")
         lines += ["", "## Published values (for scale)", ""] + [f"- {n}: {v}" for n, v in refs]
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -168,7 +184,7 @@ def main(argv=None):
         jobs = [(arm, s) for s in spec["seeds"] for arm in spec["arms"]]
         with ThreadPoolExecutor(max_workers=spec.get("parallel", 3)) as ex:
             list(ex.map(lambda j: run_one(spec, j[0], j[1], log), jobs))
-    print(report(spec, spec_path.parent / spec["name"]))
+    print(report(spec, ROOT / "results" / "lean" / spec["name"]))
     return 0
 
 
