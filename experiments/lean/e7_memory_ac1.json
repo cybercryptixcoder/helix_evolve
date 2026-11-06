@@ -14,7 +14,7 @@
   4,
   5
  ],
- "parallel": 3,
+ "parallel": 2,
  "arms": {
   "plan": [
    "--planned",
@@ -37,7 +37,7 @@
   ]
  },
  "notes": {
-  "plan": "the base setup, no memory; seeds 1-3 are experiment 4's plan runs",
+  "plan": "the base setup, no memory; seeds 1-3 are experiment 4's plan runs, seeds 4-5 experiment 6's",
   "plan+path": "the same, and the planner sees the best program's path (written by code)"
  },
  "references": [
@@ -76,6 +76,8 @@
  "reuse": {
   "plan-s1": "e4_core_ac1/plan-s1",
   "plan-s2": "e4_core_ac1/plan-s2",
-  "plan-s3": "e4_core_ac1/plan-s3"
+  "plan-s3": "e4_core_ac1/plan-s3",
+  "plan-s4": "e6b_restart_ac1/plan-s4",
+  "plan-s5": "e6b_restart_ac1/plan-s5"
  }
 }
