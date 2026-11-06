@@ -49,6 +49,7 @@ class Config:
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
     restart: int = 0              # start a new line from Code Zero after this many rounds without a gain (0: never)
+    restart_gain: float = 1e-6    # a gain smaller than this (relative to the line's best) doesn't count as one
 
 
 class Run:
@@ -118,12 +119,14 @@ class Run:
         return self.archive.best(self.lineage)
 
     def stalled(self):
-        """Rounds since the current line last improved its own best."""
+        """Rounds since the current line last improved its own best by more than `restart_gain` (relative): slow
+        polishing of a poor region doesn't keep a line alive."""
         progs = [p for p in self.archive.programs.values() if p.lineage == self.lineage and p.valid]
         best, last = None, 0
         for p in sorted(progs, key=lambda p: p.id):
-            if best is None or p.score > best:
+            if best is None or p.score > best + self.cfg.restart_gain * abs(best):
                 best, last = p.score, p.round
+            best = max(best, p.score)
         return self.round_done - last
 
     # ------------------------------------------------------------------ views
