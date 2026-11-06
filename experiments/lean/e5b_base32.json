@@ -1,0 +1,63 @@
+{
+ "name": "e5b_base32",
+ "question": "Does the base setup (plan: planner + mutations from a population, no notes) beat the plainest loop (floor) and mutations alone (population)? Experiment 2's setups again, 8 seeds in all, with the exact circle check from the start. This half: seeds [5, 6, 7, 8], on the cloud session; e5a and e5b are read together.",
+ "problem": "circles",
+ "params": {
+  "n": 32
+ },
+ "rounds": 15,
+ "budget": 10,
+ "seeds": [
+  5,
+  6,
+  7,
+  8
+ ],
+ "parallel": 3,
+ "arms": {
+  "floor": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "best",
+   "--no-inspiration",
+   "--no-notes"
+  ],
+  "population": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population",
+   "--no-notes"
+  ]
+ },
+ "notes": {
+  "floor": "the model sees the best program and writes a better one, 6 times a round",
+  "population": "v4's mutation loop alone: parents sampled by rank, another strong program for ideas",
+  "plan": "v4's two loops without memory (v4's 'control')"
+ },
+ "references": [
+  [
+   "AlphaEvolve",
+   2.93794
+  ],
+  [
+   "within 1e-9 of the best known (2.939572771205, Packomania)",
+   2.939572770205
+  ]
+ ],
+ "plot_min": 2.8
+}
