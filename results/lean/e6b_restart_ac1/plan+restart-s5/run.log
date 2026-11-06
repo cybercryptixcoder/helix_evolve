@@ -1,0 +1,32 @@
+17:39:14 round 1: best -1.595472262 (p0007, planned); line 0 at -1.595472262 RECORD; 0/6 failed; 109 s
+17:41:16 round 2: best -1.583091431 (p0012, planned); line 0 at -1.583091431 RECORD; 0/6 failed; 123 s
+17:42:51 round 3: best -1.554772325 (p0016, mutation); line 0 at -1.554772325 RECORD; 0/6 failed; 94 s
+17:44:18 round 4: best -1.547886131 (p0020, mutation); line 0 at -1.547886131 RECORD; 0/6 failed; 87 s
+17:45:31 round 5: best -1.518129333 (p0029, planned); line 0 at -1.518129333 RECORD; 0/6 failed; 73 s
+17:46:42 round 6: best -1.516984720 (p0036, planned); line 0 at -1.516984720 RECORD; 0/6 failed; 72 s
+17:47:55 round 7: best -1.515973195 (p0038, mutation); line 0 at -1.515973195 RECORD; 0/6 failed; 73 s
+17:49:35 round 8: best -1.515973195 (p0038, mutation); line 0 at -1.515973195; 0/6 failed; 100 s
+17:51:02 resuming after round 8
+17:52:47 round 9: best -1.515412076 (p0052, mutation); line 0 at -1.515412076 RECORD; 0/6 failed; 105 s
+17:57:24 round 10: best -1.515348981 (p0057, mutation); line 0 at -1.515348981 RECORD; 0/6 failed; 277 s
+17:59:35 round 11: best -1.515318754 (p0063, mutation); line 0 at -1.515318754 RECORD; 1/6 failed; 131 s
+18:02:05 round 12: best -1.515313756 (p0071, planned); line 0 at -1.515313756 RECORD; 0/6 failed; 149 s
+18:04:00 round 13: best -1.515311319 (p0075, mutation); line 0 at -1.515311319 RECORD; 0/6 failed; 115 s
+18:06:27 round 14: best -1.515310076 (p0085, planned); line 0 at -1.515310076 RECORD; 0/6 failed; 147 s
+18:08:38 round 15: best -1.515309385 (p0090, planned); line 0 at -1.515309385 RECORD; 0/6 failed; 131 s
+18:11:18 round 16: best -1.515309207 (p0096, planned); line 0 at -1.515309207 RECORD; 1/6 failed; 160 s
+18:13:42 round 17: best -1.515309207 (p0096, planned); line 1 (NEW) at -1.780823619; 0/6 failed; 145 s
+18:16:36 round 18: best -1.515309207 (p0096, planned); line 1 at -1.600195596; 0/6 failed; 174 s
+18:19:53 round 19: best -1.515309207 (p0096, planned); line 1 at -1.599488588; 1/6 failed; 197 s
+18:21:58 round 20: best -1.515309207 (p0096, planned); line 1 at -1.588497474; 0/6 failed; 125 s
+18:24:55 round 21: best -1.515309207 (p0096, planned); line 1 at -1.588005799; 0/6 failed; 177 s
+18:26:49 round 22: best -1.515309207 (p0096, planned); line 1 at -1.540232569; 1/6 failed; 113 s
+18:28:29 round 23: best -1.515309207 (p0096, planned); line 1 at -1.531636292; 0/6 failed; 101 s
+18:31:02 round 24: best -1.515309207 (p0096, planned); line 1 at -1.522348303; 0/6 failed; 152 s
+18:33:01 round 25: best -1.515309207 (p0096, planned); line 1 at -1.517869530; 0/6 failed; 120 s
+18:34:36 round 26: best -1.515309207 (p0096, planned); line 1 at -1.515766289; 0/6 failed; 94 s
+18:36:32 round 27: best -1.515309207 (p0096, planned); line 1 at -1.515651749; 0/6 failed; 116 s
+18:38:29 round 28: best -1.514321410 (p0167, mutation); line 1 at -1.514321410 RECORD; 0/6 failed; 117 s
+18:40:06 round 29: best -1.514299928 (p0171, mutation); line 1 at -1.514299928 RECORD; 0/6 failed; 97 s
+18:42:15 round 30: best -1.514298899 (p0180, planned); line 1 at -1.514298899 RECORD; 0/6 failed; 129 s
+18:42:15 done: best -1.514298899 (p0180) after 30 rounds, 182 programs
