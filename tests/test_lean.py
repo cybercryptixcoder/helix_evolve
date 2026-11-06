@@ -41,3 +41,21 @@ def test_run_resume_and_arms(tmp_path):
         roles = {p["role"] for p in progs}
         assert ("planned" in roles) == (kw.get("planned", 3) > 0)
         assert (d / "notes.jsonl").exists() == kw.get("notes", True)
+
+
+def test_erdos_and_ac3_values():
+    """Code Zero gives the trivial bounds; splitting every step into equal sub-steps is the same function, so the
+    value can't change (the knot formulas are exact); the FFT path agrees with the direct one."""
+    from lean.problems import load
+    e, a = load("erdos"), load("ac3")
+    assert abs(e.value(e.check(np.full(50, 0.5))[0]) - 0.5) < 1e-12
+    assert abs(a.value(a.check(np.ones(50))[0]) - 2) < 1e-12
+    rng = np.random.default_rng(0)
+    h = np.clip(rng.random(40), 0.05, 0.95)
+    h = h - h.mean() + 0.5
+    assert e.check(h)[0] is not None and e.check(h + 1e-6)[0] is None
+    assert abs(e.value(h) - e.value(np.repeat(h, 50))) < 1e-12        # 2,000 steps: direct
+    assert abs(e.value(h) - e.value(np.repeat(h, 200))) < 1e-12       # 8,000 steps: FFT
+    v = a.check(rng.normal(size=60) + 0.3)[0]
+    assert abs(a.value(v) - a.value(np.repeat(v, 20))) < 1e-9
+    assert a.value(v) >= 2 * 60 * np.convolve(v, v).max() / v.sum() ** 2 - 1e-12   # |f*f| >= f*f
