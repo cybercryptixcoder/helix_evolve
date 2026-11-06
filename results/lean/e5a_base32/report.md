@@ -12,9 +12,9 @@ Problem `circles` {'n': 32}; 15 rounds; 10 s of CPU per program; seeds [1, 2, 3,
 
 | Arm | 30 | 60 | 90 |
 |---|---|---|---|
-| floor | 2.9268681 [2.9183878, 2.9272501, 2.9349663] | 2.9285276 [2.9233665, 2.9272501, 2.9349663] | (2 of 3 seeds so far) |
-| population | 2.9098824 [2.9324576, 2.8742948, 2.9228948] | 2.9292091 [2.9334497, 2.9217198, 2.9324579] | (2 of 3 seeds so far) |
-| plan | 2.9343063 [2.9391002, 2.9395728, 2.9242461] | (2 of 3 seeds so far) | (2 of 3 seeds so far) |
+| floor | 2.9233765 [2.9183878, 2.9272501, 2.9349663, 2.9129019] | 2.9286999 [2.9233665, 2.9272501, 2.9349663, 2.9292167] | 2.9306435 [2.9311089, 2.9272501, 2.9349663, 2.9292487] |
+| population | 2.9152654 [2.9324576, 2.8742948, 2.9228948, 2.9314146] | 2.9297605 [2.9334497, 2.9217198, 2.9324579, 2.9314146] | 2.9305417 [2.9334497, 2.9228088, 2.9344937, 2.9314146] |
+| plan | 2.9356229 [2.9391002, 2.9395728, 2.9242461, 2.9395727] | 2.9366135 [2.9395728, 2.9395728, 2.9277356, 2.9395728] | (3 of 4 seeds so far) |
 
 ## Per run
 
@@ -22,21 +22,24 @@ Problem `circles` {'n': 32}; 15 rounds; 10 s of CPU per program; seeds [1, 2, 3,
 |---|---|---|---|---|---|---|
 | floor-s1 | 91 | 2.931108889 | 0 | 515,701 | mutation 19 | mutation 100% |
 | floor-s2 | 91 | 2.927250146 | 3 | 612,451 | mutation 12 | mutation 100% |
-| floor-s3 (running) | 85 | 2.934966263 | 1 | 448,538 | mutation 18 | mutation 100% |
+| floor-s3 | 91 | 2.934966263 | 1 | 448,538 | mutation 20 | mutation 100% |
+| floor-s4 | 91 | 2.929248662 | 14 | 437,736 | mutation 18 | mutation 100% |
 | population-s1 | 91 | 2.933449712 | 4 | 624,911 | mutation 16 | mutation 100% |
 | population-s2 | 91 | 2.922808763 | 2 | 656,823 | mutation 23 | mutation 100% |
-| population-s3 (running) | 78 | 2.934493727 | 0 | 508,354 | mutation 14 | mutation 100% |
+| population-s3 | 91 | 2.934493727 | 0 | 614,104 | mutation 15 | mutation 100% |
+| population-s4 | 91 | 2.931414584 | 4 | 662,297 | mutation 13 | mutation 100% |
 | plan-s1 | 91 | 2.939572768 | 8 | 928,631 | mutation 5, planned 10 | mutation 49%, planned 51% |
 | plan-s2 | 91 | 2.939572768 | 4 | 669,349 | mutation 3, planned 3 | mutation 100%, planned 0% |
-| plan-s3 (running) | 33 | 2.924246102 | 5 | 243,623 | planned 2, mutation 4 | planned 99%, mutation 1% |
+| plan-s3 | 91 | 2.939572768 | 9 | 934,052 | planned 8, mutation 7 | planned 99%, mutation 1% |
+| plan-s4 (running) | 60 | 2.939572771 | 1 | 537,715 | mutation 8, planned 6 | mutation 93%, planned 7% |
 
 ## Programs each run needed to pass each published value (- : not passed)
 
 | Arm | AlphaEvolve (2.93794) | within 1e-9 of the best known (2.939572771205, Packomania) (2.939572770205) |
 |---|---|---|
-| floor | -, -, - | -, -, - |
-| population | -, -, - | -, -, - |
-| plan | 20, 10, - | -, -, - |
+| floor | -, -, -, - | -, -, -, - |
+| population | -, -, -, - | -, -, -, - |
+| plan | 20, 10, 65, 10 | -, -, -, 43 |
 
 ## Published values (for scale)
 

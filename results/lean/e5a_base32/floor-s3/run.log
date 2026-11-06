@@ -12,3 +12,5 @@
 14:38:30 round 12: best 2.934966263 (p0048, mutation); 0/6 failed; 74 s
 14:39:43 round 13: best 2.934966263 (p0079, mutation) RECORD; 0/6 failed; 74 s
 14:40:40 round 14: best 2.934966263 (p0079, mutation); 0/6 failed; 57 s
+14:42:05 round 15: best 2.934966263 (p0091, mutation) RECORD; 0/6 failed; 85 s
+14:42:05 done: best 2.934966263 (p0091) after 15 rounds, 91 programs
