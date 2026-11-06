@@ -59,3 +59,26 @@ def test_erdos_and_ac3_values():
     v = a.check(rng.normal(size=60) + 0.3)[0]
     assert abs(a.value(v) - a.value(np.repeat(v, 20))) < 1e-9
     assert a.value(v) >= 2 * 60 * np.convolve(v, v).max() / v.sum() ** 2 - 1e-12   # |f*f| >= f*f
+
+
+def test_restart_lines(tmp_path):
+    """With --restart 2 and programs that never gain, a new line starts every time the current one has gone 2 rounds
+    without a gain; every parent and base comes from the current line; a resume keeps the lines."""
+    import random
+
+    def stuck(role, system, user):
+        if role == "planner":
+            return fake_answer(role, system, user)
+        return (f"```python\nimport numpy as np\n# {random.randint(1, 10 ** 9)}\ndef construct(budget_seconds, start):\n"
+                f"    return np.asarray(start, dtype=float)\n```\nSummary: keep the start")
+    d = tmp_path / "r"
+    Run(d, Config(rounds=4, budget=2, restart=2), llm=FakeLLM(stuck), log=lambda m: None).go()
+    Run(d, Config(rounds=6, budget=2, restart=2), llm=FakeLLM(stuck), log=lambda m: None).go()
+    progs = {p["id"]: p for p in map(json.loads, (d / "programs.jsonl").read_text().splitlines())}
+    seeds = sorted((p["round"], p["lineage"]) for p in progs.values() if p["role"] == "seed")
+    assert seeds == [(0, 0), (3, 1), (6, 2)]
+    for p in progs.values():
+        if p["parent"]:
+            assert progs[p["parent"]]["lineage"] == p["lineage"]
+    rows = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
+    assert [r.get("line") for r in rows[1:]] == [0, 0, 1, 1, 1, 2]

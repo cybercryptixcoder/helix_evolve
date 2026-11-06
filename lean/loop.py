@@ -8,6 +8,9 @@
               program it chooses; a coder writes each one
   3. SCORE    every new program runs from its parent's result, under a CPU limit, and is checked and scored by code
   4. NOTE     if `notes`: one line per program (what it tried, what it gave) is added to the notes
+  5. RESTART  if `restart` = K > 0 and the current line hasn't improved its own best for K rounds, a new line
+              starts from Code Zero; from then on every parent and base comes from the new line (the old lines are
+              kept, and the run's record is the best of all lines)
 
 Everything the run does is written as it happens (see README): a stopped run resumes from its last finished round.
 """
@@ -45,6 +48,7 @@ class Config:
     seed: int = 1
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
+    restart: int = 0              # start a new line from Code Zero after this many rounds without a gain (0: never)
 
 
 class Run:
@@ -104,6 +108,24 @@ class Run:
         tmp.write_text(json.dumps({"round_done": r, "config": asdict(self.cfg), "t": time.time()}, indent=1))
         os.replace(tmp, self.dir / "state.json")
 
+    # ------------------------------------------------------------------ lines (restarts)
+    @property
+    def lineage(self):
+        return self.archive.lineages()
+
+    def head(self):
+        """The current line's best program: what the planner improves on and the default base."""
+        return self.archive.best(self.lineage)
+
+    def stalled(self):
+        """Rounds since the current line last improved its own best."""
+        progs = [p for p in self.archive.programs.values() if p.lineage == self.lineage and p.valid]
+        best, last = None, 0
+        for p in sorted(progs, key=lambda p: p.id):
+            if best is None or p.score > best:
+                best, last = p.score, p.round
+        return self.round_done - last
+
     # ------------------------------------------------------------------ views
     def block(self, p, title, chars=12000):
         fb = "\n".join(f"  {l}" for l in p.feedback)
@@ -111,7 +133,7 @@ class Run:
 
     def scoreboard(self, k=6):
         return "## The strongest programs (any of them can be a base)\n" + "\n".join(
-            f"- {p.line()}: {short(p.idea, 110)}" for p in self.archive.ranked()[:k])
+            f"- {p.line()}: {short(p.idea, 110)}" for p in self.archive.ranked(self.lineage)[:k])
 
     def notes_view(self):
         """Every round's lines; past `notes_chars`, the oldest rounds keep only their gains."""
@@ -146,7 +168,7 @@ class Run:
 
     def plan(self, k):
         with self.lock:                            # mutations may be adding programs meanwhile
-            best, user = self.archive.best(), self.plan_prompt(k)
+            best, user = self.head(), self.plan_prompt(k)
         system = P.PLANNER_SYSTEM.format(k=k, budget=self.cfg.budget)
         js = P.extract_json(self.call("planner", system, user, 0.7, 6000, self.cfg.effort)) or {}
         exps = []
@@ -155,7 +177,7 @@ class Run:
                 if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
                     e = {x: str(e.get(x) or "").strip() for x in ("base", "hypothesis", "change", "prediction")}
                     b = self.archive.programs.get(e["base"])
-                    if b is None or not b.valid:
+                    if b is None or not b.valid or b.lineage != self.lineage:
                         e["base_asked"], e["base"] = e["base"], best.id
                     exps.append(e)
         while len(exps) < k:                       # an unreadable plan still spends the round's budget
@@ -164,7 +186,7 @@ class Run:
         return str(js.get("analysis") or ""), exps
 
     def plan_prompt(self, k):
-        best = self.archive.best()
+        best = self.head()
         user = (f"{self.problem.description}\n\n# Round {self.round_now} of {self.cfg.rounds}\nEach program gets "
                 f"{self.cfg.budget:.0f} s of CPU and starts from its base's result.\n\n"
                 f"{self.block(best, 'The best program so far')}\n\n{self.scoreboard()}")
@@ -193,7 +215,7 @@ class Run:
 
     def child(self, role, parent, code, idea, plan, summary):
         p = Program(id="", round=self.round_now, role=role, parent=parent.id, idea=short(idea, 300), code=code or "",
-                    plan={**plan, "summary": summary} if plan else {})
+                    plan={**plan, "summary": summary} if plan else {}, lineage=parent.lineage)
         if code is None:
             p.error = "no program in the model's reply"
             return self.archive.add(p)
@@ -218,29 +240,36 @@ class Run:
             return None
 
     # ------------------------------------------------------------------ the loop
-    def seed(self):
-        self.round_now = 0
-        p = Program(id="", round=0, role="seed", parent=None, idea="Code Zero: the trivial starting program",
-                    code=self.problem.code_zero)
+    def seed(self, lineage=0):
+        if lineage == 0:
+            self.round_now = 0
+        p = Program(id="", round=self.round_now, role="seed", parent=None, idea="Code Zero: the trivial starting program",
+                    code=self.problem.code_zero, lineage=lineage)
         res = evaluate(self.problem, p.code, None, self.cfg.budget, self.cfg.mem_mb)
         if not res["valid"]:
             raise RuntimeError(f"Code Zero failed: {res['error']}")
         p.valid, p.score, p.feedback, p.cpu = True, res["score"], res["feedback"], res["cpu"]
         self.archive.add(p, res["construction"])
-        self._append("rounds.jsonl", {"round": 0, "best": p.score, "best_id": p.id})
-        self.checkpoint(0)
+        if lineage == 0:
+            self._append("rounds.jsonl", {"round": 0, "best": p.score, "best_id": p.id})
+            self.checkpoint(0)
+        return p
 
     def round(self, r):
         self.round_now = r
         t0, calls0 = time.time(), self.llm.calls
         rng = random.Random(self.cfg.seed * 7919 + r)
-        pool = [p for p in self.archive.programs.values() if p.valid]
-        best = self.archive.best()
+        restarted = None
+        if self.cfg.restart and self.stalled() >= self.cfg.restart:
+            with self.lock:
+                restarted = self.seed(self.lineage + 1).id       # a new line from Code Zero, in this round
+        pool = [p for p in self.archive.programs.values() if p.valid and p.lineage == self.lineage]
+        best = self.head()
         if self.cfg.parents == "best":
             parents = [best] * self.cfg.mutations
         else:
             parents = [self.archive.sample_parent(rng, pool) for _ in range(self.cfg.mutations)]
-        top = self.archive.ranked()[:5]
+        top = self.archive.ranked(self.lineage)[:5]
         analysis = ""
         with ThreadPoolExecutor(max_workers=self.cfg.mutations + self.cfg.planned) as ex:
             futs = []
@@ -271,10 +300,13 @@ class Run:
                "programs": len(kids), "failed": sum(1 for c in kids if not c.valid),
                "planned_best": max([c.score for c in kids if c.valid and c.role == "planned"], default=None),
                "mutation_best": max([c.score for c in kids if c.valid and c.role == "mutation"], default=None),
-               "calls": self.llm.calls - calls0, "seconds": round(time.time() - t0, 1)}
+               "calls": self.llm.calls - calls0, "seconds": round(time.time() - t0, 1),
+               "line": self.lineage, "line_best": self.head().score, "restarted": restarted}
         self._append("rounds.jsonl", row)
         self.checkpoint(r)
         self.log(f"round {r}: best {new_best.score:.9f} ({new_best.id}, {new_best.role})"
+                 + (f"; line {self.lineage}{' (NEW)' if restarted else ''} at {self.head().score:.9f}"
+                    if self.cfg.restart else "")
                  + (" RECORD" if row["record"] else "") + f"; {row['failed']}/{len(kids)} failed; "
                  f"{row['seconds']:.0f} s")
         return row

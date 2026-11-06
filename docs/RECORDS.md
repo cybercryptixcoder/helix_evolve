@@ -164,6 +164,50 @@ program) to 100% (optimal, or the best known bound). The textbook rule was hidde
 Every run, with its traces: [results/v3/](../results/v3/); the write-up: [docs/WORKLOG.md](WORKLOG.md) ("The cloud
 batch", October 17). These beat simple rules, not the best known algorithms for each problem.
 
+## Lean Helix (November 5-6, 2026): circle packing and the first autocorrelation inequality
+
+Lean Helix (`lean/`) is v4's core, cleaned. Every run starts from a trivial Code Zero: a grid of tiny circles, or a
+constant function for AC1. The agents are told the problem, its scoring formula and nothing else: no published
+construction, value or method. The model is the same (DeepSeek V4.1 Flash; the planner at "low" effort). The machine differs: these three experiments ran in a cloud container with **2 CPU cores** (x86-64, Intel Xeon 2.1 GHz, Python 3.13, no GPU). Each program ran single-threaded under a hard CPU-time limit, at most 2 at once on the machine. Details: `docs/LEAN_RESULTS.md`; every
+program and model call is in `results/lean/<experiment>/<run>/`.
+
+### 4. Circle packing, 26 circles: the best known packing, to 11 decimals
+
+| | |
+|---|---|
+| The values passed | **2.63586276**, AlphaEvolve (May 2025; zero tolerance), and **2.63597770931127**, ShinkaEvolve's reported 2.635983 re-checked exactly (it allowed 1e-6 overlap; [arXiv:2509.19349](https://arxiv.org/abs/2509.19349)). Best known: 2.635983084919 (Packomania, given to 12 decimals) |
+| Helix's value | **2.6359830849176**: 1.4e-12 below the best known, within Packomania's rounding |
+| The run | experiment 1 (`experiments/lean/e1_core.json`), setup `planned-only`, seed 2, program `p0103`, round 17. The first to come within 1e-9 of the best known: setup `floor`, seed 2, program `p0049`, round 8 (49 programs) |
+| Limits | 10 s of CPU per program, at most 150 programs per run, 3 seeds of 5 setups |
+| The files | [results/lean/e1_core/](../results/lean/e1_core/) (`records/p0103.npy`, `records/p0049.npy`) |
+| Re-check | `python tools/verify_circles.py results/lean/e1_core/planned-only-s2/records/p0103.npy`: valid in exact rational arithmetic with zero tolerance, sum 2.635983084918 |
+
+### 5. Circle packing, 32 circles: above AlphaEvolve, at the best known packing
+
+| | |
+|---|---|
+| The value passed | **2.937944**, AlphaEvolve (May 2025). Best known: 2.939572771205 (Packomania; FICO Xpress, 2026) |
+| Helix's value | **2.939572771206**: equal to the best known to 12 decimals |
+| The run | experiment 2 (`experiments/lean/e2_core32.json`), setup `plan+notes`, seed 2, program `p0063`, round 11. 13 of 15 runs passed AlphaEvolve; 9 came within 1e-9 of the best known |
+| Limits | 10 s of CPU per program, at most 90 programs per run |
+| The files | [results/lean/e2_core32/](../results/lean/e2_core32/) |
+| Re-check | `python tools/verify_circles.py results/lean/e2_core32/plan+notes-s2/records/p0063.npy`: valid, exactly |
+
+### 6. The first autocorrelation inequality: below the best human construction
+
+| | |
+|---|---|
+| The value passed | **1.50973**, the "best human" value in TTT-Discover's Table 2 ([arXiv:2601.16175](https://arxiv.org/abs/2601.16175)). The compendium at [teorth.github.io](https://teorth.github.io/optimizationproblems/constants/1a.html) gives Matolcsi & Vinuesa (2009) as 1.50992 |
+| Helix's value | **C = 1.509418863205** (lower is better), from a 320-step function |
+| The run | experiment 4 (`experiments/lean/e4_core_ac1.json`), setup `plan`, seed 2, program `p0178`, round 30; first below 1.50973 after 113 programs |
+| Limits | 20 s of CPU per program (TTT-Discover: 10 minutes), 181 programs |
+| The files | [results/lean/e4_core_ac1/plan-s2/](../results/lean/e4_core_ac1/plan-s2/) |
+| Re-check | C recomputed in exact rational arithmetic from `records/p0178.npy`: 1.509418863205790; all heights non-negative |
+
+**Not passed:** every published LLM system on AC1 is lower (better): OpenEvolve 1.50719, ThetaEvolve 1.50681 (1.503133
+in its own paper), AlphaEvolve 1.5053, AlphaEvolve V2 1.50317 and TTT-Discover 1.50287. They used tens of thousands
+of programs, of up to 10 minutes each. The best known is 1.5027434868 (Atris Labs, 2026).
+
 ## How these were checked (November 3, 2026)
 
 - **Every construction above was re-scored twice:** by the repo's verifier ([`tools/verify_ac2.py`](../tools/verify_ac2.py):

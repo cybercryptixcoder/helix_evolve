@@ -28,6 +28,7 @@ class Program:
     error: str = ""
     cpu: float | None = None
     duplicate_of: str | None = None
+    lineage: int = 0                # which line (restart) it belongs to: 0, then 1, 2... (`--restart`)
 
     def line(self):
         if not self.valid:
@@ -92,12 +93,16 @@ class Archive:
     def duplicate(self, code, parent):
         return self.keys.get(code_key(code, parent))
 
-    def ranked(self):
-        return sorted((p for p in self.programs.values() if p.valid), key=lambda p: (-p.score, p.round, p.id))
+    def ranked(self, lineage=None):
+        return sorted((p for p in self.programs.values() if p.valid and (lineage is None or p.lineage == lineage)),
+                      key=lambda p: (-p.score, p.round, p.id))
 
-    def best(self):
-        r = self.ranked()
+    def best(self, lineage=None):
+        r = self.ranked(lineage)
         return r[0] if r else None
+
+    def lineages(self):
+        return max((p.lineage for p in self.programs.values()), default=0)
 
     def sample_parent(self, rng, pool):
         """Rank-weighted (1 / (1 + rank)), divided by sqrt(1 + children): strong programs not yet built on much."""

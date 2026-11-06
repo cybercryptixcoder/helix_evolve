@@ -34,8 +34,9 @@ rational arithmetic (`lean/recheck.py`, now the checker itself), 86 results acro
 counted as invalid. Most came from planner setups, whose programs learned to sit exactly on the float boundary.
 The tables use the exact check.
 
-**Best result:** 2.635983084917539, 1.5e-12 below the best known packing (Packomania: 2.635983084919, given to 12
-decimals). It came from the floor setup, seed 2, program `p0049` (round 8). Every run that passed ShinkaEvolve's
+**Best result:** 2.6359830849176, 1.4e-12 below the best known packing (Packomania: 2.635983084919, given to 12
+decimals). It came from the planned-only setup, seed 2, program `p0103` (round 17). The first to come within 1e-9
+of the best known was the floor setup, seed 2, program `p0049` (round 8, 2.635983084917539). Every run that passed ShinkaEvolve's
 value reached at least 2.6359830. Every best construction was re-checked in exact rational arithmetic with zero
 tolerance (`tools/verify_circles.py`).
 
