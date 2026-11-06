@@ -1,0 +1,21 @@
+{
+ "name": "e1_core",
+ "question": "Which parts of v4's core help? From the plainest loop (mutate the best program) upward: a population, a planner, notes for the planner; and is the mutation loop needed next to the planner?",
+ "problem": "circles", "params": {"n": 26}, "rounds": 40, "budget": 10, "seeds": [1, 2, 3], "parallel": 3,
+ "arms": {
+  "floor":        ["--planned", "0", "--mutations", "6", "--parents", "best", "--no-inspiration", "--no-notes"],
+  "population":   ["--planned", "0", "--mutations", "6", "--parents", "population", "--no-notes"],
+  "plan":         ["--planned", "3", "--mutations", "3", "--parents", "population", "--no-notes"],
+  "plan+notes":   ["--planned", "3", "--mutations", "3", "--parents", "population"],
+  "planned-only": ["--planned", "6", "--mutations", "0"]
+ },
+ "notes": {
+  "floor": "the model sees the best program and writes a better one, 6 times a round",
+  "population": "v4's mutation loop alone: parents sampled by rank, another strong program for ideas",
+  "plan": "v4's two loops without memory (v4's 'control')",
+  "plan+notes": "v4's two loops with plain notes of every experiment for the planner",
+  "planned-only": "the planner with notes, no mutation loop"
+ },
+ "references": [["AlphaEvolve (zero tolerance)", 2.63586276], ["ShinkaEvolve (exact re-check)", 2.63597770931127]],
+ "plot_min": 2.4
+}
