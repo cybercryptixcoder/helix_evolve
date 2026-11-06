@@ -71,6 +71,9 @@ def attribution(d):
 
 
 def report(spec, out_dir):
+    """Scores are shown as the problem's own value: for a minimisation problem ("minimize": true; score = -value)
+    the sign is flipped back, and a published value is passed when the run's value goes below it."""
+    sign = -1 if spec.get("minimize") else 1
     base = ROOT / "runs" / "lean" / spec["name"]
     rows, curves = [], {}
     for arm in spec["arms"]:
@@ -79,12 +82,13 @@ def report(spec, out_dir):
             c = curve(d)
             if not c:
                 continue
+            c = [None if v is None else sign * v for v in c]
             curves[(arm, s)] = c
             summ = json.loads((d / "summary.json").read_text()) if (d / "summary.json").exists() else {}
             calls = jl(d / "calls.jsonl")
             progs = jl(d / "programs.jsonl")
             g, r = attribution(d)
-            rows.append({"arm": arm, "seed": s, "programs": len(c), "best": c[-1],
+            rows.append({"arm": arm, "seed": s, "programs": len(c), "best": c[-1],  # in the problem's own sense
                          "tokens": sum(x.get("tokens_in", 0) + x.get("tokens_out", 0) for x in calls),
                          "failed": sum(1 for p in progs if not p["valid"]), "gain": g, "records": r,
                          "finished": bool(summ)})
@@ -95,7 +99,8 @@ def report(spec, out_dir):
     for arm, args in spec["arms"].items():
         lines.append(f"- **{arm}**: `{' '.join(args)}`" + (f": {spec.get('notes', {}).get(arm)}" if
                                                              spec.get("notes", {}).get(arm) else ""))
-    lines += ["", "## Best score after N programs (mean over seeds; each seed in brackets)", "",
+    lines += ["", f"## Best {'value (lower is better)' if sign < 0 else 'score'} after N programs (mean over seeds; "
+                  "each seed in brackets)", "",
               "| Arm | " + " | ".join(str(m) for m in marks) + " |", "|---|" + "---|" * len(marks)]
     for arm in spec["arms"]:
         cells = []
@@ -125,7 +130,7 @@ def report(spec, out_dir):
                 hits = []
                 for (a, s), c in sorted(curves.items()):
                     if a == arm:
-                        i = next((k for k, x in enumerate(c) if x is not None and x > v), None)
+                        i = next((k for k, x in enumerate(c) if x is not None and sign * x > sign * v), None)
                         hits.append("-" if i is None else str(i + 1))
                 cells.append(", ".join(hits))
             lines.append(f"| {arm} | " + " | ".join(cells) + " |")
@@ -157,13 +162,15 @@ def plot(spec, curves, path):
                 ys = [v if v is not None else float("nan") for v in c]
                 ax.plot(range(1, len(ys) + 1), ys, color=colours[i % len(colours)], lw=1.6, alpha=0.8,
                         label=arm if s == spec["seeds"][0] else None)
-    lo = spec.get("plot_min")
+    lo, hi = spec.get("plot_min"), spec.get("plot_max")
     if lo is not None:
         ax.set_ylim(bottom=lo)
+    if hi is not None:
+        ax.set_ylim(top=hi)
     for n, v in spec.get("references") or []:
         ax.axhline(v, color="#6e7781", lw=0.8, ls="--")
     ax.set_xlabel("programs evaluated")
-    ax.set_ylabel("best score so far")
+    ax.set_ylabel("best value so far (lower is better)" if spec.get("minimize") else "best score so far")
     ax.set_title(spec["name"], loc="left")
     ax.grid(color="#d0d7de", lw=0.6)
     ax.spines[["top", "right"]].set_visible(False)

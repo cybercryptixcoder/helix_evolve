@@ -1,11 +1,11 @@
 {
  "name": "e2_core32",
- "question": "Experiment 1 again on a harder instance: 32 circles, where AlphaEvolve (2.93794) stopped short of the best known (2.93957, FICO Xpress 2026).",
+ "question": "Experiment 1 again on a harder instance: 32 circles, where AlphaEvolve (2.93794) stopped short of the best known (2.93957, FICO Xpress 2026). (Cut from 40 to 15 rounds on Nov 5: two setups reached the best known packing within 7 rounds; this problem also has a ceiling within reach.)",
  "problem": "circles",
  "params": {
   "n": 32
  },
- "rounds": 40,
+ "rounds": 15,
  "budget": 10,
  "seeds": [
   1,

@@ -1,0 +1,90 @@
+{
+ "name": "e4_core_ac1",
+ "question": "The core's setups on the first autocorrelation inequality (minimise C; at most 30,000 steps), where the published LLM systems spread from 1.5100 (best of 25,600) to 1.5029 (TTT-Discover).",
+ "problem": "ac1",
+ "params": {
+  "max_n": 30000
+ },
+ "rounds": 30,
+ "budget": 20,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "parallel": 3,
+ "arms": {
+  "floor": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "best",
+   "--no-inspiration",
+   "--no-notes"
+  ],
+  "population": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan+notes": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population"
+  ],
+  "planned-only": [
+   "--planned",
+   "6",
+   "--mutations",
+   "0"
+  ]
+ },
+ "notes": {
+  "floor": "the model sees the best program and writes a better one, 6 times a round",
+  "population": "mutations from parents sampled by rank, with another strong program for ideas",
+  "plan+notes": "a planner with notes, plus mutations",
+  "planned-only": "the planner with notes, no mutations"
+ },
+ "references": [
+  [
+   "Best of 25,600 (gpt-oss-120b)",
+   1.51004
+  ],
+  [
+   "Best human",
+   1.50973
+  ],
+  [
+   "OpenEvolve",
+   1.50719
+  ],
+  [
+   "ThetaEvolve",
+   1.50681
+  ],
+  [
+   "AlphaEvolve (May 2025)",
+   1.5053
+  ],
+  [
+   "AlphaEvolve V2",
+   1.50317
+  ],
+  [
+   "TTT-Discover (gpt-oss-120b)",
+   1.50287
+  ]
+ ],
+ "plot_min": 1.5,
+ "minimize": true,
+ "plot_max": 1.53
+}
