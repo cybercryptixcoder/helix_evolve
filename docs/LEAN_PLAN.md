@@ -1,6 +1,6 @@
 # Plan: one lean Helix, problem first (November 5, 2026)
 
-Status: **planned, not started.** The request (Shreyas, Nov 5, 18:20 and 18:50) is in `REQUESTS.md`.
+Status: **Phase 1 built (`lean/`, Nov 5); experiment 1 running.** The request (Shreyas, Nov 5, 18:20 and 18:50) is in `REQUESTS.md`.
 
 ## The aim
 
@@ -110,3 +110,19 @@ Each step gets:
 2. The run size for a component test (for example 300 programs × 3 seeds × 2 arms).
 3. The new package's name and place (for example `lean/` or `helix/` with the old v1 moved).
 4. Where the old versions go (for example `versions/`).
+
+## Progress
+
+- **Nov 5:** Phase 1. `lean/` built: v4's core, cleaned (`lean/README.md` lists what changed and why), about 1,000
+  lines, crash-tested (`tests/test_lean.py`) and live-tested on circle packing. Decisions taken in Shreyas's
+  absence ("do as much as you can"):
+  - development problem: circle packing, n = 26, zero tolerance;
+  - package `lean/`;
+  - old versions untouched for now.
+- **Experiment 1** (`experiments/lean/e1_core.json`): which parts of v4's core help? Five arms x 3 seeds, 240
+  programs each, 10 s per program:
+  - the plainest loop;
+  - a population;
+  - a planner;
+  - a planner with notes;
+  - a planner with no mutation loop.
