@@ -28,7 +28,10 @@ class Problem:
         self.code_zero = CODE_ZERO.replace("{n}", str(self.n))
         self.references = {26: [("AlphaEvolve (May 2025; zero tolerance)", 2.63586276),
                                 ("ShinkaEvolve (Sep 2025; exact re-check of its 1e-6-slack result)", 2.63597770931127),
-                                ("ThetaEvolve (Nov 2025; 1e-6 slack)", 2.63598308)]}.get(self.n, [])
+                                ("ThetaEvolve (Nov 2025; 1e-6 slack)", 2.63598308),
+                                ("best known (Packomania)", 2.635983084919)],
+                           32: [("AlphaEvolve (May 2025)", 2.93794),
+                                ("best known (Packomania; FICO Xpress, 2026)", 2.939572771205)]}.get(self.n, [])
         self.description = f"""## The problem: pack {self.n} circles in a unit square
 
 Place {self.n} circles inside the square [0, 1] x [0, 1], with no two overlapping, so that the **sum of their radii

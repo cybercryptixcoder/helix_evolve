@@ -1,0 +1,78 @@
+{
+ "name": "e2_core32",
+ "question": "Experiment 1 again on a harder instance: 32 circles, where AlphaEvolve (2.93794) stopped short of the best known (2.93957, FICO Xpress 2026).",
+ "problem": "circles",
+ "params": {
+  "n": 32
+ },
+ "rounds": 40,
+ "budget": 10,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "parallel": 3,
+ "arms": {
+  "floor": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "best",
+   "--no-inspiration",
+   "--no-notes"
+  ],
+  "population": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan+notes": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population"
+  ],
+  "planned-only": [
+   "--planned",
+   "6",
+   "--mutations",
+   "0"
+  ]
+ },
+ "notes": {
+  "floor": "the model sees the best program and writes a better one, 6 times a round",
+  "population": "v4's mutation loop alone: parents sampled by rank, another strong program for ideas",
+  "plan": "v4's two loops without memory (v4's 'control')",
+  "plan+notes": "v4's two loops with plain notes of every experiment for the planner",
+  "planned-only": "the planner with notes, no mutation loop"
+ },
+ "references": [
+  [
+   "AlphaEvolve",
+   2.93794
+  ],
+  [
+   "best known (Packomania, FICO Xpress 2026)",
+   2.939572771205
+  ]
+ ],
+ "plot_min": 2.8
+}
