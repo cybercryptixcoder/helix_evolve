@@ -40,7 +40,10 @@ push() {
   ( flock 9
     git add -f "results/lean/$NAME" 2>/dev/null
     git -c user.name="$GIT_NAME" -c user.email="$GIT_EMAIL" commit -q -m "lean $NAME: $1" || exit 0
-    for i in 1 2 3; do git pull -q --rebase --autostash origin HEAD && git push -q origin HEAD && exit 0; sleep 20; done
+    for i in 1 2 3; do
+      if git pull -q --rebase --autostash origin HEAD; then git push -q origin HEAD && exit 0
+      else git rebase --abort 2>/dev/null; fi      # never leave a half-done rebase behind (it blocked e3's pushes)
+      sleep 20; done
     echo "   (push failed; the next push sends it)" ) 9> runs/.git.lock
 }
 
