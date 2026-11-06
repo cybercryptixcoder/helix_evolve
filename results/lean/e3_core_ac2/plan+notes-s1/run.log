@@ -6,3 +6,26 @@
 00:41:21 round 6: best 0.834994227 (p0032, mutation) RECORD; 1/6 failed; 214 s
 00:44:49 round 7: best 0.838606763 (p0038, planned) RECORD; 0/6 failed; 209 s
 00:47:48 round 8: best 0.839450412 (p0046, planned) RECORD; 0/6 failed; 179 s
+00:50:42 round 9: best 0.839676870 (p0052, planned) RECORD; 1/6 failed; 173 s
+00:55:36 round 10: best 0.839848677 (p0057, mutation) RECORD; 0/6 failed; 294 s
+00:59:47 round 11: best 0.840175565 (p0067, planned) RECORD; 0/6 failed; 252 s
+01:03:36 round 12: best 0.840344810 (p0071, planned) RECORD; 0/6 failed; 229 s
+01:07:17 round 13: best 0.840395753 (p0078, planned) RECORD; 0/6 failed; 221 s
+01:11:25 round 14: best 0.840470167 (p0081, mutation) RECORD; 0/6 failed; 248 s
+01:17:07 round 15: best 0.840552839 (p0090, mutation) RECORD; 0/6 failed; 342 s
+01:21:22 round 16: best 0.840846247 (p0093, mutation) RECORD; 0/6 failed; 255 s
+01:24:36 round 17: best 0.840965860 (p0099, planned) RECORD; 0/6 failed; 194 s
+01:27:28 round 18: best 0.841111008 (p0109, planned) RECORD; 0/6 failed; 171 s
+01:30:34 round 19: best 0.841439349 (p0113, planned) RECORD; 0/6 failed; 187 s
+01:33:40 round 20: best 0.841571892 (p0119, planned) RECORD; 2/6 failed; 186 s
+01:37:23 round 21: best 0.841679936 (p0125, planned) RECORD; 0/6 failed; 223 s
+01:42:12 round 22: best 0.841818525 (p0132, planned) RECORD; 0/6 failed; 289 s
+01:49:52 round 23: best 0.841849619 (p0138, planned) RECORD; 0/6 failed; 460 s
+01:54:42 round 24: best 0.841879545 (p0144, planned) RECORD; 0/6 failed; 290 s
+02:00:13 round 25: best 0.841896171 (p0147, mutation) RECORD; 0/6 failed; 330 s
+02:02:50 round 26: best 0.841946330 (p0154, mutation) RECORD; 0/6 failed; 158 s
+02:05:13 round 27: best 0.841982874 (p0159, mutation) RECORD; 0/6 failed; 142 s
+02:08:03 round 28: best 0.841993765 (p0168, planned) RECORD; 0/6 failed; 171 s
+02:12:38 round 29: best 0.842102549 (p0174, planned) RECORD; 1/6 failed; 275 s
+02:15:48 round 30: best 0.842414641 (p0177, planned) RECORD; 0/6 failed; 190 s
+02:15:48 done: best 0.842414641 (p0177) after 30 rounds, 181 programs

@@ -1,0 +1,53 @@
+{
+ "best": 0.9044938211496406,
+ "best_id": "p0177",
+ "rounds": 30,
+ "programs": 181,
+ "valid": 176,
+ "calls": 210,
+ "tokens_in": 1050440,
+ "tokens_out": 622680,
+ "config": {
+  "problem": "ac2",
+  "params": {
+   "max_n": 50000
+  },
+  "rounds": 30,
+  "mutations": 3,
+  "planned": 3,
+  "parents": "population",
+  "inspiration": true,
+  "notes": true,
+  "notes_chars": 20000,
+  "budget": 30.0,
+  "seed": 2,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "references": [
+  [
+   "AlphaEvolve (May 2025)",
+   0.8962
+  ],
+  [
+   "Jaech & Joseph (Aug 2025)",
+   0.941362
+  ],
+  [
+   "OpenEvolve (TTT-Discover, Table 2)",
+   0.9449
+  ],
+  [
+   "ThetaEvolve with RL",
+   0.9469
+  ],
+  [
+   "TTT-Discover (Jan 2026)",
+   0.9591
+  ],
+  [
+   "AlphaEvolve V2 (Nov 2025; 50,000 steps)",
+   0.961
+  ]
+ ]
+}

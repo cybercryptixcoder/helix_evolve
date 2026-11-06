@@ -1,0 +1,21 @@
+{
+ "round_done": 30,
+ "config": {
+  "problem": "ac2",
+  "params": {
+   "max_n": 50000
+  },
+  "rounds": 30,
+  "mutations": 0,
+  "planned": 6,
+  "parents": "population",
+  "inspiration": true,
+  "notes": true,
+  "notes_chars": 20000,
+  "budget": 30.0,
+  "seed": 2,
+  "effort": "low",
+  "mem_mb": 1500
+ },
+ "t": 1793964040.2553542
+}
