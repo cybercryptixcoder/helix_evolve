@@ -125,18 +125,44 @@ ThetaEvolve 1.50681, AlphaEvolve 1.5053, AlphaEvolve V2 1.50317, TTT-Discover 1.
 - **At this budget no setup gets near the published LLM systems.** They used 25,600 to 51,200 samples and up to 10
   minutes per program; these runs used 181 programs of 20 s each.
 
-## So far (experiments 1, 2 and 4)
+## Experiment 3: the same setups on AC2 (Nov 6, 2026; on the VM)
 
-| Setup | 26 circles | 32 circles | AC1 |
+Setup: `experiments/lean/e3_core_ac2.json`.
+- **Problem:** the second autocorrelation inequality: maximise R(f) over non-negative step functions with at most
+  50,000 steps. Higher is better.
+- **Budget:** 30 rounds (181 programs per run), 30 s of CPU per program, 3 seeds.
+
+Best R after 180 programs, each seed (higher is better):
+
+| Setup | Seeds 1, 2, 3 | Median | Passed AlphaEvolve's 0.8962 |
 |---|---|---|---|
-| floor | reaches the ceiling (1 of 3 seeds) | 1 of 3 seeds at best known | 3rd |
-| population | 0 of 3 within 1e-9 | 3 of 3 | 2nd |
-| plan | 2 of 3 | **3 of 3, fastest** | **1st (median, best run)** |
-| plan+notes | 2 of 3 | 2 of 3 | last |
-| planned-only | 2 of 3 | 1 of 3 | 4th |
+| floor | 0.92235, 0.87513, 0.91128 | **0.91128** | 2 of 3 |
+| plan+notes | 0.84241, 0.90449, **0.92557** | 0.90449 | 2 of 3 |
+| planned-only | 0.90711, 0.88373, 0.83882 | 0.88373 | 1 of 3 |
+| plan | 0.88201, 0.89856, 0.88254 | 0.88254 | 1 of 3 |
+| population | 0.90679, 0.86564, 0.86973 | 0.86973 | 1 of 3 |
 
-- **The working core: planner plus mutations from a population, with no notes.**
-- The notes, the Atlas's lean replacement, never helped. That doesn't settle the memory question (P1): a one-line
-  note per program may be the wrong memory, not memory itself. It's the first component test of Phase 2.
-- **Three seeds per setup:** the spreads are wide, so these are leads, not proofs.
-- Experiment 3 (AC2, on the VM) is the fourth problem.
+**Best result:** R = 0.925573895, from plan+notes seed 3. Re-checked from `best.npy` (4,000 steps). No run came
+near OpenEvolve (0.9449), ThetaEvolve (0.9469), TTT-Discover (0.9591) or AlphaEvolve V2 (0.9610).
+
+**What it says:** the ranking turns over. The plainest loop has the best median. plan, first on 32 circles and AC1,
+is fourth here. Records jump late and by a lot: floor-s1 went from 0.8506 to 0.9206 between programs 120 and 150.
+Because of that, three seeds of 180 programs can't rank the setups on AC2.
+
+## So far (experiments 1-4)
+
+| Setup | 26 circles | 32 circles | AC1 | AC2 |
+|---|---|---|---|---|
+| floor | 1 of 3 at the ceiling | 1 of 3 at best known | 3rd | **1st** |
+| population | 0 of 3 within 1e-9 | 3 of 3 | 2nd | 5th |
+| plan | 2 of 3 | **3 of 3, fastest** | **1st** | 4th |
+| plan+notes | 2 of 3 | 2 of 3 | 5th | 2nd |
+| planned-only | 2 of 3 | 1 of 3 | 4th | 3rd |
+
+- **No setup wins everywhere.** plan wins two problems, and the plainest loop wins AC2. Within one setup, the spread
+  between seeds is usually larger than the gap between setups.
+- **The one steady result:** the planner without mutations is never first. Dropping the mutation loop doesn't help on
+  any problem.
+- **The notes don't help on average.** They are last on AC1, second on AC2, and behind plan on 32 circles.
+- **Next:** experiment 5 settles the base setup with 8 seeds (plan, floor and population on 32 circles) before any
+  part is added.
