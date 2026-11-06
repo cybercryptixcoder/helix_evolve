@@ -1,0 +1,72 @@
+{
+ "name": "e3_core_ac2",
+ "question": "Experiment 1 on the hard problem: the second autocorrelation inequality (at most 50,000 steps), where Helix's earlier versions plateaued at 0.9414 and v10.2 reached 0.9486 with the field's ideas.",
+ "problem": "ac2",
+ "params": {
+  "max_n": 50000
+ },
+ "rounds": 30,
+ "budget": 30,
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "parallel": 3,
+ "arms": {
+  "floor": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "best",
+   "--no-inspiration",
+   "--no-notes"
+  ],
+  "population": [
+   "--planned",
+   "0",
+   "--mutations",
+   "6",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan+notes": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population"
+  ],
+  "planned-only": [
+   "--planned",
+   "6",
+   "--mutations",
+   "0"
+  ]
+ },
+ "notes": {
+  "floor": "the model sees the best program and writes a better one, 6 times a round",
+  "population": "mutations from parents sampled by rank, with another strong program for ideas",
+  "plan+notes": "a planner with notes, plus mutations",
+  "planned-only": "the planner with notes, no mutations"
+ },
+ "references": [
+  [
+   "AlphaEvolve (May 2025)",
+   0.8962
+  ],
+  [
+   "OpenEvolve (TTT-Discover Table 2)",
+   0.9449
+  ],
+  [
+   "ThetaEvolve with RL",
+   0.9469
+  ]
+ ],
+ "plot_min": 0.85
+}

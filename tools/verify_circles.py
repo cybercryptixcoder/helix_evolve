@@ -32,4 +32,4 @@ if __name__ == "__main__":
     for path in sys.argv[1:]:
         ok, why, total = verify(np.load(path))
         print(f"{path}: n = {len(np.load(path))}: {why}" + (f"; sum of radii = {float(total):.12f} "
-                                                             f"(exact rational, truncated)" if ok else ""))
+                                                             f"(computed exactly, shown to 12 decimals)" if ok else ""))
