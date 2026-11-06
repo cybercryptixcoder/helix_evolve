@@ -1,0 +1,10 @@
+{"round": 0, "best": 0.6666666666666666, "best_id": "p0001"}
+{"round": 1, "best": 0.8771247401486439, "best_id": "p0007", "record": true, "record_role": "planned", "programs": 6, "failed": 0, "planned_best": 0.8771247401486439, "mutation_best": 0.7983384583114237, "calls": 7, "seconds": 171.1}
+{"round": 2, "best": 0.8814205168831432, "best_id": "p0011", "record": true, "record_role": "planned", "programs": 6, "failed": 0, "planned_best": 0.8814205168831432, "mutation_best": 0.8771247401486439, "calls": 7, "seconds": 149.4}
+{"round": 3, "best": 0.8819871113166146, "best_id": "p0017", "record": true, "record_role": "planned", "programs": 6, "failed": 1, "planned_best": 0.8819871113166146, "mutation_best": 0.8775728855796682, "calls": 7, "seconds": 126.2}
+{"round": 4, "best": 0.8847446140580161, "best_id": "p0020", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": 0.882142598187127, "mutation_best": 0.8847446140580161, "calls": 7, "seconds": 193.2}
+{"round": 5, "best": 0.888520731075264, "best_id": "p0026", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": 0.8865992396288688, "mutation_best": 0.888520731075264, "calls": 7, "seconds": 279.9}
+{"round": 6, "best": 0.896030104231062, "best_id": "p0035", "record": true, "record_role": "planned", "programs": 6, "failed": 0, "planned_best": 0.896030104231062, "mutation_best": 0.888640171451823, "calls": 7, "seconds": 243.2}
+{"round": 7, "best": 0.8961531101280689, "best_id": "p0038", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": 0.896135408510777, "mutation_best": 0.8961531101280689, "calls": 7, "seconds": 164.0}
+{"round": 8, "best": 0.8976468316872089, "best_id": "p0045", "record": true, "record_role": "mutation", "programs": 6, "failed": 0, "planned_best": 0.8963859066053036, "mutation_best": 0.8976468316872089, "calls": 7, "seconds": 212.4}
+{"round": 9, "best": 0.8980282834651776, "best_id": "p0055", "record": true, "record_role": "planned", "programs": 6, "failed": 0, "planned_best": 0.8980282834651776, "mutation_best": 0.8980170216504859, "calls": 7, "seconds": 211.1}

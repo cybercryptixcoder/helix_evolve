@@ -29,3 +29,5 @@
 01:59:41 round 29: best 0.905289114 (p0166, mutation); 0/6 failed; 322 s
 02:03:21 round 30: best 0.906788434 (p0178, mutation) RECORD; 0/6 failed; 220 s
 02:03:21 done: best 0.906788434 (p0178) after 30 rounds, 181 programs
+08:39:17 resuming after round 30
+08:39:17 done: best 0.906788434 (p0178) after 30 rounds, 181 programs

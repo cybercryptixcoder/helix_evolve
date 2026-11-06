@@ -29,3 +29,5 @@
 06:14:49 round 29: best 0.883728731 (p0170, planned) RECORD; 0/6 failed; 512 s
 06:20:40 round 30: best 0.883728731 (p0170, planned); 0/6 failed; 350 s
 06:20:40 done: best 0.883728731 (p0170) after 30 rounds, 181 programs
+08:39:18 resuming after round 30
+08:39:18 done: best 0.883728731 (p0170) after 30 rounds, 181 programs
