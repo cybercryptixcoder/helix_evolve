@@ -4,9 +4,9 @@
  "rounds": 30,
  "programs": 181,
  "valid": 173,
- "calls": 214,
- "tokens_in": 1509605,
- "tokens_out": 1197057,
+ "calls": 0,
+ "tokens_in": 0,
+ "tokens_out": 0,
  "config": {
   "problem": "ac2",
   "params": {
