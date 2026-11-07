@@ -11,7 +11,9 @@
   5,
   6,
   7,
-  8
+  8,
+  9,
+  10
  ],
  "parallel": 2,
  "arms": {
@@ -36,7 +38,7 @@
   ]
  },
  "notes": {
-  "plan": "the base setup, no memory; experiment 5's plan runs (seeds 5-8)",
+  "plan": "the base setup, no memory; seeds 5-8 are experiment 5's plan runs, 9-10 new",
   "plan+path": "the same, and the planner sees the best program's path"
  },
  "references": [
