@@ -1,0 +1,59 @@
+{
+ "name": "e7b_memory32",
+ "question": "Experiment 7 on 32 circles: does the best program's path beat no memory?",
+ "problem": "circles",
+ "params": {
+  "n": 32
+ },
+ "rounds": 15,
+ "budget": 10,
+ "seeds": [
+  5,
+  6,
+  7,
+  8
+ ],
+ "parallel": 2,
+ "arms": {
+  "plan": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population",
+   "--no-notes"
+  ],
+  "plan+path": [
+   "--planned",
+   "3",
+   "--mutations",
+   "3",
+   "--parents",
+   "population",
+   "--no-notes",
+   "--path"
+  ]
+ },
+ "notes": {
+  "plan": "the base setup, no memory; experiment 5's plan runs (seeds 5-8)",
+  "plan+path": "the same, and the planner sees the best program's path"
+ },
+ "references": [
+  [
+   "AlphaEvolve",
+   2.93794
+  ],
+  [
+   "within 1e-9 of the best known (2.939572771205, Packomania)",
+   2.939572770205
+  ]
+ ],
+ "plot_min": 2.8,
+ "reuse": {
+  "plan-s5": "e5b_base32/plan-s5",
+  "plan-s6": "e5b_base32/plan-s6",
+  "plan-s7": "e5b_base32/plan-s7",
+  "plan-s8": "e5b_base32/plan-s8"
+ }
+}
