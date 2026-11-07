@@ -1,5 +1,5 @@
 {
- "round_done": 28,
+ "round_done": 30,
  "config": {
   "problem": "ac2",
   "params": {
@@ -20,5 +20,5 @@
   "restart": 0,
   "restart_gain": 1e-05
  },
- "t": 1794030300.5659018
+ "t": 1794030584.8105345
 }
