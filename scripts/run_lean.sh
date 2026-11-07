@@ -18,6 +18,8 @@ NAME="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['name'])
 PUSH="${PUSH:-1}"; PUSH_EVERY="${PUSH_EVERY:-1800}"
 export HELIX_EVAL_SLOTS="${EVAL_SLOTS:-2}" HELIX_SLOTS_DIR="$(pwd)/runs/.slots"
 GIT_NAME="Shreyas Naik"; GIT_EMAIL="119774329+cybercryptixcoder@users.noreply.github.com"
+# every git step that writes a commit (the commit, and the rebase that replays it) needs this identity
+export GIT_AUTHOR_NAME="$GIT_NAME" GIT_AUTHOR_EMAIL="$GIT_EMAIL" GIT_COMMITTER_NAME="$GIT_NAME" GIT_COMMITTER_EMAIL="$GIT_EMAIL"
 mkdir -p runs/lean
 exec 8> "runs/lean/.$NAME.lock"
 flock -n 8 || { echo "== $NAME is already running; this copy exits"; exit 0; }
@@ -33,6 +35,7 @@ rm -rf "$T"
 python3 -c "from lean.llm import LLM; print('   model:', LLM().chat('preflight', 'One word.', 'Say OK.', max_tokens=20))" \
   || { echo "the model can't be reached (.env with LUMINAL_API_KEYS?)"; exit 3; }
 [ "$PUSH" = "1" ] && { git push --dry-run -q origin HEAD || { echo "can't push to GitHub"; exit 3; }; }
+[ "$PUSH" = "1" ] && { git pull -q --rebase --autostash origin HEAD || { git rebase --abort 2>/dev/null; echo "can't bring the branch up to date with GitHub (diverged?)"; exit 3; }; }
 
 push() {
   [ "$PUSH" = "1" ] || return 0
