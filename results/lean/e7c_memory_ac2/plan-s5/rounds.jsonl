@@ -1,0 +1,2 @@
+{"round": 0, "best": 0.6666666666666666, "best_id": "p0001"}
+{"round": 1, "best": 0.8535872872362698, "best_id": "p0006", "record": true, "record_role": "planned", "programs": 6, "failed": 0, "planned_best": 0.8535872872362698, "mutation_best": 0.8388766736936013, "calls": 7, "seconds": 124.6, "line": 0, "line_best": 0.8535872872362698, "restarted": null}
