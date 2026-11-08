@@ -4,7 +4,7 @@
     python -m lean.run --out runs/lean/c1 --rounds 80          # resumes (state.json is there), runs to round 80
     python -m lean.run --problem circles --out /tmp/x --rounds 2 --fake    # no model calls (crash test only)
 
-    python -m lean.run --problem helix_vrp.lean --param blackbox=... --out ...   # an adapter outside this repo
+    python -m lean.run --problem helix_vrp.lean_adapter --param blackbox=... --out ...   # an adapter outside this repo
 
 --rounds is the number of generations. --planned and --mutations are v4's --deep and --wide (3 each).
 """

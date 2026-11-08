@@ -1,8 +1,8 @@
 """Every prompt the agents see, and the parsers for their replies.
 
-The text is v4's (helix4/prompts.py), word for word, so the agents are told exactly what v4 told them. Only the
-memory prompts (v4's Distiller, Navigator and Compactor) are absent: the lean core has no memory beyond the archive.
-A problem adapter may replace the three system prompts with its own wording (see lean/problems/__init__.py).
+The text is v4's (helix4/prompts.py), word for word, so the agents are told exactly what v4 told them, including the
+Atlas's two prompts (the Navigator's and the Distiller's). v4's Compactor (its Journal memory) is not used. A problem
+adapter may replace the system prompts and the Distiller's task with its own wording (see lean/problems/__init__.py).
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ PLAN_FORMAT = """Reply with one JSON object and nothing else:
  "experiments": [
   {{"base": "<program id to build on>", "hypothesis": "why this should raise the score",
     "change": "exactly what the coder should change, concretely", "prediction": "what the result will show",
-    "builds_on": ["<ids of programs this relies on>"]}}
+    "builds_on": ["<ids of programs{findings} this relies on>"]}}
  ]}}
 ```
 Give exactly {k} experiments."""
@@ -46,6 +46,39 @@ time.process_time()), and should make use of `start` when it is given."""
 
 CODE_FORMAT = """Reply with the complete program in one ```python block, then one line:
 SUMMARY: <what you changed and why, at most 30 words>"""
+
+NAVIGATOR_ASK = """## Before you plan: choose what to open
+
+Above is the map of the search so far. You can open up to {k} items to see them in full before planning: a program \
+(its plan, change, diff, code, result, its children, the findings citing it) or a finding (its evidence and its \
+linked findings). Open what will most help you choose the next experiments.
+Reply with one JSON object and nothing else:
+```json
+{{"open": ["p0012", "F3"], "why": "one sentence"}}
+```"""
+
+DISTILLER_SYSTEM = """You keep the findings of a research programme: short claims about what helps and what hurts, \
+each backed by the experiments that show it. You are precise and evidence-bound: a finding says what was changed, \
+what happened (in numbers, from the results), and the likely reason. You never invent results; every finding cites \
+the program ids it is based on."""
+
+DISTILLER_ASK = """## Your task
+
+Record what generation {gen} taught. Write new findings, and attach this generation's programs as evidence to \
+existing findings they bear on. Good findings are specific and reusable: "replacing the uniform start with a \
+two-level step (p0031) raised the score from 0.8812 to 0.8855; the f*f top got flatter (1% share 3.1% -> 6.4%)", \
+not "p0031 did better". Record failures and their cause too (errors, timeouts, no gain), and open questions worth \
+testing. Link findings when one refines, contradicts, requires, or combines with another, or explains it.
+Kinds: works (a change that raised the score), fails (a change that didn't, or broke), mechanism (why something \
+works), question (worth testing, not yet tested).
+Reply with one JSON object and nothing else:
+```json
+{{"new": [{{"kind": "works", "claim": "...", "evidence": ["p0031"],
+           "links": [{{"to": "F3", "type": "refines"}}]}}],
+ "evidence": [{{"finding": "F3", "programs": ["p0033"]}}]}}
+```
+At most 6 new findings. Link types: refines, contradicts, requires, combines-with, explains. Use ids exactly as \
+shown."""
 
 CODE_RETRY = ("\n\n(Your previous reply had no complete ```python block defining {entry}. Reply with the full "
               "program.)")

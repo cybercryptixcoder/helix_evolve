@@ -2,6 +2,7 @@
 programs.jsonl and never changed; results (constructions) saved as .npy so a child can start from its parent's."""
 from __future__ import annotations
 
+import difflib
 import hashlib
 import json
 import math
@@ -28,20 +29,34 @@ class Program:
     error: str = ""
     cpu: float | None = None
     duplicate_of: str | None = None
+    summary: str = ""               # the author's own one-line summary of the change
+    diff: str = ""                  # the change from its parent (shown to the Atlas's Distiller and when opened)
 
     def line(self):
+        """How the agents see a program: v4's words exactly (gen, deep/wide), with 9 digits instead of 6."""
+        role = SHOWN.get(self.role, self.role)
         if not self.valid:
-            return f"{self.id} ({self.role}, round {self.round}, from {self.parent}): FAILED: {self.error[:120]}"
-        d = f", {self.delta:+.9f} on its start" if self.delta is not None else ""
-        return f"{self.id} ({self.role}, round {self.round}, from {self.parent or '-'}): {self.score:.9f}{d}"
+            return f"{self.id} (gen {self.round}, {role}, from {self.parent}): FAILED: {self.error[:120]}"
+        d = f", {self.delta:+.9f} on its start" if self.delta is not None and self.parent else ""
+        return f"{self.id} (gen {self.round}, {role}, from {self.parent or '-'}): {self.score:.9f}{d}"
 
 
+SHOWN = {"planned": "deep", "mutation": "wide"}   # the roles' names in v4's prompts (the planned loop was "deep")
 KNOWN = {f.name for f in fields(Program)}      # older records may hold fields this version doesn't use
 
 
 def short(s, n):
     s = " ".join(str(s or "").split())
     return s if len(s) <= n else s[: n - 1] + "…"
+
+
+def make_diff(old, new, limit=60):
+    """v4's unified diff, at most `limit` lines."""
+    lines = [l for l in difflib.unified_diff(old.strip().splitlines(), new.strip().splitlines(), lineterm="", n=1)
+             if not l.startswith(("---", "+++"))]
+    if len(lines) > limit:
+        lines = lines[:limit] + [f"... ({len(lines) - limit} more diff lines)"]
+    return "\n".join(lines)
 
 
 def code_key(code, parent):

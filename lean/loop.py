@@ -1,15 +1,19 @@
-"""The loop: v4's, cleaned (docs/LEAN_V4.md lists every difference from helix4 and why each is safe).
+"""The loop: v4's with its Atlas memory, cleaned (docs/LEAN_V4.md lists every difference from helix4 and why each one
+is safe).
 
 One generation:
   1. MUTATE   `mutations` parents are sampled from all earlier programs (by rank, favouring programs with few
               children); for each, the mutator writes an improved version, shown one other strong program for ideas
   2. PLAN     meanwhile, the planner sees the problem, the best program (its code, its result and its last steps of
-              ancestry) and the strongest programs, and plans `planned` experiments, each on a base it chooses; a
-              coder writes each one
+              ancestry) and the Atlas's map (the tree of attempts, the findings, the last generation in full), opens
+              up to 6 items, and plans `planned` experiments, each on a base it chooses; a coder writes each one
   3. SCORE    every new program runs from its base's result, in its own process, under CPU, memory and time limits,
               and is checked and scored by code (lean/sandbox.py, or the problem's own evaluator)
-Every program is kept. Nothing is decided by a model except what to try. A stopped run resumes from its last finished
-generation.
+  4. DISTIL   the Atlas's Distiller records what the generation taught, as findings citing the programs that show
+              them; a finding's status is computed by code from the measured gains of its evidence
+Every program is kept. Nothing is decided by a model except what to try and what the findings say. A stopped run
+resumes from its last finished generation. `memory="none"` is v4's Control condition: no map, the 6 strongest
+programs instead.
 """
 from __future__ import annotations
 
@@ -26,7 +30,8 @@ from pathlib import Path
 import numpy as np
 
 from lean import prompts as P
-from lean.archive import Archive, Program, short
+from lean.archive import Archive, Program, make_diff, short
+from lean.atlas import Atlas
 from lean.problems import load, setting
 from lean.sandbox import evaluate
 
@@ -42,6 +47,10 @@ class Config:
     seed: int = 1
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
+    memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
+
+
+THE_BASES = "the base's"
 
 
 class Run:
@@ -71,9 +80,15 @@ class Run:
             llm = LLM()
         self.llm = llm
         self.llm.on_call = self.record
+        if self.cfg.memory not in ("atlas", "none"):
+            raise ValueError(f"memory must be 'atlas' or 'none', not {self.cfg.memory!r}")
+        self.atlas = Atlas(self) if self.cfg.memory == "atlas" else None
         if state:
             self.archive.truncate(self.round_done)
-            self._rewrite("rounds.jsonl", [r for r in self._read("rounds.jsonl") if r["round"] <= self.round_done])
+            if self.atlas:
+                self.atlas.truncate(self.round_done)
+            for name in ("rounds.jsonl", "plans.jsonl"):
+                self._rewrite(name, [r for r in self._read(name) if r["round"] <= self.round_done])
             self.log(f"resuming after generation {self.round_done}")
 
     # ------------------------------------------------------------------ files
@@ -114,10 +129,14 @@ class Run:
         return "## The strongest programs (any program can be a base)\n" + "\n".join(
             f"- {p.line()}: {short(p.idea, 110)}" for p in self.archive.ranked()[:k])
 
-    def plan_prompt(self, k):
+    def header(self):
         note = setting(self.problem, "generation_note").format(budget=self.cfg.budget)
-        return (f"{self.problem.description}\n\n# Generation {self.round_now} of {self.cfg.rounds}\n{note}\n\n"
-                f"{self.best_block(self.archive.best())}\n\n{self.scoreboard()}\n\n{P.PLAN_FORMAT.format(k=k)}")
+        return f"{self.problem.description}\n\n# Generation {self.round_now} of {self.cfg.rounds}\n{note}\n"
+
+    def plan_prompt(self, k):
+        """v4's Control view: the header, the best program, the 6 strongest programs. (The Atlas builds its own.)"""
+        return (f"{self.header()}\n{self.best_block(self.archive.best())}\n\n{self.scoreboard()}\n\n"
+                f"{P.PLAN_FORMAT.format(k=k, findings='')}")
 
     def task_note(self, whose):
         return setting(self.problem, "task_note").format(budget=self.cfg.budget, whose=whose)
@@ -137,20 +156,30 @@ class Run:
         return code, P.extract_summary(text)
 
     def plan(self, k):
-        """The planner's experiments (v4's Researcher, without memory: v4's "control" condition). An unreadable reply
-        is asked for once more; experiments still missing become "improve the best program"."""
-        with self.lock:                            # mutations may be adding programs meanwhile
-            best, user = self.archive.best(), self.plan_prompt(k)
+        """The planner's experiments (v4's Researcher). An unreadable reply is asked for once more; an experiment on an
+        unknown or failed base goes to the best program; experiments still missing become "improve the best program".
+        Returns (analysis, experiments, info)."""
         system = setting(self.problem, "planner_system").format(k=k, budget=self.cfg.budget)
+        if self.atlas:
+            user, info = self.atlas.plan_prompt(self.round_now, k, system)
+        else:
+            with self.lock:                        # mutations may be adding programs meanwhile
+                user, info = self.plan_prompt(k), {}
+        info["prompt_chars"] = len(user)
         js = P.extract_json(self.call("planner", system, user, 0.7, 12000, self.cfg.effort))
-        if not (isinstance(js, dict) and isinstance(js.get("experiments"), list) and js["experiments"]):
+        info["retried"] = not (isinstance(js, dict) and isinstance(js.get("experiments"), list) and js["experiments"])
+        if info["retried"]:
             js = P.extract_json(self.call("planner", system, user + P.PLAN_RETRY, 0.5, 3500))
         js = js if isinstance(js, dict) else {}
+        info["parsed"] = isinstance(js.get("experiments"), list)
         exps = []
         with self.lock:
+            best = self.archive.best()
             for e in (js.get("experiments") if isinstance(js.get("experiments"), list) else [])[:k]:
                 if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
+                    refs = e.get("builds_on")
                     e = {x: str(e.get(x) or "").strip() for x in ("base", "hypothesis", "change", "prediction")}
+                    e["builds_on"] = [str(x) for x in refs] if isinstance(refs, list) else ([str(refs)] if refs else [])
                     b = self.archive.programs.get(e["base"])
                     if b is None or not b.valid:
                         e["base_asked"], e["base"] = e["base"], best.id
@@ -158,15 +187,15 @@ class Run:
         while len(exps) < k:                       # an unreadable plan still spends the generation's budget
             exps.append({"base": best.id, "hypothesis": "(no plan: the planner's reply was unusable)",
                          "change": "Improve the base program in the way you judge most promising.", "prediction": "",
-                         "fallback": True})
-        return str(js.get("analysis") or ""), exps
+                         "builds_on": [], "fallback": True})
+        return str(js.get("analysis") or ""), exps, info
 
     def planned_child(self, exp):
         base = self.archive.programs[exp["base"]]
         user = (f"{self.problem.description}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
                 f"## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
                 f"Prediction: {exp['prediction']}\n\nImplement this experiment as a change to the base program. "
-                f"Keep what the base does well unless the experiment says otherwise. {self.task_note("the base's")}"
+                f"Keep what the base does well unless the experiment says otherwise. {self.task_note(THE_BASES)}"
                 f"\n\n{P.CODE_FORMAT}")
         code, summary = self.write_code("coder", setting(self.problem, "coder_system"), user)
         return self.child("planned", base, code, exp["hypothesis"] or exp["change"], exp, summary)
@@ -182,7 +211,7 @@ class Run:
 
     def child(self, role, parent, code, idea, plan, summary):
         p = Program(id="", round=self.round_now, role=role, parent=parent.id, idea=short(idea, 300), code=code or "",
-                    plan={**plan, "summary": summary} if plan else {"summary": summary})
+                    plan=dict(plan or {}), summary=summary)
         if code is None:
             p.error = "no program in the model's reply"
             with self.lock:
@@ -193,6 +222,7 @@ class Run:
             p.error, p.duplicate_of = f"identical to {dup} (same code on the same base): not run again", dup
             with self.lock:
                 return self.archive.add(p)
+        p.diff = make_diff(parent.code, code)
         res = evaluate(self.problem, code, self.archive.construction(parent.id), self.cfg.budget, self.cfg.mem_mb)
         if res.get("start_score") is None and parent.valid and res["valid"]:
             # a problem whose programs don't start from a construction (the VRP): a change is measured against the
@@ -239,7 +269,7 @@ class Run:
         pool = [p for p in self.archive.programs.values() if p.valid and p.round < r]
         parents = [self.archive.sample_parent(rng, pool) for _ in range(self.cfg.mutations)]
         top = self.archive.ranked()[:5]
-        analysis, exps = "", []
+        analysis, exps, info = "", [], {}
         with ThreadPoolExecutor(max_workers=self.cfg.mutations + self.cfg.planned) as ex:
             futs = []
             for par in parents:
@@ -247,15 +277,24 @@ class Run:
                 futs.append(ex.submit(self.safe, self.mutation_child, par, rng.choice(others) if others else None))
             if self.cfg.planned:
                 try:
-                    analysis, exps = self.plan(self.cfg.planned)
+                    analysis, exps, info = self.plan(self.cfg.planned)
                 except Exception as exc:                                 # noqa: BLE001
                     self.log(f"generation {r}: the planner crashed: {exc}\n{traceback.format_exc()}")
                     best = self.archive.best()
                     exps = [{"base": best.id, "hypothesis": "(no plan: the planner crashed)", "change":
                              "Improve the base program in the way you judge most promising.", "prediction": "",
-                             "fallback": True}] * self.cfg.planned
+                             "builds_on": [], "fallback": True} for _ in range(self.cfg.planned)]
                 futs += [ex.submit(self.safe, self.planned_child, e) for e in exps]
             kids = [f.result() for f in futs]
+        mem = {}
+        if self.atlas:
+            try:
+                mem = self.atlas.update(r, analysis, kids)
+            except Exception as exc:                                     # noqa: BLE001  (never lose the run)
+                self.log(f"generation {r}: the Distiller crashed: {exc}\n{traceback.format_exc()}")
+                mem = {"error": str(exc)}
+        self._append("plans.jsonl", {"round": r, "analysis": analysis, "experiments": exps, "info": info,
+                                     "memory": mem})
         new_best = self.archive.best()
         row = {"round": r, "best": new_best.score, "best_id": new_best.id, "record": new_best.round == r,
                "record_role": new_best.role if new_best.round == r else None,
@@ -265,8 +304,10 @@ class Run:
                "mutation_best": max([c.score for c in kids if c.valid and c.role == "mutation"], default=None),
                "fallback_experiments": sum(1 for e in exps if e.get("fallback")),
                "base_fallbacks": sum(1 for e in exps if "base_asked" in e),
-               "analysis": short(analysis, 600), "calls": self.llm.calls - calls0,
-               "seconds": round(time.time() - t0, 1)}
+               "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
+               "opened": info.get("opened"), "planner_prompt_chars": info.get("prompt_chars"),
+               "calls": self.llm.calls - calls0, "seconds": round(time.time() - t0, 1),
+               **(self.atlas.stats() if self.atlas else {})}
         self._append("rounds.jsonl", row)
         self.checkpoint(r)
         self.log(f"generation {r}: best {new_best.score:.9f} ({new_best.id}, {new_best.role})"

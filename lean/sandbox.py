@@ -128,6 +128,14 @@ def run_program(code, budget, start=None, mem_mb=1500):
         return arr, info
 
 
+def _takes_start(fn):
+    import inspect
+    try:
+        return len(inspect.signature(fn).parameters) >= 2
+    except (TypeError, ValueError):
+        return False
+
+
 def evaluate(problem, code, start, budget, mem_mb=1500):
     """Run, check and score. Returns valid, score, start_score, delta, feedback (lines), error, cpu, construction.
 
@@ -165,21 +173,20 @@ def evaluate(problem, code, start, budget, mem_mb=1500):
         s = float(problem.score(x))
         if not np.isfinite(s):
             raise ValueError(f"score is {s}")
-        lines = problem.describe(x)
+        lines = problem.describe(x, x0) if _takes_start(problem.describe) else problem.describe(x)
     except Exception as exc:                                             # noqa: BLE001
         out["error"] = f"the result could not be scored: {type(exc).__name__}: {exc}"[:300]
         out["feedback"] = [f"FAILED: {out['error']}"]
         return out
-    # facts true of any problem (v4 showed them for its one problem): the score against the start, whether the
-    # program changed its start at all, the result's size against the start's, and the time it used
+    # facts true of any problem (v4's first and last lines): the score against the start, whether the program changed
+    # its start at all, and the time it used; what lies between is the problem's own description of the result
     if x0 is not None:
         same = np.shape(x) == np.shape(x0) and np.allclose(x, x0, rtol=0, atol=1e-12)
         head = (f"score {s:.9f} (its start scored {out['start_score']:.9f}: {s - out['start_score']:+.9f})"
                 + ("; the result is the start unchanged" if same else ""))
-        size = f"size of the result: {np.size(x):,} numbers (its start: {np.size(x0):,})"
     else:
-        head, size = f"score {s:.9f} (no start)", f"size of the result: {np.size(x):,} numbers"
-    lines = [head, size] + lines + [f"CPU {info.get('cpu')} s of the {budget:.0f} s budget, wall {info.get('wall')} s"]
+        head = f"score {s:.9f} (no start)"
+    lines = [head] + lines + [f"CPU {info.get('cpu')} s of the {budget:.0f} s budget, wall {info.get('wall')} s"]
     out.update(valid=True, score=s, feedback=lines + printed, construction=x)
     if out["start_score"] is not None:
         out["delta"] = s - out["start_score"]

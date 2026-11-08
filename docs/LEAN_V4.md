@@ -1,19 +1,44 @@
 # Lean Helix against v4: every difference, and why each is safe (November 8, 2026)
 
-**What lean is:** v4's "control" condition (no memory beyond the archive), cleaned. The test, set by Shreyas on
+**What lean is:** v4 with its Atlas memory, the condition v4's runs showed best and that every later VRP run used,
+cleaned. The Atlas starts empty in every run: nothing from earlier runs is carried over. v4's Control condition (no
+memory) remains a setting, `memory="none"`. The test, set by Shreyas on
 Nov 8, is that lean must be at least as good as v4, shown by reading the code, not by runs (runs are too noisy to
 show it). So every difference below is one of two kinds:
 - **the same behaviour, written differently**;
 - **a fix:** a known bug or a limit in v4, removed, where the fixed version can only do at least as well.
 
+**Why v4, not a later version** (`docs/VERSIONS.md`):
+- v4 with the Atlas is the version the record calls "the baseline that works": 0.939 on AC2 in 20 generations, and
+  +20.8% over the current method on the VRP's held-out worlds.
+- v4.5 was within chance of v4.
+- v4.6 was worse.
+- v4.7 was behind v4 on the VRP from scratch (1.642 against 1.696 held out).
+- v7 and v8 were only ever run as continuations of earlier runs, never against v4 from the same start.
+
+So none of the later versions' changes is something we are sure of. The fixes below are limited to faults in v4's
+code, or its limits, whose fix can only help.
+
 Nothing whose effect is uncertain is included. The parts tested in experiments 1-7 (one-line notes, the best
 program's longer path, restarts, mutations from the best program only, mutations without inspiration) were taken out
 of the code. They remain in git history at commit `bc7475a5` (the version experiments 1-7 ran on).
 
-Compared: `helix4/` (run.py, memory.py Control, prompts.py, archive.py, evaluate.py, sandbox.py, llm.py and
-helix3/llm.py, problems/ac2.py) against `lean/` (loop.py, prompts.py, archive.py, sandbox.py, llm.py,
-problems/ac2.py). `tests/test_lean.py::test_what_the_agents_see_is_v4s` checks the agents' text against helix4's own
-strings.
+Compared: `helix4/` (run.py, memory.py's Atlas and Control, prompts.py, archive.py, evaluate.py, sandbox.py, llm.py
+and helix3/llm.py, problems/ac2.py) against `lean/` (loop.py, atlas.py, prompts.py, archive.py, sandbox.py, llm.py,
+problems/ac2.py).
+
+**Checked by tests against helix4's own code:**
+- `tests/test_lean_v4.py` renders the same programs and findings through helix4's Atlas and lean's, and requires the
+  same text, numbers aside: the map (tree of attempts, findings index, last generation), every opened program and
+  finding, every finding's status, the statistics. It also requires:
+  - the planner's view (header, best program, map, opened items, plan format);
+  - the Navigator's and the Distiller's requests;
+  - the same AC2 feedback as helix4's evaluator, line for line, for an improving, an unchanged and an invalid
+    program.
+- `tests/test_lean.py` checks the Control view, the coder's and mutator's requests and the plan retry against
+  helix4's strings.
+- For the VRP, the plug-in's own `tests/test_lean_adapter.py` (private) checks every request against what
+  `run_vrp.install` made helix4 say.
 
 ## Identical
 
@@ -23,13 +48,23 @@ strings.
   - Same thinking effort: the planner "low", the others none.
 - **Parents.** Sampled from every valid program of earlier generations, with weight 1/(1+rank)/sqrt(1+children),
   by the same seeded generator. Each mutation sees one other program, chosen at random from the 5 strongest.
-- **The planner's view** (v4's Control):
+- **The planner's view** (v4's Atlas):
   - the problem;
   - "# Generation g of G" and the budget line;
   - the best program: its id and score, its lineage line (its last 6 steps of ancestry, each with what it changed and
     gained), its result and its code;
-  - the 6 strongest programs;
+  - the map: the tree of attempts (the lineages of the 12 strongest programs and of the last generation, the rest
+    folded), the findings (up to 45: the newest and the best supported) and the last generation in full;
+  - from generation 2, up to 6 items the planner chose to open (the Navigator's call);
   - the plan format.
+
+  With `memory="none"` (v4's Control): the 6 strongest programs instead of the map, and no Navigator.
+- **The Atlas's Distiller.** After every generation it reads the findings so far, the planner's analysis and every
+  new program (plan, summary, base, result, diff), and writes at most 6 new findings and attaches evidence.
+  - Code keeps only evidence that names real programs, and links that name existing findings.
+  - A finding's status (supported, mixed, refuted, open) is computed from its evidence's measured gains, never taken
+    from the model.
+  - On resume, the findings of an unfinished generation are dropped.
 - **The prompts.** Every system prompt and format is v4's text, word for word: the planner's (v4's Researcher's),
   the coder's, the mutator's, the plan format, the code format, and both retry notes.
 - **The plan.**
@@ -63,11 +98,13 @@ strings.
 | Thinking room 12,000 tokens on top of the planner's 12,000 | 24,000 on top | More room; the reply is the same or less often cut off |
 | A coder's reply had room for 9,000 tokens | 12,000 by default; a problem may raise it (the VRP: 32,000) | A long program no longer gets cut off |
 | A rate limit (HTTP 429) ended a call after 5 tries | It is waited out | A rate limit is a wait, not a failure: fewer lost programs |
-| The facts any result has (score against its start, "the result is the start unchanged", its size against the start's, CPU and wall time) were written inside the one problem file | The core writes them for every problem | The same facts for AC2. Other problems now get them too |
+| The facts any result has (its score against its start's, "the result is the start unchanged", CPU and wall time) were written inside the one problem file | The core writes the first and last lines for every problem; the problem describes the rest (`describe`, which may see the start) | AC2's feedback is v4's, line for line (tested). Other problems now get the same first and last lines |
+| An invalid result's feedback was the error alone | The error, then the program's last printed lines, as for a crashed program | More information, not less: a program's own printout often says why its result was wrong |
 
 ## Removed
 
-- **v4's two memory conditions, Journal and Atlas.** Lean is v4's Control. Shreyas: no memory carried over for now.
+- **v4's Journal memory.** v4's job compared three conditions; the Atlas was carried forward into every later
+  version and the VRP runs, so lean keeps the Atlas, and Control as a setting.
 - **v4's own report pages** (`helix4/report.py`). Lean writes the same records, read by `lean/bench.py`.
 
 ## Added

@@ -51,8 +51,8 @@ def test_what_the_agents_see_is_v4s(tmp_path):
             return "I think we should try something"
         return fake_answer(role, system, user)
     d = tmp_path / "v"
-    Run(d, Config(problem="ac2", params={"max_n": 200000}, rounds=2, budget=2), llm=FakeLLM(answer),
-        log=lambda m: None).go()
+    Run(d, Config(problem="ac2", params={"max_n": 200000}, rounds=2, budget=2, memory="none"), llm=FakeLLM(answer),
+        log=lambda m: None).go()                      # the Control view here; the Atlas's view: test_lean_v4.py
     system, user = seen["planner"][0]
     assert system == V4.RESEARCHER_SYSTEM.format(k=3, budget=2)
     assert "# Generation 1 of 2\nEach program gets 2 s of CPU and starts from its base's construction." in user

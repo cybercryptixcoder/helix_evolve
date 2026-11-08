@@ -36,6 +36,7 @@ class Problem:
     def __init__(self, max_n=50_000):
         self.max_n = int(max_n)
         self.name = "ac2"
+        self.title = "Second autocorrelation inequality: maximise ||f*f||_2^2 / (||f*f||_1 ||f*f||_inf)"   # v4's
         self.code_zero = CODE_ZERO
         self.references = [("AlphaEvolve (May 2025)", 0.8962), ("Jaech & Joseph (Aug 2025)", 0.941362),
                            ("OpenEvolve (TTT-Discover, Table 2)", 0.9449), ("ThetaEvolve with RL", 0.9469),
@@ -81,11 +82,11 @@ A Python module defining
         if a.size < 1:
             return None, "empty array"
         if a.size > self.max_n:
-            return None, f"too many steps: {a.size:,} (at most {self.max_n:,})"
+            return None, f"too many steps: {a.size} (at most {self.max_n})"
         if not np.all(np.isfinite(a)):
             return None, "contains NaN or infinity"
         if np.any(a < 0):
-            return None, f"{int((a < 0).sum())} negative heights"
+            return None, f"{int((a < 0).sum())} negative heights (the function must be non-negative)"
         if a.max() <= 0:
             return None, "all heights are zero"
         return a / a.max(), ""
@@ -94,14 +95,14 @@ A Python module defining
         l2, l1, linf, _ = parts(h)
         return l2 / (l1 * linf) if l1 > 0 and linf > 0 else 0.0
 
-    def describe(self, h):
-        """v4's facts about an AC2 result (helix4/problems/ac2.py feedback), less those the core now gives for every
-        problem (the score against the start, the size against the start's, the CPU and wall time)."""
+    def describe(self, h, start=None):
+        """v4's facts about an AC2 result (helix4/problems/ac2.py, feedback), less the first and last lines, which the
+        core writes for every problem (the score against the start; the CPU and wall time)."""
         l2, l1, linf, g = parts(h)
         n = len(h)
         peak = int(np.argmax(g))
         near = [100 * float((g >= (1 - t) * linf).mean()) for t in (0.001, 0.01, 0.05)]
-        return [f"N = {n} steps",
+        return [f"N = {n} steps" + (f" (start had {len(start)})" if start is not None else ""),
                 f"{100 * (1 - (h > 0).mean()):.1f}% of heights are zero; largest height / mean height = "
                 f"{h.max() / max(h.mean(), 1e-300):.2f}",
                 f"f*f: {near[0]:.2f}% / {near[1]:.2f}% / {near[2]:.2f}% of its knots are within 0.1% / 1% / 5% of "
