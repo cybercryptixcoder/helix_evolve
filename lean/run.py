@@ -52,11 +52,12 @@ def main(argv=None):
     ap.add_argument("--budget", type=float, default=30.0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--effort", default="low", help="the planner's thinking effort")
+    ap.add_argument("--memory", choices=("atlas", "none"), default="atlas", help="atlas (v4's) or none (v4's Control)")
     ap.add_argument("--fake", action="store_true")
     a = ap.parse_args(argv)
     params = {k: int(v) if v.lstrip("-").isdigit() else v for k, v in (p.split("=", 1) for p in a.param)}
     cfg = Config(problem=a.problem, params=params, rounds=a.rounds, planned=a.planned, mutations=a.mutations,
-                 budget=a.budget, seed=a.seed, effort=a.effort)
+                 budget=a.budget, seed=a.seed, effort=a.effort, memory=a.memory)
     llm = None
     if a.fake:
         from lean.llm import FakeLLM

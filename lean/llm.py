@@ -1,7 +1,8 @@
 """One client for an OpenAI-style chat endpoint (Luminal's DeepSeek V4.1 Flash by default).
 
 Settings, from the environment or the repo's .env:
-    LUMINAL_API_KEYS   comma-separated keys, used in turn, each paced at about one new call a second
+    LUMINAL_API_KEYS   comma-separated keys, used in turn, each paced at about one new call a second, with at most
+                       LUMINAL_MAX_IN_FLIGHT (8) calls open on a key at once (every run in a process shares both)
     LUMINAL_BASE_URL   default https://flash.luminal.cloud/v1
     HELIX_MODEL        default deepseek-ai/DeepSeek-V4.1-Flash (HELIX_FLASH_MODEL is read too)
 
@@ -23,6 +24,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 _PACE = threading.Lock()
 _next_free = {}                      # key -> earliest start of its next call
+_IN_FLIGHT = {}                      # key -> a semaphore: at most LUMINAL_MAX_IN_FLIGHT calls open on a key at once
+_MAX_IN_FLIGHT = int(os.environ.get("LUMINAL_MAX_IN_FLIGHT", "8"))     # Luminal's limit per key
 
 
 def load_dotenv():
@@ -84,9 +87,12 @@ class LLM:
                 start = max(time.time(), _next_free.get(key, 0.0))
                 _next_free[key] = start + 1.0
             time.sleep(max(0.0, start - time.time()))
+            with _PACE:
+                gate = _IN_FLIGHT.setdefault(key, threading.BoundedSemaphore(_MAX_IN_FLIGHT))
             try:
-                text, think, finish, usage = self._stream(key, body, THINK_SECONDS if body["reasoning_effort"] != "none"
-                                                          else None)
+                with gate:
+                    text, think, finish, usage = self._stream(key, body, THINK_SECONDS
+                                                              if body["reasoning_effort"] != "none" else None)
                 tin += int(usage.get("prompt_tokens") or 0)
                 tout += int(usage.get("completion_tokens") or 0)
                 if finish == "length" and not grown:
