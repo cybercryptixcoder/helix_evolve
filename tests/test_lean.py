@@ -138,3 +138,27 @@ def test_erdos_and_ac3_values():
     assert a.value(v) >= 2 * 60 * np.convolve(v, v).max() / v.sum() ** 2 - 1e-12   # |f*f| >= f*f
 
 
+
+
+def test_many_takes_on_runs_added_later(tmp_path, monkeypatch):
+    """lean.many starts the runs in its file, and a run added to the file while it works."""
+    import threading
+    import time as T
+    import lean.many as M
+    import lean.loop as L
+    monkeypatch.setattr(L, "Run", lambda out, cfg, log: type("R", (), {"go": lambda self: T.sleep(1)})())
+    monkeypatch.setattr(M, "Run", L.Run)
+    sleeps = []
+    real_sleep = T.sleep
+    monkeypatch.setattr(M.time, "sleep", lambda s: (sleeps.append(s), real_sleep(min(s, 0.2)))[1])
+    f = tmp_path / "runs.json"
+    f.write_text(json.dumps({"runs": [{"name": "a", "out": str(tmp_path / "a")}]}))
+    started = []
+    orig = M.one
+    monkeypatch.setattr(M, "one", lambda s, log: (started.append(s["name"]), orig(s, log)))
+    th = threading.Thread(target=M.main, args=([str(f)],))
+    th.start()
+    real_sleep(0.5)
+    f.write_text(json.dumps({"runs": [{"name": "a", "out": str(tmp_path / "a")}, {"name": "b", "out": str(tmp_path / "b")}]}))
+    th.join(timeout=20)
+    assert not th.is_alive() and started == ["a", "b"]
