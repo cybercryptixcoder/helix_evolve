@@ -140,3 +140,6 @@ Each step gets:
   - an explicit adapter interface for problems.
   The tested extras (notes, path, restarts) are out of the code (commit `bc7475a5` has them). Every difference from
   v4: `docs/LEAN_V4.md`. Next: the VRP runs on it. Phase 2 is paused.
+- **Nov 8 (03:30): the Atlas restored.** The golden version is v4 with the Atlas (the condition v4's runs chose and every VRP
+  run used), started empty. The first golden commit had dropped it by mistake. `tests/test_lean_v4.py` renders the
+  same archive through helix4's Atlas and lean's and requires the same text.
