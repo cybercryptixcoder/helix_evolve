@@ -143,3 +143,14 @@ Each step gets:
 - **Nov 8 (03:30): the Atlas restored.** The golden version is v4 with the Atlas (the condition v4's runs chose and every VRP
   run used), started empty. The first golden commit had dropped it by mistake. `tests/test_lean_v4.py` renders the
   same archive through helix4's Atlas and lean's and requires the same text.
+- **Nov 8 (04:00-04:45): the VRP runs on the golden version** (private plug-in; results stay off GitHub, as its
+  copies of private code must). They start from p1010, the best VRP program so far, with an empty Atlas, fake data
+  only, for up to 20 hours, on Colab (8 CPU cores) and the VM side by side. Three evaluators:
+  - **as_is:** the plug-in's own;
+  - **scaling:** the score also rewards or penalises, from -5% to +5%, how the CPU time to reach the current method's
+    cost grows with size, from the worst and best of 3 instance shapes at 25-400 villages. Minimum of 3 runs, exponents
+    rounded to 0.1; repeatable to within 0.04 on p1010, which measures n^1.9 at worst and n^1.4 at best;
+  - **uncapped:** no time limit, the clock blocked (by a static check and at run time), cost only. p1010 was
+    converted to stop by itself before the run, by the coder (first attempt: 1.6096 against 1.6176 with the
+    clock).
+  `lean.many` runs all three in one process, sharing the key's pacing.
