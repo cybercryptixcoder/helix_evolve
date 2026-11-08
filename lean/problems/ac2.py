@@ -42,17 +42,20 @@ class Problem:
                            ("TTT-Discover (Jan 2026)", 0.9591), ("AlphaEvolve V2 (Nov 2025; 50,000 steps)", 0.9610)]
         self.description = f"""## The problem: a lower bound for the second autocorrelation constant
 
-For a non-negative function f, let f*f be its autoconvolution. The quantity
+For a non-negative function f, let f*f be its autoconvolution, (f*f)(x) = integral of f(t) f(x - t) dt. The quantity
 
     R(f) = ||f*f||_2^2 / ( ||f*f||_1 * ||f*f||_inf )
 
-is at most 1. The goal is a non-negative f with R(f) as large as possible. **Higher is better.**
+is at most 1 for every f (Hoelder's inequality). The goal is a non-negative f with R(f) as large as possible. Nobody
+knows the true maximum: every construction with a higher R is a new, better lower bound. **Higher is better.**
 
-f is a step function: a 1-D array h of N non-negative heights, one per equal-width step (1 <= N <= {self.max_n:,}).
-Scaling h doesn't change R; only the shape matters. f*f is piecewise linear, and R is computed exactly from its knot
-values L = [0, *np.convolve(h, h), 0]:
+f is given as a step function: a 1-D array h of N >= 1 non-negative heights, one per equal-width step (N is your
+choice, up to {self.max_n:,}). Scaling h, or the width of the interval, doesn't change R; only the shape matters. For such
+an f, f*f is piecewise linear, and R is computed exactly from its knot values L = [0, *np.convolve(h, h), 0]:
 
-    ||f*f||_2^2 = sum_j (L_j^2 + L_j L_{{j+1}} + L_{{j+1}}^2) / 3,   ||f*f||_1 = (sum h)^2,   ||f*f||_inf = max_j L_j
+    ||f*f||_2^2 = sum_j (L_j^2 + L_j L_{{j+1}} + L_{{j+1}}^2) / 3
+    ||f*f||_1   = (sum h)^2
+    ||f*f||_inf = max_j L_j
 
 ## What you write
 
@@ -60,12 +63,15 @@ A Python module defining
 
     def construct(budget_seconds: float, start) -> numpy array of heights
 
-- `start` is the result of the program you are improving on, or None at the very beginning. Building on it is allowed.
-- It runs on one CPU core and must return within `budget_seconds` of CPU time (check `time.process_time()`); it is
-  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget.
+- `start` is the construction of the program you are improving on (a NumPy array of heights), or None at the very
+  beginning. Building on it is allowed and expected: improving a good `start` is the main way progress is made.
+- It runs on one CPU core and must return within `budget_seconds` of CPU time (use `time.process_time()`); it is
+  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget: a program
+  that stops early wastes it. A good program keeps improving its construction until close to the end.
 - Allowed imports: numpy, scipy, math, random, time, itertools, functools, heapq, collections. No files, no network.
 - It may print short progress lines; the last lines are shown back to you.
-- The result is checked (finite, non-negative, not all zero, at most {self.max_n:,} steps) and scored exactly.
+- The result is checked (finite, non-negative, not all zero, at most {self.max_n:,} steps) and scored with the formula
+  above, exactly.
 """
 
     def check(self, arr):
@@ -89,7 +95,16 @@ A Python module defining
         return l2 / (l1 * linf) if l1 > 0 and linf > 0 else 0.0
 
     def describe(self, h):
+        """v4's facts about an AC2 result (helix4/problems/ac2.py feedback), less those the core now gives for every
+        problem (the score against the start, the size against the start's, the CPU and wall time)."""
         l2, l1, linf, g = parts(h)
-        near = [100 * float((g >= (1 - t) * linf).mean()) for t in (0.001, 0.01)]
-        return [f"N = {len(h):,} steps; {100 * float((h <= 0).mean()):.1f}% of heights are zero",
-                f"f*f: {near[0]:.2f}% / {near[1]:.2f}% of its knots are within 0.1% / 1% of its maximum"]
+        n = len(h)
+        peak = int(np.argmax(g))
+        near = [100 * float((g >= (1 - t) * linf).mean()) for t in (0.001, 0.01, 0.05)]
+        return [f"N = {n} steps",
+                f"{100 * (1 - (h > 0).mean()):.1f}% of heights are zero; largest height / mean height = "
+                f"{h.max() / max(h.mean(), 1e-300):.2f}",
+                f"f*f: {near[0]:.2f}% / {near[1]:.2f}% / {near[2]:.2f}% of its knots are within 0.1% / 1% / 5% of "
+                f"its maximum; the maximum is at {peak / max(len(g) - 1, 1):.3f} of the support",
+                f"with f scaled to unit mass on [0, 1]: ||f*f||_inf = {linf * n / l1:.6f}, "
+                f"||f*f||_2^2 = {l2 * n / l1 ** 2:.6f} (R is the second over the first)"]

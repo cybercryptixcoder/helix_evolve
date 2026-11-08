@@ -42,7 +42,14 @@ def _ssl_context():
     return ssl.create_default_context()
 
 
+THINK_SECONDS = 600                  # a thinking call that runs longer is cut and retried without thinking (v4)
+
+
 class LLMError(RuntimeError):
+    pass
+
+
+class ThinkingTooLong(LLMError):
     pass
 
 
@@ -67,8 +74,9 @@ class LLM:
                 "temperature": temperature, "reasoning_effort": effort,
                 "max_tokens": max_tokens + (24000 if effort != "none" else 0),
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
-        t0, last, attempt, limited = time.time(), None, 0, 0
+        t0, last, attempt, limited, grown = time.time(), None, 0, 0, False
         text, think, finish, usage = "", "", None, {}
+        tin = tout = 0                       # summed over every attempt that streamed (a cut-off one costs tokens too)
         while True:
             retry_after = None
             with _PACE:
@@ -77,7 +85,15 @@ class LLM:
                 _next_free[key] = start + 1.0
             time.sleep(max(0.0, start - time.time()))
             try:
-                text, think, finish, usage = self._stream(key, body)
+                text, think, finish, usage = self._stream(key, body, THINK_SECONDS if body["reasoning_effort"] != "none"
+                                                          else None)
+                tin += int(usage.get("prompt_tokens") or 0)
+                tout += int(usage.get("completion_tokens") or 0)
+                if finish == "length" and not grown:
+                    # cut off by the token limit (v4's rule): once more, with double the room
+                    body = {**body, "max_tokens": body["max_tokens"] * 2}
+                    grown = True
+                    raise LLMError("cut off by max_tokens; retrying once with double the room")
                 if not text.strip():
                     raise LLMError(f"empty answer (finish={finish})")
                 if not finish:
@@ -92,6 +108,9 @@ class LLM:
                     retry_after = float(e.headers.get("Retry-After") or 1)
                     with _PACE:
                         _next_free[key] = max(_next_free.get(key, 0.0), time.time() + retry_after)
+            except ThinkingTooLong as e:          # v4's rule: a thinking call that runs too long is retried without thinking
+                last = f"{e}"
+                body = {**body, "reasoning_effort": "none", "max_tokens": max_tokens}
             except Exception as e:                                   # noqa: BLE001  (drops, timeouts: retry)
                 last = f"{type(e).__name__}: {e}"
             if retry_after is not None:
@@ -103,7 +122,6 @@ class LLM:
                     break
                 pause = min(30, 2 * 2 ** attempt) + random.random()
             time.sleep(pause)
-        tin, tout = int(usage.get("prompt_tokens") or 0), int(usage.get("completion_tokens") or 0)
         with self._lock:
             self.calls += 1
             self.tokens_in += tin
@@ -115,12 +133,15 @@ class LLM:
                           "error": last, **(meta or {})})
         return "" if last is not None else text
 
-    def _stream(self, key, body):
+    def _stream(self, key, body, max_seconds=None):
         req = urllib.request.Request(self.base + "/chat/completions", data=json.dumps(body).encode(),
                                      headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
         text, think, finish, usage = [], [], None, {}
+        t0 = time.time()
         with urllib.request.urlopen(req, timeout=600, context=self.ctx) as r:
             for raw in r:
+                if max_seconds and time.time() - t0 > max_seconds:
+                    raise ThinkingTooLong(f"thinking took longer than {max_seconds} s")
                 line = raw.decode("utf-8", "replace").strip()
                 if not line.startswith("data:"):
                     continue

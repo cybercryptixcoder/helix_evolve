@@ -63,9 +63,11 @@ A Python module defining
 
 - Row i is (x_i, y_i, r_i): the centre and radius of circle i.
 - `start` is the result of the program you are improving on (an array of shape ({self.n}, 3)), or None at the very
-  beginning. Building on it is allowed.
+  beginning. Building on it is allowed and expected: improving a good `start` is the main way
+  progress is made.
 - It runs on one CPU core and must return within `budget_seconds` of CPU time (check `time.process_time()`); it is
-  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget.
+  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget: a
+  program that stops early wastes it. A good program keeps improving its construction until close to the end.
 - Allowed imports: numpy, scipy, math, random, time, itertools, functools, heapq, collections. No files, no network.
 - It may print short progress lines; the last lines are shown back to you.
 - The result is checked **exactly, with zero tolerance**: every radius > 0; every circle inside the square

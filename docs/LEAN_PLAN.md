@@ -132,3 +132,11 @@ Each step gets:
   `LEAN_EXPLORATION.md`), awaiting Shreyas. Built behind switches, live-tested: restarts (`--restart K`) and the
   best program's path (`--path`). Experiment 5 (the base setup, 8 seeds, VM + here) running; experiment 6 (restarts)
   ready.
+- **Nov 8: the golden version** (Shreyas: one version we know every part of, at least as good as v4 by reading the
+  code, not by runs). Lean is now v4's Control condition, cleaned:
+  - v4's prompts word for word;
+  - v4's lineage line in the planner's view;
+  - v4's plan retry, feedback and model-client rules;
+  - an explicit adapter interface for problems.
+  The tested extras (notes, path, restarts) are out of the code (commit `bc7475a5` has them). Every difference from
+  v4: `docs/LEAN_V4.md`. Next: the VRP runs on it. Phase 2 is paused.

@@ -4,12 +4,9 @@
     python -m lean.run --out runs/lean/c1 --rounds 80          # resumes (state.json is there), runs to round 80
     python -m lean.run --problem circles --out /tmp/x --rounds 2 --fake    # no model calls (crash test only)
 
-Switches (each tested on its own: docs/LEAN_PLAN.md):
-    --planned K       planned experiments per round (0: no planner)
-    --mutations K     mutation programs per round
-    --parents P       "best" or "population"
-    --no-inspiration  mutations don't see another strong program
-    --no-notes        the planner gets no notes of what was tried
+    python -m lean.run --problem helix_vrp.lean --param blackbox=... --out ...   # an adapter outside this repo
+
+--rounds is the number of generations. --planned and --mutations are v4's --deep and --wide (3 each).
 """
 from __future__ import annotations
 
@@ -52,23 +49,14 @@ def main(argv=None):
     ap.add_argument("--rounds", type=int, default=50)
     ap.add_argument("--planned", type=int, default=3)
     ap.add_argument("--mutations", type=int, default=3)
-    ap.add_argument("--parents", choices=("best", "population"), default="population")
-    ap.add_argument("--no-inspiration", action="store_true")
-    ap.add_argument("--no-notes", action="store_true")
-    ap.add_argument("--path", action="store_true", help="show the planner the best program's ancestry")
     ap.add_argument("--budget", type=float, default=30.0)
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--restart", type=int, default=0, help="start a new line from Code Zero after K rounds without a "
-                                                            "gain (0: never)")
-    ap.add_argument("--restart-gain", type=float, default=1e-5, help="the smallest gain (relative) that counts for "
-                                                                       "--restart")
+    ap.add_argument("--effort", default="low", help="the planner's thinking effort")
     ap.add_argument("--fake", action="store_true")
     a = ap.parse_args(argv)
     params = {k: int(v) if v.lstrip("-").isdigit() else v for k, v in (p.split("=", 1) for p in a.param)}
     cfg = Config(problem=a.problem, params=params, rounds=a.rounds, planned=a.planned, mutations=a.mutations,
-                 parents=a.parents, inspiration=not a.no_inspiration, notes=not a.no_notes, budget=a.budget,
-                 seed=a.seed, restart=a.restart, restart_gain=a.restart_gain,
-                 path=a.path)
+                 budget=a.budget, seed=a.seed, effort=a.effort)
     llm = None
     if a.fake:
         from lean.llm import FakeLLM

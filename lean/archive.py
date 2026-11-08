@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 import numpy as np
@@ -28,13 +28,15 @@ class Program:
     error: str = ""
     cpu: float | None = None
     duplicate_of: str | None = None
-    lineage: int = 0                # which line (restart) it belongs to: 0, then 1, 2... (`--restart`)
 
     def line(self):
         if not self.valid:
             return f"{self.id} ({self.role}, round {self.round}, from {self.parent}): FAILED: {self.error[:120]}"
         d = f", {self.delta:+.9f} on its start" if self.delta is not None else ""
         return f"{self.id} ({self.role}, round {self.round}, from {self.parent or '-'}): {self.score:.9f}{d}"
+
+
+KNOWN = {f.name for f in fields(Program)}      # older records may hold fields this version doesn't use
 
 
 def short(s, n):
@@ -56,7 +58,8 @@ class Archive:
         if self.path.exists():
             for line in self.path.read_text().splitlines():
                 if line.strip():
-                    self._index(Program(**json.loads(line)))
+                    row = json.loads(line)
+                    self._index(Program(**{k: v for k, v in row.items() if k in KNOWN}))
 
     def _index(self, p):
         self.programs[p.id] = p
@@ -93,16 +96,30 @@ class Archive:
     def duplicate(self, code, parent):
         return self.keys.get(code_key(code, parent))
 
-    def ranked(self, lineage=None):
-        return sorted((p for p in self.programs.values() if p.valid and (lineage is None or p.lineage == lineage)),
-                      key=lambda p: (-p.score, p.round, p.id))
+    def ranked(self):
+        return sorted((p for p in self.programs.values() if p.valid), key=lambda p: (-p.score, p.round, p.id))
 
-    def best(self, lineage=None):
-        r = self.ranked(lineage)
+    def best(self):
+        r = self.ranked()
         return r[0] if r else None
 
-    def lineages(self):
-        return max((p.lineage for p in self.programs.values()), default=0)
+    def lineage(self, pid, depth=8):
+        out, p = [], self.programs.get(pid)
+        while p is not None and len(out) < depth:
+            out.append(p)
+            p = self.programs.get(p.parent) if p.parent else None
+        return list(reversed(out))
+
+    def lineage_line(self, pid, depth=6):
+        """The program's last `depth` steps of ancestry, oldest first: each step's score, and what it changed and
+        gained (v4's line, with 9 digits instead of 5 so that small gains are visible)."""
+        parts = []
+        for p in self.lineage(pid, depth):
+            if p.score is None:
+                continue
+            what = f" ({p.delta:+.9f}: {short(p.idea, 60)})" if p.parent and p.delta is not None else ""
+            parts.append(f"{p.id} {p.score:.9f}{what}")
+        return " -> ".join(parts)
 
     def sample_parent(self, rng, pool):
         """Rank-weighted (1 / (1 + rank)), divided by sqrt(1 + children): strong programs not yet built on much."""

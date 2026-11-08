@@ -53,26 +53,41 @@ print("@@RESULT@@" + json.dumps(info))
 '''
 
 
+def _mem_available_mb():
+    try:
+        for line in open("/proc/meminfo"):
+            if line.startswith("MemAvailable"):
+                return int(line.split()[1]) // 1024
+    except OSError:
+        pass
+    return 1 << 30
+
+
 @contextlib.contextmanager
 def eval_slot():
+    """One of HELIX_EVAL_SLOTS machine-wide slots (file locks), taken only while the machine has at least
+    HELIX_EVAL_MIN_MB of memory available (v4's rule). The longer a program has waited, the more often it checks."""
     n = max(1, int(os.environ.get("HELIX_EVAL_SLOTS", "2")))
     d = Path(os.environ.get("HELIX_SLOTS_DIR", ROOT / "runs" / ".slots"))
     d.mkdir(parents=True, exist_ok=True)
+    need = int(os.environ.get("HELIX_EVAL_MIN_MB", "600"))
+    t0 = time.time()
     while True:
-        for i in range(n):
-            f = open(d / f"slot{i}.lock", "w")
-            try:
-                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except OSError:
-                f.close()
-                continue
-            try:
-                yield i
-            finally:
-                fcntl.flock(f, fcntl.LOCK_UN)
-                f.close()
-            return
-        time.sleep(0.2)
+        if _mem_available_mb() >= need:
+            for i in range(n):
+                f = open(d / f"slot{i}.lock", "w")
+                try:
+                    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except OSError:
+                    f.close()
+                    continue
+                try:
+                    yield i
+                finally:
+                    fcntl.flock(f, fcntl.LOCK_UN)
+                    f.close()
+                return
+        time.sleep(max(0.05, 0.5 - (time.time() - t0) / 120))
 
 
 def run_program(code, budget, start=None, mem_mb=1500):
@@ -114,24 +129,37 @@ def run_program(code, budget, start=None, mem_mb=1500):
 
 
 def evaluate(problem, code, start, budget, mem_mb=1500):
-    """Run, check and score. Returns valid, score, start_score, delta, feedback (lines), error, cpu, construction."""
+    """Run, check and score. Returns valid, score, start_score, delta, feedback (lines), error, cpu, construction.
+
+    A problem with its own evaluator (`problem.evaluate`) is handed the program instead; see lean/problems."""
+    if hasattr(problem, "evaluate"):
+        with eval_slot():
+            res = problem.evaluate(code, start, budget, mem_mb)
+        out = {"valid": False, "score": None, "start_score": None, "delta": None, "feedback": [], "error": "",
+               "cpu": None, "construction": None, **res}
+        if out["valid"] and out["start_score"] is not None:
+            out["delta"] = out["score"] - out["start_score"]
+        return out
     with eval_slot():
         arr, info = run_program(code, budget, start, mem_mb)
     out = {"valid": False, "score": None, "start_score": None, "delta": None, "feedback": [], "error": "",
            "cpu": info.get("cpu"), "construction": None}
+    x0 = None
     if start is not None:
         x0, _ = problem.check(start)
         out["start_score"] = problem.score(x0) if x0 is not None else None
-    tail = [t[:160] for t in (info.get("stdout_tail") or "").strip().splitlines()[-3:]]
+    tail = [t[:160] for t in (info.get("stdout_tail") or "").strip().splitlines()[-4:]]
+    printed = [f"its last printed lines: {' | '.join(tail)}"] if tail else []
     if not info.get("ok"):
         tb = (info.get("traceback") or "").strip().splitlines()
         out["error"] = info.get("error") or "failed"
-        out["feedback"] = [f"FAILED: {out['error']}"] + ([f"traceback (end): {' | '.join(tb[-3:])}"] if tb else [])
+        out["feedback"] = [f"FAILED: {out['error']}"] + ([f"traceback (end): {' | '.join(tb[-3:])}"] if tb else []) \
+            + printed
         return out
     x, why = problem.check(arr)
     if x is None:
         out["error"] = f"invalid result: {why}"
-        out["feedback"] = [f"FAILED: {out['error']}"]
+        out["feedback"] = [f"FAILED: {out['error']}"] + printed
         return out
     try:
         s = float(problem.score(x))
@@ -142,12 +170,17 @@ def evaluate(problem, code, start, budget, mem_mb=1500):
         out["error"] = f"the result could not be scored: {type(exc).__name__}: {exc}"[:300]
         out["feedback"] = [f"FAILED: {out['error']}"]
         return out
-    head = f"score {s:.9f}" + (f" (its start scored {out['start_score']:.9f}: {s - out['start_score']:+.9f})"
-                               if out["start_score"] is not None else " (no start)")
-    lines = [head] + lines + [f"CPU {info.get('cpu')} s of {budget:.0f} s"]
-    if tail:
-        lines.append("its last printed lines: " + " | ".join(tail))
-    out.update(valid=True, score=s, feedback=lines, construction=x)
+    # facts true of any problem (v4 showed them for its one problem): the score against the start, whether the
+    # program changed its start at all, the result's size against the start's, and the time it used
+    if x0 is not None:
+        same = np.shape(x) == np.shape(x0) and np.allclose(x, x0, rtol=0, atol=1e-12)
+        head = (f"score {s:.9f} (its start scored {out['start_score']:.9f}: {s - out['start_score']:+.9f})"
+                + ("; the result is the start unchanged" if same else ""))
+        size = f"size of the result: {np.size(x):,} numbers (its start: {np.size(x0):,})"
+    else:
+        head, size = f"score {s:.9f} (no start)", f"size of the result: {np.size(x):,} numbers"
+    lines = [head, size] + lines + [f"CPU {info.get('cpu')} s of the {budget:.0f} s budget, wall {info.get('wall')} s"]
+    out.update(valid=True, score=s, feedback=lines + printed, construction=x)
     if out["start_score"] is not None:
         out["delta"] = s - out["start_score"]
     return out

@@ -65,9 +65,11 @@ A Python module defining
 
     def construct(budget_seconds: float, start) -> numpy array of heights
 
-- `start` is the result of the program you are improving on, or None at the very beginning. Building on it is allowed.
+- `start` is the result of the program you are improving on, or None at the very beginning. Building on it is allowed and expected: improving a good `start` is the main way
+  progress is made.
 - It runs on one CPU core and must return within `budget_seconds` of CPU time (check `time.process_time()`); it is
-  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget.
+  killed a little after that, and a killed program scores nothing. Leave a margin, but use the budget: a
+  program that stops early wastes it. A good program keeps improving its construction until close to the end.
 - Allowed imports: numpy, scipy, math, random, time, itertools, functools, heapq, collections. No files, no network.
 - It may print short progress lines; the last lines are shown back to you.
 - The result is checked (finite, every height in [0, 1], mean height 1/2 within 1e-9, at most {self.max_n:,} steps) and scored exactly.

@@ -28,19 +28,96 @@ def test_ac2_limit_is_exact():
     assert abs(p.score(np.ones(50)) - 2 / 3) < 1e-12
 
 
-def test_run_resume_and_arms(tmp_path):
-    for kw in ({}, {"planned": 0, "mutations": 4, "parents": "best", "inspiration": False, "notes": False},
-               {"planned": 4, "mutations": 0}):
-        d = tmp_path / str(len(kw))
+def test_run_resume(tmp_path):
+    for kw in ({}, {"planned": 0, "mutations": 4}, {"planned": 4, "mutations": 0}):
+        d = tmp_path / str(len(kw)) / str(kw.get("planned"))
         Run(d, Config(rounds=2, budget=2, **kw), llm=FakeLLM(fake_answer), log=lambda m: None).go()
         Run(d, Config(rounds=3, budget=2, **kw), llm=FakeLLM(fake_answer), log=lambda m: None).go()
         rows = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
         assert [r["round"] for r in rows] == [0, 1, 2, 3]
         progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
-        assert len(progs) == 1 + 3 * 6 * 0 + 3 * (kw.get("planned", 3) + kw.get("mutations", 3))
-        roles = {p["role"] for p in progs}
-        assert ("planned" in roles) == (kw.get("planned", 3) > 0)
-        assert (d / "notes.jsonl").exists() == kw.get("notes", True)
+        assert len(progs) == 1 + 3 * (kw.get("planned", 3) + kw.get("mutations", 3))
+
+
+def test_what_the_agents_see_is_v4s(tmp_path):
+    """The planner's view, the planner's retry, and the coder's and mutator's requests, as v4 wrote them."""
+    import helix4.prompts as V4
+    seen, bad = {"planner": [], "coder": [], "mutator": []}, {"n": 0}
+
+    def answer(role, system, user):
+        seen[role].append((system, user))
+        if role == "planner" and bad["n"] == 0:            # the first plan is unreadable: v4 asks once more
+            bad["n"] += 1
+            return "I think we should try something"
+        return fake_answer(role, system, user)
+    d = tmp_path / "v"
+    Run(d, Config(problem="ac2", params={"max_n": 200000}, rounds=2, budget=2), llm=FakeLLM(answer),
+        log=lambda m: None).go()
+    system, user = seen["planner"][0]
+    assert system == V4.RESEARCHER_SYSTEM.format(k=3, budget=2)
+    assert "# Generation 1 of 2\nEach program gets 2 s of CPU and starts from its base's construction." in user
+    assert "## The best program so far: p0001" in user and "\nIts lineage: p0001 " in user
+    assert "## The strongest programs (any program can be a base)" in user
+    assert user.endswith(V4.PLAN_FORMAT.format(k=3, findings=""))
+    assert seen["planner"][1][1].endswith("(Your previous reply could not be read. Reply with the JSON object only.)")
+    rows = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
+    assert rows[1]["fallback_experiments"] == 0
+    s, u = seen["coder"][0]
+    assert s == V4.CODER_SYSTEM and "Keep what the base does well unless the experiment says otherwise. " \
+        "budget_seconds will be 2; `start` will be the base's construction." in u
+    s, u = seen["mutator"][0]
+    assert s == V4.MUTATOR_SYSTEM
+    assert any("## Another strong program, for ideas: " in u for _, u in seen["mutator"][3:])   # generation 2
+    assert "Write an improved version of the program to improve. budget_seconds will be 2; `start` will be its " \
+        "construction." in u
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    second = [p for p in progs if p["round"] == 2 and p["valid"]]
+    assert second and all("Its lineage" not in "".join(p["feedback"]) for p in second)
+
+
+def test_feedback_says_when_the_start_is_unchanged(tmp_path):
+    from lean.sandbox import evaluate
+    p = load("ac2", max_n=1000)
+    keep = "def construct(budget_seconds, start):\n    return start\n"
+    r = evaluate(p, keep, np.ones(50), 2)
+    assert r["valid"] and "the result is the start unchanged" in r["feedback"][0] and r["delta"] == 0
+    assert any(l.startswith("CPU ") and "wall" in l for l in r["feedback"])
+    r = evaluate(p, "def construct(budget_seconds, start):\n    print('hello')\n    return -start\n", np.ones(5), 2)
+    assert not r["valid"] and any("hello" in l for l in r["feedback"])       # failures show the printed lines too
+
+
+class ScoreOnly:
+    """An adapter with its own evaluator and no constructions (like the VRP): the score is the program's length."""
+    name, references, entry = "toy", [], "solve"
+    description = "Write solve(). Longer is better."
+    code_zero = "def solve():\n    return 1\n"
+    task_note = "solve() is called once."
+    generation_note = "Every program is run once; a change is measured against its base's score."
+
+    def evaluate(self, code, start, budget, mem_mb):
+        assert start is None
+        return {"valid": True, "score": float(len(code)), "feedback": [f"score {len(code)}"], "error": "", "cpu": 0.0}
+
+
+def test_an_adapter_with_its_own_evaluator(tmp_path, monkeypatch):
+    import lean.loop as L
+
+    def answer(role, system, user):
+        if role == "planner":
+            return fake_answer(role, system, user)
+        return f"```python\ndef solve():\n    return {np.random.randint(10 ** 9)}\n```\nSUMMARY: longer"
+    monkeypatch.setattr(L, "load", lambda name, **kw: ScoreOnly())
+    seen = []
+    llm = FakeLLM(lambda r, s, u: (seen.append((r, u)), answer(r, s, u))[1])
+    d = tmp_path / "toy"
+    Run(d, Config(problem="toy", rounds=1, budget=2), llm=llm, log=lambda m: None).go()
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    kids = [p for p in progs if p["parent"]]
+    assert len(kids) == 6 and all(p["valid"] and p["delta"] == p["score"] - progs[0]["score"] for p in kids)
+    assert all(f"its base p0001 scored" in p["feedback"][0] for p in kids)
+    assert any("Every program is run once" in u for r, u in seen if r == "planner")
+    assert any(u.rstrip().endswith("SUMMARY: <what you changed and why, at most 30 words>") and "solve() is called once."
+               in u for r, u in seen if r == "coder")
 
 
 def test_erdos_and_ac3_values():
@@ -61,36 +138,3 @@ def test_erdos_and_ac3_values():
     assert a.value(v) >= 2 * 60 * np.convolve(v, v).max() / v.sum() ** 2 - 1e-12   # |f*f| >= f*f
 
 
-def test_restart_lines(tmp_path):
-    """With --restart 2 and programs that never gain, a new line starts every time the current one has gone 2 rounds
-    without a gain; every parent and base comes from the current line; a resume keeps the lines."""
-    import random
-
-    def stuck(role, system, user):
-        if role == "planner":
-            return fake_answer(role, system, user)
-        return (f"```python\nimport numpy as np\n# {random.randint(1, 10 ** 9)}\ndef construct(budget_seconds, start):\n"
-                f"    return np.asarray(start, dtype=float)\n```\nSummary: keep the start")
-    d = tmp_path / "r"
-    Run(d, Config(rounds=4, budget=2, restart=2), llm=FakeLLM(stuck), log=lambda m: None).go()
-    Run(d, Config(rounds=6, budget=2, restart=2), llm=FakeLLM(stuck), log=lambda m: None).go()
-    progs = {p["id"]: p for p in map(json.loads, (d / "programs.jsonl").read_text().splitlines())}
-    seeds = sorted((p["round"], p["lineage"]) for p in progs.values() if p["role"] == "seed")
-    assert seeds == [(0, 0), (3, 1), (6, 2)]
-    for p in progs.values():
-        if p["parent"]:
-            assert progs[p["parent"]]["lineage"] == p["lineage"]
-    rows = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
-    assert [r.get("line") for r in rows[1:]] == [0, 0, 1, 1, 1, 2]
-
-
-def test_path_in_planner_prompt(tmp_path):
-    seen = []
-
-    def answer(role, system, user):
-        if role == "planner":
-            seen.append(user)
-        return fake_answer(role, system, user)
-    Run(tmp_path / "p", Config(rounds=2, budget=2, path=True, notes=False), llm=FakeLLM(answer), log=lambda m: None).go()
-    assert len(seen) == 2 and all("How the best program got here" in u and "p0001 (seed" in u for u in seen)
-    assert "## Notes" not in seen[0]
