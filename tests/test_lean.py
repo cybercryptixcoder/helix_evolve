@@ -146,10 +146,10 @@ def test_many_takes_on_runs_added_later(tmp_path, monkeypatch):
     import time as T
     import lean.many as M
     import lean.loop as L
-    monkeypatch.setattr(L, "Run", lambda out, cfg, log: type("R", (), {"go": lambda self: T.sleep(1)})())
+    real_sleep = T.sleep                     # (time.sleep itself is patched below: lean.many's waits are shortened)
+    monkeypatch.setattr(L, "Run", lambda out, cfg, log: type("R", (), {"go": lambda self: real_sleep(2)})())
     monkeypatch.setattr(M, "Run", L.Run)
     sleeps = []
-    real_sleep = T.sleep
     monkeypatch.setattr(M.time, "sleep", lambda s: (sleeps.append(s), real_sleep(min(s, 0.2)))[1])
     f = tmp_path / "runs.json"
     f.write_text(json.dumps({"runs": [{"name": "a", "out": str(tmp_path / "a")}]}))
