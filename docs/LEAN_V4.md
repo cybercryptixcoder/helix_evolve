@@ -116,6 +116,10 @@ problems/ac2.py).
   - Lean makes it explicit: a problem may bring its own evaluator. Programs that don't start from a construction
     have each change measured against their base's score, with "its base … scored …" added to the first feedback
     line, as v4's VRP plug-in did.
+- **More than one starting program** (November 8, 2026; Shreyas approved). A problem may list `extra_seeds`
+  (`[(idea, code), ...]`): each is evaluated and joins generation 0 beside Code Zero, so parents and inspirations
+  can come from any of them. With none listed, generation 0 is exactly as before (tested). Used by the VRP's
+  "combined" variant: a fast program and a cheap one, side by side.
 
 ## Problems
 

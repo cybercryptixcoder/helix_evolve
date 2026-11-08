@@ -258,9 +258,20 @@ class Run:
             raise RuntimeError(f"Code Zero failed: {res['error']} | " + " | ".join(res["feedback"][:6]))
         p.valid, p.score, p.feedback, p.cpu = True, res["score"], res["feedback"], res["cpu"]
         self.archive.add(p, res.get("construction"))
-        self._append("rounds.jsonl", {"round": 0, "best": p.score, "best_id": p.id})
-        self.checkpoint(0)
         self.log(f"generation 0: Code Zero scores {p.score:.9f}")
+        # optional further starting programs (a problem's `extra_seeds`: [(idea, code), ...]); none by default, and
+        # then generation 0 is exactly as before
+        for idea, code in getattr(self.problem, "extra_seeds", []) or []:
+            q = Program(id="", round=0, role="seed", parent=None, idea=idea, code=code)
+            res = evaluate(self.problem, q.code, None, self.cfg.budget, self.cfg.mem_mb)
+            if not res["valid"]:
+                raise RuntimeError(f"a starting program failed: {res['error']} | " + " | ".join(res["feedback"][:6]))
+            q.valid, q.score, q.feedback, q.cpu = True, res["score"], res["feedback"], res["cpu"]
+            self.archive.add(q, res.get("construction"))
+            self.log(f"generation 0: starting program {q.id} scores {q.score:.9f}")
+        best = self.archive.ranked()[0]
+        self._append("rounds.jsonl", {"round": 0, "best": best.score, "best_id": best.id})
+        self.checkpoint(0)
 
     def round(self, r):
         self.round_now = r

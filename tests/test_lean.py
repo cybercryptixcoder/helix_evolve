@@ -120,6 +120,34 @@ def test_an_adapter_with_its_own_evaluator(tmp_path, monkeypatch):
                in u for r, u in seen if r == "coder")
 
 
+def test_extra_starting_programs(tmp_path, monkeypatch):
+    """A problem's extra_seeds join generation 0 beside Code Zero; parents and inspirations come from all of them."""
+    import lean.loop as L
+
+    class TwoStarts(ScoreOnly):
+        extra_seeds = [("the second start", "def solve():\n    return 22222222222222\n")]
+
+    def answer(role, system, user):
+        if role == "planner":
+            return fake_answer(role, system, user)
+        return f"```python\ndef solve():\n    return {np.random.randint(10 ** 9)}\n```\nSUMMARY: x"
+    monkeypatch.setattr(L, "load", lambda name, **kw: TwoStarts())
+    d = tmp_path / "two"
+    Run(d, Config(problem="toy", rounds=1, budget=2), llm=FakeLLM(answer), log=lambda m: None).go()
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    seeds = [p for p in progs if p["role"] == "seed"]
+    assert [p["id"] for p in seeds] == ["p0001", "p0002"] and seeds[1]["idea"] == "the second start"
+    rounds = [json.loads(l) for l in (d / "rounds.jsonl").read_text().splitlines()]
+    assert rounds[0]["best_id"] == "p0002"                       # the better start is generation 0's best
+    assert len([p for p in progs if p["parent"]]) == 6
+    # no extra_seeds: generation 0 is Code Zero alone, as before
+    monkeypatch.setattr(L, "load", lambda name, **kw: ScoreOnly())
+    d = tmp_path / "one"
+    Run(d, Config(problem="toy", rounds=1, budget=2), llm=FakeLLM(answer), log=lambda m: None).go()
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    assert [p["id"] for p in progs if p["role"] == "seed"] == ["p0001"]
+
+
 def test_erdos_and_ac3_values():
     """Code Zero gives the trivial bounds; splitting every step into equal sub-steps is the same function, so the
     value can't change (the knot formulas are exact); the FFT path agrees with the direct one."""
