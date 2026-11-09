@@ -17,9 +17,10 @@
 
 - A problem may supply `knowledge`: a Markdown text of entries, each `## K<n>: <title>` followed by its text. No
   `knowledge`: nothing changes (tested).
-- **The planner** sees the whole bank in its prompt (before its instructions), introduced by one sentence: "The
-  field's knowledge of this problem: use it to design experiments. Cite the entries an experiment draws on in its
-  `knowledge` field." An experiment's `knowledge` field (e.g. `["K3", "K7"]`) is kept in `plans.jsonl`.
+- **The planner** sees the whole bank in its prompt (before its instructions), introduced by two sentences: "Use it
+  to design better programs: the state of the art, methods that work, facts about this problem. An experiment that
+  draws on an entry names it in its "knowledge" field (for example "knowledge": ["K3"]); its coder then receives that
+  entry in full." An experiment's `knowledge` field (e.g. `["K3", "K7"]`) is kept in `plans.jsonl`.
 - **A coder** gets the full text of the entries its experiment cites (so the method is implemented as described).
 - **A mutator** (no planner) sees the whole bank too. With `inspiration: "knowledge"` (a run setting; the default
   stays v4's), a mutator is no longer shown "another strong program, for ideas": the bank is its only inspiration, so
@@ -34,8 +35,8 @@ knowledge and the problem's facts, never our programs). 19 entries, each a few p
 site-dependent, split delivery VRP); the state of the art (hybrid genetic search, SISR ruin-and-recreate, ALNS,
 set-partitioning matheuristics, branch-price-and-cut, column generation); the split-delivery results (full truckloads,
 when splitting pays, known heuristics); fleet sizing and mix; lower bounds; and the facts of this problem (most of the
-cost is trucks; most trips are full loads). Plus the three directions no program has tried so far (column generation,
-a truckload model, combining whole solutions), as knowledge, not as orders.
+cost is trucks; most trips are full loads). Column generation, truckload models and the recombination of whole
+solutions are described as methods of the field, not as instructions.
 
 ### The run (`helix_vrp/lean_knowledge.py`)
 
