@@ -120,6 +120,10 @@ problems/ac2.py).
   (`[(idea, code), ...]`): each is evaluated and joins generation 0 beside Code Zero, so parents and inspirations
   can come from any of them. With none listed, generation 0 is exactly as before (tested). Used by the VRP's
   "combined" variant: a fast program and a cheap one, side by side.
+- **A knowledge bank** (November 9, 2026; Shreyas asked): a problem may supply `knowledge` (Markdown entries
+  `## K<n>: title`, `lean/knowledge.py`). The planner and the mutators see the whole bank; a coder gets the entries its
+  experiment cites (`knowledge` field, kept in plans.jsonl). With `inspiration: "knowledge"` a mutation is shown the
+  bank instead of another strong program. No bank and the default setting: prompts exactly as before (tested).
 
 ## Problems
 

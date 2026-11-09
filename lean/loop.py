@@ -32,8 +32,12 @@ import numpy as np
 from lean import prompts as P
 from lean.archive import Archive, Program, make_diff, short
 from lean.atlas import Atlas
+from lean.knowledge import Bank
 from lean.problems import load, setting
 from lean.sandbox import evaluate
+
+
+PLAN_REPLY = P.PLAN_FORMAT.split("\n")[0]          # "Reply with one JSON object...": the bank goes before it
 
 
 @dataclass
@@ -48,6 +52,8 @@ class Config:
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
     memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
+    inspiration: str = "programs"  # a mutation's ideas: "programs" (v4: another strong program) or "knowledge" (the
+                                   # problem's knowledge bank only, so no program is shown as a model to copy)
 
 
 THE_BASES = "the base's"
@@ -83,6 +89,7 @@ class Run:
         if self.cfg.memory not in ("atlas", "none"):
             raise ValueError(f"memory must be 'atlas' or 'none', not {self.cfg.memory!r}")
         self.atlas = Atlas(self) if self.cfg.memory == "atlas" else None
+        self.bank = Bank(getattr(self.problem, "knowledge", "") or "")   # the field's knowledge, if the problem has any
         if state:
             self.archive.truncate(self.round_done)
             if self.atlas:
@@ -165,6 +172,9 @@ class Run:
         else:
             with self.lock:                        # mutations may be adding programs meanwhile
                 user, info = self.plan_prompt(k), {}
+        if self.bank:                              # the knowledge bank goes just before the reply format
+            cut = user.rfind(PLAN_REPLY)
+            user = user[:cut] + self.bank.whole() + user[cut:] if cut >= 0 else user + "\n\n" + self.bank.whole()
         info["prompt_chars"] = len(user)
         js = P.extract_json(self.call("planner", system, user, 0.7, 12000, self.cfg.effort))
         info["retried"] = not (isinstance(js, dict) and isinstance(js.get("experiments"), list) and js["experiments"])
@@ -177,9 +187,11 @@ class Run:
             best = self.archive.best()
             for e in (js.get("experiments") if isinstance(js.get("experiments"), list) else [])[:k]:
                 if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
-                    refs = e.get("builds_on")
+                    refs, cites = e.get("builds_on"), Bank.ids(e.get("knowledge"))
                     e = {x: str(e.get(x) or "").strip() for x in ("base", "hypothesis", "change", "prediction")}
                     e["builds_on"] = [str(x) for x in refs] if isinstance(refs, list) else ([str(refs)] if refs else [])
+                    if self.bank:
+                        e["knowledge"] = cites
                     b = self.archive.programs.get(e["base"])
                     if b is None or not b.valid:
                         e["base_asked"], e["base"] = e["base"], best.id
@@ -193,7 +205,7 @@ class Run:
     def planned_child(self, exp):
         base = self.archive.programs[exp["base"]]
         user = (f"{self.problem.description}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
-                f"## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
+                f"{self.bank.cited(exp.get('knowledge') or [])}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
                 f"Prediction: {exp['prediction']}\n\nImplement this experiment as a change to the base program. "
                 f"Keep what the base does well unless the experiment says otherwise. {self.task_note(THE_BASES)}"
                 f"\n\n{P.CODE_FORMAT}")
@@ -205,7 +217,8 @@ class Run:
         if inspiration is not None:
             user += (f"## Another strong program, for ideas: {inspiration.line()}\n```python\n"
                      f"{P.clip(inspiration.code, self.clip['inspiration'])}```\n\n")
-        user += f"Write an improved version of the program to improve. {self.task_note('its')}\n\n{P.CODE_FORMAT}"
+        user += (f"{self.bank.whole()}Write an improved version of the program to improve. {self.task_note('its')}"
+                 f"\n\n{P.CODE_FORMAT}")
         code, summary = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
         return self.child("mutation", parent, code, summary or "(no summary)", {}, summary)
 
@@ -285,7 +298,8 @@ class Run:
             futs = []
             for par in parents:
                 others = [q for q in top if q.id != par.id]
-                futs.append(ex.submit(self.safe, self.mutation_child, par, rng.choice(others) if others else None))
+                insp = rng.choice(others) if others and self.cfg.inspiration == "programs" else None
+                futs.append(ex.submit(self.safe, self.mutation_child, par, insp))
             if self.cfg.planned:
                 try:
                     analysis, exps, info = self.plan(self.cfg.planned)

@@ -148,6 +148,58 @@ def test_extra_starting_programs(tmp_path, monkeypatch):
     assert [p["id"] for p in progs if p["role"] == "seed"] == ["p0001"]
 
 
+def test_knowledge_bank(tmp_path, monkeypatch):
+    """The planner and the mutators see the whole bank, a coder only the entries its experiment cites; the plan keeps
+    the citation; a problem without a bank gives prompts without one."""
+    import lean.loop as L
+    from lean.knowledge import CITED, INTRO
+
+    class Knowing(ScoreOnly):
+        knowledge = ("## K1: Savings\nMerge trips by savings.\n\n## K2: Split\nCut a giant tour optimally.\n")
+
+    seen = []
+
+    def answer(role, system, user):
+        seen.append((role, user))
+        if role == "planner":
+            return json.dumps({"analysis": "a", "experiments": [
+                {"base": "p0001", "hypothesis": "h", "change": "use Split", "prediction": "", "knowledge": ["K2"]},
+                {"base": "p0001", "hypothesis": "h2", "change": "c", "prediction": "", "knowledge": "K9, K1"},
+                {"base": "p0001", "hypothesis": "h3", "change": "c", "prediction": ""}]})
+        return f"```python\ndef solve():\n    return {np.random.randint(10 ** 9)}\n```\nSUMMARY: x"
+    monkeypatch.setattr(L, "load", lambda name, **kw: Knowing())
+    d = tmp_path / "k"
+    Run(d, Config(problem="toy", rounds=1, budget=2, memory="none"), llm=FakeLLM(answer), log=lambda m: None).go()
+    planner = [u for r, u in seen if r == "planner"][0]
+    assert INTRO in planner and "Merge trips by savings." in planner and "Cut a giant tour optimally." in planner
+    assert planner.index(INTRO) < planner.rindex("Reply with one JSON object")      # before the reply format
+    coders = [u for r, u in seen if r == "coder"]
+    with_k2 = [u for u in coders if "use Split" in u][0]
+    assert CITED in with_k2 and "Cut a giant tour optimally." in with_k2 and "Merge trips" not in with_k2
+    assert any("Merge trips" in u and "Cut a giant" not in u for u in coders)        # "K9, K1": K1 only
+    assert any(CITED not in u for u in coders)                                        # no citation, no entries
+    assert all(INTRO in u for r, u in seen if r == "mutator")
+    plans = [json.loads(l) for l in (d / "plans.jsonl").read_text().splitlines()]
+    assert [e["knowledge"] for e in plans[0]["experiments"]] == [["K2"], ["K9", "K1"], []]
+    # without a bank: no bank anywhere
+    seen.clear()
+    monkeypatch.setattr(L, "load", lambda name, **kw: ScoreOnly())
+    Run(tmp_path / "n", Config(problem="toy", rounds=1, budget=2, memory="none"), llm=FakeLLM(answer),
+        log=lambda m: None).go()
+    assert seen and all(INTRO not in u and CITED not in u for _, u in seen)
+    # inspiration from the bank only: with two starts, mutators never see another program
+    class Two(Knowing):
+        extra_seeds = [("second start", "def solve():\n    return 222222222\n")]
+    for mode, shown in (("programs", True), ("knowledge", False)):
+        seen.clear()
+        monkeypatch.setattr(L, "load", lambda name, **kw: Two())
+        Run(tmp_path / mode, Config(problem="toy", rounds=2, budget=2, memory="none", inspiration=mode),
+            llm=FakeLLM(answer), log=lambda m: None).go()
+        muts = [u for r, u in seen if r == "mutator"]
+        assert muts and any("Another strong program" in u for u in muts) == shown
+        assert all(INTRO in u for u in muts)
+
+
 def test_erdos_and_ac3_values():
     """Code Zero gives the trivial bounds; splitting every step into equal sub-steps is the same function, so the
     value can't change (the knot formulas are exact); the FFT path agrees with the direct one."""
