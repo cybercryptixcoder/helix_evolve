@@ -28,6 +28,8 @@ def fake_answer(role, system, user):
         return "```json\n" + json.dumps({"analysis": "fake", "experiments": [
             {"base": ids[0], "hypothesis": f"fake {i}", "change": f"jitter {i}", "prediction": "small gain"}
             for i in range(k)]}) + "\n```"
+    if role == "mutation_planner":
+        return '```json\n{"hypothesis": "fake", "change": "jitter", "prediction": "small gain"}\n```'
     tag = random.randint(1, 10 ** 9)
     return f'''```python
 import numpy as np, time

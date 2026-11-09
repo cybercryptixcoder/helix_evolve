@@ -54,6 +54,11 @@ class Config:
     memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
     inspiration: str = "programs"  # a mutation's ideas: "programs" (v4: another strong program) or "knowledge" (the
                                    # problem's knowledge bank only, so no program is shown as a model to copy)
+    edits: bool = False           # coders reply with edits to the base (search/replace), or the whole program if the
+                                  # change rewrites nearly all of it; v4: always the whole program
+    mutation_plan: bool = False   # a mutation in two steps: a mutation planner (seeing what v4's mutator saw: its
+                                  # parent, and the inspiration or the bank; never the Atlas) chooses the change, then
+                                  # the coder implements it; v4: one mutator decides and writes
 
 
 THE_BASES = "the base's"
@@ -90,12 +95,14 @@ class Run:
             raise ValueError(f"memory must be 'atlas' or 'none', not {self.cfg.memory!r}")
         self.atlas = Atlas(self) if self.cfg.memory == "atlas" else None
         self.bank = Bank(getattr(self.problem, "knowledge", "") or "")   # the field's knowledge, if the problem has any
+        # forget an unfinished generation (on a fresh start, an unfinished generation 0: a run stopped while it scored
+        # its starting programs would otherwise keep a second copy of them)
+        self.archive.truncate(self.round_done)
+        if self.atlas:
+            self.atlas.truncate(self.round_done)
+        for name in ("rounds.jsonl", "plans.jsonl"):
+            self._rewrite(name, [r for r in self._read(name) if r["round"] <= self.round_done])
         if state:
-            self.archive.truncate(self.round_done)
-            if self.atlas:
-                self.atlas.truncate(self.round_done)
-            for name in ("rounds.jsonl", "plans.jsonl"):
-                self._rewrite(name, [r for r in self._read(name) if r["round"] <= self.round_done])
             self.log(f"resuming after generation {self.round_done}")
 
     # ------------------------------------------------------------------ files
@@ -153,14 +160,31 @@ class Run:
         return self.llm.chat(role, system, user, temperature=temperature, max_tokens=max_tokens, effort=effort,
                              meta={"round": self.round_now})
 
-    def write_code(self, role, system, user):
+    def write_code(self, role, system, user, base=None):
+        """The program in a coder's or mutator's reply, its summary, and how it came: "full" (the whole program) or
+        "edits" (applied to `base`; only coders with `edits` on), "+retry" if it took a second call."""
         n = setting(self.problem, "reply_tokens")
+        edits = self.cfg.edits and base is not None
+        if edits:
+            user = user.replace(P.CODE_FORMAT, P.EDIT_FORMAT)
         text = self.call(role, system, user, 0.5 if role == "coder" else 0.8, n)
-        code = P.extract_code(text, self.entry)
+        code, form, why = self.read_reply(text, base if edits else None)
         if code is None:
-            text = self.call(role, system, user + P.CODE_RETRY.format(entry=self.entry), 0.4, n)
-            code = P.extract_code(text, self.entry)
-        return code, P.extract_summary(text)
+            retry = P.EDIT_RETRY.format(why=why) if edits else P.CODE_RETRY.format(entry=self.entry)
+            text = self.call(role, system, user + retry, 0.4, n)
+            code, form, why = self.read_reply(text, base if edits else None)
+            form += "+retry"
+        return code, P.extract_summary(text), form
+
+    def read_reply(self, text, base):
+        """(code, form, why not): edits applied to `base` when the reply has any, else its whole program."""
+        if base is not None and P.EDIT_START in (text or ""):
+            code, why = P.apply_edits(base.code, text)
+            if code is not None and f"def {self.entry}" not in code:
+                code, why = None, f"the edited program no longer defines {self.entry}"
+            return code, "edits", why
+        code = P.extract_code(text, self.entry)
+        return code, "full", f"no edits and no complete ```python block defining {self.entry}"
 
     def plan(self, k):
         """The planner's experiments (v4's Researcher). An unreadable reply is asked for once more; an experiment on an
@@ -202,29 +226,54 @@ class Run:
                          "builds_on": [], "fallback": True})
         return str(js.get("analysis") or ""), exps, info
 
-    def planned_child(self, exp):
+    def planned_child(self, exp, role="planned"):
         base = self.archive.programs[exp["base"]]
         user = (f"{self.problem.description}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
                 f"{self.bank.cited(exp.get('knowledge') or [])}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
                 f"Prediction: {exp['prediction']}\n\nImplement this experiment as a change to the base program. "
                 f"Keep what the base does well unless the experiment says otherwise. {self.task_note(THE_BASES)}"
                 f"\n\n{P.CODE_FORMAT}")
-        code, summary = self.write_code("coder", setting(self.problem, "coder_system"), user)
-        return self.child("planned", base, code, exp["hypothesis"] or exp["change"], exp, summary)
+        code, summary, form = self.write_code("coder", setting(self.problem, "coder_system"), user, base)
+        return self.child(role, base, code, exp["hypothesis"] or exp["change"], exp, summary, form)
 
-    def mutation_child(self, parent, inspiration):
+    def mutation_view(self, parent, inspiration):
+        """What a mutation's author sees (v4's mutator view): the program to improve, then the inspiration or bank."""
         user = f"{self.problem.description}\n\n{self.block(parent, 'The program to improve', self.clip['base'])}\n\n"
         if inspiration is not None:
             user += (f"## Another strong program, for ideas: {inspiration.line()}\n```python\n"
                      f"{P.clip(inspiration.code, self.clip['inspiration'])}```\n\n")
-        user += (f"{self.bank.whole()}Write an improved version of the program to improve. {self.task_note('its')}"
-                 f"\n\n{P.CODE_FORMAT}")
-        code, summary = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
-        return self.child("mutation", parent, code, summary or "(no summary)", {}, summary)
+        return user + self.bank.whole()
 
-    def child(self, role, parent, code, idea, plan, summary):
+    def mutation_child(self, parent, inspiration):
+        if self.cfg.mutation_plan:
+            return self.planned_mutation(parent, inspiration)
+        user = (f"{self.mutation_view(parent, inspiration)}Write an improved version of the program to improve. "
+                f"{self.task_note('its')}\n\n{P.CODE_FORMAT}")
+        code, summary, form = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
+        return self.child("mutation", parent, code, summary or "(no summary)", {}, summary, form)
+
+    def planned_mutation(self, parent, inspiration):
+        """A mutation in two steps: the mutation planner chooses one change from what a mutator sees; the coder (the
+        planned experiments' coder) implements it on the parent."""
+        ask = P.MUTATION_PLAN_FORMAT.format(knowledge=P.MUTATION_PLAN_KNOWLEDGE if self.bank else "")
+        user = f"{self.mutation_view(parent, inspiration)}{ask}"
+        system = setting(self.problem, "mutation_planner_system")
+        js = P.extract_json(self.call("mutation_planner", system, user, 0.8, 4000))
+        if not (isinstance(js, dict) and (js.get("change") or js.get("hypothesis"))):
+            js = P.extract_json(self.call("mutation_planner", system, user + P.PLAN_RETRY, 0.5, 4000))
+        js = js if isinstance(js, dict) else {}
+        exp = {x: str(js.get(x) or "").strip() for x in ("hypothesis", "change", "prediction")}
+        exp["base"] = parent.id
+        if self.bank:
+            exp["knowledge"] = Bank.ids(js.get("knowledge"))
+        if not (exp["change"] or exp["hypothesis"]):          # an unreadable plan still spends the mutation
+            exp.update(change="Improve the base program in the way you judge most promising.", fallback=True,
+                       hypothesis="(no plan: the mutation planner's reply was unusable)")
+        return self.planned_child(exp, role="mutation")
+
+    def child(self, role, parent, code, idea, plan, summary, reply=""):
         p = Program(id="", round=self.round_now, role=role, parent=parent.id, idea=short(idea, 300), code=code or "",
-                    plan=dict(plan or {}), summary=summary)
+                    plan=dict(plan or {}), summary=summary, reply=reply)
         if code is None:
             p.error = "no program in the model's reply"
             with self.lock:
@@ -274,9 +323,12 @@ class Run:
         self.log(f"generation 0: Code Zero scores {p.score:.9f}")
         # optional further starting programs (a problem's `extra_seeds`: [(idea, code), ...]); none by default, and
         # then generation 0 is exactly as before
-        for idea, code in getattr(self.problem, "extra_seeds", []) or []:
+        # (scored side by side, as a generation's children are; added in their given order)
+        seeds = getattr(self.problem, "extra_seeds", []) or []
+        with ThreadPoolExecutor(max_workers=max(1, len(seeds))) as ex:
+            results = list(ex.map(lambda s: evaluate(self.problem, s[1], None, self.cfg.budget, self.cfg.mem_mb), seeds))
+        for (idea, code), res in zip(seeds, results):
             q = Program(id="", round=0, role="seed", parent=None, idea=idea, code=code)
-            res = evaluate(self.problem, q.code, None, self.cfg.budget, self.cfg.mem_mb)
             if not res["valid"]:
                 raise RuntimeError(f"a starting program failed: {res['error']} | " + " | ".join(res["feedback"][:6]))
             q.valid, q.score, q.feedback, q.cpu = True, res["score"], res["feedback"], res["cpu"]

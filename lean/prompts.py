@@ -80,6 +80,36 @@ Reply with one JSON object and nothing else:
 At most 6 new findings. Link types: refines, contradicts, requires, combines-with, explains. Use ids exactly as \
 shown."""
 
+EDIT_START, EDIT_MID, EDIT_END = "<<<<<<< SEARCH", "=======", ">>>>>>> REPLACE"
+
+EDIT_FORMAT = f"""Reply with your change as edits to the base program, instead of the complete program. Each edit:
+{EDIT_START}
+<lines copied exactly from the base program>
+{EDIT_MID}
+<the lines that replace them>
+{EDIT_END}
+Each SEARCH text must appear exactly once in the base program (include enough lines to make it unique); edits are \
+applied in order. An edit may be as large as the change needs: a whole function, several functions, or most of the \
+file. If the change rewrites nearly all of the program, reply with the complete program in one ```python block \
+instead. Then one line:
+SUMMARY: <what you changed and why, at most 30 words>"""
+
+EDIT_RETRY = ("\n\n(Your previous edits could not be applied: {why}. Reply again: edits whose SEARCH text is copied "
+              "exactly from the base program, or the complete program.)")
+
+MUTATION_PLANNER_SYSTEM = """You are an expert programmer and optimiser. You improve programs: given one, you choose \
+one substantial change you expect to raise its score from where it starts, and describe it for a coder, who \
+implements it. You plan; you don't write code. Make the change concrete enough to implement without guessing; it \
+may be as small or as large as you judge best."""
+
+MUTATION_PLAN_FORMAT = """Choose one change to the program to improve. Reply with one JSON object and nothing else:
+```json
+{{"hypothesis": "why this should raise the score", "change": "exactly what the coder should change, concretely",
+ "prediction": "what the result will show"{knowledge}}}
+```"""
+
+MUTATION_PLAN_KNOWLEDGE = ', "knowledge": ["<ids of knowledge-bank entries it draws on, if any>"]'
+
 CODE_RETRY = ("\n\n(Your previous reply had no complete ```python block defining {entry}. Reply with the full "
               "program.)")
 
@@ -111,6 +141,28 @@ def extract_code(text, entry="construct"):
     if f"def {entry}" in text and "```" not in text:
         return text.strip() + "\n"
     return None
+
+
+EDIT_RE = re.compile(rf"^{EDIT_START}[ \t]*\n(.*?)^{EDIT_MID}[ \t]*\n(.*?)^{EDIT_END}[ \t]*$", re.S | re.M)
+
+
+def apply_edits(code, text):
+    """(new code, None), or (None, why not): the reply's search/replace edits applied to `code` in order. A SEARCH
+    text must occur exactly once; if it doesn't verbatim, it may still match with trailing spaces ignored."""
+    edits = EDIT_RE.findall(text or "")
+    if not edits:
+        return None, "no complete edit (SEARCH, =======, REPLACE) in the reply"
+    for i, (old, new) in enumerate(edits, 1):
+        if not old.strip():
+            return None, f"edit {i} has an empty SEARCH text"
+        if code.count(old) != 1:
+            strip = lambda s: "\n".join(l.rstrip() for l in s.split("\n"))
+            if strip(code).count(strip(old)) != 1:
+                n = strip(code).count(strip(old))
+                return None, f"edit {i}'s SEARCH text appears {n} times in the program, not once"
+            code, old = strip(code), strip(old)
+        code = code.replace(old, new, 1)
+    return code, None
 
 
 def extract_summary(text):

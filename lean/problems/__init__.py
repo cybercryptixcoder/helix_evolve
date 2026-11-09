@@ -22,7 +22,7 @@ Optional, with defaults (`setting` below) that reproduce v4's text exactly:
 
     entry           the function a program must define ("construct")
     title           one line naming the problem (the Atlas's Distiller sees it; default: the name)
-    planner_system, coder_system, mutator_system   the system prompts, with the same {k} / {budget} fields
+    planner_system, coder_system, mutator_system, mutation_planner_system   the system prompts, with the same {k} / {budget} fields
     distiller_ask   the Atlas Distiller's task, with the same {gen} field
     generation_note the line under "# Generation g of G" in the planner's view (budget: the CPU seconds)
     task_note       the end of a coder's or mutator's request: what the program will be given
@@ -40,6 +40,7 @@ DEFAULTS = {
     "planner_system": P.PLANNER_SYSTEM,
     "coder_system": P.CODER_SYSTEM,
     "mutator_system": P.MUTATOR_SYSTEM,
+    "mutation_planner_system": P.MUTATION_PLANNER_SYSTEM,
     "distiller_ask": P.DISTILLER_ASK,
     "generation_note": "Each program gets {budget:.0f} s of CPU and starts from its base's construction.",
     "task_note": "budget_seconds will be {budget:.0f}; `start` will be {whose} construction.",

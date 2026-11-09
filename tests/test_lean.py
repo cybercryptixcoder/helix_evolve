@@ -242,3 +242,61 @@ def test_many_takes_on_runs_added_later(tmp_path, monkeypatch):
     f.write_text(json.dumps({"runs": [{"name": "a", "out": str(tmp_path / "a")}, {"name": "b", "out": str(tmp_path / "b")}]}))
     th.join(timeout=20)
     assert not th.is_alive() and started == ["a", "b"]
+
+
+def test_edits_and_planned_mutations(tmp_path):
+    """Coders may reply with edits (applied by code; a failed edit is asked for once more); a mutation can be planned
+    then coded, its planner seeing what a mutator sees and never the Atlas; v4's behaviour is the default."""
+    from lean import prompts as P
+    base = "import numpy as np\n\ndef construct(budget_seconds, start):\n    x = np.asarray(start, dtype=float)\n" \
+           "    return x * (1 + 1e-3)\n"
+    code, why = P.apply_edits(base, f"{P.EDIT_START}\n    return x * (1 + 1e-3)\n{P.EDIT_MID}\n"
+                                    f"    return x * (1 + 2e-3)\n{P.EDIT_END}\nSUMMARY: x")
+    assert why is None and code == base.replace("1e-3", "2e-3")
+    assert P.apply_edits(base, f"{P.EDIT_START}\nnot there\n{P.EDIT_MID}\nx\n{P.EDIT_END}")[0] is None
+    assert P.apply_edits(base + "  \n", f"{P.EDIT_START}\n    return x * (1 + 1e-3)  \n{P.EDIT_MID}\n"
+                                        f"    return x\n{P.EDIT_END}")[0] is not None     # trailing spaces ignored
+    seen = {"coder": [], "mutation_planner": [], "mutator": []}
+    first = {"n": 0}
+
+    def answer(role, system, user):
+        seen.setdefault(role, []).append(user)
+        if role == "coder":
+            assert P.EDIT_FORMAT in user and P.CODE_FORMAT not in user
+            first["n"] += 1
+            if first["n"] == 1:                           # a SEARCH text that isn't in the base: asked once more
+                return f"{P.EDIT_START}\nnope\n{P.EDIT_MID}\nx\n{P.EDIT_END}"
+            m = __import__("re").search(r"(    x = .*\n)", user)
+            return (f"{P.EDIT_START}\n{m.group(1)}{P.EDIT_MID}\n{m.group(1)}    x = x * (1 - 1e-4)\n{P.EDIT_END}\n"
+                    "SUMMARY: shrink") if m else fake_answer(role, system, user)
+        return fake_answer(role, system, user)
+    d = tmp_path / "e"
+    Run(d, Config(problem="ac2", params={"max_n": 2000}, rounds=2, budget=2, edits=True, mutation_plan=True),
+        llm=FakeLLM(answer), log=lambda m: None).go()
+    assert not seen["mutator"] and len(seen["mutation_planner"]) == 6
+    assert all("## The program to improve" in u and "Atlas" not in u and "F1" not in u
+               for u in seen["mutation_planner"])
+    assert P.EDIT_RETRY.split("{")[0] in seen["coder"][1]
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    kids = [p for p in progs if p["role"] != "seed"]
+    assert len(kids) == 12 and {p["role"] for p in kids} == {"planned", "mutation"}
+    assert all(p["reply"].startswith(("edits", "full")) for p in kids)
+    assert any(p["reply"] == "edits" and p["valid"] for p in kids)
+    assert all(p["plan"].get("hypothesis") for p in kids if p["role"] == "mutation")
+    # the default is v4's: one mutator, whole programs
+    seen2 = []
+    Run(tmp_path / "v", Config(problem="ac2", params={"max_n": 2000}, rounds=1, budget=2),
+        llm=FakeLLM(lambda r, s, u: seen2.append((r, u)) or fake_answer(r, s, u)), log=lambda m: None).go()
+    assert {r for r, _ in seen2} >= {"mutator", "coder"} and "mutation_planner" not in {r for r, _ in seen2}
+    assert all(P.EDIT_FORMAT not in u for _, u in seen2)
+
+
+def test_fresh_start_forgets_an_unfinished_generation_0(tmp_path):
+    d = tmp_path / "f"
+    d.mkdir()
+    (d / "programs.jsonl").write_text(json.dumps({"id": "p0001", "round": 0, "role": "seed", "parent": None,
+                                                  "idea": "stale", "code": "x", "valid": True, "score": 0.1}) + "\n")
+    Run(d, Config(problem="ac2", params={"max_n": 2000}, rounds=1, budget=2), llm=FakeLLM(fake_answer),
+        log=lambda m: None).go()
+    progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
+    assert [p["idea"] for p in progs].count("stale") == 0 and progs[0]["id"] == "p0001"

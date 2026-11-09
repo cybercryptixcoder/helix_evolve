@@ -124,6 +124,18 @@ problems/ac2.py).
   `## K<n>: title`, `lean/knowledge.py`). The planner and the mutators see the whole bank; a coder gets the entries its
   experiment cites (`knowledge` field, kept in plans.jsonl). With `inspiration: "knowledge"` a mutation is shown the
   bank instead of another strong program. No bank and the default setting: prompts exactly as before (tested).
+- **Edits, and mutations in two steps** (November 9, 2026; Shreyas asked: faster generations, narrow tasks, the
+  decisions unchanged). Two settings, both off by default (then v4's behaviour, tested):
+  - `edits`: a coder replies with search/replace edits to its base, applied by code (an edit may replace whole
+    functions or most of the file; a reply may still be the complete program when the change rewrites nearly all of
+    it). Edits that don't apply are asked for once more, with the reason. Each program records how its reply came
+    (`reply`: full, edits, +retry). Why: VRP programs are ~100k characters, and writing them out whole was most of a
+    generation's time. Only how a change is written changes, not who decides it.
+  - `mutation_plan`: a mutation is planned, then coded. The mutation planner sees exactly what v4's mutator saw (its
+    parent, and another strong program or the bank), never the Atlas, and chooses one change; the planned
+    experiments' coder implements it. So mutations stay the unsteered exploration, now as narrow tasks.
+  - Also: generation 0's starting programs are scored side by side (no change in what is scored), and a fresh start
+    forgets an unfinished generation 0 (a run stopped while scoring its starting programs kept a second copy).
 
 ## Problems
 

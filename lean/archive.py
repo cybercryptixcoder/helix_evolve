@@ -31,6 +31,7 @@ class Program:
     duplicate_of: str | None = None
     summary: str = ""               # the author's own one-line summary of the change
     diff: str = ""                  # the change from its parent (shown to the Atlas's Distiller and when opened)
+    reply: str = ""                 # how its author's reply came: "full" (the whole program) or "edits", "+retry"
 
     def line(self):
         """How the agents see a program: v4's words exactly (gen, deep/wide), with 9 digits instead of 6."""
