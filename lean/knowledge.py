@@ -15,6 +15,7 @@ INTRO = ("## The knowledge bank: what the field knows about this problem\n"
          "Use it to design better programs: the state of the art, methods that work, facts about this problem. An "
          "experiment that draws on an entry names it in its \"knowledge\" field (for example \"knowledge\": "
          "[\"K3\"]); its coder then receives that entry in full.\n\n")
+FIELD = '"knowledge": ["<ids of knowledge-bank entries it draws on, if any>"],\n    '   # in the plan's reply format
 CITED = "## From the knowledge bank (the entries this experiment draws on)\n"
 
 

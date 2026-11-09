@@ -152,7 +152,7 @@ def test_knowledge_bank(tmp_path, monkeypatch):
     """The planner and the mutators see the whole bank, a coder only the entries its experiment cites; the plan keeps
     the citation; a problem without a bank gives prompts without one."""
     import lean.loop as L
-    from lean.knowledge import CITED, INTRO
+    from lean.knowledge import CITED, FIELD, INTRO
 
     class Knowing(ScoreOnly):
         knowledge = ("## K1: Savings\nMerge trips by savings.\n\n## K2: Split\nCut a giant tour optimally.\n")
@@ -173,6 +173,7 @@ def test_knowledge_bank(tmp_path, monkeypatch):
     planner = [u for r, u in seen if r == "planner"][0]
     assert INTRO in planner and "Merge trips by savings." in planner and "Cut a giant tour optimally." in planner
     assert planner.index(INTRO) < planner.rindex("Reply with one JSON object")      # before the reply format
+    assert planner.count(FIELD) == 1 and planner.index(FIELD) > planner.rindex("Reply with one JSON object")
     coders = [u for r, u in seen if r == "coder"]
     with_k2 = [u for u in coders if "use Split" in u][0]
     assert CITED in with_k2 and "Cut a giant tour optimally." in with_k2 and "Merge trips" not in with_k2

@@ -32,7 +32,7 @@ import numpy as np
 from lean import prompts as P
 from lean.archive import Archive, Program, make_diff, short
 from lean.atlas import Atlas
-from lean.knowledge import Bank
+from lean.knowledge import FIELD as KFIELD, Bank
 from lean.problems import load, setting
 from lean.sandbox import evaluate
 
@@ -196,9 +196,15 @@ class Run:
         else:
             with self.lock:                        # mutations may be adding programs meanwhile
                 user, info = self.plan_prompt(k), {}
-        if self.bank:                              # the knowledge bank goes just before the reply format
-            cut = user.rfind(PLAN_REPLY)
-            user = user[:cut] + self.bank.whole() + user[cut:] if cut >= 0 else user + "\n\n" + self.bank.whole()
+        if self.bank:                              # the knowledge bank goes just before the reply format, and the
+            cut = user.rfind(PLAN_REPLY)           # format gains the "knowledge" field (else plans don't cite)
+            if cut >= 0:
+                fmt = user[cut:]
+                at = fmt.rfind('"builds_on": [')
+                fmt = fmt[:at] + KFIELD + fmt[at:] if at >= 0 else fmt
+                user = user[:cut] + self.bank.whole() + fmt
+            else:
+                user = user + "\n\n" + self.bank.whole()
         info["prompt_chars"] = len(user)
         js = P.extract_json(self.call("planner", system, user, 0.7, 12000, self.cfg.effort))
         info["retried"] = not (isinstance(js, dict) and isinstance(js.get("experiments"), list) and js["experiments"])
