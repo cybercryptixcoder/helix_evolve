@@ -49,6 +49,8 @@ class Config:
     seed: int = 1
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
+    eval_workers: int = 0         # at most this many programs evaluated at once (0: no limit, v4's behaviour); for
+                                  # a machine with fewer cores than a generation has programs, so CPU times stay honest
     memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
     inspiration: str = "programs"  # a mutation's ideas: "programs" (v4: another strong program) or "guidance" (the
                                    # problem's guidance store only, so no program is shown as a model to copy)
@@ -84,6 +86,7 @@ class Run:
         self.archive = Archive(self.dir)
         self.lock = threading.Lock()
         self.task = threading.local()              # the program a thread is making (for the traces)
+        self.eval_gate = threading.BoundedSemaphore(self.cfg.eval_workers) if self.cfg.eval_workers > 0 else None
         self.calls_f = (self.dir / "calls.jsonl").open("a")
         if llm is None:
             from lean.llm import LLM
@@ -296,8 +299,14 @@ class Run:
             with self.lock:
                 return self.archive.add(p)
         p.diff = make_diff(parent.code, code)
-        t0 = time.time()
-        res = evaluate(self.problem, code, self.archive.construction(parent.id), self.cfg.budget, self.cfg.mem_mb)
+        if self.eval_gate:
+            self.eval_gate.acquire()
+        try:
+            t0 = time.time()
+            res = evaluate(self.problem, code, self.archive.construction(parent.id), self.cfg.budget, self.cfg.mem_mb)
+        finally:
+            if self.eval_gate:
+                self.eval_gate.release()
         p.trace.update(eval_start=round(t0, 3), eval_end=round(time.time(), 3), eval_seconds=round(time.time() - t0, 3))
         if res.get("start_score") is None and parent.valid and res["valid"]:
             # a problem whose programs don't start from a construction (the VRP): a change is measured against the
