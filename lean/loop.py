@@ -83,6 +83,7 @@ class Run:
         self.clip = setting(self.problem, "clip")
         self.archive = Archive(self.dir)
         self.lock = threading.Lock()
+        self.task = threading.local()              # the program a thread is making (for the traces)
         self.calls_f = (self.dir / "calls.jsonl").open("a")
         if llm is None:
             from lean.llm import LLM
@@ -164,8 +165,10 @@ class Run:
 
     # ------------------------------------------------------------------ the agents
     def call(self, role, system, user, temperature, max_tokens, effort="none"):
+        """A model call, tagged with its generation and task (the program it is for; none for the generation's own
+        calls: planner, Navigator, Distiller), so every call's tokens and time can be tied to a program."""
         return self.llm.chat(role, system, user, temperature=temperature, max_tokens=max_tokens, effort=effort,
-                             meta={"round": self.round_now})
+                             meta={"round": self.round_now, "task": getattr(self.task, "id", None)})
 
     def write_code(self, role, system, user, base=None):
         """The program in a coder's or mutator's reply, its summary, and how it came: "full" (the whole program) or
@@ -281,7 +284,7 @@ class Run:
 
     def child(self, role, parent, code, idea, plan, summary, reply=""):
         p = Program(id="", round=self.round_now, role=role, parent=parent.id, idea=short(idea, 300), code=code or "",
-                    plan=dict(plan or {}), summary=summary, reply=reply)
+                    plan=dict(plan or {}), summary=summary, reply=reply, trace={"task": getattr(self.task, "id", None)})
         if code is None:
             p.error = "no program in the model's reply"
             with self.lock:
@@ -293,7 +296,9 @@ class Run:
             with self.lock:
                 return self.archive.add(p)
         p.diff = make_diff(parent.code, code)
+        t0 = time.time()
         res = evaluate(self.problem, code, self.archive.construction(parent.id), self.cfg.budget, self.cfg.mem_mb)
+        p.trace.update(eval_start=round(t0, 3), eval_end=round(time.time(), 3), eval_seconds=round(time.time() - t0, 3))
         if res.get("start_score") is None and parent.valid and res["valid"]:
             # a problem whose programs don't start from a construction (the VRP): a change is measured against the
             # base's score, and the first feedback line says so (v4's VRP plug-in did the same)
@@ -305,8 +310,10 @@ class Run:
         with self.lock:
             return self.archive.add(p, res.get("construction"))
 
-    def safe(self, fn, *args):
-        """Never lose the run to one crashed agent call: the crash is logged and kept as a failed program."""
+    def safe(self, fn, *args, task=None):
+        """Never lose the run to one crashed agent call: the crash is logged and kept as a failed program. `task` names
+        the program being made (g<generation>-m<k> or -p<k>), for the traces."""
+        self.task.id = task
         try:
             return fn(*args)
         except Exception as exc:                                         # noqa: BLE001
@@ -323,7 +330,10 @@ class Run:
         p = Program(id="", round=0, role="seed", parent=None,
                     idea=getattr(self.problem, "seed_idea", "Code Zero: the trivial starting program"),
                     code=self.problem.code_zero)
+        t0 = time.time()
         res = evaluate(self.problem, p.code, None, self.cfg.budget, self.cfg.mem_mb)
+        p.trace = {"task": "g0-seed", "eval_start": round(t0, 3), "eval_end": round(time.time(), 3),
+                   "eval_seconds": round(time.time() - t0, 3)}
         if not res["valid"]:
             raise RuntimeError(f"Code Zero failed: {res['error']} | " + " | ".join(res["feedback"][:6]))
         p.valid, p.score, p.feedback, p.cpu = True, res["score"], res["feedback"], res["cpu"]
@@ -348,6 +358,7 @@ class Run:
 
     def round(self, r):
         self.round_now = r
+        self.task.id = None                        # the planner, Navigator and Distiller: the generation's own calls
         t0, calls0 = time.time(), self.llm.calls
         rng = random.Random(self.cfg.seed * 7919 + r)
         pool = [p for p in self.archive.programs.values() if p.valid and p.round < r]
@@ -356,10 +367,10 @@ class Run:
         analysis, exps, info = "", [], {}
         with ThreadPoolExecutor(max_workers=self.cfg.mutations + self.cfg.planned) as ex:
             futs = []
-            for par in parents:
+            for k, par in enumerate(parents, 1):
                 others = [q for q in top if q.id != par.id]
                 insp = rng.choice(others) if others and self.cfg.inspiration == "programs" else None
-                futs.append(ex.submit(self.safe, self.mutation_child, par, insp))
+                futs.append(ex.submit(self.safe, self.mutation_child, par, insp, task=f"g{r}-m{k}"))
             if self.cfg.planned:
                 try:
                     analysis, exps, info = self.plan(self.cfg.planned)
@@ -369,7 +380,7 @@ class Run:
                     exps = [{"base": best.id, "hypothesis": "(no plan: the planner crashed)", "change":
                              "Improve the base program in the way you judge most promising.", "prediction": "",
                              "builds_on": [], "fallback": True} for _ in range(self.cfg.planned)]
-                futs += [ex.submit(self.safe, self.planned_child, e) for e in exps]
+                futs += [ex.submit(self.safe, self.planned_child, e, task=f"g{r}-p{k}") for k, e in enumerate(exps, 1)]
             kids = [f.result() for f in futs]
         mem = {}
         if self.atlas:
@@ -392,6 +403,7 @@ class Run:
                "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
                "opened": info.get("opened"), "planner_prompt_chars": info.get("prompt_chars"),
                "calls": self.llm.calls - calls0, "seconds": round(time.time() - t0, 1),
+               "t_start": round(t0, 3), "t_end": round(time.time(), 3),
                **(self.atlas.stats() if self.atlas else {})}
         self._append("rounds.jsonl", row)
         self.checkpoint(r)

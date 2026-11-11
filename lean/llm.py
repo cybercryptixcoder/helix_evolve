@@ -79,7 +79,8 @@ class LLM:
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
         t0, last, attempt, limited, grown = time.time(), None, 0, 0, False
         text, think, finish, usage = "", "", None, {}
-        tin = tout = 0                       # summed over every attempt that streamed (a cut-off one costs tokens too)
+        tin = tout = cached = reasoning = 0  # summed over every attempt that streamed (a cut-off one costs tokens too)
+        tag = json.dumps({"role": role, **(meta or {})})      # sent as X-Trace-Tag, for a logging relay (if any)
         while True:
             retry_after = None
             with _PACE:
@@ -92,9 +93,11 @@ class LLM:
             try:
                 with gate:
                     text, think, finish, usage = self._stream(key, body, THINK_SECONDS
-                                                              if body["reasoning_effort"] != "none" else None)
+                                                              if body["reasoning_effort"] != "none" else None, tag)
                 tin += int(usage.get("prompt_tokens") or 0)
                 tout += int(usage.get("completion_tokens") or 0)
+                cached += int((usage.get("prompt_tokens_details") or {}).get("cached_tokens") or 0)
+                reasoning += int((usage.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0)
                 if finish == "length" and not grown:
                     # cut off by the token limit (v4's rule): once more, with double the room
                     body = {**body, "max_tokens": body["max_tokens"] * 2}
@@ -134,14 +137,17 @@ class LLM:
             self.tokens_out += tout
         if self.on_call:
             self.on_call({"role": role, "system": system, "user": user, "reply": text if last is None else "",
-                          "reasoning": think, "tokens_in": tin, "tokens_out": tout, "finish": finish,
+                          "reasoning": think, "tokens_in": tin, "tokens_out": tout, "tokens_cached": cached,
+                          "tokens_reasoning": reasoning, "finish": finish, "key": key[-4:], "t_start": round(t0, 3),
                           "seconds": round(time.time() - t0, 1), "temperature": temperature, "effort": effort,
                           "error": last, **(meta or {})})
         return "" if last is not None else text
 
-    def _stream(self, key, body, max_seconds=None):
-        req = urllib.request.Request(self.base + "/chat/completions", data=json.dumps(body).encode(),
-                                     headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
+    def _stream(self, key, body, max_seconds=None, tag=None):
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {key}"}
+        if tag:
+            headers["X-Trace-Tag"] = tag
+        req = urllib.request.Request(self.base + "/chat/completions", data=json.dumps(body).encode(), headers=headers)
         text, think, finish, usage = [], [], None, {}
         t0 = time.time()
         with urllib.request.urlopen(req, timeout=600, context=self.ctx) as r:
