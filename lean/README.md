@@ -1,8 +1,8 @@
 # Helix (lean)
 
 The main version of Helix: v4 with its Atlas memory, cleaned, at least as good as v4 by construction. Every difference from v4 is
-listed in `docs/LEAN_V4.md`, with why each one is safe. About 900 lines; the model client, the sandbox and the loop
-each fit on a screen.
+listed in `docs/LEAN_V4.md`, with why each one is safe. The core (loop, Atlas, stores, prompts, sandbox, archive, model
+client) is about 1,500 lines; the model client, the sandbox and the loop each fit on a screen.
 
 ## The loop
 
@@ -19,7 +19,10 @@ each generation:
              status is computed by code from its evidence's measured gains
 ```
 
-The Atlas starts empty in every run. `Config(memory="none")` is v4's Control: no map, the 6 strongest programs
+The Atlas starts empty in every run. Beside it, a problem may bring two stores written before the run
+(`stores.py`, `docs/design/STORES_DESIGN.md`): a **context store** (facts about the problem, taken as true, seen by
+every agent) and a **guidance store** (approaches that may help, each a hypothesis whose record of attempts, gained,
+no gain or failed, is computed from measured results and shown with it; never deleted). `Config(memory="none")` is v4's Control: no map, the 6 strongest programs
 instead.
 
 Every program is kept, with its code, parent, idea and result. Nothing is decided by a model except what to try.
@@ -41,6 +44,7 @@ An adapter can also live outside this repository (the private VRP plug-in does):
 |---|---|
 | `loop.py` | the loop and its settings (`Config`) |
 | `atlas.py` | the Atlas: findings, the map, the Navigator's openings, the Distiller |
+| `stores.py` | the context store and the guidance store (with each entry's record) |
 | `prompts.py` | every prompt (v4's text) and the parsers for the replies |
 | `sandbox.py` | runs a program in its own process under limits; checks and scores its result |
 | `archive.py` | every program, as a tree |

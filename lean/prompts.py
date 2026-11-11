@@ -27,7 +27,7 @@ PLAN_FORMAT = """Reply with one JSON object and nothing else:
  "experiments": [
   {{"base": "<program id to build on>", "hypothesis": "why this should raise the score",
     "change": "exactly what the coder should change, concretely", "prediction": "what the result will show",
-    "builds_on": ["<ids of programs{findings} this relies on>"]}}
+    {guidance}"builds_on": ["<ids of programs{findings} this relies on>"]}}
  ]}}
 ```
 Give exactly {k} experiments."""
@@ -105,10 +105,8 @@ may be as small or as large as you judge best."""
 MUTATION_PLAN_FORMAT = """Choose one change to the program to improve. Reply with one JSON object and nothing else:
 ```json
 {{"hypothesis": "why this should raise the score", "change": "exactly what the coder should change, concretely",
- "prediction": "what the result will show"{knowledge}}}
+ "prediction": "what the result will show"{guidance}}}
 ```"""
-
-MUTATION_PLAN_KNOWLEDGE = ', "knowledge": ["<ids of knowledge-bank entries it draws on, if any>"]'
 
 CODE_RETRY = ("\n\n(Your previous reply had no complete ```python block defining {entry}. Reply with the full "
               "program.)")

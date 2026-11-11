@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import threading
 import time
 import traceback
@@ -32,12 +33,9 @@ import numpy as np
 from lean import prompts as P
 from lean.archive import Archive, Program, make_diff, short
 from lean.atlas import Atlas
-from lean.knowledge import FIELD as KFIELD, Bank
 from lean.problems import load, setting
 from lean.sandbox import evaluate
-
-
-PLAN_REPLY = P.PLAN_FORMAT.split("\n")[0]          # "Reply with one JSON object...": the bank goes before it
+from lean import stores as S
 
 
 @dataclass
@@ -52,12 +50,12 @@ class Config:
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
     memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
-    inspiration: str = "programs"  # a mutation's ideas: "programs" (v4: another strong program) or "knowledge" (the
-                                   # problem's knowledge bank only, so no program is shown as a model to copy)
+    inspiration: str = "programs"  # a mutation's ideas: "programs" (v4: another strong program) or "guidance" (the
+                                   # problem's guidance store only, so no program is shown as a model to copy)
     edits: bool = False           # coders reply with edits to the base (search/replace), or the whole program if the
                                   # change rewrites nearly all of it; v4: always the whole program
     mutation_plan: bool = False   # a mutation in two steps: a mutation planner (seeing what v4's mutator saw: its
-                                  # parent, and the inspiration or the bank; never the Atlas) chooses the change, then
+                                  # parent, and the inspiration or the guidance; never the Atlas) chooses the change, then
                                   # the coder implements it; v4: one mutator decides and writes
 
 
@@ -94,7 +92,12 @@ class Run:
         if self.cfg.memory not in ("atlas", "none"):
             raise ValueError(f"memory must be 'atlas' or 'none', not {self.cfg.memory!r}")
         self.atlas = Atlas(self) if self.cfg.memory == "atlas" else None
-        self.bank = Bank(getattr(self.problem, "knowledge", "") or "")   # the field's knowledge, if the problem has any
+        if self.cfg.inspiration not in ("programs", "guidance"):
+            raise ValueError(f"inspiration must be 'programs' or 'guidance', not {self.cfg.inspiration!r}")
+        # the stores (lean/stores.py): the context goes with the description to every agent; the guidance, if any
+        context = (getattr(self.problem, "context", "") or "").strip()
+        self.statement = self.problem.description + (f"\n\n{S.CONTEXT}{context}" if context else "")
+        self.guidance = S.Guidance(getattr(self.problem, "guidance", "") or "")
         # forget an unfinished generation (on a fresh start, an unfinished generation 0: a run stopped while it scored
         # its starting programs would otherwise keep a second copy of them)
         self.archive.truncate(self.round_done)
@@ -145,12 +148,16 @@ class Run:
 
     def header(self):
         note = setting(self.problem, "generation_note").format(budget=self.cfg.budget)
-        return f"{self.problem.description}\n\n# Generation {self.round_now} of {self.cfg.rounds}\n{note}\n"
+        return f"{self.statement}\n\n# Generation {self.round_now} of {self.cfg.rounds}\n{note}\n"
 
     def plan_prompt(self, k):
         """v4's Control view: the header, the best program, the 6 strongest programs. (The Atlas builds its own.)"""
-        return (f"{self.header()}\n{self.best_block(self.archive.best())}\n\n{self.scoreboard()}\n\n"
-                f"{P.PLAN_FORMAT.format(k=k, findings='')}")
+        return f"{self.header()}\n{self.best_block(self.archive.best())}\n\n{self.scoreboard()}\n\n{self.plan_tail(k, '')}"
+
+    def plan_tail(self, k, findings):
+        """The end of the planner's view: the guidance store (if any), then the reply format (call under the lock)."""
+        return self.guidance.whole(self.archive, self.round_now) + P.PLAN_FORMAT.format(
+            k=k, findings=findings, guidance=S.FIELD if self.guidance else "")
 
     def task_note(self, whose):
         return setting(self.problem, "task_note").format(budget=self.cfg.budget, whose=whose)
@@ -174,7 +181,7 @@ class Run:
             text = self.call(role, system, user + retry, 0.4, n)
             code, form, why = self.read_reply(text, base if edits else None)
             form += "+retry"
-        return code, P.extract_summary(text), form
+        return code, P.extract_summary(text), form, text
 
     def read_reply(self, text, base):
         """(code, form, why not): edits applied to `base` when the reply has any, else its whole program."""
@@ -196,15 +203,6 @@ class Run:
         else:
             with self.lock:                        # mutations may be adding programs meanwhile
                 user, info = self.plan_prompt(k), {}
-        if self.bank:                              # the knowledge bank goes just before the reply format, and the
-            cut = user.rfind(PLAN_REPLY)           # format gains the "knowledge" field (else plans don't cite)
-            if cut >= 0:
-                fmt = user[cut:]
-                at = fmt.rfind('"builds_on": [')
-                fmt = fmt[:at] + KFIELD + fmt[at:] if at >= 0 else fmt
-                user = user[:cut] + self.bank.whole() + fmt
-            else:
-                user = user + "\n\n" + self.bank.whole()
         info["prompt_chars"] = len(user)
         js = P.extract_json(self.call("planner", system, user, 0.7, 12000, self.cfg.effort))
         info["retried"] = not (isinstance(js, dict) and isinstance(js.get("experiments"), list) and js["experiments"])
@@ -217,11 +215,11 @@ class Run:
             best = self.archive.best()
             for e in (js.get("experiments") if isinstance(js.get("experiments"), list) else [])[:k]:
                 if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
-                    refs, cites = e.get("builds_on"), Bank.ids(e.get("knowledge"))
+                    refs, cites = e.get("builds_on"), S.ids(e.get("guidance"))
                     e = {x: str(e.get(x) or "").strip() for x in ("base", "hypothesis", "change", "prediction")}
                     e["builds_on"] = [str(x) for x in refs] if isinstance(refs, list) else ([str(refs)] if refs else [])
-                    if self.bank:
-                        e["knowledge"] = cites
+                    if self.guidance:
+                        e["guidance"] = cites
                     b = self.archive.programs.get(e["base"])
                     if b is None or not b.valid:
                         e["base_asked"], e["base"] = e["base"], best.id
@@ -234,34 +232,38 @@ class Run:
 
     def planned_child(self, exp, role="planned"):
         base = self.archive.programs[exp["base"]]
-        user = (f"{self.problem.description}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
-                f"{self.bank.cited(exp.get('knowledge') or [])}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
+        user = (f"{self.statement}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
+                f"{self.guidance.cited(exp.get('guidance') or [])}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
                 f"Prediction: {exp['prediction']}\n\nImplement this experiment as a change to the base program. "
                 f"Keep what the base does well unless the experiment says otherwise. {self.task_note(THE_BASES)}"
                 f"\n\n{P.CODE_FORMAT}")
-        code, summary, form = self.write_code("coder", setting(self.problem, "coder_system"), user, base)
+        code, summary, form, _ = self.write_code("coder", setting(self.problem, "coder_system"), user, base)
         return self.child(role, base, code, exp["hypothesis"] or exp["change"], exp, summary, form)
 
     def mutation_view(self, parent, inspiration):
-        """What a mutation's author sees (v4's mutator view): the program to improve, then the inspiration or bank."""
-        user = f"{self.problem.description}\n\n{self.block(parent, 'The program to improve', self.clip['base'])}\n\n"
+        """What a mutation's author sees (v4's mutator view): the program to improve, then the inspiration, then the
+        guidance store (if any)."""
+        user = f"{self.statement}\n\n{self.block(parent, 'The program to improve', self.clip['base'])}\n\n"
         if inspiration is not None:
             user += (f"## Another strong program, for ideas: {inspiration.line()}\n```python\n"
                      f"{P.clip(inspiration.code, self.clip['inspiration'])}```\n\n")
-        return user + self.bank.whole()
+        with self.lock:                            # the guidance's records read the archive, which others write to
+            return user + self.guidance.whole(self.archive, self.round_now)
 
     def mutation_child(self, parent, inspiration):
         if self.cfg.mutation_plan:
             return self.planned_mutation(parent, inspiration)
         user = (f"{self.mutation_view(parent, inspiration)}Write an improved version of the program to improve. "
-                f"{self.task_note('its')}\n\n{P.CODE_FORMAT}")
-        code, summary, form = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
-        return self.child("mutation", parent, code, summary or "(no summary)", {}, summary, form)
+                f"{self.task_note('its')}\n\n{P.CODE_FORMAT}" + (S.MUTATOR_LINE if self.guidance else ""))
+        code, summary, form, text = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
+        cites = S.ids(" ".join(re.findall(r"GUIDANCE:\s*(.+)", text or ""))) if self.guidance else []
+        plan = {"guidance": cites} if cites else {}
+        return self.child("mutation", parent, code, summary or "(no summary)", plan, summary, form)
 
     def planned_mutation(self, parent, inspiration):
         """A mutation in two steps: the mutation planner chooses one change from what a mutator sees; the coder (the
         planned experiments' coder) implements it on the parent."""
-        ask = P.MUTATION_PLAN_FORMAT.format(knowledge=P.MUTATION_PLAN_KNOWLEDGE if self.bank else "")
+        ask = P.MUTATION_PLAN_FORMAT.format(guidance=S.MUTATION_FIELD if self.guidance else "")
         user = f"{self.mutation_view(parent, inspiration)}{ask}"
         system = setting(self.problem, "mutation_planner_system")
         js = P.extract_json(self.call("mutation_planner", system, user, 0.8, 4000))
@@ -270,8 +272,8 @@ class Run:
         js = js if isinstance(js, dict) else {}
         exp = {x: str(js.get(x) or "").strip() for x in ("hypothesis", "change", "prediction")}
         exp["base"] = parent.id
-        if self.bank:
-            exp["knowledge"] = Bank.ids(js.get("knowledge"))
+        if self.guidance:
+            exp["guidance"] = S.ids(js.get("guidance"))
         if not (exp["change"] or exp["hypothesis"]):          # an unreadable plan still spends the mutation
             exp.update(change="Improve the base program in the way you judge most promising.", fallback=True,
                        hypothesis="(no plan: the mutation planner's reply was unusable)")

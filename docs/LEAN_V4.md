@@ -120,10 +120,15 @@ problems/ac2.py).
   (`[(idea, code), ...]`): each is evaluated and joins generation 0 beside Code Zero, so parents and inspirations
   can come from any of them. With none listed, generation 0 is exactly as before (tested). Used by the VRP's
   "combined" variant: a fast program and a cheap one, side by side.
-- **A knowledge bank** (November 9, 2026; Shreyas asked): a problem may supply `knowledge` (Markdown entries
-  `## K<n>: title`, `lean/knowledge.py`). The planner and the mutators see the whole bank; a coder gets the entries its
-  experiment cites (`knowledge` field, kept in plans.jsonl). With `inspiration: "knowledge"` a mutation is shown the
-  bank instead of another strong program. No bank and the default setting: prompts exactly as before (tested).
+- **The context store and the guidance store** (November 11, 2026; Shreyas asked; they replace the November 9
+  knowledge bank). A problem may supply `context` (facts about the problem and its domain, taken as true: every agent
+  sees it with the description) and `guidance` (Markdown entries `## G<n>: title`: approaches that may help, each a
+  hypothesis). The planner and the mutators see every guidance entry with its record (`lean/stores.py`); a coder gets
+  the entries its experiment cites; mutators may cite entries on a `GUIDANCE:` line. An entry's record (tried, gained,
+  no gain, failed, and the latest attempts) is computed by code from the measured results of the programs that cited
+  it, from earlier generations; entries are never removed. The Distiller is told which entries each program drew on.
+  With `inspiration: "guidance"` a mutation is shown the guidance instead of another strong program. No stores and
+  the default setting: prompts exactly as before (tested). Design: `docs/design/STORES_DESIGN.md`.
 - **Edits, and mutations in two steps** (November 9, 2026; Shreyas asked: faster generations, narrow tasks, the
   decisions unchanged). Two settings, both off by default (then v4's behaviour, tested):
   - `edits`: a coder replies with search/replace edits to its base, applied by code (an edit may replace whole
@@ -132,7 +137,7 @@ problems/ac2.py).
     (`reply`: full, edits, +retry). Why: VRP programs are ~100k characters, and writing them out whole was most of a
     generation's time. Only how a change is written changes, not who decides it.
   - `mutation_plan`: a mutation is planned, then coded. The mutation planner sees exactly what v4's mutator saw (its
-    parent, and another strong program or the bank), never the Atlas, and chooses one change; the planned
+    parent, and another strong program or the guidance), never the Atlas, and chooses one change; the planned
     experiments' coder implements it. So mutations stay the unsteered exploration, now as narrow tasks.
   - Also: generation 0's starting programs are scored side by side (no change in what is scored), and a fresh start
     forgets an unfinished generation 0 (a run stopped while scoring its starting programs kept a second copy).

@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 
 from lean import prompts as P
+from lean import stores as S
 from lean.archive import SHOWN, short
 from lean.problems import setting
 
@@ -30,6 +31,15 @@ def result_lines(p, k=4):
     if not p.valid:
         return [p.error[:300]] + [l for l in p.feedback[1:2]]
     return p.feedback[:k]
+
+
+def planned(plan):
+    """A planned program's plan (a mutation's may hold only the guidance it cited)."""
+    return bool(plan.get("hypothesis") or plan.get("change"))
+
+
+def guided(plan):
+    return f" | guidance: {', '.join(plan['guidance'])}" if plan.get("guidance") else ""
 
 
 def outcome(p):
@@ -129,7 +139,8 @@ class Atlas:
         for p in sorted(last, key=lambda q: q.id):
             pl = {k: v for k, v in (p.plan or {}).items() if k != "summary"}
             what = (f"hypothesis: {short(pl.get('hypothesis'), 200)} | change: {short(pl.get('change'), 220)} | "
-                    f"predicted: {short(pl.get('prediction'), 120)}") if pl else f"mutation: {short(p.idea, 200)}"
+                    f"predicted: {short(pl.get('prediction'), 120)}") if planned(pl) else f"mutation: {short(p.idea, 200)}"
+            what += guided(pl)
             res = "\n    ".join(result_lines(p, 5))
             coder = f"\n    coder: {short(p.summary, 160)}" if p.summary and p.summary != p.idea else ""
             out.append(f"- {p.line()}\n    {what}{coder}\n    {res}")
@@ -151,11 +162,11 @@ class Atlas:
         p = a.programs[pid]
         out = [f"### {p.line()}"]
         pl = {k: v for k, v in (p.plan or {}).items() if k != "summary"}
-        if pl:
+        if planned(pl):
             out.append(f"Plan: hypothesis: {pl.get('hypothesis')} | change: {pl.get('change')} | "
-                       f"predicted: {pl.get('prediction')} | builds on: {pl.get('builds_on')}")
+                       f"predicted: {pl.get('prediction')} | builds on: {pl.get('builds_on')}{guided(pl)}")
         else:
-            out.append(f"Intent: {p.idea}")
+            out.append(f"Intent: {p.idea}{guided(pl)}")
         if p.summary:
             out.append(f"Coder's summary: {p.summary}")
         out.append("Result:\n  " + "\n  ".join(result_lines(p, 8)))
@@ -209,7 +220,8 @@ class Atlas:
         user = base
         if opened:
             user += "\n\n## What you opened\n" + "\n\n".join(opened)
-        user += "\n\n" + P.PLAN_FORMAT.format(k=k, findings=" or findings")
+        with run.lock:
+            user += "\n\n" + run.plan_tail(k, " or findings")
         return user, {"opened": asked, "open_why": why}
 
     # ---- the Distiller
@@ -220,8 +232,9 @@ class Atlas:
         for c in children:
             pl = {k: v for k, v in (c.plan or {}).items() if k != "summary"}
             what = (f"planned: {short(pl.get('hypothesis'), 240)} | change: {short(pl.get('change'), 260)} | "
-                    f"predicted: {short(pl.get('prediction'), 140)} | builds on {pl.get('builds_on')}") if pl else \
-                f"wide-loop mutation: {short(c.idea, 220)}"
+                    f"predicted: {short(pl.get('prediction'), 140)} | builds on {pl.get('builds_on')}") if planned(pl) \
+                else f"wide-loop mutation: {short(c.idea, 220)}"
+            what += guided(pl)
             parent = run.archive.programs.get(c.parent)
             rows.append(f"### {c.line()}\n{what}\ncoder's summary: {short(c.summary, 200)}\n"
                         f"its base {c.parent}: {short(parent.idea, 120) if parent else '-'}\nresult:\n  "
@@ -230,7 +243,8 @@ class Atlas:
         title = getattr(run.problem, "title", run.problem.name)
         user = (f"{title}\n\n## Findings so far\n{index}\n\n## The researcher's analysis this generation\n"
                 f"{short(analysis, 900)}\n\n## Generation {gen}: every program and its result\n"
-                + "\n\n".join(rows) + "\n\n" + setting(run.problem, "distiller_ask").format(gen=gen))
+                + "\n\n".join(rows) + "\n\n" + setting(run.problem, "distiller_ask").format(gen=gen)
+                + (S.DISTILLER_NOTE if run.guidance else ""))
         reply = run.call("distiller", P.DISTILLER_SYSTEM, user, 0.3, 3000)
         js = P.extract_json(reply) or {}
         js = js if isinstance(js, dict) else {}
