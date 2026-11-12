@@ -36,6 +36,7 @@ from lean.atlas import Atlas
 from lean.problems import load, setting
 from lean.sandbox import evaluate
 from lean import stores as S
+from lean import scout as W
 
 
 @dataclass
@@ -49,6 +50,7 @@ class Config:
     seed: int = 1
     effort: str = "low"           # the planner's thinking effort
     mem_mb: int = 1500
+    scout: bool = False           # the Scout (lean/scout.py): web, code and paper search each generation (off: v4)
     eval_workers: int = 0         # at most this many programs evaluated at once (0: no limit, v4's behaviour); for
                                   # a machine with fewer cores than a generation has programs, so CPU times stay honest
     memory: str = "atlas"         # "atlas" (v4's best condition, started empty) or "none" (v4's Control)
@@ -86,6 +88,7 @@ class Run:
         self.archive = Archive(self.dir)
         self.lock = threading.Lock()
         self.task = threading.local()              # the program a thread is making (for the traces)
+        self.scout = None                          # made after the archive is loaded (it reads the run folder)
         self.eval_gate = threading.BoundedSemaphore(self.cfg.eval_workers) if self.cfg.eval_workers > 0 else None
         self.calls_f = (self.dir / "calls.jsonl").open("a")
         if llm is None:
@@ -107,6 +110,9 @@ class Run:
         self.archive.truncate(self.round_done)
         if self.atlas:
             self.atlas.truncate(self.round_done)
+        if self.cfg.scout:
+            self.scout = W.Scout(self)
+            self.scout.truncate(self.round_done)
         for name in ("rounds.jsonl", "plans.jsonl"):
             self._rewrite(name, [r for r in self._read(name) if r["round"] <= self.round_done])
         if state:
@@ -159,9 +165,12 @@ class Run:
         return f"{self.header()}\n{self.best_block(self.archive.best())}\n\n{self.scoreboard()}\n\n{self.plan_tail(k, '')}"
 
     def plan_tail(self, k, findings):
-        """The end of the planner's view: the guidance store (if any), then the reply format (call under the lock)."""
-        return self.guidance.whole(self.archive, self.round_now) + P.PLAN_FORMAT.format(
-            k=k, findings=findings, guidance=S.FIELD if self.guidance else "")
+        """The end of the planner's view: the guidance store (if any), the scout's items (if on), then the reply format
+        (call under the lock)."""
+        return (self.guidance.whole(self.archive, self.round_now)
+                + (self.scout.for_planner(self.round_now) if self.scout else "")
+                + P.PLAN_FORMAT.format(k=k, findings=findings, guidance=(S.FIELD if self.guidance else "")
+                                       + (W.FIELD if self.scout else "")))
 
     def task_note(self, whose):
         return setting(self.problem, "task_note").format(budget=self.cfg.budget, whose=whose)
@@ -221,11 +230,13 @@ class Run:
             best = self.archive.best()
             for e in (js.get("experiments") if isinstance(js.get("experiments"), list) else [])[:k]:
                 if isinstance(e, dict) and (e.get("change") or e.get("hypothesis")):
-                    refs, cites = e.get("builds_on"), S.ids(e.get("guidance"))
+                    refs, cites, webs = e.get("builds_on"), S.ids(e.get("guidance")), W.ids(e.get("web"))
                     e = {x: str(e.get(x) or "").strip() for x in ("base", "hypothesis", "change", "prediction")}
                     e["builds_on"] = [str(x) for x in refs] if isinstance(refs, list) else ([str(refs)] if refs else [])
                     if self.guidance:
                         e["guidance"] = cites
+                    if self.scout:
+                        e["web"] = webs
                     b = self.archive.programs.get(e["base"])
                     if b is None or not b.valid:
                         e["base_asked"], e["base"] = e["base"], best.id
@@ -239,7 +250,8 @@ class Run:
     def planned_child(self, exp, role="planned"):
         base = self.archive.programs[exp["base"]]
         user = (f"{self.statement}\n\n{self.block(base, 'The base program', self.clip['base'])}\n\n"
-                f"{self.guidance.cited(exp.get('guidance') or [])}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
+                f"{self.guidance.cited(exp.get('guidance') or [])}"
+                f"{self.scout.cited(exp.get('web') or []) if self.scout else ''}## The experiment to implement\nHypothesis: {exp['hypothesis']}\nChange: {exp['change']}\n"
                 f"Prediction: {exp['prediction']}\n\nImplement this experiment as a change to the base program. "
                 f"Keep what the base does well unless the experiment says otherwise. {self.task_note(THE_BASES)}"
                 f"\n\n{P.CODE_FORMAT}")
@@ -254,16 +266,25 @@ class Run:
             user += (f"## Another strong program, for ideas: {inspiration.line()}\n```python\n"
                      f"{P.clip(inspiration.code, self.clip['inspiration'])}```\n\n")
         with self.lock:                            # the guidance's records read the archive, which others write to
-            return user + self.guidance.whole(self.archive, self.round_now)
+            user += self.guidance.whole(self.archive, self.round_now)
+        if self.scout:                             # this mutator's direction from the web: one per mutation slot
+            task = getattr(self.task, "id", None) or ""
+            slot = int(task.rsplit("-m", 1)[1]) - 1 if "-m" in task else 0
+            user += self.scout.for_mutator(slot)
+        return user
 
     def mutation_child(self, parent, inspiration):
         if self.cfg.mutation_plan:
             return self.planned_mutation(parent, inspiration)
         user = (f"{self.mutation_view(parent, inspiration)}Write an improved version of the program to improve. "
-                f"{self.task_note('its')}\n\n{P.CODE_FORMAT}" + (S.MUTATOR_LINE if self.guidance else ""))
+                f"{self.task_note('its')}\n\n{P.CODE_FORMAT}" + (S.MUTATOR_LINE if self.guidance else "")
+                + (W.MUTATOR_LINE if self.scout else ""))
         code, summary, form, text = self.write_code("mutator", setting(self.problem, "mutator_system"), user)
         cites = S.ids(" ".join(re.findall(r"GUIDANCE:\s*(.+)", text or ""))) if self.guidance else []
         plan = {"guidance": cites} if cites else {}
+        webs = W.ids(" ".join(re.findall(r"WEB:\s*(.+)", text or ""))) if self.scout else []
+        if webs:
+            plan["web"] = webs
         return self.child("mutation", parent, code, summary or "(no summary)", plan, summary, form)
 
     def planned_mutation(self, parent, inspiration):
@@ -367,8 +388,18 @@ class Run:
 
     def round(self, r):
         self.round_now = r
-        self.task.id = None                        # the planner, Navigator and Distiller: the generation's own calls
+        self.task.id = None                        # the planner, Navigator, Distiller, Scout: the generation's own calls
         t0, calls0 = time.time(), self.llm.calls
+        scouted = {}
+        if self.scout:                             # the search comes first: the planner and the mutators read it
+            try:
+                rec = self.scout.scout(r, self.cfg.mutations)
+                scouted = {"queries": len(rec["queries"]), "items": len(rec["results"]), "cost_usd": rec["cost_usd"],
+                           "errors": len(rec["errors"])}
+            except Exception as exc:                                     # noqa: BLE001  (never lose the run)
+                self.log(f"generation {r}: the scout crashed: {exc}\n{traceback.format_exc()}")
+                self.scout.brief = {"deep": [], "wide": []}
+                scouted = {"error": str(exc)[:300]}
         rng = random.Random(self.cfg.seed * 7919 + r)
         pool = [p for p in self.archive.programs.values() if p.valid and p.round < r]
         parents = [self.archive.sample_parent(rng, pool) for _ in range(self.cfg.mutations)]
@@ -412,7 +443,7 @@ class Run:
                "plan_parsed": info.get("parsed"), "plan_retried": info.get("retried"),
                "opened": info.get("opened"), "planner_prompt_chars": info.get("prompt_chars"),
                "calls": self.llm.calls - calls0, "seconds": round(time.time() - t0, 1),
-               "t_start": round(t0, 3), "t_end": round(time.time(), 3),
+               "t_start": round(t0, 3), "t_end": round(time.time(), 3), **({"scout": scouted} if self.scout else {}),
                **(self.atlas.stats() if self.atlas else {})}
         self._append("rounds.jsonl", row)
         self.checkpoint(r)

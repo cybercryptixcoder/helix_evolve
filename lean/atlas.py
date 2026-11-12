@@ -33,13 +33,18 @@ def result_lines(p, k=4):
     return p.feedback[:k]
 
 
+W_NOTE = ("\nWhen a program drew on web items (\"web: W6.2\" above), say in its finding what it took from the item and "
+          "what that did (\"W6.2's string removal, implemented as ...: +0.002\").")
+
+
 def planned(plan):
     """A planned program's plan (a mutation's may hold only the guidance it cited)."""
     return bool(plan.get("hypothesis") or plan.get("change"))
 
 
 def guided(plan):
-    return f" | guidance: {', '.join(plan['guidance'])}" if plan.get("guidance") else ""
+    return ((f" | guidance: {', '.join(plan['guidance'])}" if plan.get("guidance") else "")
+            + (f" | web: {', '.join(plan['web'])}" if plan.get("web") else ""))
 
 
 def outcome(p):
@@ -244,7 +249,8 @@ class Atlas:
         user = (f"{title}\n\n## Findings so far\n{index}\n\n## The researcher's analysis this generation\n"
                 f"{short(analysis, 900)}\n\n## Generation {gen}: every program and its result\n"
                 + "\n\n".join(rows) + "\n\n" + setting(run.problem, "distiller_ask").format(gen=gen)
-                + (S.DISTILLER_NOTE if run.guidance else ""))
+                + (S.DISTILLER_NOTE if run.guidance else "")
+                + (W_NOTE if run.scout else ""))
         reply = run.call("distiller", P.DISTILLER_SYSTEM, user, 0.3, 3000)
         js = P.extract_json(reply) or {}
         js = js if isinstance(js, dict) else {}
