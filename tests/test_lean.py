@@ -316,3 +316,17 @@ def test_fresh_start_forgets_an_unfinished_generation_0(tmp_path):
         log=lambda m: None).go()
     progs = [json.loads(l) for l in (d / "programs.jsonl").read_text().splitlines()]
     assert [p["idea"] for p in progs].count("stale") == 0 and progs[0]["id"] == "p0001"
+
+
+def test_scout_code_helpers():
+    from lean.scout import source, window, html_text
+    assert source("https://github.com/o/r/pull/5") == {"type": "repo", "repo": "o/r"}
+    assert source("https://github.com/o/r/blob/main/src/a.py")["path"] == "src/a.py"
+    assert source("https://github.com/o/r/blob/main/README.md")["type"] == "repo"
+    assert source("https://github.com/topics/x") is None
+    assert source("https://stackoverflow.com/questions/123/t") == {"type": "qa", "id": "123"}
+    text = "".join(f"line {i}\n" for i in range(300)) + "def target(a):\n" + "".join(
+        f"    s = {i}\n" for i in range(40)) + "".join(f"x {i}\n" for i in range(3000))
+    w = window(text, ["target"], 400)
+    assert w.startswith("def target(a):") and len(w) <= 400
+    assert "    return 1" in html_text("<pre><code>def f():\n    return 1\n</code></pre>")

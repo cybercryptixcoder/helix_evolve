@@ -18,6 +18,8 @@ Keys: EXA_API_KEY and OPENALEX_API_KEY in the environment or the repo's .env.
 """
 from __future__ import annotations
 
+import gzip
+import html
 import json
 import os
 import re
@@ -52,15 +54,21 @@ Write two sets of queries.
 - facts the run needs to decide between two directions.
 
 **wide** ({n_wide} queries, one per mutator), for diversity: approaches to this problem that are neither in the guidance
-store nor tried in the Atlas, each different from the others.
+store nor tried in the Atlas, each different from the others. Phrase them openly (the kind of method or the difficulty,
+not the one method you would pick first), so that the range of what the search finds, not your own first idea, decides
+what the mutators see.
 
 For each query give:
 - "query": what to search for, in natural language, specific to this problem as it stands (not a keyword list);
 - "kind", which decides where it is searched and what comes back:
   - "web": the whole web, papers' full texts and technical reports included; returns the passages of each page that
     answer the purpose. Use it for how a method works, how to get out of a difficulty, and implementation details;
-  - "code": repositories, gists and Q&A; returns the relevant part of a README or source file. Use it to see how
-    others implement something;
+  - "code": real source code, as written: finds repositories, files, gists and Stack Overflow answers, then reads the
+    relevant source files themselves. Describe the code you want to see (its language and what it does, e.g. "Python
+    function that ..."). Ask for code that is likely to exist: a known move, model, algorithm or data structure, or a
+    library's usage, not this problem's exact variant (nobody has published that; the coders adapt what is found).
+    Use it to see how others implement something, and for any programming difficulty the run has (an error that keeps
+    coming back, a step that is too slow, a library's API), not only for methods;
   - "paper": a research index (titles and abstracts only, no method details). Use it to find which work exists on a
     question; at most one query of this kind in all (deep and wide together): "web" also finds papers, with their
     method details;
@@ -79,12 +87,89 @@ Reply with one JSON object and nothing else:
 FIELD = '"web": ["<ids of web items it draws on, if any>"],\n    '
 MUTATOR_LINE = "\nIf your change draws on web items, add one more line:\nWEB: <their ids, e.g. W6.2>"
 INTRO = ("## From the web and the literature, found for this generation\n"
-         "Material the scout found this generation (W items: web pages, code, and paper abstracts). It may or may not "
+         "Material the scout found this generation (W items: web pages, source code, and paper abstracts). It may or may not "
          "help: use what is relevant and say which items an experiment draws on; ignore the rest.\n\n")
 MUT_INTRO = ("## From the web, for ideas: a direction found for you this generation\n"
              "Not a program to copy: material on an approach that may help. Use it if it gives you a good change.\n\n")
 TRIED = "## Web items tried in earlier generations, and how they did\n"
 CITED = "## From the web (the items this experiment draws on)\n"
+
+
+PICK = """## Choose the source files to read
+
+A search for code found these sources. Query: {query}
+What a result must contain: {purpose}
+
+{sources}
+
+Choose up to {n} files (in all) most likely to hold code that serves that purpose: from a repository's file list, or a
+file already given. For each, give 3-8 identifiers or words likely to appear in the relevant part (function, class,
+method or variable names), used to cut the part of the file to read. Reply with one JSON object and nothing else:
+```json
+{{"files": [{{"repo": "owner/name", "path": "the/path.ext", "terms": ["..."]}}]}}
+```"""
+
+CODE_EXT = (".py", ".pyx", ".c", ".cc", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".java", ".kt", ".scala", ".rs", ".go",
+            ".jl", ".js", ".ts", ".cs", ".r", ".m", ".f90", ".ml", ".hs", ".rb", ".swift", ".lua", ".zig", ".nim", ".d")
+NOT_REPO = {"topics", "orgs", "search", "marketplace", "features", "collections", "sponsors", "settings", "login",
+            "about", "pricing", "enterprise", "apps"}
+CODE_CHARS = 6000                                       # a code item: up to this much of a file
+
+
+def is_code(path):
+    return path.lower().endswith(CODE_EXT)
+
+
+def html_text(h):
+    """Stack Exchange HTML to text, code blocks kept as written."""
+    h = re.sub(r"<pre[^>]*><code[^>]*>(.*?)</code></pre>", lambda m: "\n```\n" + m.group(1) + "\n```\n", h, flags=re.S)
+    return html.unescape(re.sub(r"<[^>]+>", "", h)).strip()
+
+
+def source(url):
+    """What a code-search result points at: a GitHub file or repository, a gist, a Stack Overflow question, or None.
+    A GitHub pull request, issue, release or doc page points at its repository, whose code may hold the answer."""
+    p = urllib.parse.urlparse(url)
+    parts = [x for x in p.path.split("/") if x]
+    if p.netloc in ("github.com", "www.github.com") and len(parts) >= 2 and parts[0] not in NOT_REPO:
+        repo = f"{parts[0]}/{parts[1]}"
+        if len(parts) >= 5 and parts[2] == "blob" and is_code(parts[-1]):
+            return {"type": "file", "repo": repo, "ref": parts[3], "path": "/".join(parts[4:])}
+        return {"type": "repo", "repo": repo}
+    if p.netloc == "gist.github.com" and parts:
+        return {"type": "gist", "id": parts[-1]}
+    m = re.match(r"/questions/(\d+)", p.path)
+    if p.netloc.endswith("stackoverflow.com") and m:
+        return {"type": "qa", "id": m.group(1)}
+    return None
+
+
+def window(text, terms, size=CODE_CHARS):
+    """The part of a file (whole lines, at most `size` characters) where the terms are densest."""
+    if len(text) <= size:
+        return text
+    lines = [l[:size] for l in text.splitlines(keepends=True)]
+    terms = [t.lower() for t in terms if len(t) >= 3]
+    hits = [sum(l.lower().count(t) for t in terms) for l in lines]
+    best, span, j, h, c = -1, (0, 0), 0, 0, 0
+    for i in range(len(lines)):
+        while j < len(lines) and c + len(lines[j]) <= size:
+            c, h, j = c + len(lines[j]), h + hits[j], j + 1
+        if h > best:
+            best, span = h, (i, j)
+        c, h = c - len(lines[i]), h - hits[i]
+    fi = next((k for k in range(*span) if hits[k]), span[0])  # start at the definition the first hit is in, if it
+    i, back = fi, 0                                             # is near (code reads down from a definition); else a
+    while i > 0 and not re.match(r"\S", lines[i]) and back + len(lines[i - 1]) <= size // 3:   # little before it
+        i, back = i - 1, back + len(lines[i - 1])
+    if not re.match(r"\S", lines[i]):
+        i, back = fi, 0
+        while i > 0 and back + len(lines[i - 1]) <= size // 6:
+            i, back = i - 1, back + len(lines[i - 1])
+    c, j = 0, i
+    while j < len(lines) and c + len(lines[j]) <= size:
+        c, j = c + len(lines[j]), j + 1
+    return "".join(lines[i:j])
 
 
 def ids(value):
@@ -102,18 +187,24 @@ class Searcher:
         self.openalex = os.environ.get("OPENALEX_API_KEY", "")
         if not self.exa or not self.openalex:
             raise RuntimeError("the scout needs EXA_API_KEY and OPENALEX_API_KEY (in .env)")
+        self.github = os.environ.get("GITHUB_TOKEN", "")      # optional: GitHub's API allows 60 calls an hour without
         self.ctx = _ssl_context()
-        self.last = {"exa": 0.0, "openalex": 0.0}
+        self.last = {}
 
-    def _get(self, svc, req, pace):
-        wait = self.last[svc] + pace - time.time()
+    def _get(self, svc, req, pace, raw=False):
+        wait = self.last.get(svc, 0.0) + pace - time.time()
         if wait > 0:
             time.sleep(wait)
         for attempt in range(5):
             self.last[svc] = time.time()
             try:
                 with urllib.request.urlopen(req, timeout=90, context=self.ctx) as r:
-                    return json.loads(r.read()), dict(r.headers)
+                    data = r.read()
+                    if raw:
+                        return data.decode("utf-8", "replace"), dict(r.headers)
+                    if r.headers.get("Content-Encoding") == "gzip":          # Stack Exchange always gzips
+                        data = gzip.decompress(data)
+                    return json.loads(data), dict(r.headers)
             except urllib.error.HTTPError as e:
                 if e.code in (429, 500, 502, 503, 504) and attempt < 4:
                     time.sleep(float(e.headers.get("Retry-After") or 2 ** (attempt + 1)))
@@ -130,7 +221,7 @@ class Searcher:
         body = {"query": query, "type": "auto", "numResults": n,
                 "contents": {"highlights": {"query": purpose or query, "maxCharacters": 1800}}}
         if code:
-            body["includeDomains"] = ["github.com", "gist.github.com", "stackoverflow.com", "gitlab.com"]
+            body["includeDomains"] = ["github.com", "gist.github.com", "stackoverflow.com"]
         req = urllib.request.Request("https://api.exa.ai/search", data=json.dumps(body).encode(),
                                      headers={"x-api-key": self.exa, "Content-Type": "application/json"})
         d, _ = self._get("exa", req, 0.25)                     # 10 requests a second is Exa's limit
@@ -140,6 +231,36 @@ class Searcher:
             out.append({"title": r.get("title") or "", "url": r.get("url") or "", "date": (r.get("publishedDate") or "")[:10],
                         "text": text})
         return out, float((d.get("costDollars") or {}).get("total") or 0.0)
+
+    # ---- real code: GitHub files (raw, as written), gists, Stack Overflow answers
+    def _github(self, url, raw=False):
+        h = {"User-Agent": "helix-scout"}
+        if self.github and not raw:
+            h["Authorization"] = f"Bearer {self.github}"
+        return self._get("github", urllib.request.Request(url, headers=h), 0.2, raw=raw)[0]
+
+    def tree(self, repo):
+        """A repository's source files (paths), from GitHub's tree of its default branch."""
+        d = self._github(f"https://api.github.com/repos/{repo}/git/trees/HEAD?recursive=1")
+        return [t["path"] for t in d.get("tree") or [] if t.get("type") == "blob" and is_code(t["path"])
+                and t.get("size", 0) < 400_000]
+
+    def file(self, repo, ref, path):
+        return self._github(f"https://raw.githubusercontent.com/{repo}/{ref}/{urllib.parse.quote(path)}", raw=True)
+
+    def gist(self, gid):
+        d = self._github(f"https://api.github.com/gists/{gid}")
+        return "\n\n".join(f"# {name}\n{f.get('content') or ''}" for name, f in (d.get("files") or {}).items()
+                           if is_code(name))
+
+    def answers(self, qid):
+        """A Stack Overflow question's top answers, code blocks as written."""
+        q = urllib.parse.urlencode({"site": "stackoverflow", "filter": "withbody", "sort": "votes", "order": "desc",
+                                    "pagesize": 3})
+        d, _ = self._get("stackexchange", urllib.request.Request(
+            f"https://api.stackexchange.com/2.3/questions/{qid}/answers?{q}"), 0.2)
+        return "\n\n".join(f"### Answer (score {a.get('score')})\n{html_text(a.get('body') or '')}"
+                           for a in d.get("items") or [])
 
     def papers(self, query, n=4):
         """OpenAlex semantic search over titles and abstracts; each with its abstract."""
@@ -222,6 +343,68 @@ class Scout:
                        f"{n['no gain']} no gain, {n['failed']} failed ({', '.join(p.id for p, _ in res[-3:])})")
         return TRIED + "\n".join(out) + "\n" if out else ""
 
+    # ---- a code query: real source code, not pages about it
+    def code(self, query, purpose, seen_url, n_sources=4):
+        """Exa finds repositories, files, gists and Stack Overflow questions; the model picks the files to read from the
+        repositories' file lists; each file is read as written (raw) and the part where its terms are densest kept.
+        Returns (results, Exa cost, the files picked)."""
+        res, cost = self.searcher.web(query, purpose, code=True, n=10)
+        srcs, keys = [], set()
+        for r in res:
+            s = source(r["url"])
+            key = s and (s.get("repo") or s.get("id"))
+            if not s or key in keys:
+                continue
+            keys.add(key)
+            srcs.append(dict(s, title=r["title"], url=r["url"]))
+            if len(srcs) == n_sources:
+                break
+        listing, trees = [], {}
+        for s in srcs:
+            if s["type"] == "repo":
+                try:
+                    paths = self.searcher.tree(s["repo"])
+                except Exception:                                 # noqa: BLE001  (an unreadable repository: skip it)
+                    continue
+                if len(paths) > 300:                              # large repositories: paths that share a word with
+                    words = set(re.findall(r"[a-z]{4,}", (query + " " + purpose).lower()))   # the query first
+                    paths = sorted(paths, key=lambda p: (-len(words & set(re.findall(r"[a-z]{4,}", p.lower()))),
+                                                          len(p)))[:300]
+                trees[s["repo"]] = set(paths)
+                listing.append(f"### Repository {s['repo']} ({short(s['title'], 100)}): its source files\n"
+                               + "\n".join(paths))
+            elif s["type"] == "file":
+                trees.setdefault(s["repo"], set()).add(s["path"])
+                listing.append(f"### File {s['repo']}: {s['path']}")
+        picked = []
+        if listing:
+            js = P.extract_json(self.run.call("scout", SYSTEM, PICK.format(
+                query=query, purpose=purpose or query, sources="\n\n".join(listing), n=self.per_query + 1), 0.2, 3000))
+            for f in (js.get("files") if isinstance(js, dict) else None) or []:
+                if isinstance(f, dict) and f.get("path") in trees.get(f.get("repo"), ()):
+                    picked.append(f)
+        out = []
+        for s in srcs:                                            # in the search's order
+            try:
+                if s["type"] in ("repo", "file"):
+                    for f in [f for f in picked if f["repo"] == s["repo"]]:
+                        ref = s["ref"] if s["type"] == "file" and f["path"] == s["path"] else "HEAD"
+                        url = f"https://github.com/{s['repo']}/blob/{ref}/{f['path']}"
+                        if url in seen_url:
+                            continue
+                        text = window(self.searcher.file(s["repo"], ref, f["path"]),
+                                      [str(t) for t in f.get("terms") or []])
+                        out.append({"title": f"{s['repo']}: {f['path']}", "url": url, "date": "", "text": text})
+                elif s["type"] == "gist":
+                    out.append({"title": s["title"], "url": s["url"], "date": "",
+                                "text": window(self.searcher.gist(s["id"]), re.findall(r"\w{4,}", purpose))})
+                elif s["type"] == "qa":
+                    out.append({"title": s["title"], "url": s["url"], "date": "",
+                                "text": self.searcher.answers(s["id"])[:CODE_CHARS]})
+            except Exception:                                     # noqa: BLE001  (an unreadable source: the next one)
+                continue
+        return out, cost, picked
+
     # ---- one generation's search
     def scout(self, gen, n_wide):
         run = self.run
@@ -249,8 +432,11 @@ class Scout:
                     if kind == "paper":
                         res, cost = self.searcher.papers(query)
                         rec["cost_usd"]["openalex"] += cost
+                    elif kind == "code":
+                        res, cost, entry["picked"] = self.code(query, purpose, seen_url)
+                        rec["cost_usd"]["exa"] += cost
                     else:
-                        res, cost = self.searcher.web(query, purpose, code=(kind == "code"))
+                        res, cost = self.searcher.web(query, purpose)
                         rec["cost_usd"]["exa"] += cost
                 except Exception as exc:                          # noqa: BLE001  (a failed search: none this time)
                     rec["errors"].append(f"{set_name} {kind}: {exc}"[:300])
@@ -261,7 +447,8 @@ class Scout:
                     wid = f"W{gen}.{k}"
                     src = r.get("venue") or urllib.parse.urlparse(r["url"]).netloc
                     head = f"{wid}: {r['title']} ({src}{', ' + r['date'] if r['date'] else ''}) {r['url']}"
-                    text = f"{head}\nFound for: {purpose or query}\n{short(r['text'], 2400)}"
+                    body = r["text"] if kind == "code" else short(r["text"], 2400)
+                    text = f"{head}\nFound for: {purpose or query}\n{body}"
                     self.items[wid] = rec["items_text"][wid] = text
                     seen_url.add(r["url"])
                     entry["items"].append(wid)

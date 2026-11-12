@@ -16,9 +16,20 @@ generation, for the planner (the deep loop) and the mutators (the wide loop). Co
    Each query has a kind: web (the whole web, papers' full texts included: the passages that answer the query's
    purpose), code (repositories, gists, Q&A) or paper (a research index: titles and abstracts; at most one per
    generation).
-3. **Searches:** web and code with Exa (`auto`, highlights guided by the query's purpose); papers with OpenAlex
-   (semantic search, abstracts). Never repeats a query from its log; never shows a page shown before; keeps 2 results
-   per query with at least 200 characters of content.
+3. **Searches:** web with Exa (`auto`, highlights guided by the query's purpose); papers with OpenAlex (semantic
+   search, abstracts); code as below. Never repeats a query from its log; never shows a page shown before; keeps 2
+   results per query with at least 200 characters of content.
+
+   **Code is real source code, as written** (since November 12: before, code results were often a pull request's
+   task list, a release's changelog or a README). Exa finds where the code is (GitHub, gists, Stack Overflow); a GitHub
+   pull request, issue, release or doc page counts as a pointer to its repository. For each repository (up to 4 per
+   query) the Scout lists its source files (GitHub's API); the model picks the files that serve the query's purpose and
+   names the identifiers to look for; each file is read raw (indentation intact) and the part where those identifiers
+   are densest is kept (up to 6,000 characters, starting at the enclosing definition). Stack Overflow questions give
+   their top answers with code blocks as written (Stack Exchange's API). Code queries describe the code to see and ask
+   for what is likely to exist (a known move, model or data structure, a library's usage), not the problem's exact
+   variant; they may be about any programming difficulty the run has, not only methods. `GITHUB_TOKEN` (optional)
+   raises GitHub's limit from 60 to 5,000 calls an hour.
 4. **Hands out the results** as items W<generation>.<k>: the planner gets the deep items and the scout's diagnosis,
    each mutator the items of its own wide query. An experiment or mutation that draws on items cites them; its coder
    gets them in full.
@@ -44,3 +55,8 @@ as Exa and OpenAlex report it, errors); a resumed run continues it.
   (Alkaid-SDVRP, first at the DIMACS challenge), and code (jsprit's string removal). The planner with the brief cited
   items in every experiment and changed direction in 2 of 3; without it, plans were also sound but drew on nothing new.
 - A live run of generations from that state on Colab: the agents, citations, records and costs, end to end.
+- Real code (November 12), replayed live on Colab after generation 8: a code query on operator scheduling read
+  ALNS's roulette-wheel selector and stopping criterion (N-Wouda/ALNS); one on Benders decomposition read two
+  logic-based Benders implementations, one for a heterogeneous-fleet routing problem. A direct test read HGS-CVRP's
+  SWAP* (`LocalSearch::swapStar`) whole, from its first line. Before the prompt asked for code likely to exist, a
+  query for the problem's exact variant got only loosely related files.
