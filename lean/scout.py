@@ -218,7 +218,7 @@ class Scout:
             if not res:
                 continue
             n = {o: sum(1 for _, x in res if x == o) for o in ("gained", "no gain", "failed")}
-            out.append(f"- {wid}: {short(self.items[wid].splitlines()[0], 150)} | tried {len(res)}: {n['gained']} gained, "
+            out.append(f"- {short(self.items[wid].splitlines()[0], 160)} | tried {len(res)}: {n['gained']} gained, "
                        f"{n['no gain']} no gain, {n['failed']} failed ({', '.join(p.id for p, _ in res[-3:])})")
         return TRIED + "\n".join(out) + "\n" if out else ""
 
