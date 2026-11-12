@@ -25,6 +25,13 @@ every agent) and a **guidance store** (approaches that may help, each a hypothes
 no gain or failed, is computed from measured results and shown with it; never deleted). `Config(memory="none")` is v4's Control: no map, the 6 strongest programs
 instead.
 
+Optionally (`--scout`, off by default), a **Scout** searches the web, code and the research literature at the start of
+every generation (`scout.py`, `docs/design/SCOUT_DESIGN.md`): from where the run stands it writes deep queries for the
+planner (where the run is stuck, how to build what it is pursuing) and one wide query per mutator (approaches neither
+in the guidance nor tried), searches them (Exa for the web and code, reading real source files from the repositories
+it finds; OpenAlex for papers), never repeats a query or a page, and hands the results out as items that programs cite
+and that get a measured record, like guidance. Keys: `EXA_API_KEY`, `OPENALEX_API_KEY` (and optionally `GITHUB_TOKEN`).
+
 Every program is kept, with its code, parent, idea and result. Nothing is decided by a model except what to try.
 
 ## Problems are adapters
@@ -45,6 +52,7 @@ An adapter can also live outside this repository (the private VRP plug-in does):
 | `loop.py` | the loop and its settings (`Config`) |
 | `atlas.py` | the Atlas: findings, the map, the Navigator's openings, the Distiller |
 | `stores.py` | the context store and the guidance store (with each entry's record) |
+| `scout.py` | the Scout: each generation's searches, its items and their records (off by default) |
 | `prompts.py` | every prompt (v4's text) and the parsers for the replies |
 | `sandbox.py` | runs a program in its own process under limits; checks and scores its result |
 | `archive.py` | every program, as a tree |
@@ -66,6 +74,7 @@ Each run writes:
 ```bash
 python -m lean.run --problem ac2 --param max_n=50000 --out runs/lean/ac2 --rounds 50 --budget 30
 python -m lean.run --out runs/lean/ac2 --rounds 80            # resumes, runs to generation 80
+python -m lean.run --problem ac2 --out runs/lean/ac2s --rounds 50 --scout --eval-workers 4   # with the Scout; 4 evaluations at once
 python -m pytest tests/test_lean.py tests/test_lean_v4.py     # crash tests, and lean against helix4's own code
 ```
 

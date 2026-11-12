@@ -25,6 +25,23 @@ constant function (R = 0.667).
 Helix's best is **0.9412521** (v7, continuing v4.7's warm run, generation 290). Before that it was 0.9408 (v4
 atlas-s1 by generation 50, which moved only in the 8th decimal place over generations 51–150).
 
+## Lean, November 11-12, 2026: stores, traces and the Scout (the latest lean)
+
+- **Stores** (`docs/design/STORES_DESIGN.md`, `lean/stores.py`): a context store (facts, taken as true) and a guidance
+  store (approaches as refutable hypotheses, each with a record of attempts computed from measured results), replacing
+  the November 9 knowledge bank. Tested live on circles and on a private routing problem.
+- **Traces:** every model call tagged with its generation and task, with its cached and reasoning tokens; every
+  program's evaluation timed; `--eval-workers` caps evaluations at once.
+- **The Scout** (`docs/design/SCOUT_DESIGN.md`, `lean/scout.py`, off by default, `--scout`): web, code and paper
+  searches each generation, deep for the planner and wide for the mutators; code results are real source files.
+  About $0.04 of search a generation.
+- **Runs** (a private routing problem, one seed each, a pilot): lean Helix against OpenEvolve (the published
+  repository, its defaults) from the same start, same evaluator, model and 300 programs: OpenEvolve 1.6119, Helix
+  1.6047, at about 60% of OpenEvolve's model spend. Helix with the Scout from the same start: about level with Helix
+  without it, on fewer programs. Helix with the Scout from our best earlier program: +0.34%, the best result on that
+  problem under the same rules. What OpenEvolve does better, from reading the programs: small diffs by a model that
+  thinks on every call, against Helix's whole-program rewrites by coders that don't think.
+
 ## Lean (November 5-6, 2026): v4's core, cleaned; each part tested
 
 - **What it is.** `lean/` (about 1,000 lines): v4's core, rebuilt with every part behind a switch, so each one is

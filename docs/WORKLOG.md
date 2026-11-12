@@ -4,6 +4,21 @@ A running record of the work on Helix since the handoff: what was asked, what wa
 
 ---
 
+## November 11-12, 2026: the stores, the Scout, and Helix against OpenEvolve
+
+- **Asked (Shreyas, Nov 11):** a context store and a refutable guidance store, lean and clean; a fair comparison with
+  OpenEvolve (the real repository) from the same start; a mandatory search agent for the planner and the mutators.
+- **Built:** `lean/stores.py` (replacing the knowledge bank), call and program traces, `--eval-workers`, and
+  `lean/scout.py` (`--scout`, off by default); code results changed on Nov 12 from changelogs and task lists to real
+  source files read from the repositories found.
+- **Ran and found** (a private routing problem; details in the private repository): OpenEvolve 1.6119 against Helix
+  1.6047 at 300 programs each; Helix spent about 60% as much. The Scout's runs: level with Helix from the same start;
+  +0.34% from our best earlier program. Programs that cited search results gained as often as those that didn't.
+- **Next:** diffs instead of whole-program rewrites, thinking on hard changes, and a control inside the run for the
+  Scout (half the mutators with search, half without).
+
+---
+
 ## November 5-6, 2026: lean Helix built and its core tested
 
 - **Asked (Shreyas, Nov 5):** one lean main variant, rebuilt from v4.
